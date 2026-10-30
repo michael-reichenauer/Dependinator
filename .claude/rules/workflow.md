@@ -25,6 +25,10 @@ How this project is worked on, beyond CLAUDE.md. Always loaded, in local and clo
   merge into `main` or push it by hand, and never merge `main` into `dev`; the workflow makes the
   release commits. This replaced the earlier flow (every `main` push a release, `./scripts/release`)
   in Oct 2026.
+- **Previews go to the Marketplace's pre-release track too** (decided with the user Oct 26, 2026;
+  the Oct 22 plan had kept them on GitHub only, a preference, not a blocker). The minutes-based
+  build number grows across previews and releases, so never introduce the odd/even minor
+  convention, and never publish a version lower than one already on the Marketplace.
 - **Whenever you are blocked or waiting on the user**, notify them: they are often not watching.
 - A 401 in the Release workflow's Marketplace step means the `VSCE_PAT` secret (an Azure DevOps
   PAT, expires around July 2027) needs a new token.
@@ -53,6 +57,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 - An incremental build can leave stale binaries (CSharpier.MsBuild touches sources; a running
   `dotnet watch` hot-reloads in process only). When a failure contradicts the source, check the
   dll's timestamp, delete the project's `obj/` and `bin/`, and rebuild.
+- `./scripts/watch` restarted the app on every page load when a project's generated
+  `obj/.../AssemblyInfo.cs` changed during a parse: the Roslyn parser's design-time build of this
+  solution rewrote Core's `BuildTime` metadata, and dotnet watch restarts on any Compile item change.
+  Core now skips AssemblyInfo in design-time builds; keep build-time-varying values out of them.
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 
@@ -64,9 +72,11 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   is the sanctioned split.
 - Pass-through namespaces are view-level (`Node.IsPassThrough`). Renaming nodes at parse time was
   rejected: it churns node identity and breaks references and search.
-- AI help: a `claude -p` subprocess on the user's subscription was postponed (the policy for a
-  published extension is unclear); the copy-prompt and copy-fix-prompt buttons are the accepted
-  in-between.
+- AI help: a `claude -p` route on the user's subscription was postponed (the policy for a
+  published extension is unclear), then built on Oct 26 at Michael's request as an experimental
+  opt-in. First hidden (unlisted VS Code setting, env var), then moved the same day to Settings ›
+  Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
+  to hide it again later. Since Oct 30 the switch is in Settings › AI, with the default provider. Keep it out of the README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
 
 ## Ideas waiting for a session
@@ -90,6 +100,14 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   user: not every ancestor, for now), View toggle, node menu "List Hidden Children". The badge is
   not clickable (pointer events pass through, like the problem badge). Still open: hide rules (by
   pattern), once these have been lived with.
+- **Ask your model (roadmap idea 5), next:** phase 1 (Oct 29) is the Ask panel (`AskPanel.razor`,
+  `AskModel.cs`) on the Claude Code route with the MCP model tools; node names in backticks become
+  links (short name in the text). Phase 2 (Oct 29): the API key route, `ModelToolsAgent`'s own
+  tool-use loop (Sonnet, 15 turns) over the app's MCP server as a client (`McpAgentTools`), live
+  lookup lines from `IModelQueries.Asked`, the cost per answer. Phase 3 (Oct 29): follow-ups (the
+  last 3 exchanges in the prompt), the `read_source` tool, `./scripts/ask-eval` (run it after a
+  prompt or tool change). Still open: tool results carried across follow-ups, more eval cases
+  from real questions. No paste route (decided with the user: multi-turn tools).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

@@ -10,6 +10,8 @@
 
     <ItemGroup>
         <PackageReference Include="Anthropic" />
+        <!-- The MCP client, for the model tools the host serves (ModelToolsAgent). -->
+        <PackageReference Include="ModelContextProtocol.Core" />
     </ItemGroup>
 
     <ItemGroup>

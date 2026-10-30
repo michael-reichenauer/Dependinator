@@ -148,6 +148,29 @@ public sealed class AppPage
         await Expect(ToolbarEdit).ToHaveAttributeAsync("data-checked", "true");
     }
 
+    // Settings › AI (AiSettingsDialog): turns on the experimental Claude Code route through its
+    // warning, and makes a provider ("claude", "code", "chat") the default, then closes the dialog.
+    public async Task SetAiSettingsAsync(bool useClaudeCode = false, string? defaultProvider = null)
+    {
+        await (await OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        ILocator useCode = page.GetByTestId("ai-settings-use-claude-code");
+        await Expect(useCode).ToBeVisibleAsync();
+        if (useClaudeCode && await useCode.GetAttributeAsync("data-checked") != "true")
+        {
+            await useCode.ClickAsync();
+            await page.GetByTestId("use-claude-code-confirm").ClickAsync();
+            await Expect(useCode).ToHaveAttributeAsync("data-checked", "true");
+        }
+        if (defaultProvider is not null)
+        {
+            ILocator radio = page.GetByTestId($"ai-settings-default-{defaultProvider}");
+            await radio.ClickAsync();
+            await Expect(radio).ToHaveAttributeAsync("data-checked", "true");
+        }
+        await page.GetByTestId("ai-settings-close").ClickAsync();
+        await Expect(useCode).ToHaveCountAsync(0);
+    }
+
     // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.
     public ILocator CloudButton => page.GetByTestId("toolbar-cloud");
 

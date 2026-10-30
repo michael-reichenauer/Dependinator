@@ -48,6 +48,7 @@ static class IssueReport
         {
             IssueKind.Bug => "bug_report.yml",
             IssueKind.Improvement => "feature_request.yml",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
         return $"{NewIssueUrl}?template={template}"
             + $"&version={Uri.EscapeDataString(version)}"

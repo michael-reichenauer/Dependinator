@@ -279,20 +279,20 @@
     gap: 2px;
 }
 
-/* The review dialog's "Get an AI opinion" section: the two routes side by side, then one line
-   once there is an answer, or the AI chat route's steps. */
-.dep-cycles__ai {
+/* The review dialog's "Get an AI opinion" section: one row that opens to the routes side by side,
+   then one line once there is an answer, or the AI chat route's steps. */
+.dep-ai {
     margin-top: 12px;
 }
 
-.dep-cycles__ai-header {
+.dep-ai__header {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 4px;
 }
 
-.dep-cycles__ai-title {
+.dep-ai__title {
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
     font-weight: 500;
@@ -300,14 +300,30 @@
     text-transform: uppercase;
 }
 
-.dep-cycles__routes {
+/* "Get an AI opinion": a disclosure row, its sparkle in Claude's coral, and the routes it hides. */
+.dep-ai__expand {
+    margin-left: -6px;
+    text-transform: none;
+    font-weight: 500;
+}
+
+.dep-ai__expand .mud-button-icon-start {
+    color: #d97757;
+}
+
+.dep-ai__expand-hint {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ai__routes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 10px;
     margin-top: 6px;
 }
 
-.dep-cycles__route {
+.dep-ai__route {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -316,41 +332,132 @@
     border-radius: 6px;
 }
 
-.dep-cycles__route > :last-child {
+.dep-ai__route > :last-child {
     margin-top: auto;
     padding-top: 4px;
 }
 
-.dep-cycles__route-name {
+.dep-ai__route-name {
     display: flex;
     align-items: center;
     gap: 6px;
     font-weight: 500;
 }
 
-.dep-cycles__route-text {
+.dep-ai__route-text {
     font-size: 0.8125rem;
 }
 
-.dep-cycles__route-meta {
+.dep-ai__route-meta {
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
 }
 
+/* The default's button and, joined to it, the arrow of its provider menu (AiProviderMenu). */
+.dep-ai__ask-split {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.dep-ai__ask-split > .mud-button-root:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dep-ai__ask-split .mud-menu {
+    margin-left: -1px;
+}
+
+.dep-ai-menu__arrow {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+
+/* The menu's rows: the provider, "default" beside the default, and what it uses and costs. */
+.dep-ai-menu__item {
+    display: flex;
+    flex-direction: column;
+    max-width: 320px;
+}
+
+.dep-ai-menu__name {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.dep-ai-menu__tag,
+.dep-ai-menu__detail {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    white-space: normal;
+}
+
+/* The Ask panel's chip: the provider that answers, opening the menu. */
+.dep-ai-menu__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 2px 0 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+}
+
+.dep-ai-menu__chip:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.dep-ai-menu__chip .mud-icon-root {
+    font-size: 1rem;
+}
+
+/* Settings › AI: a row per provider, the default picked by its radio. */
+.dep-ai-settings {
+    display: flex;
+    flex-direction: column;
+    margin: 8px 0;
+}
+
+.dep-ai-settings__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+}
+
+.dep-ai-settings__row--off .dep-ai-settings__text {
+    opacity: 0.55;
+}
+
+.dep-ai-settings__text {
+    flex: 1;
+    min-width: 0;
+}
+
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
-.dep-cycles__ask-claude .mud-button-icon-start,
-.dep-cycles__claude-icon {
+.dep-ai__ask-claude .mud-button-icon-start,
+.dep-ai__claude-icon,
+.dep-ai-menu__claude .mud-icon-root {
     color: #d97757;
 }
 
-.dep-cycles__ask-claude .dep-cycles__ask-claude-progress {
+.dep-ai__ask-claude .dep-ai__ask-claude-progress {
     width: 14px !important;
     height: 14px !important;
     margin-right: 6px;
 }
 
 /* The AI chat route's numbered steps, ticked off as they are done. */
-.dep-cycles__steps {
+.dep-ai__steps {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -360,14 +467,14 @@
     border-radius: 6px;
 }
 
-.dep-cycles__step {
+.dep-ai__step {
     display: grid;
     grid-template-columns: 22px minmax(0, 1fr);
     gap: 8px;
     align-items: start;
 }
 
-.dep-cycles__step-number {
+.dep-ai__step-number {
     display: grid;
     place-items: center;
     width: 20px;
@@ -378,13 +485,13 @@
     font-size: 0.6875rem;
 }
 
-.dep-cycles__step--done .dep-cycles__step-number {
+.dep-ai__step--done .dep-ai__step-number {
     border-color: var(--mud-palette-success);
     background: var(--mud-palette-success);
     color: var(--mud-palette-success-text);
 }
 
-.dep-cycles__step-body {
+.dep-ai__step-body {
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -393,13 +500,13 @@
 }
 
 /* "Use answer", for an answer typed or edited in the paste box rather than pasted. */
-.dep-cycles__paste-actions {
+.dep-ai__paste-actions {
     display: flex;
     justify-content: flex-end;
 }
 
 /* One chip per answer, named by where it came from (Claude or the AI chat), when there are several. */
-.dep-cycles__answers {
+.dep-ai__answers {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -407,26 +514,26 @@
 }
 
 /* Asking Claude in the review dialog, and Claude's verdict. */
-.dep-cycles__suggest {
+.dep-ai__suggest {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-top: 12px;
 }
 
-.dep-cycles__suggest-note {
+.dep-ai__suggest-note {
     color: var(--mud-palette-text-secondary);
     font-size: 0.8125rem;
 }
 
-.dep-cycles__suggest-error {
+.dep-ai__suggest-error {
     margin-top: 8px;
     color: var(--mud-palette-error);
     font-size: 0.875rem;
     white-space: pre-line;
 }
 
-.dep-cycles__suggestion {
+.dep-ai__suggestion {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -439,33 +546,61 @@
 }
 
 /* A long answer scrolls inside its panel, so the reason and the buttons stay in view. */
-.dep-cycles__suggestion {
+.dep-ai__suggestion {
     max-height: 40vh;
     overflow-y: auto;
 }
 
 /* While asking: the answer's place, framed like the answer. */
-.dep-cycles__suggestion--pending {
+.dep-ai__suggestion--pending {
     border-left-color: var(--mud-palette-lines-default);
 }
 
-.dep-cycles__suggest-pending {
+.dep-ai__suggest-pending {
     display: flex;
     align-items: center;
     gap: 8px;
     color: var(--mud-palette-text-secondary);
 }
 
-.dep-cycles__suggestion[data-verdict="break"] {
+.dep-ai__suggestion[data-verdict="break"] {
     border-left-color: var(--mud-palette-warning);
 }
 
-.dep-cycles__suggestion-verdict {
+.dep-ai__suggestion-verdict {
     font-weight: 600;
 }
 
-.dep-cycles__suggestion-note {
+.dep-ai__suggestion-note {
     color: var(--mud-palette-text-secondary);
+}
+
+/* "Show prompt" beside the section's title: a quiet text button. */
+.dep-ai__show-prompt {
+    text-transform: none;
+    font-size: 0.75rem;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* The prompt dialog (PromptDialog.razor): the prompt as it is sent, scrolling inside the dialog. */
+.dep-prompt__meta,
+.dep-prompt__note {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-prompt__text {
+    max-height: 65vh;
+    overflow: auto;
+    margin: 8px 0 0;
+    padding: 10px 12px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    background: var(--mud-palette-background-gray);
+    font-size: 0.8125rem;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* The search dialog in picker mode (PathPanel.razor): what the chosen node will be used for. */
@@ -730,6 +865,43 @@
     }
 }
 
+/* Suggested rules (SuggestRulesView.razor), the view the Rules panel switches to: a bit wider,
+   so the AI routes fit side by side; one row per rule, with Dependinator's check. */
+.dep-suggest-rules {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-suggest-rules__verdict {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.dep-suggest-rules__rule {
+    padding: 4px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-suggest-rules__head {
+    display: flex;
+    align-items: center;
+    gap: 4px 6px;
+}
+
+.dep-suggest-rules__head .dep-panel__count {
+    white-space: nowrap;
+}
+
+.dep-suggest-rules__add.mud-button-root {
+    min-width: 0;
+    padding: 0 8px;
+}
+
+.dep-suggest-rules__error {
+    color: var(--mud-palette-warning-darken);
+}
+
 /* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
 .dep-rules__rule {
     padding: 4px 0;
@@ -746,12 +918,32 @@
     gap: 6px;
 }
 
+/* Long names wrap (after their dots) rather than clip: both names are links, the "to" one must
+   stay clickable. */
 .dep-rules__names {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow-wrap: break-word;
+}
+
+/* A rule's node names go to their node (RuleNodeLink.razor); a missing node is plain bold. */
+.dep-rules__node {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 700;
+    color: inherit;
+    text-align: inherit;
+}
+
+button.dep-rules__node {
+    cursor: pointer;
+}
+
+button.dep-rules__node:hover {
+    color: var(--mud-palette-primary);
+    text-decoration: underline;
 }
 
 .dep-rules__arrow {
@@ -775,6 +967,37 @@
     padding: 2px 6px;
 }
 
+.dep-rules__item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dep-rules__item > .dep-rules__violation {
+    flex: 1;
+    min-width: 0;
+}
+
+.dep-rules__reason {
+    flex-basis: 100%;
+    font-size: 0.8125rem;
+}
+
+/* A rule's collapsed list of allowed dependencies. */
+.dep-rules__allowed-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    cursor: pointer;
+}
+
 .dep-rules__add {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
@@ -783,6 +1006,10 @@
     margin-top: 8px;
     padding-top: 6px;
     border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__suggest {
+    margin-top: 2px;
 }
 
 /* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
@@ -952,3 +1179,207 @@
     white-space: nowrap;
     font-weight: 600;
 }
+
+/* Claude Code's report, its markdown rendered (SimpleMarkdown). */
+.dep-ai__markdown p,
+.dep-ai__markdown ul {
+    margin: 0 0 6px;
+}
+
+.dep-ai__markdown ul {
+    padding-left: 20px;
+}
+
+.dep-ai__markdown code {
+    font-family: monospace;
+    font-size: 0.8125rem;
+}
+
+/* The files Claude Code changed, in its report after "Fix with Claude Code". */
+.dep-ai__fix-files {
+    margin: 0;
+    padding-left: 20px;
+    font-family: monospace;
+    font-size: 0.8125rem;
+}
+
+/* The fix actions of an answer that suggests a change, under it, so the dialog's own buttons
+   (Cancel, accepting anyway, Fix later) stay on one row. */
+.dep-ai__fix-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+/* The review dialogs' buttons wrap to a second row rather than squeezing their labels. */
+.dep-ai__actions {
+    flex-wrap: wrap;
+    row-gap: 8px;
+}
+
+.dep-ai__actions .mud-button-root {
+    white-space: nowrap;
+}
+
+/* The About node dialog (AboutNodeDialog.razor): the node's comment from the code, and what it contains and links to. */
+.dep-about__comment {
+    margin-top: 8px;
+    font-size: 0.875rem;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* The Improve comments dialog's introduction. */
+.dep-about__text {
+    font-size: 0.875rem;
+}
+
+.dep-about__comment--none,
+.dep-about__facts {
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-about__facts {
+    margin-top: 6px;
+    font-size: 0.8125rem;
+}
+
+/* The Ask panel (AskPanel.razor): questions and answers about the model, the newest at the
+   bottom above the question box; node names in an answer are links to the diagram. */
+.dep-ask {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-ask__list {
+    gap: 10px;
+    padding-bottom: 4px;
+}
+
+.dep-ask__examples {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.dep-ask__example {
+    padding: 3px 8px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.dep-ask__example:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.dep-ask__question {
+    font-weight: 600;
+    white-space: pre-line;
+    word-break: break-word;
+}
+
+/* The answer scrolls with the panel's list, not on its own. */
+.dep-ask__answer.dep-ai__suggestion {
+    max-height: none;
+    overflow-y: visible;
+    margin-top: 4px;
+}
+
+.dep-ask__answer ol {
+    margin: 0 0 6px;
+    padding-left: 20px;
+}
+
+.dep-ask__node {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: monospace;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-primary);
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.dep-ask__node:hover {
+    text-decoration: underline;
+}
+
+.dep-ask__nodes {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-ask__node-row {
+    overflow-wrap: break-word;
+}
+
+.dep-ask__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dep-ask__input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.dep-ask__meta {
+    display: flex;
+    align-items: center;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ask__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ask__step::before {
+    content: "· ";
+}
+
+.dep-ask__answer-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-ask__steps-toggle {
+    padding: 0 6px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    white-space: nowrap;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.dep-ask__steps-toggle:hover {
+    color: var(--mud-palette-primary);
+}
+
+
+

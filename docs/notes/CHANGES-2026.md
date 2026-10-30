@@ -29,7 +29,7 @@ project works.
   group and rubber-band selection), new line and container visuals, a release flow through `dev`
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
-  Claude's suggestions for cycles, C# member naming fixes, and a problem indicator with node badges.
+  Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -185,6 +185,52 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   once (copy, open claude.ai, paste back), a pasted answer is read without a button, and answers
   are labeled by source ("Claude · Break", "Chat · Accept"), so the other route reads as a second
   opinion.
+- **AI review of broken rules, Show prompt and Claude Code (Oct 26).** Each dependency that
+  breaks an architecture rule has a Review button, with the same AI opinion section as a cycle:
+  Claude (or an AI chat's pasted answer) suggests fixing it, with a fix prompt for Claude Code, or
+  allowing it, with a reason. An allowed dependency moves to the rule's collapsed Allowed list,
+  is no longer drawn or counted as a violation, and is saved with the model (undoable); removing
+  the rule takes it along. "Show prompt" in both reviews shows the prompt every route uses before
+  it is sent or copied. A hidden, experimental third route asks Claude Code (`claude -p`) on the
+  user's computer with their own Claude login instead of an API key: it is unclear whether
+  Anthropic allows that for a third-party tool, so it is off until turned on under Settings › Use
+  Claude Code (Experimental), after a warning. (First built behind an unlisted VS Code setting and
+  an environment variable; moved to the Settings menu the same day, while Michael is the only user.)
+  The same day Claude Code got read-only tools in the model's folder, to check the excerpts
+  against the code, and "Fix with Claude Code": when an answer suggests breaking a cycle or fixing a
+  rule, Claude Code makes the change in the model's folder (it may edit files there, not run
+  commands), after a warning when the folder has uncommitted changes; the dialog shows its report
+  and the changed files, and re-parses.
+- **About Node (Oct 27).** "About Node …" in the node menu and the right-click menu opens a dialog
+  with the node's comment from the code, what it contains, and how many types outside it it uses
+  and are used by it, plus a question about it ("What is this and why is it here?" until the user
+  writes another) for Claude, Claude Code or an AI chat. The prompt has the node and its parent with
+  their comments, its children, the types it uses and that use it (most links first), and a type's
+  source or a container's files. The answer is shown, not saved, and can be copied. Claude answers
+  on Claude Sonnet 5.5 here (`IClaudeService.AskQuicklyAsync`), faster and cheaper than the Opus
+  used for verdicts.
+- **Improve Comments (Oct 27).** "Improve Comments …" in the node menu (one or several selected
+  nodes) and in the About dialog has Claude Code add or rewrite the comments of namespaces and types,
+  of the nodes alone or of everything inside them, which the diagram shows as descriptions. The
+  prompt (`CommentsPrompt`) lists each one with where its comment goes, its comment now and what it
+  uses and is used by, and says what a good comment says and where the parser reads it (a namespace
+  comment in one file only). It runs like Fix with Claude Code, on the current branch (edits, no
+  commands), with a warning above 150 namespaces and types; without the Claude Code route the prompt
+  is copied for any coding agent. Claude Code's run limit went from 15 to 30 minutes for it.
+- **MCP server (Oct 27).** `Dependinator.Mcp` (the official MCP C# SDK, Streamable HTTP) gives AI
+  agents read-only tools over the open diagram: `get_model`, `list_children`, `search_nodes`,
+  `get_dependencies`, `find_paths`, `list_cycles`, `list_rules` and `check_rule`, which counts what
+  a rule would break before it is added. The tools ask the UI through `[Rpc] IModelQueryService`
+  (`Diagrams/Ai/ModelQueries.cs`), so the answers come from the model the user sees. The language
+  server runs it on a loopback port with a bearer token; the extension registers it for Copilot and,
+  with "Dependinator: Connect Claude Code", for Claude Code. The dev host serves it at `/mcp`.
+- **Suggest rules (Oct 27).** "Suggest rules …" in the Rules panel asks Claude, Claude Code or the
+  user's AI chat for up to 8 architecture rules. The prompt (`SuggestRulesPrompt`) lists the
+  containers level by level (up to 120) and the link counts between those listed deepest (up to
+  150), plus the existing rules. The Claude Code route gets the app's own MCP server, so it checks
+  candidates with `check_rule` before answering (13 checks for this repository, 25 s). Dependinator
+  re-checks every suggestion and shows "kept today", "N broken" or why it cannot be added; the user
+  ticks which to add.
 - **Problem indicator (Oct 21).** A warning count in the app bar, like the VS Code status bar,
   shows that the model has open cycles and broken architecture rules without opening their
   panels; it is hidden while there are none. Its tooltip names them, and a click lists them, one
@@ -203,10 +249,48 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   nodes inside their opened container, instead of to the container as an icon. It also picks the
   cycle: its lines stay red while the other cycles' lines fade, and lines not touching its nodes
   fade as for a selection of them, until the row is clicked again.
+- **Rule navigation (Oct 29).** A rule's two node names in the Rules panel are links that go to
+  and select the node, and a broken dependency frames both of its classes, with the orange line
+  between them (before, it went to the source class only).
+- **Suggest rules beside the diagram (Oct 29).** Suggest rules moved from a dialog over the
+  diagram into the Rules panel, which switches to a suggestions view with a back arrow. Its node
+  names go to their node, each rule has its own Add button (plus "Add all"), and the checks follow
+  the model as rules are added or it is re-parsed. The view stays alive while hidden, so an answer
+  that takes a while still arrives after going back to the rules or closing the panel.
+- **Ask about the model (Oct 29).** A question box in a panel beside the diagram (app bar button,
+  View › Ask About the Model): Claude Code looks the answer up with the app's own MCP model tools
+  and reads the code, and every node name in its answer is a link that goes to the node, with the
+  nodes it is about listed below and "Show all" framing them. The prompt (`AskModelPrompt`) holds
+  only the model's top level and the question; the tools fetch the rest. Answers stay while the
+  panel is closed, until another model opens (roadmap idea 5, phase 1).
+- **Ask with the API key (Oct 29).** The Ask panel's first route is now Claude with the user's
+  own API key: `ModelToolsAgent` in `Dependinator.Claude` runs the tool-use loop itself (Sonnet
+  5.5, at most 15 turns, the last without tools) and gets the very same tools as an MCP client of
+  the app's own server (`McpAgentTools`), so nothing is defined twice. Both routes show the
+  lookups live ("Searched for …", reported by `ModelQueryService`), and an API answer shows what
+  it cost (phase 2).
+- **Ask follow-ups, and read the code (Oct 29).** A question in the Ask panel follows up on the
+  earlier ones: the prompt carries the last three questions and answers until the conversation is
+  cleared. A new `read_source` model tool reads a node's code with line numbers (through
+  `IWorkspaceFileService`, so in VS Code over the tunnel), for the API route, Copilot and Claude
+  Code alike. A name an answer writes partly (`PromptParts.ReadSourcesAsync`) links too when only
+  one node ends so. `./scripts/ask-eval` asks a set of questions about this repository
+  (`scripts/ask-eval.json`) in the dev host and scores the answers (phase 3).
+- **One default AI, Settings › AI (Oct 30).** The places that ask an AI share one provider choice:
+  `AiProvider` lists the providers (Claude, Claude Code, the AI chat) with what each can do (an
+  answer, model lookups, code changes), and Settings › AI picks the default and turns on the
+  experimental Claude Code route (it replaced the "Use Claude Code" menu toggle). The review dialogs
+  show the providers side by side only until one is picked, which becomes the default; after that
+  one button asks it, and the menu next to it (`AiProviderMenu`) asks another once. The Ask panel's
+  route buttons, cost line and Show prompt became one chip naming the provider, with the same menu.
+  Another provider (Copilot, Codex, Gemini) is now one more `AiProvider` entry plus its route in
+  `IAiService`.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
   extension host, like Help; bug reports get the `bug` label from their form.
+- **What's New (Oct 27).** A Help menu item opens `CHANGELOG.md` on GitHub (main, so the
+  latest release's notes plus what is unreleased at that point).
 - **Settings.** Invert the mouse-wheel zoom direction (Sep).
 
 ## Editing and design
@@ -328,6 +412,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hand or by Claude (the `release` skill) in `CHANGELOG.md`'s `## [Unreleased]`, grouped New,
   Improved, Changed, Fixed. One version `major.minor.<minutes since 2026-01-01>` everywhere
   (`docs/RELEASING.md`).
+- **Marketplace pre-releases (Oct 26).** Previews are also published to the VS Code Marketplace's
+  pre-release track, which users opt into with **Switch to Pre-Release Version**. The version
+  grows across previews and releases, so no odd/even minor is needed.
 - **Security (Oct 8).** CodeQL alerts fixed and the workflow's `GITHUB_TOKEN` permissions limited.
   Vulnerable transitive packages (MessagePack, System.Security.Cryptography.Pkcs/Xml) pinned to
   patched versions until their parent packages catch up (Oct 19).

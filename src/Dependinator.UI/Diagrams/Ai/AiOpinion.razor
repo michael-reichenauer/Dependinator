@@ -1,0 +1,556 @@
+@typeparam TAnswer where TAnswer : class, IAiAnswer
+@inject IAiService aiService
+@inject IClipboardService clipboardService
+@inject IVsCodeSendService vsCodeSendService
+@inject IDialogService dialogService
+
+@* "Get an AI opinion" in a review dialog (a cycle, a dependency that breaks a rule): the AI
+   providers that give the same kind of answer (AiChoice: Claude with the user's API key, a few
+   cents; Claude Code, the experimental local route, only where the user turned it on; and "Use
+   your AI chat", free, which copies the prompt and then shows the rest of that route as steps:
+   open claude.ai, paste the answer back). Until the user has a default (Settings › AI), they wait
+   behind one row ("Get an AI opinion", naming them) that opens them as cards side by side, each
+   saying what it does and costs, and the one picked becomes the default. After that the
+   default's button shows at once, with the menu beside it (AiProviderMenu) to ask another
+   provider once; while it asks, only the answer's place shows progress. A pasted answer is read
+   once the pasting stops, without a button. "Show prompt" shows the prompt every provider gets,
+   before it is sent or copied. Each answer is kept while the dialog is open, labeled by where it came from (answers can differ for a borderline case, and
+   the section says so then), and the selected one is shown by the dialog (AnswerContent) and
+   passed to it (OnAnswerSelected), which decides what it means. In VS Code the API key is entered
+   in an input box at the top of the window, which is easy to miss while watching the dialog, so
+   the section points there while it waits. Test ids are the dialog's prefix and a suffix
+   ("accept-cycle-ask"). *@
+@if (isChatOpen)
+{
+  @* The chat route's steps, all in view at once, each ticked off when done. *@
+  <div class="dep-ai" data-testid="@Id("chat-steps")">
+    <div class="dep-ai__header">
+      <span class="dep-ai__title">Use your AI chat</span>
+      @ShowPromptLink
+      <MudSpacer />
+      <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="CloseChat"
+                 data-testid="@Id("chat-close")">Back</MudButton>
+    </div>
+    <div class="dep-ai__steps">
+      <div class="dep-ai__step @(isPromptCopied && !isCopyingPrompt ? "dep-ai__step--done" : "")">
+        <span class="dep-ai__step-number">@(isPromptCopied && !isCopyingPrompt ? "✓" : "1")</span>
+        <div class="dep-ai__step-body">
+          @if (isCopyingPrompt)
+          {
+            <div class="dep-ai__suggest-pending">
+              <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="dep-ai__ask-claude-progress" />
+              <span>Copying the prompt ...</span>
+            </div>
+          }
+          else if (isPromptCopied)
+          {
+            <div data-testid="@Id("prompt-copied")">@PromptCopiedText</div>
+            <div>
+              <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="CopyPromptAsync"
+                         data-testid="@Id("copy-again")">Copy again</MudButton>
+            </div>
+          }
+          else
+          {
+            <div>Copy the prompt</div>
+            <div>
+              <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                         OnClick="CopyPromptAsync" data-testid="@Id("copy-again")">Copy prompt</MudButton>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="dep-ai__step">
+        <span class="dep-ai__step-number">2</span>
+        <div class="dep-ai__step-body">
+          <div>Paste it into claude.ai, or another AI chat</div>
+          @* claude.ai opens empty, to paste into: a prompt with code is too long, and too
+             private, to pass in the address. *@
+          <div>
+            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
+                       EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew"
+                       title="Open claude.ai in the browser, to paste the prompt into"
+                       OnClick="OpenClaudeAsync" data-testid="@Id("open-claude")">Open claude.ai</MudButton>
+          </div>
+        </div>
+      </div>
+      <div class="dep-ai__step">
+        <span class="dep-ai__step-number">3</span>
+        <div class="dep-ai__step-body" data-testid="@Id("paste")">
+          <div>Paste the whole answer here</div>
+          <MudTextField T="string" Value="pastedAnswer" ValueChanged="OnPasteTextChanged" Immediate="true"
+                        Lines="4" Variant="Variant.Outlined" Margin="Margin.Dense"
+                        Placeholder="It is read as soon as it is pasted"
+                        data-testid="@Id("paste-text")" />
+          @if (!string.IsNullOrWhiteSpace(pastedAnswer))
+          {
+            <div class="dep-ai__paste-actions">
+              <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="UsePastedAnswer"
+                         data-testid="@Id("paste-use")">Use answer</MudButton>
+            </div>
+          }
+          @if (pasteError is not null)
+          {
+            <div class="dep-ai__suggest-error" data-testid="@Id("paste-error")">@pasteError</div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}
+else if (HasAiHelp && answers.Count == 0 && !IsChoosing)
+{
+  @* With a default: its button at once, nothing to open first. *@
+  <div class="dep-ai__header dep-ai" data-testid="@Id("ai")">
+    @AskSplit
+    @ShowPromptLink
+  </div>
+}
+else if (HasAiHelp && answers.Count == 0)
+{
+  @* No default yet: one row, opened to the providers side by side, each saying what happens and
+     what it costs; the one the user picks becomes the default. *@
+  <div class="dep-ai" data-testid="@Id("ai")">
+    <div class="dep-ai__header">
+      <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__expand"
+                 StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
+                 EndIcon="@(isExpanded ? MudBlazor.Icons.Material.Filled.ExpandLess : MudBlazor.Icons.Material.Filled.ExpandMore)"
+                 aria-expanded="@(isExpanded ? "true" : "false")" OnClick="() => isExpanded = !isExpanded"
+                 data-testid="@Id("expand")">@ExpandText</MudButton>
+      @if (isExpanded)
+      {
+        @ShowPromptLink
+      }
+      else
+      {
+        <span class="dep-ai__expand-hint">@RouteNames (optional)</span>
+      }
+    </div>
+    @if (isExpanded)
+    {
+      <div class="dep-ai__routes">
+        @foreach (var provider in choice.Providers)
+        {
+          <div class="dep-ai__route" data-testid="@Id($"route-{provider.Id}")">
+            <div class="dep-ai__route-name">
+              <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="@provider.IconClass" />
+              @(provider.Source is AiSource.Chat ? provider.AskText(false) : provider.Name)
+            </div>
+            <div class="dep-ai__route-text">@CardText(provider)</div>
+            <div class="dep-ai__route-meta">@CardMeta(provider)</div>
+            <div>@CardButton(provider)</div>
+          </div>
+        }
+      </div>
+      <div class="dep-ai__route-meta mt-1" data-testid="@Id("choose-note")">
+        The one you pick is used from now on. Change it in Settings › AI, or ask another AI from the ▾ menu.
+      </div>
+    }
+  </div>
+}
+else if (HasAiHelp)
+{
+  @* With an answer: one line, offering another opinion from the default or, from its menu, any provider. *@
+  <div class="dep-ai__header dep-ai" data-testid="@Id("ai")">
+    <span class="dep-ai__title">@(answers.Count > 1 ? $"{AnswerTitle}s" : AnswerTitle)</span>
+    @ShowPromptLink
+    <MudSpacer />
+    @AskSplit
+  </div>
+}
+@if (step is SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey)
+{
+  <MudAlert Severity="Severity.Info" Icon="@MudBlazor.Icons.Material.Filled.ArrowUpward" Class="mt-2"
+            data-testid="@Id("enter-key")">
+    @EnterKeyMessage(step.Value)
+  </MudAlert>
+}
+@if (askError is not null)
+{
+  <div class="dep-ai__suggest-error" data-testid="@Id("suggest-error")">@askError</div>
+  @* Asking failed (no key, a key not accepted, no credits, no network, Claude Code missing): the
+     AI chat route, whose answer can be pasted back, is always a way on. *@
+  @if (isAskError && GetPrompt is not null && !isChatOpen)
+  {
+    <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
+               Class="mt-1" OnClick="StartChatAsync" data-testid="@Id("copy-instead")">Use your AI chat instead</MudButton>
+  }
+}
+@if (answers.Count > 1)
+{
+  <div class="dep-ai__answers">
+    @for (var i = 0; i < answers.Count; i++)
+    {
+      var index = i;
+      <MudButton Size="Size.Small" Variant="@(index == selected ? Variant.Filled : Variant.Outlined)"
+                 Color="@(index == selected ? Color.Primary : Color.Default)" OnClick="() => SelectAsync(index)"
+                 data-testid="@Id("answer")" data-selected="@(index == selected ? "true" : "false")">
+        @AnswerLabel(index)
+      </MudButton>
+    }
+  </div>
+  @if (AnswersDiffer)
+  {
+    <div class="dep-ai__suggest-note" data-testid="@Id("answers-differ")">
+      The answers differ, so this is a judgement call. Pick the one that convinces you, or decide yourself.
+    </div>
+  }
+}
+@if (step is SuggestStep.AskingClaude or SuggestStep.AskingClaudeCode)
+{
+  @* Where the answer will appear. *@
+  <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="@Id("asking")">
+    <div class="dep-ai__suggest-pending">
+      <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+      <span>
+        @(step is SuggestStep.AskingClaudeCode
+          ? "Asking Claude Code on this computer, this can take a minute or two."
+          : "Asking Claude, this can take up to a minute.")
+      </span>
+    </div>
+  </div>
+}
+else if (Selected is { } s && AnswerContent is not null)
+{
+  @AnswerContent(s)
+}
+
+@code {
+  // The test id prefix of the dialog ("accept-cycle").
+  [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+  // The prompt that every route uses: copied for an AI chat, shown by "Show prompt". Null hides
+  // the chat route and the link.
+  [Parameter] public Func<Task<string>>? GetPrompt { get; set; }
+
+  // Asks Claude (AiSource.Claude) or Claude Code, telling each step; null where the host cannot.
+  [Parameter] public Func<AiSource, Action<SuggestStep>, Task<Result<TAnswer>>>? Ask { get; set; }
+
+  // Reads an AI chat's answer, pasted back.
+  [Parameter, EditorRequired] public Func<string, Result<TAnswer>> ParsePasted { get; set; } = null!;
+
+  // Told whenever another answer is selected (a new one, or a click on its chip).
+  [Parameter] public EventCallback<TAnswer> OnAnswerSelected { get; set; }
+
+  // Shows the selected answer, where the section is done.
+  [Parameter] public RenderFragment<TAnswer>? AnswerContent { get; set; }
+
+  // The texts that name what is reviewed.
+  [Parameter] public string RouteText { get; set; } = "Claude reads it and its code and answers here.";
+  [Parameter] public string AskTitle { get; set; } = "Ask Claude for an opinion";
+  [Parameter] public string CopyTitle { get; set; } = "Copy a prompt for an AI chat";
+  [Parameter] public string PromptCopiedText { get; set; } = "The prompt is copied.";
+  [Parameter] public string ExpandText { get; set; } = "Get an AI opinion";
+  [Parameter] public string AnswerTitle { get; set; } = "AI opinion";
+
+  // Opens the routes at once, where asking is what the dialog is for.
+  [Parameter] public bool IsExpandedAtStart { get; set; }
+
+  public TAnswer? Selected => selected >= 0 ? answers[selected] : null;
+
+  readonly List<TAnswer> answers = [];
+  int selected = -1;
+  bool isSuggesting;
+  SuggestStep? step;
+  string? askError;
+  bool isAskError;
+  AiChoice choice = AiChoice.ChatOnly;
+  bool isExpanded;
+
+  bool isChatOpen;
+  bool isPromptCopied;
+  bool isCopyingPrompt;
+  bool isShowingPrompt;
+  string pastedAnswer = "";
+  string? pasteError;
+
+  bool HasAiHelp => Ask is not null || GetPrompt is not null;
+
+  // No default yet, and more than one provider: the first ask shows them all to choose from.
+  bool IsChoosing => choice.Default is null && choice.Providers.Count > 1;
+
+  // The provider the main button asks: the default, or the only one there is.
+  AiProvider? Primary => choice.DefaultFor(AiCapability.Answer);
+
+  // The closed row names the providers: "Claude, Claude Code or your AI chat", or the default
+  // and "another AI" once there is one.
+  string RouteNames
+  {
+    get
+    {
+      List<string> names = [.. choice.Providers.Select(p => p.Source is AiSource.Chat ? "your AI chat" : p.Name)];
+      if (!IsChoosing && Primary is { } primary && names.Count > 1)
+        return $"{(primary.Source is AiSource.Chat ? "Your AI chat" : primary.Name)}, or another AI";
+      return names.Count == 1 ? names[0] : $"{string.Join(", ", names[..^1])} or {names[^1]}";
+    }
+  }
+
+  bool AnswersDiffer => answers.Select(a => a.Verdict).Distinct().Count() > 1;
+
+  string Id(string suffix) => $"{TestId}-{suffix}";
+
+  protected override async Task OnInitializedAsync()
+  {
+    isExpanded = IsExpandedAtStart;
+    await RefreshChoiceAsync();
+  }
+
+  // The providers this place can use: asking needs Ask, the AI chat a prompt to copy.
+  async Task RefreshChoiceAsync() =>
+    choice = (await aiService.GetChoiceAsync()).Where(p => p.Source is AiSource.Chat ? GetPrompt is not null : Ask is not null);
+
+  // Where the answer came from, and its verdict; numbered when one route answered more than once.
+  string AnswerLabel(int index)
+  {
+    var answer = answers[index];
+    var isNumbered = answers.Count(a => a.Source == answer.Source) > 1;
+    var number = isNumbered ? $" {answers.Take(index).Count(a => a.Source == answer.Source) + 1}" : "";
+    return $"{answer.Source.ShortName()}{number} · {answer.Verdict}";
+  }
+
+  // The default's button, and the menu next to it that asks another provider once.
+  RenderFragment? AskSplit => Primary is not { } primary ? null :
+    @<span class="dep-ai__ask-split">
+      <MudButton StartIcon="@primary.Icon" Size="Size.Small"
+                 Variant="@(answers.Count > 0 ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
+                 Class="@(primary.IsClaude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(primary)"
+                 OnClick="() => RunAsync(primary)" data-testid="@Id("ask")" data-provider="@primary.Id">
+        @AskLabel(primary)
+      </MudButton>
+      @if (choice.Providers.Count > 1 || aiService.IsAvailable)
+      {
+        <AiProviderMenu Choice="choice" TestId="@Id("ask")" OnChoose="RunAsync" OnSettingsChanged="RefreshChoiceAsync"
+                        Disabled="isSuggesting" Variant="@(answers.Count > 0 ? Variant.Text : Variant.Outlined)" />
+      }
+    </span>;
+
+  // A card's button, before there is a default: picking it makes it the default.
+  RenderFragment CardButton(AiProvider provider) =>
+    @<MudButton StartIcon="@(provider.Source is AiSource.Chat ? MudBlazor.Icons.Material.Outlined.ContentCopy : provider.Icon)"
+                Size="Size.Small" Variant="Variant.Outlined" Disabled="isSuggesting"
+                Class="@(provider.IsClaude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(provider)"
+                OnClick="() => ChooseAsync(provider)" data-testid="@Id(CardButtonId(provider))">
+      @if (provider.Source is AiSource.Chat)
+      {
+        <text>Copy prompt</text>
+      }
+      else
+      {
+        @AskLabel(provider)
+      }
+    </MudButton>;
+
+  static string CardButtonId(AiProvider provider) =>
+    provider.Source switch
+    {
+      AiSource.Claude => "suggest",
+      AiSource.ClaudeCode => "suggest-code",
+      _ => "copy-prompt",
+    };
+
+  string CardText(AiProvider provider) =>
+    provider.Source switch
+    {
+      AiSource.Claude => RouteText,
+      AiSource.ClaudeCode => "Claude Code on this computer reads the prompt and answers here.",
+      _ => "Copy a prompt into claude.ai or any AI chat, then paste its answer back here.",
+    };
+
+  // Shorter than the provider's Detail where the card's text already says what it does.
+  static string CardMeta(AiProvider provider) =>
+    provider.Source switch
+    {
+      AiSource.ClaudeCode => "Your Claude login, experimental",
+      AiSource.Chat => "Free, works with any chat",
+      _ => provider.Detail,
+    };
+
+  // The progress shows where the answer will appear, so the button only names what it asks.
+  RenderFragment AskLabel(AiProvider provider) =>
+    @<text>@provider.AskText(answers.Any(a => a.Source == provider.Source))</text>;
+
+  string AskTitleOf(AiProvider provider) =>
+    provider.Source switch
+    {
+      AiSource.Claude => $"{AskTitle}, with your own API key",
+      AiSource.ClaudeCode => $"{AskTitle}, through Claude Code on this computer (experimental)",
+      _ => answers.Count > 0 ? "Copy the prompt again, for another answer from an AI chat" : CopyTitle,
+    };
+
+  // Asks the provider once (the menu's override), or starts the AI chat route.
+  Task RunAsync(AiProvider provider) =>
+    provider.Source is AiSource.Chat ? StartChatAsync() : AskAsync(provider.Source);
+
+  // The first pick, before there is a default, becomes the default; one this place cannot use (an
+  // AI chat where there is no prompt to copy) stays the default elsewhere.
+  async Task ChooseAsync(AiProvider provider)
+  {
+    if (aiService.IsAvailable && (await aiService.GetChoiceAsync()).Default is null)
+    {
+      await aiService.SetDefaultAsync(provider.Source);
+      await RefreshChoiceAsync();
+    }
+    await RunAsync(provider);
+  }
+
+  RenderFragment? ShowPromptLink => GetPrompt is null ? null :
+    @<MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt" Disabled="isShowingPrompt"
+                title="Show the prompt that is sent to Claude or Claude Code, or copied for an AI chat"
+                OnClick="ShowPromptAsync" data-testid="@Id("show-prompt")">
+      @(isShowingPrompt ? "Getting the prompt ..." : "Show prompt")
+    </MudButton>;
+
+  // Each answer is kept, and the new one selected; an error leaves the earlier answers as they are.
+  async Task AskAsync(AiSource route)
+  {
+    if (Ask is null)
+      return;
+    isSuggesting = true;
+    askError = null;
+    isAskError = false;
+    isChatOpen = false;
+    Result<TAnswer> result;
+    try
+    {
+      result = await Ask(route, next =>
+      {
+        step = next;
+        _ = InvokeAsync(StateHasChanged);
+      });
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Asking for an AI opinion failed", e.Message);
+      result = new Error($"Could not ask: {e.Message}", e);
+    }
+    finally
+    {
+      isSuggesting = false;
+      step = null;
+    }
+    if (result.Value is not TAnswer answer)
+    {
+      askError = result.Error.Message;
+      isAskError = true;
+      return;
+    }
+    answers.Add(answer);
+    await SelectAsync(answers.Count - 1);
+  }
+
+  async Task SelectAsync(int index)
+  {
+    selected = index;
+    await OnAnswerSelected.InvokeAsync(answers[index]);
+  }
+
+  // Building the prompt can take a moment (in VS Code the source is read over the LSP).
+  async Task ShowPromptAsync()
+  {
+    if (GetPrompt is null || isShowingPrompt)
+      return;
+    isShowingPrompt = true;
+    var prompt = await TryGetPromptAsync();
+    isShowingPrompt = false;
+    StateHasChanged();
+    if (prompt is not null)
+      await PromptDialog.ShowAsync(dialogService, prompt);
+  }
+
+  // The AI chat route: copies the prompt, its first step, and shows the steps.
+  async Task StartChatAsync()
+  {
+    isChatOpen = true;
+    isPromptCopied = false;
+    pastedAnswer = "";
+    pasteError = null;
+    askError = null;
+    isAskError = false;
+    await CopyPromptAsync();
+  }
+
+  // Step 1 says so while the prompt is built; a result that arrives after Back is dropped.
+  async Task CopyPromptAsync()
+  {
+    if (GetPrompt is null || isCopyingPrompt)
+      return;
+    isCopyingPrompt = true;
+    var prompt = await TryGetPromptAsync();
+    var isCopied = isChatOpen && prompt is not null && await clipboardService.CopyAsync(prompt);
+    if (isChatOpen && prompt is not null && !isCopied)
+      askError = "Could not copy to the clipboard.";
+    isCopyingPrompt = false;
+    isPromptCopied = isCopied;
+  }
+
+  // The prompt, or null with the error shown: building it failed (reading the source over the
+  // LSP, say), or what it is about is no longer in the model (a re-parse while the dialog is open).
+  async Task<string?> TryGetPromptAsync()
+  {
+    try
+    {
+      var prompt = await GetPrompt!();
+      if (prompt != "")
+        return prompt;
+      askError = AiService.EmptyPromptError;
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Building the AI prompt failed", e.Message);
+      askError = $"Could not build the prompt: {e.Message}";
+    }
+    return null;
+  }
+
+
+  void CloseChat()
+  {
+    isChatOpen = false;
+    pasteError = null;
+    askError = null;
+  }
+
+  const string ClaudeUrl = "https://claude.ai/new";
+
+  Task OpenClaudeAsync() => vsCodeSendService.OpenExternalAsync(ClaudeUrl);
+
+  // A paste (much text at once) is read right away; typed or edited text waits for "Use answer",
+  // so an answer is not taken while it is still being written.
+  async Task OnPasteTextChanged(string text)
+  {
+    var isPaste = (text ?? "").Length - pastedAnswer.Length >= MinPastedLength;
+    pastedAnswer = text ?? "";
+    pasteError = null;
+    if (isPaste)
+      await UsePastedAnswer();
+  }
+
+  const int MinPastedLength = 10;
+
+  // An answer joins the others, selected, and the steps close; one that cannot be read stays in
+  // the box, to fix.
+  async Task UsePastedAnswer()
+  {
+    if (string.IsNullOrWhiteSpace(pastedAnswer))
+      return;
+    var answer = ParsePasted(pastedAnswer);
+    if (answer.Value is not TAnswer a)
+    {
+      pasteError = answer.Error.Message;
+      return;
+    }
+    isChatOpen = false;
+    pastedAnswer = "";
+    answers.Add(a);
+    await SelectAsync(answers.Count - 1);
+  }
+
+  // Where to enter the key: in VS Code an input box at the top of the window, outside this UI. The
+  // web host takes it from its environment, so there the check is over at once.
+  static string EnterKeyMessage(SuggestStep step) =>
+    !Dependinator.Core.Build.IsVsCodeExtWasm ? "Checking the Claude API key ..."
+    : step is SuggestStep.EnteringNewApiKey
+      ? "Claude did not accept the stored API key. Enter a new one in the box at the top of the VS Code window."
+    : "Asking Claude uses your own Anthropic API key, from console.anthropic.com (billed to your account, "
+      + "a few cents per answer). Enter it in the box at the top of the VS Code window.";
+}

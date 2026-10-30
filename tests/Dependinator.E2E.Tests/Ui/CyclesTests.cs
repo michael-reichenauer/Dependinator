@@ -10,7 +10,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // there are none) and closes again from its button; a cycle accepted with a reason in the review
 // dialog moves to the Accepted section, its reason can be edited, and removing the acceptance
 // brings it back; the dialog copies a cycle's AI prompt and reads the answer pasted back, and
-// answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry.
+// answers (Claude's or pasted) suggest the reason, or a fix prompt to copy and a To fix entry;
+// with Claude Code on in Settings › AI, a break answer can be fixed by Claude Code right away.
 public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -172,6 +173,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(field).ToBeVisibleAsync();
         ILocator ask = Page.GetByTestId("accept-cycle-suggest");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
 
         // In test mode the app answers for Claude (no key or network): a pair is accepted, and
         // broken when asked again.
@@ -182,10 +184,13 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
         await Expect(Page.GetByTestId("accept-cycle-asking")).ToHaveCountAsync(0);
         await Expect(field).ToHaveValueAsync("Suggested in test mode");
-        await Expect(ask).ToHaveTextAsync("Ask again");
+        // Claude is the default now: the routes give way to one button that asks it.
+        await Expect(ask).ToHaveCountAsync(0);
+        ILocator askAgain = Page.GetByTestId("accept-cycle-ask");
+        await Expect(askAgain).ToHaveTextAsync("Ask Claude again");
 
         // The second answer differs: both are kept, and the reason follows the selected one.
-        await ask.ClickAsync();
+        await askAgain.ClickAsync();
         ILocator answers = Page.GetByTestId("accept-cycle-answer");
         await Expect(answers).ToHaveCountAsync(2);
         await Expect(answers.First).ToHaveTextAsync("Claude 1 · Accept");
@@ -218,6 +223,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         // In test mode the app answers for Claude: a cycle of more than two is to be broken.
         ILocator cycle = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "TaskExtensions" });
         await cycle.GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
@@ -251,6 +257,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // In test mode a cycle of more than two is to be broken (see the test above).
         await open.Filter(new() { HasTextString = "TaskExtensions" }).GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToHaveAttributeAsync("data-verdict", "break");
         await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
@@ -288,8 +295,18 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator cycle = Page.GetByTestId("cycles-item").First;
         string member = (await cycle.Locator(".dep-cycles__members").InnerTextAsync()).Split(" ↔ ")[0];
         await cycle.GetByTestId("cycles-review").ClickAsync();
-        // Both routes are offered side by side before any answer.
+        // The routes wait behind "Get an AI opinion", then are offered side by side before any answer.
+        ILocator expand = Page.GetByTestId("accept-cycle-expand");
+        await Expect(expand).ToHaveAttributeAsync("aria-expanded", "false");
+        await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveCountAsync(0);
+        await expand.ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
+        // The prompt every route uses can be read first, without copying it.
+        await Page.GetByTestId("accept-cycle-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The cycle");
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync(member);
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToHaveCountAsync(0);
         ILocator copy = Page.GetByTestId("accept-cycle-copy-prompt");
         await copy.ClickAsync();
         // Copying shows the rest of the AI chat route as steps, the first one done.
@@ -325,9 +342,11 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("accept-cycle-reason"))
             .ToHaveValueAsync("Accepted anyway; suggested fix: Move it.");
 
-        // A second pasted answer joins the first, as with Claude's answers, each named by its source.
-        await Expect(copy).ToHaveTextAsync("Use your AI chat");
-        await copy.ClickAsync();
+        // A second pasted answer joins the first, as with Claude's answers, each named by its source;
+        // the AI chat is the default now, so the one button starts it again.
+        ILocator again = Page.GetByTestId("accept-cycle-ask");
+        await Expect(again).ToHaveTextAsync("Use your AI chat");
+        await again.ClickAsync();
         await answerBox.FillAsync("Verdict: Accept\nReason to store: One concept.");
         await Expect(Page.GetByTestId("accept-cycle-answer")).ToHaveCountAsync(2);
         await Expect(Page.GetByTestId("accept-cycle-answer").Last).ToHaveTextAsync("Chat 2 · Accept");
@@ -343,5 +362,50 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.FillReliablyAsync(field, reason);
         await Page.GetByTestId("accept-cycle-save").ClickAsync();
         await Expect(field).ToHaveCountAsync(0);
+    }
+
+    // In test mode the app answers for Claude Code (no command runs): a report after a moment,
+    // or an error when stopped first.
+    [E2EFact]
+    public async Task FixWithClaudeCode_ShouldReportTheChangedFiles_AndCanBeStopped()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.SetAiSettingsAsync(useClaudeCode: true, defaultProvider: "code");
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
+        await pair.GetByTestId("cycles-review").ClickAsync();
+
+        // Not offered before an answer suggests breaking the cycle (a pair is accepted first).
+        ILocator fix = Page.GetByTestId("accept-cycle-fix-claude-code");
+        ILocator ask = Page.GetByTestId("accept-cycle-ask");
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        // With a default, its button shows at once, and only the answer's place shows progress.
+        await Expect(Page.GetByTestId("accept-cycle-expand")).ToHaveCountAsync(0);
+        await ask.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-asking")).ToBeVisibleAsync();
+        await Expect(ask).ToHaveTextAsync("Ask Claude Code");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(fix).ToHaveCountAsync(0);
+        await ask.ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+
+        // Stopped while it runs: an error, and it can be started again.
+        await fix.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fixing")).ToBeVisibleAsync();
+        await Expect(fix).ToBeDisabledAsync();
+        await Page.GetByTestId("accept-cycle-fix-stop").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToContainTextAsync("Claude Code was stopped.");
+        await Expect(Page.GetByTestId("accept-cycle-fixing")).ToHaveCountAsync(0);
+
+        await fix.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-report")).ToContainTextAsync("Claude Code changed 1 file");
+        await Expect(Page.GetByTestId("accept-cycle-fix-files")).ToHaveTextAsync("src/Test.cs");
+        await Expect(Page.GetByTestId("accept-cycle-fix-error")).ToHaveCountAsync(0);
+        // Test mode changes no code, so the re-parsed model still has the cycle: Done, offered once
+        // Claude Code changed files, gives way to the choices again.
+        await Expect(Page.GetByTestId("accept-cycle-not-fixed")).ToContainTextAsync("still there");
+        await Expect(Page.GetByTestId("accept-cycle-done")).ToHaveCountAsync(0);
+        await Expect(fix).ToBeEnabledAsync();
     }
 }

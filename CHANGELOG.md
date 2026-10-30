@@ -3,7 +3,37 @@
 What changed for the people who use Dependinator, in each release, newest first. A release includes
 the previews before it. Releases with nothing users notice are left out.
 
+**Unreleased** lists what is not yet in an official release: changes already out in a preview
+(pre-release) and changes still waiting for the next preview. They move under a version heading
+with the next official release.
+
 ## [Unreleased]
+
+## [v0.87.435765] - 2026-10-30
+
+### New
+
+- Previews of the VS Code extension can be installed from the Marketplace: **Switch to Pre-Release Version** on the extension's page in VS Code gets each preview as it comes out, and **Switch to Release Version** goes back
+- A dependency that breaks an architecture rule can be reviewed like a cycle: ask Claude, Claude Code or your own AI chat whether to fix it or allow it; fixing gives a prompt for an AI that can change the code, and allowing keeps the dependency with a reason under its rule, where it is no longer counted as a problem
+- **Settings › AI** picks the AI that every AI feature asks: **Claude** (your own API key), **Claude Code** (experimental, turned on there after a warning) or **your AI chat** (copy the prompt, paste the answer back); the first time you ask, the choices are shown and the one you pick becomes the default, and the **▾** menu beside the button asks another one once
+- **Claude Code** (experimental) asks Claude Code on this computer with your own Claude login instead of an API key; it reads the code in the model's folder to check its answer
+- **Fix with Claude Code** in the cycle and rule reviews lets Claude Code make the suggested change in the model's folder (edits only, no commands), after a warning about uncommitted changes; it shows the running time with **Stop**, then a summary and the changed files, and re-parses
+- **AI agents can ask about the diagram**: the extension runs an MCP server that Copilot's agent mode lists as "Dependinator", and **Dependinator: Connect Claude Code** adds it to Claude Code for the folder; its tools find nodes and look up their dependencies, paths between them, cycles and architecture rules, and check a rule before it is added, while the diagram is open
+- **Suggest rules …** in the Rules panel asks Claude, Claude Code or your own AI chat to suggest architecture rules for the model; Dependinator checks each one and shows what it would break today, and you tick the ones to add (Claude Code can check its own candidates through Dependinator's MCP server first)
+- **About Node …** in the node menu shows a node's comment, what it contains and how many types it uses and is used by, with a question about the node ("What is this and why is it here?" by default) for Claude, Claude Code or your own AI chat
+- **Ask About the Model** (View menu or the app bar) opens a panel for questions about the model: Claude or Claude Code looks the answer up with Dependinator's tools and reads a node's code when needed, the nodes in the answer are links to the diagram (**Show all** zooms to them), each lookup shows as a line while it works, and follow-up questions see the conversation until it is cleared
+- **Improve Comments …** in the node menu and the **About Node** dialog lets Claude Code add or rewrite the comments of namespaces and types, of one or several nodes or of everything inside them, which the diagram shows as descriptions; without Claude Code the prompt is copied for any coding agent
+- **Help › What's New** opens this change log
+
+### Improved
+
+- **Show prompt** in the cycle and rule reviews shows the prompt before it is sent or copied
+- The two node names of a rule in the Rules panel go to and select their node, a broken dependency frames both of its classes with the line between them, and long rule names wrap instead of being clipped
+
+### Fixed
+
+- Code excerpts in AI prompts no longer start a line early or drop the type's closing line
+- **Show Source Code** on a Razor component opens its `.razor` file, and its `@code` members open at their own line (re-parse to pick this up)
 
 ## [v0.86.429455] - 2026-10-26
 

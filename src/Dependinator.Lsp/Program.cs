@@ -3,9 +3,11 @@ using Dependinator.Claude;
 using Dependinator.Core;
 using Dependinator.Core.CloudSync;
 using Dependinator.Core.Rpc;
+using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Lsp.Claude;
 using Dependinator.Lsp.CloudSync;
+using Dependinator.Lsp.Mcp;
 using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
@@ -75,11 +77,12 @@ internal class Program
                         }
                     )
                     .OnInitialized(
-                        (server, _, _, _) =>
+                        (server, initializeParams, _, _) =>
                         {
                             Log.Info("Initialized Dependinator Language Server");
                             // Signals the extension that UI->LSP messages can flow now.
                             server.SendNotification(LspReady.Method, new LspReady());
+                            LspMcpServer.StartAsync(server, initializeParams.InitializationOptions).RunInBackground();
                             return Task.CompletedTask;
                         }
                     )

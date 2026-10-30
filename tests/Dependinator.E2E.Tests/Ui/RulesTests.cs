@@ -1,12 +1,13 @@
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises architecture rules: the panel opens empty, a rule picked from two nodes lists the
 // dependencies that break it and draws them highlighted, a rule nobody breaks is marked kept, and
-// removing a rule takes it away again.
+// removing a rule takes it away again. An AI can suggest rules, which Dependinator checks.
 public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -29,10 +30,16 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator violation = Page.GetByTestId("rules-violation").First;
         await Expect(violation).ToBeVisibleAsync();
 
-        // At the initial view only the solution's own lines are drawn; a violation row navigates
-        // to the offending class, where its lines show up in the rule color.
+        // At the initial view only the solution's own lines are drawn; a violation row frames
+        // both classes, where the lines between them show up in the rule color.
         await violation.ClickAsync();
         await Expect(ruleLines.First).ToBeAttachedAsync();
+
+        // A rule's node names go to that node and select it (the breadcrumb ends with it).
+        await rule.GetByTestId("rules-item-to").ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync("Demo.Core");
+        await rule.GetByTestId("rules-item-from").ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync("Demo.UI");
 
         // The other way round nobody breaks it.
         await AddRuleAsync("Demo.Core (dll)", "Demo.UI (dll)");
@@ -67,6 +74,108 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(ruleRow).ToContainTextAsync("1 broken architecture rule");
         await ruleRow.ClickAsync();
         await Expect(Page.GetByTestId("rules-panel")).ToBeVisibleAsync();
+    }
+
+    // A dependency that breaks a rule is reviewed like a cycle: the prompt can be read first, an AI
+    // suggests fixing it (with a fix prompt) or allowing it (with a reason), and an allowed one moves
+    // to the rule's Allowed list until the user stops allowing it.
+    [E2EFact]
+    public async Task ReviewViolation_ShouldOfferAFixPrompt_AndAllowItWithAReason()
+    {
+        // Playwright can grant clipboard permissions on Chromium only, so the clipboard is stubbed.
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        ILocator violations = Page.GetByTestId("rules-violation-item");
+        await Expect(violations.First).ToBeVisibleAsync();
+        int count = await violations.CountAsync();
+
+        await violations.First.GetByTestId("rules-review").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-text")).ToContainTextAsync("must not use");
+        await Page.GetByTestId("rule-review-expand").ClickAsync();
+        await Page.GetByTestId("rule-review-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The dependency that breaks it");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        // In test mode the app answers for Claude: first fix it, then allow it.
+        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        ILocator verdict = Page.GetByTestId("rule-review-suggestion");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "fix");
+        await Expect(Page.GetByTestId("rule-review-save")).ToHaveTextAsync("Allow anyway");
+        await Page.GetByTestId("rule-review-copy-fix").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-copied")).ToContainTextAsync("fix prompt is copied");
+        string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.StartsWith("Please remove a dependency that breaks an architecture rule", prompt);
+
+        // Claude is the default now: one button asks it again.
+        await Page.GetByTestId("rule-review-ask").ClickAsync();
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "allow");
+        await Expect(Page.GetByTestId("rule-review-answers-differ")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("rule-review-reason")).ToHaveValueAsync("Allowed in test mode");
+        await Page.GetByTestId("rule-review-save").ClickAsync();
+
+        await Expect(violations).ToHaveCountAsync(count - 1);
+        ILocator allowed = Page.GetByTestId("rules-allowed-item");
+        await Expect(allowed).ToHaveCountAsync(1);
+        await Expect(allowed.GetByTestId("rules-allowed-reason")).ToHaveTextAsync("Allowed in test mode");
+
+        // Collapsed, the list keeps its count; stopping to allow it reports it again.
+        await Page.GetByTestId("rules-allowed-toggle").ClickAsync();
+        await Expect(allowed).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("rules-allowed-toggle")).ToContainTextAsync("Allowed (1)");
+        await Page.GetByTestId("rules-allowed-toggle").ClickAsync();
+        await allowed.GetByTestId("rules-allowed-remove").ClickAsync();
+        await Expect(violations).ToHaveCountAsync(count);
+        await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
+    }
+
+    // An AI suggests rules (in test mode the app answers for Claude) in a view the Rules panel
+    // switches to: the prompt holds the model's structure and dependencies, Dependinator checks
+    // each rule, one on a node that is not in the model cannot be added, a rule's node name goes to
+    // its node, and an added rule shows as one, both here and back in the rules list.
+    [E2EFact]
+    public async Task SuggestRules_ShouldCheckEachRule_AndAddTheChosenOnes()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("suggest-rules-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("rules-panel")).ToHaveCountAsync(0);
+
+        await Page.GetByTestId("suggest-rules-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("Dependencies between them");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
+        ILocator items = Page.GetByTestId("suggest-rules-item");
+        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items.Nth(2)).ToHaveAttributeAsync("data-can-add", "no");
+        await Expect(items.Nth(2).GetByTestId("suggest-rules-error")).ToContainTextAsync("No node is named");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
+
+        // The node names go to their node, with the view still open beside the diagram.
+        // TextContent, since Firefox's InnerText breaks the name at a wrapped <wbr> ("Demo.\nsln").
+        var toName = await items.Nth(0).GetByTestId("suggest-rules-to").TextContentAsync() ?? "";
+        await items.Nth(0).GetByTestId("suggest-rules-to").ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync(toName.Split(' ')[0]);
+        await Expect(Page.GetByTestId("suggest-rules-panel")).ToBeVisibleAsync();
+
+        await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
+        await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
+        await Expect(items.Nth(0).GetByTestId("suggest-rules-status")).ToHaveTextAsync("already a rule");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveCountAsync(0);
+
+        // Back to the rules, which list the added one; the answer is still there on return.
+        await Page.GetByTestId("suggest-rules-back").ClickAsync();
+        await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Expect(items).ToHaveCountAsync(3);
     }
 
     // Picks both nodes through the search dialog in picker mode and adds the rule.

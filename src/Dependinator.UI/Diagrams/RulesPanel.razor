@@ -5,12 +5,20 @@
 @inject IDialogService dialogService
 @inject Modeling.IModelService modelService
 @inject Modeling.Models.IModelMgr modelMgr
+@inject IRuleReviewService ruleReviewService
 @implements IDisposable
 
 @* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
    the dependencies that break it (per class pair, with link counts); while the panel is open those
-   lines are drawn in the rule color. Rules are saved with the model and undoable. *@
-@if (viewOptions.IsRulesShown)
+   lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
+   frames both of its classes with the lines between them. Each dependency can be reviewed
+   (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
+   allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" switches
+   the panel to SuggestRulesView (IViewOptions.IsRuleSuggestionsShown), where an AI suggests rules
+   to add; that view stays alive once started (hidden while the rules show or the panel is closed,
+   and reopening the panel shows the rules) until another model is opened.
+   Rules and allowed dependencies are saved with the model and undoable. *@
+@if (viewOptions.IsRulesShown && !viewOptions.IsRuleSuggestionsShown)
 {
   var reports = ruleService.GetReports();
   var violationCount = reports.Sum(r => r.Violations.Count);
@@ -27,7 +35,7 @@
     <div class="dep-panel__list">
       @if (reports.Count == 0)
       {
-        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data".</div>
+        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data", or let an AI suggest some.</div>
       }
       @foreach (var report in reports)
       {
@@ -35,7 +43,9 @@
           <div class="dep-rules__head">
             <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
             <span class="dep-rules__names" title="@($"{report.FromDisplay} must not depend on {report.ToDisplay}")">
-              <b>@report.FromDisplay</b> <span class="dep-rules__arrow">must not use</span> <b>@report.ToDisplay</b>
+              <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+              <span class="dep-rules__arrow">must not use</span>
+              <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
             </span>
             <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small" title="Remove this rule"
@@ -46,14 +56,57 @@
             <div class="dep-rules__violations">
               @foreach (var violation in report.Violations)
               {
-                <button type="button" class="dep-panel__row dep-rules__violation"
-                        title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to go to {violation.SourceName}")"
-                        @onclick="() => ShowAsync(violation.SourceId)" data-testid="rules-violation">
-                  <span>@violation.SourceName</span>
-                  <span class="dep-rules__arrow">→</span>
-                  <span>@violation.TargetName</span>
-                  <span class="dep-panel__count">(@violation.LinkCount)</span>
-                </button>
+                <div class="dep-rules__item" data-testid="rules-violation-item">
+                  <button type="button" class="dep-panel__row dep-rules__violation"
+                          title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to show both")"
+                          @onclick="() => ShowViolationAsync(violation)" data-testid="rules-violation">
+                    <span>@violation.SourceName</span>
+                    <span class="dep-rules__arrow">→</span>
+                    <span>@violation.TargetName</span>
+                    <span class="dep-panel__count">(@violation.LinkCount)</span>
+                  </button>
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small"
+                                 title="@ReviewTitle" OnClick="() => ReviewAsync(report, violation)"
+                                 data-testid="rules-review" />
+                </div>
+              }
+            </div>
+          }
+          @if (report.Allowed.Count > 0)
+          {
+            var isOpen = openAllowed.Contains(report.Rule);
+            <div class="dep-rules__violations">
+              <button type="button" class="dep-rules__allowed-toggle" @onclick="() => ToggleAllowed(report.Rule)"
+                      data-testid="rules-allowed-toggle">
+                <MudIcon Icon="@(isOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                         Size="Size.Small" />
+                Allowed (@report.Allowed.Count)
+              </button>
+              @if (isOpen)
+              {
+                @foreach (var allowed in report.Allowed)
+                {
+                  <div class="dep-rules__item" data-testid="rules-allowed-item">
+                    <button type="button" class="dep-panel__row dep-rules__violation"
+                            title="Click to edit why it is allowed, or to stop allowing it"
+                            @onclick="() => EditAllowedAsync(report, allowed)" data-testid="rules-allowed">
+                      <span>@allowed.SourceName</span>
+                      <span class="dep-rules__arrow">→</span>
+                      <span>@allowed.TargetName</span>
+                      @if (allowed.IsGone)
+                      {
+                        <span class="dep-cycles__gone">no longer used</span>
+                      }
+                      @if (allowed.Allowed.Reason != "")
+                      {
+                        <span class="dep-cycles__reason dep-rules__reason" data-testid="rules-allowed-reason">@allowed.Allowed.Reason</span>
+                      }
+                    </button>
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                                   title="Stop allowing it: it is reported again while it is used"
+                                   OnClick="() => ruleService.Disallow(allowed.Allowed)" data-testid="rules-allowed-remove" />
+                  </div>
+                }
               }
             </div>
           }
@@ -76,18 +129,62 @@
         Add
       </MudButton>
     </div>
+    <div class="dep-rules__suggest">
+      <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
+                 title="Let an AI suggest rules from the model's structure and dependencies; you choose which to add"
+                 OnClick="ShowSuggestions" data-testid="rules-suggest">
+        Suggest rules …
+      </MudButton>
+    </div>
   </div>
+}
+@if (suggestModelPath is not null)
+{
+  <SuggestRulesView IsShown="viewOptions.IsRuleSuggestionsShown" OnBack="ShowRuleList" OnClose="Close" />
 }
 
 @code {
+  readonly HashSet<Modeling.Models.ArchitectureRule> openAllowed = [];
   Modeling.Models.NodeId? fromId;
   Modeling.Models.NodeId? toId;
   string? fromName;
   string? toName;
 
+  // The model the suggestions view was started for ("" until a model is loaded), null before.
+  string? suggestModelPath;
+
   protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 
-  void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+  void OnUiStateChanged() => InvokeAsync(() =>
+  {
+    if (suggestModelPath is not null)
+      ForgetSuggestionsForAnotherModel();
+    StateHasChanged();
+  });
+
+  // Suggestions for another model would name its nodes, so a newly opened model starts over. The
+  // path is "" while a model loads, which is not another model (the same one may be reloading).
+  void ForgetSuggestionsForAnotherModel()
+  {
+    var path = modelMgr.WithModel(m => m.Path);
+    if (path == "" || path == suggestModelPath)
+      return;
+    if (suggestModelPath == "")
+      suggestModelPath = path;
+    else
+    {
+      suggestModelPath = null;
+      viewOptions.SetRuleSuggestionsShown(false);
+    }
+  }
+
+  void ShowSuggestions()
+  {
+    suggestModelPath ??= modelMgr.WithModel(m => m.Path);
+    viewOptions.SetRuleSuggestionsShown(true);
+  }
+
+  void ShowRuleList() => viewOptions.SetRuleSuggestionsShown(false);
 
   static string Summary(int rules, int violations) =>
     rules == 0 ? "" : violations == 0 ? "all kept" : violations == 1 ? "1 violation" : $"{violations} violations";
@@ -105,7 +202,76 @@
 
   static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
 
-  Task ShowAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
+  // Frames both classes, so the line between them is in view. Nothing is selected: classes in
+  // different projects are too small at that zoom to show a selection or its toolbar.
+  Task ShowViolationAsync(RuleViolation violation) =>
+    navigationService.ShowNodesAsync([violation.SourceId, violation.TargetId]);
+
+  string ReviewTitle => ruleReviewService.IsAvailable
+    ? "Review this dependency: allow it with why, or let Claude suggest whether and how to fix it"
+    : "Review this dependency: allow it with why, or copy a prompt for an AI chat";
+
+  void ToggleAllowed(Modeling.Models.ArchitectureRule rule)
+  {
+    if (!openAllowed.Remove(rule))
+      openAllowed.Add(rule);
+  }
+
+  async Task ReviewAsync(RuleReport report, RuleViolation violation)
+  {
+    var rule = report.Rule;
+    Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestion>>>? suggest = ruleReviewService.IsAvailable
+      ? (route, onStep) => ruleReviewService.SuggestAsync(rule, violation, route, onStep)
+      : null;
+    var parameters = new DialogParameters<RuleReviewDialog>
+    {
+      { d => d.FromName, report.FromDisplay },
+      { d => d.ToName, report.ToDisplay },
+      { d => d.SourceName, violation.SourceLongName },
+      { d => d.TargetName, violation.TargetLongName },
+      { d => d.Suggest, suggest },
+      { d => d.FixPrompt, s => ruleReviewService.GetFixPrompt(rule, violation, s) },
+      { d => d.CopyPrompt, () => ruleReviewService.GetPromptAsync(rule, violation) },
+      { d => d.IsViolationGone, () => !IsViolated(rule, violation) },
+    };
+    if (await ShowReviewAsync(parameters, MaxWidth.Small) is not { } result)
+      return;
+    ruleService.Allow(rule, violation, result.Reason);
+    openAllowed.Add(rule);
+  }
+
+  // Whether the rule still reports this dependency, say after Claude Code's fix and a re-parse.
+  bool IsViolated(Modeling.Models.ArchitectureRule rule, RuleViolation violation) =>
+    ruleService.GetReports()
+      .Any(r => r.Rule == rule
+        && r.Violations.Any(v => v.SourceId == violation.SourceId && v.TargetId == violation.TargetId));
+
+  async Task EditAllowedAsync(RuleReport report, AllowedReport allowed)
+  {
+    var parameters = new DialogParameters<RuleReviewDialog>
+    {
+      { d => d.FromName, report.FromDisplay },
+      { d => d.ToName, report.ToDisplay },
+      { d => d.SourceName, allowed.SourceName },
+      { d => d.TargetName, allowed.TargetName },
+      { d => d.Reason, allowed.Allowed.Reason },
+      { d => d.IsEdit, true },
+    };
+    if (await ShowReviewAsync(parameters, MaxWidth.ExtraSmall) is not { } result)
+      return;
+    if (result.IsDisallow)
+      ruleService.Disallow(allowed.Allowed);
+    else
+      ruleService.SetAllowedReason(allowed.Allowed, result.Reason);
+  }
+
+  async Task<RuleReviewDialogResult?> ShowReviewAsync(DialogParameters<RuleReviewDialog> parameters, MaxWidth maxWidth)
+  {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = maxWidth, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<RuleReviewDialog>(null, parameters, options);
+    var result = await dialog.Result;
+    return result is { Canceled: false, Data: RuleReviewDialogResult data } ? data : null;
+  }
 
   async Task PickAsync(bool isFrom)
   {

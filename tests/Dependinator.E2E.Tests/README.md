@@ -191,7 +191,7 @@ Useful app-specific selectors:
   Hooks: app menu activator `appbar-menu`; its items `menu-undo`, `menu-redo`,
   `menu-search`, `menu-fit-to-screen`, `menu-refresh`, `menu-show-hidden-nodes`,
   `menu-edit-mode`, `menu-delete-model`, `menu-local-paths`, `menu-cloud-models`,
-  `menu-login`/`menu-logout`, `menu-about`, `menu-settings` +
+  `menu-login`/`menu-logout`, `menu-about`, `menu-whats-new`, `menu-settings` +
   `menu-include-test-projects`; toolbar buttons `toolbar-cloud`,
   `toolbar-search`, `toolbar-undo`, `toolbar-redo`, `toolbar-refresh`,
   `toolbar-edit`. The node context toolbar uses `node-*` (e.g. `node-menu`,

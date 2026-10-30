@@ -35,6 +35,23 @@ else if (HasSelectedLine)
     <MudTooltip Text="Menu">
       <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
                PopoverClass="@MenuClass" data-testid="node-menu">
+        @if (!IsMultiSelected && !IsSelectedNodeZone)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Info"
+                       OnClick="ShowAbout" title="What the model knows of this node, and a question about it for an AI."
+                       data-testid="node-menu-about">
+            About Node …
+          </MudMenuItem>
+        }
+        @if (!IsSelectedNodeZone && CanImproveComments)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EditNote"
+                       OnClick="ImproveComments"
+                       title="Have Claude Code add or rewrite the comments of the selected nodes, or of everything inside them."
+                       data-testid="node-menu-improve-comments">
+            Improve Comments …
+          </MudMenuItem>
+        }
         <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.FitScreen"
                      OnClick="ZoomToNode" data-testid="node-menu-zoom-to">
           Zoom to Node
@@ -350,6 +367,12 @@ else if (HasSelectedLine)
   INodeAliasService nodeAliasService { get; set; } = null!;
 
   [Inject]
+  IAboutNodeService aboutNodeService { get; set; } = null!;
+
+  [Inject]
+  IImproveCommentsService improveCommentsService { get; set; } = null!;
+
+  [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
 
   [Inject]
@@ -555,6 +578,21 @@ else if (HasSelectedLine)
   {
     if (TryGetSelectedNodeId(out var nodeId))
       zoneService.EditZoneAsync(nodeId).RunInBackground();
+  }
+
+  void ShowAbout()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      aboutNodeService.ShowAsync(nodeId).RunInBackground();
+  }
+
+  bool CanImproveComments => improveCommentsService.CanImprove([.. selectionService.SelectedNodeIds]);
+
+  void ImproveComments()
+  {
+    IReadOnlyList<Modeling.Models.NodeId> nodeIds = [.. selectionService.SelectedNodeIds];
+    if (nodeIds.Count > 0)
+      improveCommentsService.ShowAsync(nodeIds).RunInBackground();
   }
 
   void EditAlias()

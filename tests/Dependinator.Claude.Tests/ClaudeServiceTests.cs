@@ -148,4 +148,27 @@ public class ClaudeServiceTests
         Assert.Contains("\"json_schema\"", request);
         Assert.Contains("\"fallbacks\":\"default\"", request);
     }
+
+    [Fact]
+    public async Task AskQuicklyAsync_ShouldAskTheFasterModel()
+    {
+        using var api = new FakeAnthropicApi(
+            HttpStatusCode.OK,
+            """
+            {
+              "id": "msg_test", "type": "message", "role": "assistant", "model": "claude-sonnet-5-5",
+              "content": [{ "type": "text", "text": "{ \"answer\": \"A parser.\" }" }],
+              "stop_reason": "end_turn", "stop_sequence": null,
+              "usage": { "input_tokens": 12, "output_tokens": 7 }
+            }
+            """
+        );
+        keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
+
+        var text = AssertOk(await service.AskQuicklyAsync("What is this?", Schema));
+
+        Assert.Equal("""{ "answer": "A parser." }""", text);
+        Assert.Contains("\"model\":\"claude-sonnet-5-5\"", api.LastRequestBody!);
+    }
 }

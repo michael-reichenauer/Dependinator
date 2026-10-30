@@ -1,6 +1,8 @@
 using Dependinator.Core.Claude;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -109,6 +111,14 @@ public class CycleSuggestionTests
     }
 
     [Fact]
+    public void ParseText_ShouldTakeTheVerdictWordThatComesFirst()
+    {
+        var suggestion = AssertOk(CycleSuggestion.ParseText("Verdict: Break (do not accept it)\nChange: Move it."));
+
+        Assert.False(suggestion.IsAccept);
+    }
+
+    [Fact]
     public void ParseText_ShouldFail_WithoutAVerdict()
     {
         var error = AssertError(
@@ -120,12 +130,41 @@ public class CycleSuggestionTests
 
     readonly Mock<ICyclePromptService> prompts = new();
     readonly Mock<IClaudeService> claude = new();
+    readonly Mock<IModelMgr> modelMgr = new();
     readonly List<SuggestStep> steps = [];
 
-    public CycleSuggestionTests() => prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
+    public CycleSuggestionTests()
+    {
+        prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
+        modelMgr.Setup(m => m.WithModel(It.IsAny<Func<IModel, string>>())).Returns(ModelPath);
+    }
 
-    Task<Result<CycleSuggestion>> SuggestAsync() =>
-        new CycleSuggestionService(prompts.Object, claude.Object).SuggestAsync(Cycle, steps.Add);
+    // Claude Code may read the code in the model's folder.
+    static readonly string ModelPath = Path.Combine(Path.GetTempPath(), "repo", "App.sln");
+
+    Task<Result<CycleSuggestion>> SuggestAsync(AiSource route = AiSource.Claude) =>
+        new CycleSuggestionService(
+            prompts.Object,
+            new AiService(claude.Object, Mock.Of<IConfigService>(), modelMgr.Object)
+        ).SuggestAsync(Cycle, route, steps.Add);
+
+    [Fact]
+    public async Task SuggestAsync_ShouldAskClaudeCode_WithoutAnApiKey_WhenThatRouteIsChosen()
+    {
+        claude
+            .Setup(c =>
+                c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema, Path.GetDirectoryName(ModelPath), false)
+            )
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        var suggestion = AssertOk(await SuggestAsync(AiSource.ClaudeCode));
+
+        Assert.True(suggestion.IsAccept);
+        Assert.Equal(AiSource.ClaudeCode, suggestion.Source);
+        Assert.Equal([SuggestStep.AskingClaudeCode], steps);
+        claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
 
     [Fact]
     public async Task SuggestAsync_ShouldAskClaudeWithTheCyclePromptAndTheAnswerSchema()

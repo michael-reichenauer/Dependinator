@@ -61,6 +61,11 @@ inside, and jump from any node straight to its source.
 - **Icon library** with curated Azure, AWS and Google Cloud service icons.
 - **Light and dark themes**, a mini-map, a legend, and export of the diagram as
   an image.
+- **AI help.** Ask questions about the model and get answers that link to the
+  diagram, have a dependency cycle or a broken architecture rule reviewed, get
+  rules suggested, and let Claude Code improve comments or make a fix. Pick the
+  AI once in Settings › AI: Claude with your own API key, Claude Code on your
+  computer (experimental), or any AI chat by copying the prompt.
 - **Multiple models** per workspace, with optional sync across devices.
 
 ## Get started

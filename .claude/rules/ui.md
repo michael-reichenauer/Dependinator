@@ -17,6 +17,13 @@ paths:
 - A `MudDialog`'s `TitleContent` re-renders only through `IMudDialogInstance.StateHasChanged()`.
 - Blazor Server shares statics across circuits (users, and parallel e2e tests), so per-user state
   goes in scoped services (`IViewOptions`), never in statics.
+- `UseJsonRpcClasses` serves every concrete class in the assembly that implements an `[Rpc]`
+  interface and resolves it from DI, so a second, non-DI implementation (a helper or a wrapper)
+  makes the host fail at startup. Share the code through a base class that does not declare the
+  interface (`ModelQueryAnswers`).
+- `ModelQueryService` answers on the most recently opened scope, so in the web host with parallel
+  e2e tests a query can land on another test's circuit; test-mode code asks its own scope
+  (`ScopeModelQueries`).
 
 ## Lines
 

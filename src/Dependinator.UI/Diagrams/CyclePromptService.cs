@@ -1,5 +1,6 @@
 using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Models;
+using static Dependinator.UI.Diagrams.PromptParts;
 
 namespace Dependinator.UI.Diagrams;
 
@@ -26,7 +27,7 @@ class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFile
         }
 
         // Read without holding the model, since in VS Code the files come from the LSP process.
-        var sources = await ReadAsync(requests);
+        var sources = await ReadSourcesAsync(workspaceFileService, requests);
 
         using (var model = modelMgr.UseModel())
             return CyclePrompt.Build(model, cycle, sources);
@@ -36,33 +37,5 @@ class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFile
     {
         using var model = modelMgr.UseModel();
         return CyclePrompt.BuildFix(model, cycle, suggestion);
-    }
-
-    // The web host and the VS Code extension see the workspace files; the standalone browser
-    // app has none.
-    static bool CanReadSource => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
-
-    // Each excerpt once (two types in a short file both show all of it), under its first direction.
-    async Task<IReadOnlyList<SourceSection>> ReadAsync(IReadOnlyList<SourceRequest> requests)
-    {
-        List<SourceSection> sections = [];
-        HashSet<(string, int)> shown = [];
-        foreach (var request in requests)
-        {
-            List<SourceExcerpt> excerpts = [];
-            foreach (var unit in request.Units)
-            {
-                var text = await workspaceFileService.ReadSourceFileAsync(unit.Span.Path);
-                if (text is not string fileText)
-                {
-                    Log.Info("No source for the cycle prompt", text.Error.Message);
-                    continue;
-                }
-                excerpts.AddRange(SourceExcerpts.Cut(unit, fileText).Where(e => shown.Add((e.Path, e.StartLine))));
-            }
-            if (excerpts.Count > 0)
-                sections.Add(new SourceSection(request.Direction, excerpts));
-        }
-        return sections;
     }
 }

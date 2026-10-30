@@ -310,6 +310,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Web extensions can't start a .NET process, so skip the server there.
     const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+
+    // The MCP server runs in the LSP; its module runs claude, so it is node-only like cloud sync auth.
+    if (!isWeb) {
+        try {
+            const mcpServer = await import("./mcpServer");
+            mcpServer.registerMcpServerProvider(context);
+        } catch (error) {
+            logger.error("Dependinator MCP server registration failed", error);
+        }
+    }
     languageClientPromise = isWeb
         ? Promise.resolve(undefined)
         : startLanguageServer(context).catch(error => {
@@ -456,6 +466,15 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.commands.registerCommand(claudeApiKey.setClaudeApiKeyCommandId, async () => {
             if (await claudeApiKey.askForApiKeyAsync(context))
                 vscode.window.showInformationMessage("Dependinator: The Claude API key is saved.");
+        }),
+        // The id is mcpServer.connectClaudeCodeCommandId, written out: the web bundle cannot load that module.
+        vscode.commands.registerCommand("dependinator.connectClaudeCode", async () => {
+            if (isWeb) {
+                vscode.window.showInformationMessage("Dependinator: Claude Code needs VS Code on the desktop.");
+                return;
+            }
+            const mcpServer = await import("./mcpServer");
+            await mcpServer.connectClaudeCode(context);
         }),
         vscode.commands.registerCommand(searchCommandId, async () => {
             // With the diagram already open the search dialog opens right away; otherwise the

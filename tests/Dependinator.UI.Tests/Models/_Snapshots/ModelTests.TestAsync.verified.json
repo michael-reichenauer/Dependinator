@@ -124,6 +124,7 @@
   ],
   "Lines": [],
   "Rules": [],
+  "AllowedViolations": [],
   "AcceptedCycles": [],
   "ParseProblems": []
 }

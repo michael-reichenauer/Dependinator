@@ -45,8 +45,16 @@ interface IViewOptions
     // Architecture rules: the rules panel is open and violating lines are drawn highlighted.
     bool IsRulesShown { get; }
 
+    // The rules panel shows its Suggest rules view (SuggestRulesView) instead of the rules; opening
+    // or closing the panel goes back to the rules.
+    bool IsRuleSuggestionsShown { get; }
+
     // The hidden nodes panel (HiddenNodesPanel), top-right like the analysis panels.
     bool IsHiddenNodesShown { get; }
+
+    // The Ask panel (AskPanel), questions about the model for an AI, top-right like the analysis
+    // panels (IAskModelService opens and closes it).
+    bool IsAskShown { get; }
 
     // While set, the hidden nodes panel lists only this node's hidden children (opened from its
     // node menu, List Hidden Children).
@@ -72,7 +80,9 @@ interface IViewOptions
     void SetCyclesMinimized(bool minimized);
     void SetSelectedCycle(string? cycleKey);
     void SetRulesShown(bool shown);
+    void SetRuleSuggestionsShown(bool shown);
     void SetHiddenNodesShown(bool shown, NodeId? parentId = null);
+    void SetAskShown(bool shown);
     void SetHiddenBadgesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
@@ -127,7 +137,9 @@ class ViewOptions : IViewOptions
     public bool IsCyclesMinimized { get; private set; }
     public string? SelectedCycleKey { get; private set; }
     public bool IsRulesShown { get; private set; }
+    public bool IsRuleSuggestionsShown { get; private set; }
     public bool IsHiddenNodesShown { get; private set; }
+    public bool IsAskShown { get; private set; }
     public NodeId? HiddenNodesParentId { get; private set; }
     public bool IsHiddenBadgesShown { get; private set; } = true;
     public bool IsMinimapShown { get; private set; }
@@ -158,13 +170,21 @@ class ViewOptions : IViewOptions
 
     public void SetSelectedCycle(string? cycleKey) => SelectedCycleKey = IsCyclesShown ? cycleKey : null;
 
-    public void SetRulesShown(bool shown) => IsRulesShown = shown;
+    public void SetRulesShown(bool shown)
+    {
+        IsRulesShown = shown;
+        IsRuleSuggestionsShown = false;
+    }
+
+    public void SetRuleSuggestionsShown(bool shown) => IsRuleSuggestionsShown = shown && IsRulesShown;
 
     public void SetHiddenNodesShown(bool shown, NodeId? parentId = null)
     {
         IsHiddenNodesShown = shown;
         HiddenNodesParentId = shown ? parentId : null;
     }
+
+    public void SetAskShown(bool shown) => IsAskShown = shown;
 
     public void SetHiddenBadgesShown(bool shown) => IsHiddenBadgesShown = shown;
 

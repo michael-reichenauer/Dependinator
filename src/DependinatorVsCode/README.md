@@ -7,9 +7,9 @@ between them. A Bicep deployment is drawn the same way: modules and resources
 with their Azure icons, parameters and outputs, and the dependencies between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
-![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/bicep.png)
-
 ![The Dependinator map of a solution: projects as containers, their namespaces and types inside, and dependencies as lines between them](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/hero.png)
+
+![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/bicep.png)
 
 Dependinator is in beta: the core works end to end, but expect rough edges and
 the occasional breaking change between versions. Feedback shapes what gets built
@@ -43,6 +43,15 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - **Icon library** with curated Azure, AWS and Google Cloud service icons.
 - **Light and dark themes** (following VS Code), a mini-map, a legend, and
   export of the diagram as an image.
+- **AI help.** Ask questions about the model (the nodes in the answer link to
+  the diagram), have a dependency cycle or a broken architecture rule reviewed,
+  get rules suggested, and let Claude Code improve comments or make a fix. Pick
+  the AI once in Settings › AI: Claude with your own Anthropic API key, Claude
+  Code on your computer with your Claude login (experimental), or any AI chat by
+  copying the prompt and pasting the answer back.
+- **AI agents can ask about the map.** A local MCP server lets Copilot's agent
+  mode (and Claude Code, after *Dependinator: Connect Claude Code*) look up
+  nodes, dependencies, paths, cycles and architecture rules of the open diagram.
 - **Multiple models** per workspace, with optional sync across devices and the
   companion web app at [dependinator.com](https://dependinator.com).
 
@@ -80,7 +89,8 @@ navigation tips, and keyboard/mouse controls.
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
 | `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
-| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for "Ask Claude" when reviewing a cycle (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
+| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for the Claude route of the AI features (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
+| `Dependinator: Connect Claude Code` | Add Dependinator's MCP server to Claude Code for this folder (`claude mcp add`, local scope), so Claude Code can ask about the open diagram. Copilot finds the server without this. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 
 ## Settings

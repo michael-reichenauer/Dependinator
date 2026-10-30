@@ -31,6 +31,8 @@
 @inject IThemeService themeService
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
+@inject Dependinator.UI.Diagrams.Ai.IAiService aiService
+@inject Dependinator.UI.Diagrams.IAskModelService askModelService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
@@ -179,6 +181,16 @@
                              data-testid="menu-rules">
                     Show Architecture Rules
                 </MudMenuItem>
+
+                @if (askModelService.IsAvailable)
+                {
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@AskIcon" OnClick="askModelService.Toggle"
+                                 title="Ask an AI a question about the model; the nodes in its answer link to the diagram."
+                                 data-checked="@(viewOptions.IsAskShown ? "true" : "false")"
+                                 data-testid="menu-ask">
+                        Ask About the Model
+                    </MudMenuItem>
+                }
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AltRoute" OnClick="pathFinderService.Open"
                              title="Shows why one node depends on another: the shortest chain of dependencies between two nodes you choose."
@@ -363,6 +375,17 @@
                              data-testid="menu-invert-scroll-zoom">
                     Invert Scroll Zoom
                 </MudMenuItem>
+
+                @if (aiService.IsAvailable)
+                {
+                    <MudDivider />
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AutoAwesome" OnClick="ShowAiSettingsAsync"
+                                 title="The AI the app asks by default, and the experimental Claude Code route."
+                                 data-testid="menu-ai-settings">
+                        AI …
+                    </MudMenuItem>
+                }
             </MudMenu>
 
             <MudDivider />
@@ -376,6 +399,11 @@
                              title="Replays the short tour of the basics shown on the first start."
                              data-testid="menu-tips">
                     Show Tips
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.NewReleases" OnClick="ShowWhatsNewAsync"
+                             title="Opens the change log: what is new in each release, and what is coming in the next one."
+                             data-testid="menu-whats-new">
+                    What's New
                 </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.BugReport"
                              OnClick="() => issueReportService.OpenAsync(IssueKind.Bug)"
@@ -475,6 +503,15 @@
         </MudTooltip>
     }
 
+    @if (askModelService.IsAvailable)
+    {
+        <MudTooltip Text="Ask about the model">
+            <MudIconButton Icon="@Icons.Material.Outlined.QuestionAnswer" OnClick="askModelService.Toggle"
+                           Color="@(viewOptions.IsAskShown ? Color.Primary : Color.Tertiary)"
+                           data-checked="@(viewOptions.IsAskShown ? "true" : "false")" data-testid="toolbar-ask" />
+        </MudTooltip>
+    }
+
     <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
     <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
@@ -532,7 +569,6 @@
     MudMessageBox deleteLocalModelBox { get; set; } = null!;
     MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
-
     bool isSearchOpen;
 
     string? CurrentRecentModelPath =>
@@ -751,6 +787,11 @@
 
     Task ShowHelpAsync() => vsCodeSendService.OpenHelpAsync();
 
+    // The change log on main, as of the latest release (the release workflow merges dev into main).
+    const string ChangeLogUrl = "https://github.com/michael-reichenauer/Dependinator/blob/main/CHANGELOG.md";
+
+    Task ShowWhatsNewAsync() => vsCodeSendService.OpenExternalAsync(ChangeLogUrl);
+
     void OnUiStateChanged() => _ = InvokeAsync(StateHasChanged);
 
     // Toggles read as checkboxes, so their on/off state is visible at a glance.
@@ -796,6 +837,7 @@
     }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
+    string AskIcon => CheckIcon(viewOptions.IsAskShown);
     string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
 
     void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
@@ -808,6 +850,7 @@
         {
             viewOptions.SetCyclesShown(false);
             viewOptions.SetHiddenNodesShown(false);
+            viewOptions.SetAskShown(false);
             pathFinderService.Close();
         }
         viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
@@ -822,6 +865,7 @@
             pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
             viewOptions.SetRulesShown(false);
             viewOptions.SetHiddenNodesShown(false);
+            viewOptions.SetAskShown(false);
         }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
@@ -844,6 +888,11 @@
     {
         if (!viewOptions.IsRulesShown)
             ToggleRules();
+        else if (viewOptions.IsRuleSuggestionsShown)
+        {
+            viewOptions.SetRuleSuggestionsShown(false);
+            applicationEvents.TriggerUIStateChanged();
+        }
     }
 
     void ToggleLegend()
@@ -942,6 +991,8 @@
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
+
+    Task ShowAiSettingsAsync() => Dependinator.UI.Diagrams.Ai.AiSettingsDialog.ShowAsync(dialogService);
 
     async Task ToggleInvertScrollZoom()
     {

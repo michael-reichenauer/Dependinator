@@ -6,6 +6,7 @@ using Dependinator.Core.Rpc;
 using Dependinator.Core.Shared;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
+using Dependinator.Mcp;
 using Dependinator.Roslyn;
 using Dependinator.UI;
 using Dependinator.UI.Shared;
@@ -67,9 +68,14 @@ public class Program
         builder.Services.AddSingleton<IHostFileSystem, LocalHostFileSystem>();
         builder.Services.AddSingleton<IHostStoragePaths>(new HostStoragePaths());
         builder.Services.AddJsonRpcInterfaces(typeof(Dependinator.Core.RootClass));
+        // AI agents ask about the open diagram's model at /mcp (e.g. claude mcp add --transport http
+        // dependinator http://localhost:5000/mcp); this is the local dev host, so it takes requests from
+        // this computer only, without a token.
+        builder.Services.AddDependinatorMcp();
 
         var app = builder.Build();
         app.Services.UseJsonRpcClasses(typeof(Dependinator.Core.RootClass));
+        app.Services.UseJsonRpcClasses(typeof(DependinatorServiceCollectionExtensions)); // The model queries
         app.Services.UseJsonRpcClasses(typeof(DependinatorClaudeServiceCollectionExtensions));
         app.Services.UseJsonRpc();
         // The dev host lists this repository's models (the working solution and the sample Bicep
@@ -94,6 +100,8 @@ public class Program
         app.UseStaticFiles();
         app.UseRouting();
         app.MapBlazorHub();
+        app.MapDependinatorMcp();
+        app.PublishModelToolsAddress();
         app.MapFallbackToPage("/_Host");
 
         app.Run();
