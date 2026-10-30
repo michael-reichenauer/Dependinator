@@ -45,8 +45,11 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
 
     public string Name => Source.Name();
 
-    // Claude's sparkle in its coral, as on the other Claude buttons.
-    public string IconClass => Source is AiSource.Claude ? "dep-ai__claude-icon" : "";
+    // Claude's own routes (the API and Claude Code): their icons are in Claude's coral. Other
+    // providers keep neutral icons, so the color says whose AI it is and the symbol how it runs.
+    public bool IsClaude => Source is AiSource.Claude or AiSource.ClaudeCode;
+
+    public string IconClass => IsClaude ? "dep-ai__claude-icon" : "";
 
     public bool Can(AiCapability need) => (Capabilities & need) == need;
 

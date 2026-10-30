@@ -38,7 +38,8 @@
     @foreach (var provider in Choice.Providers)
     {
       var canDo = provider.Can(Need);
-      <MudMenuItem Icon="@provider.Icon" IconColor="Color.Secondary" Disabled="@(!canDo)"
+      <MudMenuItem Icon="@provider.Icon" IconColor="@(provider.IsClaude ? Color.Inherit : Color.Secondary)" Disabled="@(!canDo)"
+                   Class="@(provider.IsClaude ? "dep-ai-menu__claude" : "")"
                    OnClick="() => OnChoose.InvokeAsync(provider)"
                    data-testid="@($"{TestId}-with-{provider.Id}")">
         <div class="dep-ai-menu__item">

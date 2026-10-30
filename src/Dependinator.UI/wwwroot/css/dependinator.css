@@ -445,7 +445,8 @@
 
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
 .dep-ai__ask-claude .mud-button-icon-start,
-.dep-ai__claude-icon {
+.dep-ai__claude-icon,
+.dep-ai-menu__claude .mud-icon-root {
     color: #d97757;
 }
 

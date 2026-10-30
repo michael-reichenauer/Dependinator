@@ -24,7 +24,7 @@
             <MudRadio T="AiSource?" Value="@((AiSource?)provider.Source)" Dense="true" Disabled="@(!isOffered)"
                       Color="Color.Primary" data-testid="@($"ai-settings-default-{provider.Id}")"
                       data-checked="@(choice.IsDefault(provider) ? "true" : "false")" />
-            <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="dep-ai-settings__icon" />
+            <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="@($"dep-ai-settings__icon {provider.IconClass}")" />
             <div class="dep-ai-settings__text">
               <div>@provider.Name</div>
               <div class="dep-ai__route-meta">@provider.Detail</div>
