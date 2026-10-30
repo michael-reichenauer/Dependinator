@@ -65,9 +65,11 @@ static class PromptParts
     }
 
     // A path relative to the model's folder (where the .sln is), when inside it.
-    internal static string DisplayPath(IModel model, string path)
+    internal static string DisplayPath(IModel model, string path) => DisplayPath(model.Path, path);
+
+    internal static string DisplayPath(string modelPath, string path)
     {
-        var folder = Path.GetDirectoryName(model.Path);
+        var folder = Path.GetDirectoryName(modelPath);
         if (string.IsNullOrEmpty(folder))
             return path;
         var relative = Path.GetRelativePath(folder, path);

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Asks the Ask panel's eval questions (scripts/ask-eval.json) in the running dev host and scores
+# the answers: whether each names the nodes it should, its time, lookups and cost.
+#
+#   ./scripts/ask-eval                 all cases on the Claude API route (needs ANTHROPIC_API_KEY
+#                                      for the host; costs cents per question)
+#   ./scripts/ask-eval -c              on the Claude Code route instead (your Claude login)
+#   ./scripts/ask-eval tool-loop ...   only the named cases
+#
+# The questions are about this repository's own model, which the dev host opens, so run it after
+# a prompt or tool change to see whether the answers got better or worse. Answers are saved in
+# ./tests/ask-eval-results/. Starts Dependinator.Web on :5000 if it is not running (never in test
+# mode: test mode answers with canned text).
+#
+# Requires the globally installed @playwright/cli (playwright module + browsers).
+set -eu
+cd "$(dirname "$0")/.."
+
+NODE_PATH="$(npm root -g)/@playwright/cli/node_modules"
+export NODE_PATH
+node -e "require('playwright')" 2> /dev/null \
+    || { echo "error: playwright not found (npm install -g @playwright/cli)"; exit 1; }
+
+app_pid=""
+cleanup() {
+    if [ -n "$app_pid" ]; then
+        kill "$app_pid" 2> /dev/null || true
+    fi
+}
+trap cleanup EXIT
+
+if ! curl -sf -o /dev/null http://localhost:5000; then
+    echo "Starting Dependinator.Web on http://localhost:5000 ..."
+    dotnet build src/Dependinator.Web/Dependinator.Web.csproj -v q
+    ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://localhost:5000 \
+        dotnet run --project src/Dependinator.Web --no-build > /dev/null 2>&1 &
+    app_pid=$!
+    for _ in $(seq 1 60); do
+        curl -sf -o /dev/null http://localhost:5000 && break
+        sleep 1
+    done
+    curl -sf -o /dev/null http://localhost:5000 \
+        || { echo "error: app did not start on :5000"; exit 1; }
+fi
+
+node scripts/ask-eval.mjs "$@"

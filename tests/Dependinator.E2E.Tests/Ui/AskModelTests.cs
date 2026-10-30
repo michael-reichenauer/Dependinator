@@ -62,11 +62,14 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("toolbar-ask").ClickAsync();
         await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(1);
 
-        // Asked on the Claude Code route, the answer has no cost.
+        // Asked on the Claude Code route, the answer has no cost; the question follows up on the
+        // first one.
         await Page.GetByTestId("ask-route-code").ClickAsync();
         await Page.GetByTestId("ask-question").FillAsync("What uses the parser?");
         await Page.GetByTestId("ask-send").ClickAsync();
         await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(2);
+        await Expect(Page.GetByTestId("ask-answer-text").Nth(1)).ToContainTextAsync("A follow-up, after 1 answered.");
+        await Expect(Page.GetByTestId("ask-answer-text").First).Not.ToContainTextAsync("follow-up");
         await Expect(Page.GetByTestId("ask-answer-meta").Nth(1))
             .ToHaveTextAsync(new System.Text.RegularExpressions.Regex("^Claude Code\\s*2 lookups$"));
 

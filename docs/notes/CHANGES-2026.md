@@ -269,6 +269,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   the app's own server (`McpAgentTools`), so nothing is defined twice. Both routes show the
   lookups live ("Searched for …", reported by `ModelQueryService`), and an API answer shows what
   it cost (phase 2).
+- **Ask follow-ups, and read the code (Oct 29).** A question in the Ask panel follows up on the
+  earlier ones: the prompt carries the last three questions and answers until the conversation is
+  cleared. A new `read_source` model tool reads a node's code with line numbers (through
+  `IWorkspaceFileService`, so in VS Code over the tunnel), for the API route, Copilot and Claude
+  Code alike. A name an answer writes partly (`PromptParts.ReadSourcesAsync`) links too when only
+  one node ends so. `./scripts/ask-eval` asks a set of questions about this repository
+  (`scripts/ask-eval.json`) in the dev host and scores the answers (phase 3).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

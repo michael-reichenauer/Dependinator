@@ -18,6 +18,7 @@ from anywhere (they `cd` to the repo root themselves), e.g. `./scripts/watch`.
 | --- | --- |
 | `test` | Full suite: unit tests (`dotnet test Dependinator.sln`), then the e2e tests. Arguments are forwarded to `e2e` (e.g. `./scripts/test -s -t`). |
 | `e2e` | Playwright UI tests. Starts the app itself in test mode (embedded demo model); `-b <browser>`, `-a` (all browsers), `-s` (cloud-sync stack), `-t` (traces). See `tests/Dependinator.E2E.Tests/README.md`. |
+| `ask-eval` | Ask the Ask panel's eval questions (`scripts/ask-eval.json`, about this repository's own model) in the dev host and score the answers: the nodes they name, time, lookups and cost. `-c` for the Claude Code route, case names to run only those. Answers saved in `tests/ask-eval-results/`. |
 | `trace` | Serve a Playwright trace from `./scripts/e2e -t` in the Trace Viewer on port 9322 (`./scripts/trace`, `./scripts/trace 6`, or a path). |
 
 ## VS Code extension

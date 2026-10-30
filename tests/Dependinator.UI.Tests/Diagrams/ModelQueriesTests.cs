@@ -1,5 +1,6 @@
 using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
@@ -7,8 +8,10 @@ using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using FileSpan = Dependinator.Core.Parsing.FileSpan;
 using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
+using ParsedNode = Dependinator.Core.Parsing.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -19,6 +22,7 @@ public class ModelQueriesTests
 {
     readonly ModelMgr modelMgr = new(new StateMgr());
     readonly ModelQueryService service = new();
+    readonly Mock<IWorkspaceFileService> workspace = new();
     readonly ModelQueries queries;
 
     // UI (assembly): UI.Views.View (with Load()) and UI.Models.Item; Data (assembly): Data.Repo
@@ -57,6 +61,7 @@ public class ModelQueriesTests
             new NodeSearchService(mgr),
             new CycleService(mgr, Mock.Of<ICommandService>()),
             new RuleService(mgr, Mock.Of<ICommandService>()),
+            workspace.Object,
             service
         );
 
@@ -239,5 +244,90 @@ public class ModelQueriesTests
         var error = AssertError(await service.GetModelAsync());
 
         Assert.Contains("No Dependinator diagram is open", error.Message);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldNumberTheLinesOfAShortFile_WithThePathFromTheModelsFolder()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 1, 2); // 0-based, as the parsers give them
+        workspace.Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs")).ReturnsAsync((Result<string>)"a\r\nb\nc\n");
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        Assert.Equal("Data.Repo", source.Node.Name);
+        Assert.Equal("src/Repo.cs, lines 1-3:\n    1  a\n    2  b\n    3  c", source.Text);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldShowATypeInALongFile_WithTheCommentAboveIt()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 200, 209);
+        var lines = Enumerable.Range(1, 400).Select(n => n == 200 ? "// The repository" : $"line {n}");
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"))
+            .ReturnsAsync((Result<string>)string.Join("\n", lines));
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        Assert.StartsWith("src/Repo.cs, lines 200-210:\n  200  // The repository\n  201  line 201\n", source.Text);
+        Assert.EndsWith("  210  line 210", source.Text);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldCutLongCode()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 0, 999);
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"))
+            .ReturnsAsync((Result<string>)string.Join("\n", Enumerable.Range(1, 1000).Select(n => $"line {n}")));
+        AddMember("Data.Repo.Get()", 10);
+        for (var n = 1; n <= 30; n++)
+            AddMember($"Data.Repo.M{n}()", 30 * n + 20);
+
+        var source = AssertOk(await queries.ReadSourceAsync("Data.Repo"));
+
+        var numbered = source.Text.Split('\n').Count(l => l.StartsWith("  ", StringComparison.Ordinal));
+        Assert.Equal(ModelQueries.MaxSourceLines, numbered);
+        Assert.EndsWith("(The rest of the code is left out.)", source.Text);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldReadAMemberOfAPartialType_FromItsOwnFile()
+    {
+        SetSource(repo, "/repo/src/Repo.cs", 0, 9);
+        var get = AddMember("Data.Repo.Get()", 2, "/repo/src/Repo.Get.cs");
+        workspace
+            .Setup(w => w.ReadSourceFileAsync("/repo/src/Repo.Get.cs"))
+            .ReturnsAsync((Result<string>)"partial class Repo\n{\n    void Get() { }\n}");
+
+        var source = AssertOk(await queries.ReadSourceAsync(get.Name));
+
+        Assert.StartsWith("src/Repo.Get.cs, lines 1-4:", source.Text);
+        workspace.Verify(w => w.ReadSourceFileAsync("/repo/src/Repo.cs"), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReadSourceAsync_ShouldFail_ForANodeWithoutCodeOfItsOwn()
+    {
+        var error = AssertError(await queries.ReadSourceAsync("UI.Views"));
+
+        Assert.Equal("UI.Views has no code of its own (a namespace): read the types in it.", error.Message);
+        workspace.Verify(w => w.ReadSourceFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    Node AddMember(string name, int line, string path = "/repo/src/Repo.cs")
+    {
+        using var model = modelMgr.UseModel();
+        var member =
+            model.Nodes.GetValueOrDefault(NodeId.FromName(name)) ?? AddNode(model, name, repo, NodeType.MethodMember);
+        member.Update(new ParsedNode(name, new() { FileSpan = new FileSpan(path, line, line) }));
+        return member;
+    }
+
+    void SetSource(Node node, string path, int startLine, int endLine)
+    {
+        using var model = modelMgr.UseModel();
+        model.Path = "/repo/Demo.sln";
+        node.Update(new ParsedNode(node.Name, new() { FileSpan = new FileSpan(path, startLine, endLine) }));
     }
 }

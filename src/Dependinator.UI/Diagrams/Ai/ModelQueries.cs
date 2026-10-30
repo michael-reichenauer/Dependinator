@@ -1,4 +1,5 @@
 using Dependinator.Core.ModelQueries;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 
@@ -18,6 +19,7 @@ interface IModelQueries
     Result<CycleList> ListCycles();
     Result<IReadOnlyList<RuleResult>> ListRules();
     Result<RuleResult> CheckRule(string fromName, string toName);
+    Task<Result<NodeSource>> ReadSourceAsync(string nodeName);
 
     // An agent asked a question through the RPC (the MCP tools), in words: "Searched for "Clerk"".
     // In-app features that call the methods directly are not told.
@@ -32,6 +34,7 @@ sealed class ModelQueries(
     INodeSearchService nodeSearchService,
     ICycleService cycleService,
     IRuleService ruleService,
+    IWorkspaceFileService workspaceFileService,
     ModelQueryService host
 ) : IModelQueries, IDisposable
 {
@@ -45,6 +48,7 @@ sealed class ModelQueries(
     internal const int MaxCycleMembers = 20;
     internal const int MaxViolations = 25;
     internal const int MaxAllowed = 25;
+    internal const int MaxSourceLines = 400;
     const int MaxDescriptionLength = 200;
 
     public event Action<string>? Asked;
@@ -223,6 +227,64 @@ sealed class ModelQueries(
         var rule = new ArchitectureRule(from.Name, to.Name);
         var report = RuleService.Compute(model, [rule]).Reports.Single();
         return ToRuleResult(report, model.Rules.Contains(rule));
+    }
+
+    // The code About Node shows: a short file whole, a type with the comments above it (a long one
+    // cut to its members), a member within its type.
+    public async Task<Result<NodeSource>> ReadSourceAsync(string nodeName)
+    {
+        if (!PromptParts.CanReadSource)
+            return new Error("This Dependinator app has no access to the source files.");
+        QueryNode node;
+        IReadOnlyList<SourceRequest> requests;
+        string modelPath;
+        using (var model = modelMgr.UseModel())
+        {
+            if (CheckHasModel(model) is Error e)
+                return e;
+            var found = FindNode(model, nodeName);
+            if (found is not Node n)
+                return found.Error;
+            requests = NodePrompt.GetSourceRequests(n);
+            if (requests.Count == 0)
+                return new Error(
+                    $"{n.Name} has no code of its own (a {PromptParts.Kind(n.Type)}): read the types in it."
+                );
+            (node, modelPath) = (ToQueryNode(n), model.Path);
+        }
+
+        // Read outside the model lock: in VS Code the files come over the RPC tunnel.
+        var sections = await PromptParts.ReadSourcesAsync(workspaceFileService, requests);
+        var excerpts = sections.SelectMany(s => s.Excerpts).ToList();
+        if (excerpts.Count == 0)
+            return new Error(
+                $"Could not read the code of {node.Name}: its file could not be read (it may be outside the workspace)."
+            );
+
+        // A long type is cut to its members, which can still be many: the first ones, up to a cap.
+        List<string> parts = [];
+        var shownLines = 0;
+        foreach (var x in excerpts)
+        {
+            var lines = x.Lines.Take(MaxSourceLines - shownLines).ToList();
+            if (lines.Count == 0)
+            {
+                parts.Add("(The rest of the code is left out.)");
+                break;
+            }
+            shownLines += lines.Count;
+            var endLine = x.StartLine + lines.Count - 1;
+            parts.Add(
+                $"{PromptParts.DisplayPath(modelPath, x.Path)}, lines {x.StartLine}-{endLine}:\n"
+                    + string.Join("\n", lines.Select((line, i) => $"{x.StartLine + i, 5}  {line}"))
+            );
+            if (lines.Count < x.Lines.Count)
+            {
+                parts.Add("(The rest of the code is left out.)");
+                break;
+            }
+        }
+        return new NodeSource(node, string.Join("\n\n", parts));
     }
 
     static Result CheckHasModel(IModel model) =>

@@ -90,13 +90,29 @@ sealed class ModelTools(IModelQueryService queries)
         [Description("The name of the node it must not use.")] string to
     ) => Answer(await queries.CheckRuleAsync(from, to));
 
+    [McpServerTool(Name = "read_source", ReadOnly = true, Idempotent = true)]
+    [Description(
+        "Reads a node's code from the workspace (a type, a member, a Bicep resource), with line numbers: a short "
+            + "file whole, a long type cut to its members. Projects and namespaces have no code of their own: read their types. Use it when the "
+            + "names and dependencies do not answer the question, such as what a type does or why it uses another."
+    )]
+    public async Task<CallToolResult> ReadSource([Description("The node's name.")] string nodeName)
+    {
+        var read = await queries.ReadSourceAsync(nodeName);
+        return read is NodeSource source ? Text(SourceText(source), isError: false) : Text(read.Error.Message, true);
+    }
+
+    // Code reads best as itself, not as a JSON string with its quotes and line breaks escaped.
+    static string SourceText(NodeSource source) => $"{source.Node.Name} ({source.Node.Type}):\n\n{source.Text}";
+
     // An error is a result, not an exception, so an expected answer such as "no diagram is open"
     // is not logged as a failure.
     static CallToolResult Answer<T>(Result<T> result)
-        where T : notnull
-    {
-        var isError = result.Value is not T;
-        var text = result.Value is T value ? JsonSerializer.Serialize(value, JsonOptions) : result.Error.Message;
-        return new CallToolResult { Content = [new TextContentBlock { Text = text }], IsError = isError };
-    }
+        where T : notnull =>
+        result.Value is T value
+            ? Text(JsonSerializer.Serialize(value, JsonOptions), isError: false)
+            : Text(result.Error.Message, isError: true);
+
+    static CallToolResult Text(string text, bool isError) =>
+        new() { Content = [new TextContentBlock { Text = text }], IsError = isError };
 }

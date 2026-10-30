@@ -27,7 +27,7 @@
       <MudSpacer />
       @if (entries.Count > 0 && !IsAsking)
       {
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteSweep" Size="Size.Small" title="Clear the questions and answers"
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteSweep" Size="Size.Small" title="Clear the conversation, so the next question starts a new one"
                        OnClick="Clear" data-testid="ask-clear" />
       }
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="askModelService.Close"
@@ -39,7 +39,7 @@
         <div class="dep-panel__hint" data-testid="ask-intro">
           Ask anything about the model: where something is handled, what depends on what, what a change would
           touch. Claude looks it up with Dependinator's tools, and the nodes in its answer are links to the
-          diagram.
+          diagram. Ask follow-ups: Claude sees the conversation until you clear it.
         </div>
         <div class="dep-ask__examples">
           @foreach (var example in Examples)
@@ -179,6 +179,10 @@
 
   const int MaxPendingSteps = 6;
 
+  // The questions answered so far, which a new question follows up on, until they are cleared.
+  List<AskExchange> Conversation() =>
+    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text))];
+
   static readonly string[] Examples =
   [
     "What are the main parts of this codebase, and how do they depend on each other?",
@@ -250,6 +254,7 @@
     var text = question.Trim();
     if (text == "" || IsAsking)
       return;
+    var earlier = Conversation();
     var entry = new Entry(text) { Route = route };
     entries.Add(entry);
     question = "";
@@ -265,7 +270,7 @@
     Result<ModelAnswer> result;
     try
     {
-      result = await askModelService.AskAsync(text, entry.Route, step => _ = InvokeAsync(() =>
+      result = await askModelService.AskAsync(text, earlier, entry.Route, step => _ = InvokeAsync(() =>
       {
         entry.Step = step;
         StateHasChanged();
@@ -332,7 +337,7 @@
 
   async Task ShowPromptAsync()
   {
-    var prompt = askModelService.GetPrompt(question.Trim());
+    var prompt = askModelService.GetPrompt(question.Trim(), Conversation());
     if (prompt != "")
       await PromptDialog.ShowAsync(dialogService, prompt);
   }

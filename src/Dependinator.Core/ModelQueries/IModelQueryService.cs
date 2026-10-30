@@ -41,6 +41,11 @@ interface IModelQueryService
 
     // Evaluates "from must not use to" without adding it: the violations it would report today.
     Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName);
+
+    // The node's code (a type, a member, a Bicep resource), read from the workspace: a short file
+    // whole, a long type cut to its members, a member within its type. An error for a node without
+    // code of its own (a project, a namespace) or where the host has no source.
+    Task<Result<NodeSource>> ReadSourceAsync(string nodeName);
 }
 
 // A node as the answers show it: Name is the key to pass back, Title the readable name, Type the
@@ -111,3 +116,7 @@ record RuleResult(
     IReadOnlyList<AllowedDependency> Allowed,
     int AllowedCount
 );
+
+// The node's code as excerpts, each headed by its file (relative to the model's folder where it is
+// in it) and lines, and each line by its number.
+record NodeSource(QueryNode Node, string Text);

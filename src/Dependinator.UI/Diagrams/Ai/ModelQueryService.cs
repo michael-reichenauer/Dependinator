@@ -75,6 +75,9 @@ abstract class ModelQueryAnswers
     public Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName) =>
         Ask($"Checked the rule {Short(fromName)} must not use {Short(toName)}", q => q.CheckRule(fromName, toName));
 
+    public Task<Result<NodeSource>> ReadSourceAsync(string nodeName) =>
+        AskAsync($"Read the code of {Short(nodeName)}", q => q.ReadSourceAsync(nodeName));
+
     // A node name as a progress line shows it: its last part ("AppBar", not its full name).
     static string Short(string name)
     {
@@ -84,21 +87,22 @@ abstract class ModelQueryAnswers
     }
 
     Task<Result<T>> Ask<T>(string what, Func<IModelQueries, Result<T>> question)
+        where T : notnull => AskAsync(what, q => Task.FromResult(question(q)));
+
+    async Task<Result<T>> AskAsync<T>(string what, Func<IModelQueries, Task<Result<T>>> question)
         where T : notnull
     {
         if (Scope() is not { } queries)
-            return Task.FromResult<Result<T>>(
-                new Error("No Dependinator diagram is open. Open the diagram and try again.")
-            );
+            return new Error("No Dependinator diagram is open. Open the diagram and try again.");
         try
         {
             queries.ReportAsked(what);
-            return Task.FromResult(question(queries));
+            return await question(queries);
         }
         catch (Exception e)
         {
             // A question must not take down the RPC connection the diagram also runs on.
-            return Task.FromResult<Result<T>>(new Error(e));
+            return new Error(e);
         }
     }
 }

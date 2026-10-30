@@ -70,6 +70,7 @@ dotnet test tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Test
 ./scripts/e2e -t                                       # record Playwright traces into ./tests/Dependinator.E2E.Tests/traces
 ./scripts/e2e -r                                       # untraced, then re-run only the failed tests with tracing (CI does this)
 ./scripts/trace [6|path.zip]                           # view a recorded trace (serves viewer on :9322)
+./scripts/ask-eval [-c] [case ...]                     # score the Ask panel's answers on scripts/ask-eval.json (API key route; -c Claude Code)
 # CI: build.yml runs unit-tests.yml and e2e.yml (Chromium) on every push and publishes
 # nothing; a PR into dev/main also gets a test site (azure-static-web-apps-*.yml).
 # Previews and releases are made only by hand with release.yml (docs/RELEASING.md, the

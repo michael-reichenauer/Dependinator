@@ -99,6 +99,9 @@ public record AnswerNode(string Name, string Why);
 // UI.App.AppBar"), so the panel shows the node's short name in the text and its long one in lists.
 public record NodeLink(NodeId Id, string ShortName, string LongName);
 
+// An earlier question in the panel's conversation and its answer's text.
+record AskExchange(string Question, string Answer);
+
 // The prompt that asks an AI a question about the model open in the diagram. It holds only an
 // overview (the model's size and top level); the AI finds the rest with Dependinator's tools,
 // which answer on the model as it is now, and reads the code where it can.
@@ -107,7 +110,12 @@ static class AskModelPrompt
     internal const int MaxNodes = 12;
     const int MaxTopLevel = 40;
 
-    public static string Build(IModel model, string question)
+    // A follow-up gets the last few exchanges, each answer cut to a length that keeps the prompt
+    // small; the tools can look up again what was cut.
+    internal const int MaxEarlier = 3;
+    internal const int MaxEarlierAnswerLength = 2000;
+
+    public static string Build(IModel model, string question, IReadOnlyList<AskExchange> earlier)
     {
         var topLevel = model
             .Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n))
@@ -139,16 +147,38 @@ static class AskModelPrompt
         if (topLevel.Count > MaxTopLevel)
             text.AppendLine($"- … and {topLevel.Count - MaxTopLevel} more");
 
-        text.AppendLine().AppendLine("## The question").AppendLine();
+        var recent = earlier.TakeLast(MaxEarlier).ToList();
+        if (recent.Count > 0)
+        {
+            text.AppendLine().AppendLine("## Earlier in this conversation").AppendLine();
+            if (earlier.Count > recent.Count)
+            {
+                var left = earlier.Count - recent.Count;
+                text.AppendLine($"({left} earlier {(left == 1 ? "question" : "questions")} left out.)").AppendLine();
+            }
+            foreach (var exchange in recent)
+            {
+                text.AppendLine($"**Question:** {exchange.Question.Trim()}").AppendLine();
+                text.AppendLine($"**Answer:** {Cut(exchange.Answer.Trim())}").AppendLine();
+            }
+            text.AppendLine("## The question (it may follow up on the conversation above)").AppendLine();
+        }
+        else
+        {
+            text.AppendLine().AppendLine("## The question").AppendLine();
+        }
         text.AppendLine(question.Trim());
         text.AppendLine().Append(TaskSection);
         return text.ToString();
     }
 
+    static string Cut(string answer) =>
+        answer.Length <= MaxEarlierAnswerLength ? answer : answer[..MaxEarlierAnswerLength] + " … (cut)";
+
     static readonly string TaskSection = $"""
         ## How to answer
 
-        Find out with Dependinator's tools before you answer: search_nodes to find the nodes the question is about, get_dependencies for what a node uses and what uses it, find_paths for why one part depends on another, list_children to go into a node, list_cycles and list_rules for its problems. Read the code where you can and it helps. Use only as many calls as the question needs.
+        Find out with Dependinator's tools before you answer: search_nodes to find the nodes the question is about, get_dependencies for what a node uses and what uses it, find_paths for why one part depends on another, list_children to go into a node, list_cycles and list_rules for its problems, read_source for a node's code when the names and dependencies are not enough. Use only as many calls as the question needs.
 
         Answer the question directly, in a few short paragraphs or a list: the answer is shown in a narrow panel beside the diagram. Write every node you mention in backticks, by its name exactly as the tools give it (such as `Dependinator.Core.Parsing.ParserService`), so the user can click it to go to the node. Under nodes, list the nodes the answer is about, at most {MaxNodes}, the most important first. If the model cannot answer the question, say so, and what would.
 
@@ -170,10 +200,15 @@ interface IAskModelService
     // (always in test mode).
     Task<IReadOnlyList<AiSource>> GetRoutesAsync();
 
-    // The prompt for the question; empty when there is no model.
-    string GetPrompt(string question);
+    // The prompt for the question, a follow-up on the earlier ones; empty when there is no model.
+    string GetPrompt(string question, IReadOnlyList<AskExchange> earlier);
 
-    Task<Result<ModelAnswer>> AskAsync(string question, AiSource route, Action<SuggestStep> onStep);
+    Task<Result<ModelAnswer>> AskAsync(
+        string question,
+        IReadOnlyList<AskExchange> earlier,
+        AiSource route,
+        Action<SuggestStep> onStep
+    );
 
     void Toggle();
 
@@ -199,13 +234,18 @@ class AskModelService(
             ? [AiSource.Claude, AiSource.ClaudeCode]
         : [AiSource.Claude];
 
-    public string GetPrompt(string question)
+    public string GetPrompt(string question, IReadOnlyList<AskExchange> earlier)
     {
         using var model = modelMgr.UseModel();
-        return AskModelPrompt.Build(model, question);
+        return AskModelPrompt.Build(model, question, earlier);
     }
 
-    public async Task<Result<ModelAnswer>> AskAsync(string question, AiSource route, Action<SuggestStep> onStep)
+    public async Task<Result<ModelAnswer>> AskAsync(
+        string question,
+        IReadOnlyList<AskExchange> earlier,
+        AiSource route,
+        Action<SuggestStep> onStep
+    )
     {
         // The e2e tests exercise the panel without a key or Claude Code: two lookups, as an agent
         // would make them through the tools, and a canned answer.
@@ -216,11 +256,11 @@ class AskModelService(
             await lookups.GetModelAsync();
             await lookups.SearchNodesAsync(question);
             await Task.Delay(TestModeAnswerDelay);
-            return WithLinks(TestModeAnswer(route) with { Question = question });
+            return WithLinks(TestModeAnswer(route, earlier.Count) with { Question = question });
         }
 
         // AiService's own error for an empty prompt is about a review dialog.
-        var prompt = GetPrompt(question);
+        var prompt = GetPrompt(question, earlier);
         if (prompt == "")
             return new Error("There is no model to ask about yet: open or parse one first.");
         Task<string> GetPromptAsync() => Task.FromResult(prompt);
@@ -275,11 +315,38 @@ class AskModelService(
         Dictionary<string, NodeLink> links = [];
         foreach (var name in answer.Names())
         {
-            if (ModelQueries.FindNode(model, name) is Node node)
+            if (FindLinkedNode(model, name) is { } node)
                 links[name] = new NodeLink(node.Id, node.ShortName, node.LongName);
         }
         return answer with { Links = links };
     }
+
+    // A node the answer names: by its name or title as the tools give them, or else by the end of
+    // its title ("PromptParts.ReadSourcesAsync", "ReadSourcesAsync()"), as answers often write it,
+    // when only one node (or one method's overloads) ends so.
+    internal static Node? FindLinkedNode(IModel model, string name)
+    {
+        if (ModelQueries.FindNode(model, name) is Node node)
+            return node;
+        var tail = WithoutParameters(name.Trim());
+        if (tail.Length < 3 || tail.Any(char.IsWhiteSpace))
+            return null;
+        var matches = model
+            .Nodes.Values.Where(n => !n.IsRoot)
+            .Select(n => (Node: n, Title: WithoutParameters(n.LongName)))
+            .Where(n => n.Title == tail || n.Title.EndsWith("." + tail, StringComparison.Ordinal))
+            .ToList();
+        if (matches.Count == 1)
+            return matches[0].Node;
+        var isOverloads =
+            matches.Count > 1
+            && matches.All(m =>
+                m.Node.Type.IsMember && m.Title == matches[0].Title && m.Node.Parent == matches[0].Node.Parent
+            );
+        return isOverloads ? matches.MinBy(m => m.Node.Name, StringComparer.Ordinal).Node : null;
+    }
+
+    static string WithoutParameters(string name) => name.IndexOf('(') is var at and >= 0 ? name[..at] : name;
 
     public void Toggle()
     {
@@ -310,17 +377,18 @@ class AskModelService(
 
     // Names the first two top-level nodes, one twice (in the text and in the nodes), and a node
     // that is not in the model, which stays plain code.
-    ModelAnswer TestModeAnswer(AiSource route)
+    ModelAnswer TestModeAnswer(AiSource route, int earlierCount)
     {
+        var followUp = earlierCount > 0 ? $" A follow-up, after {earlierCount} answered." : "";
         List<Node> top;
         using (var model = modelMgr.UseModel())
             top = [.. model.Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n)).OrderBy(n => n.Name).Take(2)];
         var names = top.Select(n => n.Name).ToList();
         var text = names.Count switch
         {
-            0 => $"Test mode: {route.Name()} was not asked. The model is empty.",
+            0 => $"Test mode: {route.Name()} was not asked.{followUp} The model is empty.",
             _ =>
-                $"Test mode: {route.Name()} was not asked.\n\n- {string.Join("\n- ", names.Select(n => $"`{n}` is at the top level"))}\n- `No.Such.Node` is not in the model",
+                $"Test mode: {route.Name()} was not asked.{followUp}\n\n- {string.Join("\n- ", names.Select(n => $"`{n}` is at the top level"))}\n- `No.Such.Node` is not in the model",
         };
         return new ModelAnswer(text, [.. names.Select(n => new AnswerNode(n, "Test mode"))])
         {
