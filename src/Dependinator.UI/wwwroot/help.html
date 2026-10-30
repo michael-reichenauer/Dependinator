@@ -179,6 +179,8 @@
                 add your own nodes, links, notes and zones, or sketch an architecture from an empty model.</li>
             <li class="feature"><b>Export</b> — save the current view, a selected area or the whole diagram
                 as an SVG or PNG image.</li>
+            <li class="feature"><b>Ask an AI</b> — ask about the model, review a cycle or a broken rule, get rules
+                suggested, or have Claude Code improve comments or make a fix (see <a href="#ai">AI help</a>).</li>
             <li class="feature"><b>Optional device sync</b> — enable device sync to keep your models and
                 views in sync across devices.</li>
         </ul>
@@ -257,18 +259,13 @@
                 button on a row opens the cycle's review.
                 A cycle that is intended can be <b>accepted</b> with a reason: it moves to the Accepted section and its
                 lines are drawn normally. It is reported again if another node joins it. Accepting is saved with the model
-                and can be undone. Not sure? <b>Get an AI opinion</b> in the review offers two routes to the same kind of
-                answer. <b>Use your AI chat</b> is free: <b>Copy prompt</b> copies a prompt for an AI chat (such as
-                claude.ai) that asks whether the cycle is intended, or how to break it; in VS Code and the local web app it
-                includes the source code behind the cycle's thinnest dependencies. The steps that follow offer
-                <b>Open claude.ai</b> to paste it into, and a box to paste the AI's answer back into, which is read as soon as
-                it is pasted. In VS Code and the local web app, <b>Ask Claude</b> asks Claude
-                directly, with your own Anthropic API key, a few cents per answer (VS Code asks for it the first time, in a
-                box at the top of the window, and the dialog says so; the command "Dependinator: Set Claude API Key" changes
-                it). If asking fails (no key, a key not accepted, no credits left), <b>Use your AI chat instead</b> takes the
-                other route. For a second opinion, ask again or use the other route: each answer is kept, labeled by where it
-                came from, and when they differ you pick the one that convinces you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
-                prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it; <b>Fix
+                and can be undone. Not sure? <b>Get an AI opinion</b> in the review asks an AI (see <a href="#ai">AI help</a>)
+                whether the cycle is intended, or how to break it; the prompt includes the source code behind the cycle's
+                thinnest dependencies in VS Code and the local web app. For a second opinion, ask again or ask another AI:
+                each answer is kept, labeled by where it came from, and when they differ you pick the one that convinces
+                you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
+                prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it, or <b>Fix with
+                Claude Code</b> when Claude Code is turned on; <b>Fix
                 later</b>, which moves the cycle to the <b>To fix</b> section with the planned change (its lines stay red,
                 and its fix prompt can be copied from there); or <b>Accept anyway</b>, with the suggested fix kept in the
                 reason. Nothing is saved until you decide. If a refactor breaks an accepted or to-fix cycle, or a node
@@ -277,7 +274,10 @@
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
                 "this must not depend on that" by picking two nodes (a project, a namespace, a class, a resource). Every
                 dependency that breaks a rule is listed per class pair and drawn orange; rules are saved with the
-                model, so they stay checked after every re-parse.</li>
+                model, so they stay checked after every re-parse. Each broken dependency has a <b>review</b> like a cycle's:
+                an AI suggests fixing it or allowing it, and an allowed one is kept with its reason under its rule, where it
+                no longer counts as a problem. <b>Suggest rules …</b> asks an AI for rules that fit the model; Dependinator
+                checks each one, shows what it would break today, and you tick the ones to add.</li>
             <li class="feature"><b>Find a path</b> — why does one node depend on another? <b>View › Find Path</b>
                 lets you choose two nodes and lists the shortest chains of dependencies from the first to the
                 second; the chosen chain is drawn highlighted while every other line fades, and clicking a hop takes
@@ -324,6 +324,59 @@
             On a small screen a click on the diagram folds the explorer down to its title bar, so it does
             not cover the map; click the title bar to bring it back.
         </p>
+
+        <h2 id="ai">AI help</h2>
+        <p>
+            Wherever Dependinator can use an AI, it asks the one you chose. There are three:
+        </p>
+        <ul>
+            <li class="feature"><b>Claude</b> — the Anthropic API with your own API key (from console.anthropic.com),
+                a few cents per answer. VS Code asks for the key the first time, in a box at the top of the window; the
+                command "Dependinator: Set Claude API Key" changes or removes it. It is kept in VS Code's secret storage
+                and sent only to Anthropic.</li>
+            <li class="feature"><b>Claude Code</b> (experimental) — the <i>claude</i> command on this computer with
+                your own Claude login. It runs in the model's folder and reads the code to check its answer. It is off
+                until you turn it on in <b>Settings › AI</b>, after a warning: it is unclear whether Anthropic's terms
+                allow a third-party tool to use a Claude subscription this way.</li>
+            <li class="feature"><b>Your AI chat</b> — free: copy the prompt into claude.ai or any AI chat, then paste its
+                answer back, where it is read as soon as it is pasted. <b>Open claude.ai</b> opens a chat to paste it
+                into.</li>
+        </ul>
+        <p>
+            The first time you ask, the choices are shown side by side, and the one you pick becomes the
+            <b>default</b>. From then on the button asks the default at once, and the <b>▾</b> menu beside it asks
+            another AI, once. <b>Settings › AI</b> changes the default and turns Claude Code on or off. If asking
+            fails (no key, a key not accepted, no credits left, Claude Code not installed), the AI chat route is
+            offered instead. <b>Show prompt</b> shows what is sent or copied before you send it. Claude and Claude
+            Code are offered in VS Code and the local web app; the web app at dependinator.com offers the AI chat
+            route.
+        </p>
+        <ul>
+            <li class="feature"><b>Ask About the Model</b> — the speech-bubble button in the app bar (or
+                <b>View › Ask About the Model</b>) opens a panel for questions such as where something is handled or
+                what a change would touch. Claude or Claude Code looks the answer up in the model with Dependinator's
+                tools, and reads a node's code when it needs to; each lookup shows as a line while it works. Node names
+                in the answer are links to the diagram, and <b>Show all</b> zooms to every node it names. Ask
+                follow-ups: the AI sees the conversation until you clear it. The chip under the question box shows which AI
+                answers and switches to another. VS Code and the local web app only.</li>
+            <li class="feature"><b>Review a cycle or a broken rule</b> — <b>Get an AI opinion</b> in the review (see
+                <b>Find cycles</b> and <b>Architecture rules</b> above).</li>
+            <li class="feature"><b>Suggest rules …</b> — in the Rules panel, asks for architecture rules from the
+                model's containers and the dependencies between them; Claude Code can check its candidates against
+                the model first.</li>
+            <li class="feature"><b>About Node …</b> — in the node menu: the node's comment, what it contains and how
+                many types it uses and is used by, with a question about it for an AI ("What is this and why is it
+                here?" by default).</li>
+            <li class="feature"><b>Improve Comments …</b> — in the node menu and the About Node dialog: Claude Code
+                adds or rewrites the comments of namespaces and types, which the diagram shows as descriptions;
+                without Claude Code the prompt is copied for any coding agent.</li>
+            <li class="feature"><b>Fix with Claude Code</b> — when an answer suggests breaking a cycle or fixing a
+                broken rule, Claude Code makes the change in the model's folder (edits only, no commands), after a
+                warning about uncommitted changes, then lists the changed files and re-parses.</li>
+            <li class="feature"><b>AI agents can ask Dependinator</b> — in VS Code a local MCP server lets Copilot's
+                agent mode, and Claude Code after "Dependinator: Connect Claude Code", look up nodes, dependencies,
+                paths, cycles and rules of the open diagram.</li>
+        </ul>
 
         <h2>Edit mode</h2>
         <p>

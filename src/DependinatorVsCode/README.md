@@ -43,6 +43,12 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - **Icon library** with curated Azure, AWS and Google Cloud service icons.
 - **Light and dark themes** (following VS Code), a mini-map, a legend, and
   export of the diagram as an image.
+- **AI help.** Ask questions about the model (the nodes in the answer link to
+  the diagram), have a dependency cycle or a broken architecture rule reviewed,
+  get rules suggested, and let Claude Code improve comments or make a fix. Pick
+  the AI once in Settings › AI: Claude with your own Anthropic API key, Claude
+  Code on your computer with your Claude login (experimental), or any AI chat by
+  copying the prompt and pasting the answer back.
 - **AI agents can ask about the map.** A local MCP server lets Copilot's agent
   mode (and Claude Code, after *Dependinator: Connect Claude Code*) look up
   nodes, dependencies, paths, cycles and architecture rules of the open diagram.
@@ -83,7 +89,7 @@ navigation tips, and keyboard/mouse controls.
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
 | `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
-| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for "Ask Claude" when reviewing a cycle (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
+| `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for the Claude route of the AI features (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
 | `Dependinator: Connect Claude Code` | Add Dependinator's MCP server to Claude Code for this folder (`claude mcp add`, local scope), so Claude Code can ask about the open diagram. Copilot finds the server without this. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |
 

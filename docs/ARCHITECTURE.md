@@ -37,13 +37,17 @@ this repository and is also the app the e2e tests drive.
 
 Only three external services are involved, and all are optional for the core use: **Clerk** signs
 users in for cloud sync, the small **cloud sync API** (our own Azure Functions over Blob Storage)
-stores the synced models, and the **Anthropic Claude API** reviews a circular dependency or a
-dependency that breaks a rule when the user asks, with the user's own API key. Claude is called from the VS Code extension's language
-server and from the dev host, never from the browser app. The other way round, AI agents (Copilot or
+stores the synced models, and the **Anthropic Claude API** answers the AI features when the user
+asks (reviewing a cycle or a dependency that breaks a rule, suggesting rules, questions about a node
+or the model), with the user's own API key. Claude is called from the VS Code extension's language
+server and from the dev host, never from the browser app. The same features can instead run the
+user's local **Claude Code** (experimental) or go through any AI chat by copy and paste; the user
+picks the default in Settings › AI. The other way round, AI agents (Copilot or
 Claude Code) can ask Dependinator about the open model through its **MCP server** on localhost.
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
-but the Claude review sends code excerpts of the cycle or dependency it asks about. The web app cannot parse
+but the AI features send code excerpts of what they ask about, and Ask about the model can read a
+node's source on request. The web app cannot parse
 code: what it shows comes from VS Code through sync, or from the demo models.
 
 ## 2. Hosts view: one UI, three hosts
