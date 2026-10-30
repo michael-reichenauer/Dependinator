@@ -160,7 +160,8 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
 
         // The node names go to their node, with the view still open beside the diagram.
-        var toName = await items.Nth(0).GetByTestId("suggest-rules-to").InnerTextAsync();
+        // TextContent, since Firefox's InnerText breaks the name at a wrapped <wbr> ("Demo.\nsln").
+        var toName = await items.Nth(0).GetByTestId("suggest-rules-to").TextContentAsync() ?? "";
         await items.Nth(0).GetByTestId("suggest-rules-to").ClickAsync();
         await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync(toName.Split(' ')[0]);
         await Expect(Page.GetByTestId("suggest-rules-panel")).ToBeVisibleAsync();
