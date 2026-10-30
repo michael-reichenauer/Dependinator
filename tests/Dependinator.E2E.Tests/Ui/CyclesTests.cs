@@ -184,10 +184,13 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
         await Expect(Page.GetByTestId("accept-cycle-asking")).ToHaveCountAsync(0);
         await Expect(field).ToHaveValueAsync("Suggested in test mode");
-        await Expect(ask).ToHaveTextAsync("Ask again");
+        // Claude is the default now: the routes give way to one button that asks it.
+        await Expect(ask).ToHaveCountAsync(0);
+        ILocator askAgain = Page.GetByTestId("accept-cycle-ask");
+        await Expect(askAgain).ToHaveTextAsync("Ask Claude again");
 
         // The second answer differs: both are kept, and the reason follows the selected one.
-        await ask.ClickAsync();
+        await askAgain.ClickAsync();
         ILocator answers = Page.GetByTestId("accept-cycle-answer");
         await Expect(answers).ToHaveCountAsync(2);
         await Expect(answers.First).ToHaveTextAsync("Claude 1 · Accept");
@@ -339,9 +342,11 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("accept-cycle-reason"))
             .ToHaveValueAsync("Accepted anyway; suggested fix: Move it.");
 
-        // A second pasted answer joins the first, as with Claude's answers, each named by its source.
-        await Expect(copy).ToHaveTextAsync("Use your AI chat");
-        await copy.ClickAsync();
+        // A second pasted answer joins the first, as with Claude's answers, each named by its source;
+        // the AI chat is the default now, so the one button starts it again.
+        ILocator again = Page.GetByTestId("accept-cycle-ask");
+        await Expect(again).ToHaveTextAsync("Use your AI chat");
+        await again.ClickAsync();
         await answerBox.FillAsync("Verdict: Accept\nReason to store: One concept.");
         await Expect(Page.GetByTestId("accept-cycle-answer")).ToHaveCountAsync(2);
         await Expect(Page.GetByTestId("accept-cycle-answer").Last).ToHaveTextAsync("Chat 2 · Accept");
@@ -366,15 +371,14 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
-        await Page.GetByTestId("use-claude-code-confirm").ClickAsync();
+        await App.SetAiSettingsAsync(useClaudeCode: true, defaultProvider: "code");
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
         await pair.GetByTestId("cycles-review").ClickAsync();
 
         // Not offered before an answer suggests breaking the cycle (a pair is accepted first).
         ILocator fix = Page.GetByTestId("accept-cycle-fix-claude-code");
-        ILocator ask = Page.GetByTestId("accept-cycle-suggest-code");
+        ILocator ask = Page.GetByTestId("accept-cycle-ask");
         ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
         await Page.GetByTestId("accept-cycle-expand").ClickAsync();
         await ask.ClickAsync();

@@ -1,0 +1,130 @@
+@using MudBlazor
+@inject IAiService aiService
+@inject IApplicationEvents applicationEvents
+
+@* Settings › AI: the AI the app asks by default (AiChoice), and the experimental Claude Code route,
+   turned on only after a warning, since it uses the user's Claude login. Every place that asks
+   uses the default, and its menu (▾) asks another provider once. Changes are saved at once. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">AI</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-about__text">
+      The AI the app asks by default. Wherever the app asks, the menu next to the button asks another one, once.
+    </div>
+    @if (choice is not null)
+    {
+      <MudRadioGroup T="AiSource?" Value="choice.Default" ValueChanged="SetDefaultAsync" Class="dep-ai-settings"
+                     data-testid="ai-settings">
+        @foreach (var provider in AiProvider.All)
+        {
+          var isOffered = choice.Providers.Contains(provider);
+          <div class="@($"dep-ai-settings__row {(isOffered ? "" : "dep-ai-settings__row--off")}")">
+            <MudRadio T="AiSource?" Value="@((AiSource?)provider.Source)" Dense="true" Disabled="@(!isOffered)"
+                      Color="Color.Primary" data-testid="@($"ai-settings-default-{provider.Id}")"
+                      data-checked="@(choice.IsDefault(provider) ? "true" : "false")" />
+            <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="dep-ai-settings__icon" />
+            <div class="dep-ai-settings__text">
+              <div>@provider.Name</div>
+              <div class="dep-ai__route-meta">@provider.Detail</div>
+            </div>
+            @if (provider == AiProvider.ClaudeCode)
+            {
+              <MudSwitch T="bool" Value="isClaudeCodeOn" ValueChanged="ToggleClaudeCodeAsync" Color="Color.Primary"
+                         title="Experimental: run the claude command on this computer with your own Claude login"
+                         data-testid="ai-settings-use-claude-code" data-checked="@(isClaudeCodeOn ? "true" : "false")" />
+            }
+          </div>
+          @if (provider == AiProvider.ClaudeCode && isConfirmingClaudeCode)
+          {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="ai-settings-claude-code-warning">
+              <div>
+                Claude Code runs the claude command on this computer with your own Claude login, instead of an Anthropic
+                API key. The prompt includes excerpts of your source code.
+              </div>
+              <div class="mt-1">
+                It is unclear whether Anthropic's terms allow a third-party tool to use a Claude subscription this way, so
+                use it for your own experiments only, at your own risk.
+              </div>
+              <div class="mt-1">
+                <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="ConfirmClaudeCodeAsync"
+                           data-testid="use-claude-code-confirm">Use Claude Code</MudButton>
+                <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => isConfirmingClaudeCode = false"
+                           data-testid="use-claude-code-cancel">Cancel</MudButton>
+              </div>
+            </MudAlert>
+          }
+        }
+      </MudRadioGroup>
+      @if (choice.Default is null)
+      {
+        <div class="dep-ai__route-meta" data-testid="ai-settings-no-default">
+          No default yet: the first time you ask, the app shows the choices, and the one you pick becomes the default.
+        </div>
+      }
+    }
+  </DialogContent>
+  <DialogActions>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="ai-settings-close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  AiChoice? choice;
+  bool isClaudeCodeOn;
+  bool isConfirmingClaudeCode;
+
+  public static async Task ShowAsync(IDialogService dialogService)
+  {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<AiSettingsDialog>((string?)null, options);
+    await dialog.Result;
+  }
+
+  protected override Task OnInitializedAsync() => RefreshAsync();
+
+  async Task RefreshAsync()
+  {
+    choice = await aiService.GetChoiceAsync();
+    isClaudeCodeOn = choice.Providers.Contains(AiProvider.ClaudeCode);
+  }
+
+  async Task SetDefaultAsync(AiSource? source)
+  {
+    if (source is not { } s)
+      return;
+    await aiService.SetDefaultAsync(s);
+    await ChangedAsync();
+  }
+
+  // Turning Claude Code on asks first; off needs no confirmation.
+  async Task ToggleClaudeCodeAsync(bool isOn)
+  {
+    if (isOn)
+    {
+      isConfirmingClaudeCode = true;
+      return;
+    }
+    isConfirmingClaudeCode = false;
+    await aiService.SetClaudeCodeEnabledAsync(false);
+    await ChangedAsync();
+  }
+
+  async Task ConfirmClaudeCodeAsync()
+  {
+    isConfirmingClaudeCode = false;
+    await aiService.SetClaudeCodeEnabledAsync(true);
+    await ChangedAsync();
+  }
+
+  async Task ChangedAsync()
+  {
+    await RefreshAsync();
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  void Close() => MudDialog.Close();
+}

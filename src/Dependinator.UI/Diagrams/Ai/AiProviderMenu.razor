@@ -1,0 +1,112 @@
+@using MudBlazor
+@inject IAiService aiService
+@inject IDialogService dialogService
+@inject IThemeService themeService
+
+@* The provider menu every place that asks an AI shares (AiOpinion, the Ask panel): the providers
+   the user can ask (AiChoice), each with what it uses and costs, the default marked, then "Show
+   prompt" where the place has one and "AI settings …" (AiSettingsDialog). A provider that cannot
+   do what the place needs (Need) is listed greyed, with why, so the user knows it is there. It
+   opens from a small arrow next to the place's own button (Split), or from a chip that names the
+   current provider (Chip). Choosing a provider asks it once; the default stays. *@
+<MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true" PopoverClass="@MenuClass"
+         Disabled="Disabled" data-testid="@($"{TestId}-providers")">
+  <ActivatorContent>
+    @if (IsChip)
+    {
+      <button type="button" class="dep-ai-menu__chip" disabled="@Disabled" title="Choose which AI to ask"
+              @onclick="@(e => context.ToggleAsync(e))" data-testid="@($"{TestId}-menu")"
+              data-provider="@Current?.Id">
+        @if (Current is not null)
+        {
+          <MudIcon Icon="@Current.Icon" Size="Size.Small" Class="@IconClass(Current)" />
+          <span>@Current.Name</span>
+        }
+        <MudIcon Icon="@MudBlazor.Icons.Material.Filled.ArrowDropDown" Size="Size.Small" />
+      </button>
+    }
+    else
+    {
+      <MudButton Size="Size.Small" Variant="Variant" Color="Color" Disabled="Disabled" Class="dep-ai-menu__arrow"
+                 title="Ask another AI, or change the default" aria-label="Choose which AI to ask"
+                 OnClick="@(e => context.ToggleAsync(e))" data-testid="@($"{TestId}-menu")">
+        <MudIcon Icon="@MudBlazor.Icons.Material.Filled.ArrowDropDown" Size="Size.Small" />
+      </MudButton>
+    }
+  </ActivatorContent>
+  <ChildContent>
+    @foreach (var provider in Choice.Providers)
+    {
+      var canDo = provider.Can(Need);
+      <MudMenuItem Icon="@provider.Icon" IconColor="Color.Secondary" Disabled="@(!canDo)"
+                   OnClick="() => OnChoose.InvokeAsync(provider)"
+                   data-testid="@($"{TestId}-with-{provider.Id}")">
+        <div class="dep-ai-menu__item">
+          <div class="dep-ai-menu__name">
+            @provider.Name
+            @if (Choice.IsDefault(provider))
+            {
+              <span class="dep-ai-menu__tag">default</span>
+            }
+          </div>
+          <div class="dep-ai-menu__detail">@(canDo ? provider.Detail : UnableText)</div>
+        </div>
+      </MudMenuItem>
+    }
+    @if (OnShowPrompt.HasDelegate || aiService.IsAvailable)
+    {
+      <MudDivider />
+    }
+    @if (OnShowPrompt.HasDelegate)
+    {
+      <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.Article" IconColor="Color.Secondary"
+                   Disabled="IsShowPromptDisabled" OnClick="OnShowPrompt"
+                   data-testid="@($"{TestId}-show-prompt")">Show prompt</MudMenuItem>
+    }
+    @if (aiService.IsAvailable)
+    {
+      <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.Settings" IconColor="Color.Secondary"
+                   OnClick="ShowSettingsAsync" data-testid="@($"{TestId}-settings")">AI settings …</MudMenuItem>
+    }
+  </ChildContent>
+</MudMenu>
+
+@code {
+  [Parameter, EditorRequired] public AiChoice Choice { get; set; } = AiChoice.ChatOnly;
+
+  // What the place needs; a provider that cannot do it is listed greyed with UnableText.
+  [Parameter] public AiCapability Need { get; set; } = AiCapability.Answer;
+  [Parameter] public string UnableText { get; set; } = "Cannot do this here";
+
+  // The test id prefix: "<prefix>-menu" opens it, "<prefix>-with-<provider id>" asks a provider.
+  [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+  // A chip naming Current opens it, instead of an arrow next to the place's own button.
+  [Parameter] public bool IsChip { get; set; }
+  [Parameter] public AiProvider? Current { get; set; }
+
+  // The arrow's look, matching the button it sits next to.
+  [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
+  [Parameter] public Color Color { get; set; } = Color.Default;
+
+  [Parameter] public bool Disabled { get; set; }
+
+  [Parameter] public EventCallback<AiProvider> OnChoose { get; set; }
+
+  // "Show prompt" in the menu, where the place has no link of its own.
+  [Parameter] public EventCallback OnShowPrompt { get; set; }
+  [Parameter] public bool IsShowPromptDisabled { get; set; }
+
+  // Told when the settings dialog closes, so the place reads the choice again.
+  [Parameter] public EventCallback OnSettingsChanged { get; set; }
+
+  string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
+
+  static string IconClass(AiProvider provider) => provider == AiProvider.Claude ? "dep-ai__claude-icon" : "";
+
+  async Task ShowSettingsAsync()
+  {
+    await AiSettingsDialog.ShowAsync(dialogService);
+    await OnSettingsChanged.InvokeAsync();
+  }
+}

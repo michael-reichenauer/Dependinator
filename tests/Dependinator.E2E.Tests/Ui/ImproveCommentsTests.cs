@@ -44,8 +44,7 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
-        await Page.GetByTestId("use-claude-code-confirm").ClickAsync();
+        await App.SetAiSettingsAsync(useClaudeCode: true);
 
         await App.SelectNodeByFullNameAsync("Demo.sln");
         await App.ClickNodeMenuItemAsync("node-menu-about");

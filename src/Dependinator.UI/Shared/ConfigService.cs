@@ -1,4 +1,5 @@
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Shared.CloudSync;
 
@@ -54,6 +55,10 @@ class Config
     // The experimental "Ask Claude Code" route in the AI review dialogs (Settings › Use Claude
     // Code), turned on after a warning: `claude -p` with the user's own Claude login.
     public bool UseClaudeCode { get; set; } = false;
+
+    // The AI the app asks by default (Settings › AI); none until the user picks one, the first
+    // time they ask or in Settings.
+    public AiSource? DefaultAiProvider { get; set; }
 }
 
 interface IConfigService

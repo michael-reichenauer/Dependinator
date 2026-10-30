@@ -112,7 +112,8 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.StartsWith("Please remove a dependency that breaks an architecture rule", prompt);
 
-        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        // Claude is the default now: one button asks it again.
+        await Page.GetByTestId("rule-review-ask").ClickAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "allow");
         await Expect(Page.GetByTestId("rule-review-answers-differ")).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("rule-review-reason")).ToHaveValueAsync("Allowed in test mode");

@@ -188,17 +188,13 @@ static class AskModelPrompt
 // "Ask" (AskPanel): a question about the open model for an AI, which finds the answer with
 // Dependinator's model tools and names the nodes it is about, as links in the panel. Asked through
 // Claude with the user's API key (the host runs the tool-use loop, IClaudeService.
-// AskWithModelToolsAsync), or Claude Code on this computer (Settings › Use Claude Code); both get
+// AskWithModelToolsAsync), or Claude Code on this computer (Settings › AI); both get
 // the tools through the app's MCP server. The panel sits top-right with the analysis panels, so
 // opening it closes them.
 interface IAskModelService
 {
     // Whether this host can ask an AI: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
-
-    // The routes the user can ask through now: Claude, and Claude Code where it is turned on
-    // (always in test mode).
-    Task<IReadOnlyList<AiSource>> GetRoutesAsync();
 
     // The prompt for the question, a follow-up on the earlier ones; empty when there is no model.
     string GetPrompt(string question, IReadOnlyList<AskExchange> earlier);
@@ -227,12 +223,6 @@ class AskModelService(
 ) : IAskModelService
 {
     public bool IsAvailable => aiService.IsAvailable;
-
-    public async Task<IReadOnlyList<AiSource>> GetRoutesAsync() =>
-        !IsAvailable ? []
-        : Dependinator.Core.Build.IsTestMode || await aiService.IsClaudeCodeEnabledAsync()
-            ? [AiSource.Claude, AiSource.ClaudeCode]
-        : [AiSource.Claude];
 
     public string GetPrompt(string question, IReadOnlyList<AskExchange> earlier)
     {
@@ -269,7 +259,7 @@ class AskModelService(
         {
             // The setting may have been turned off since the panel offered the route.
             if (!await aiService.IsClaudeCodeEnabledAsync())
-                return new Error("Claude Code is turned off. Turn it on in Settings › Use Claude Code (Experimental).");
+                return new Error("Claude Code is turned off. Turn it on in Settings › AI.");
             var json = await aiService.AskAsync(
                 route,
                 GetPromptAsync,

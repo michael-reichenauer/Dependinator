@@ -380,11 +380,10 @@
                 {
                     <MudDivider />
 
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@UseClaudeCodeIcon" OnClick="ToggleUseClaudeCodeAsync"
-                                 title="Experimental: adds Ask Claude Code to the AI review dialogs, which runs the claude command on this computer with your own Claude login."
-                                 data-checked="@(useClaudeCode ? "true" : "false")"
-                                 data-testid="menu-use-claude-code">
-                        Use Claude Code (Experimental)
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AutoAwesome" OnClick="ShowAiSettingsAsync"
+                                 title="The AI the app asks by default, and the experimental Claude Code route."
+                                 data-testid="menu-ai-settings">
+                        AI …
                     </MudMenuItem>
                 }
             </MudMenu>
@@ -537,25 +536,6 @@
     </YesButton>
 </MudMessageBox>
 
-<MudMessageBox @ref="useClaudeCodeBox" Title="Use Claude Code? (Experimental)" CancelText="Cancel">
-    <MessageContent>
-        <MudText>
-            The AI review dialogs get an "Ask Claude Code" button, which runs the claude command (Claude Code) on
-            this computer with your own Claude login, instead of using an Anthropic API key. The prompt includes
-            excerpts of your source code.
-        </MudText>
-        <MudText Typo="Typo.body2" Class="mt-2">
-            It is unclear whether Anthropic's terms allow a third-party tool to use a Claude subscription this way,
-            so use it for your own experiments only, at your own risk. Turn it off again in Settings.
-        </MudText>
-    </MessageContent>
-    <YesButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" data-testid="use-claude-code-confirm">
-            Use Claude Code
-        </MudButton>
-    </YesButton>
-</MudMessageBox>
-
 <MudMessageBox @ref="deleteLocalOrRemoteModelBox" Title="Delete Current Model" CancelText="Cancel">
     <MessageContent>
         <MudText>Do you want to delete only the local model, or both the local and the remote (cloud) model?</MudText>
@@ -589,10 +569,6 @@
     MudMessageBox deleteLocalModelBox { get; set; } = null!;
     MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
-    MudMessageBox useClaudeCodeBox { get; set; } = null!;
-
-    bool useClaudeCode;
-
     bool isSearchOpen;
 
     string? CurrentRecentModelPath =>
@@ -614,8 +590,6 @@
         themeService.Changed += OnUiStateChanged;
         keyboardService.KeyDown += OnKeyDown;
     }
-
-    protected override async Task OnInitializedAsync() => useClaudeCode = (await configService.GetAsync()).UseClaudeCode;
 
     // The app-level shortcuts: search, undo/redo and fit. Canvas gestures (Escape, arrows,
     // zoom) are handled by the interaction service, Delete by the toolbars.
@@ -1018,18 +992,7 @@
         applicationEvents.TriggerUIStateChanged();
     }
 
-    string UseClaudeCodeIcon => CheckIcon(useClaudeCode);
-
-    // Turning the experimental route on asks first, since it uses the user's Claude subscription.
-    async Task ToggleUseClaudeCodeAsync()
-    {
-        var newValue = !useClaudeCode;
-        if (newValue && await useClaudeCodeBox.ShowAsync() != true)
-            return;
-        useClaudeCode = newValue;
-        await configService.SetAsync(config => config.UseClaudeCode = newValue);
-        applicationEvents.TriggerUIStateChanged();
-    }
+    Task ShowAiSettingsAsync() => Dependinator.UI.Diagrams.Ai.AiSettingsDialog.ShowAsync(dialogService);
 
     async Task ToggleInvertScrollZoom()
     {

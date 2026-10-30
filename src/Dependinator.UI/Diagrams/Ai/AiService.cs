@@ -18,8 +18,15 @@ interface IAiService
     // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    // Whether the user turned on the experimental Claude Code route (Settings › Use Claude Code).
+    // Whether the user turned on the experimental Claude Code route (Settings › AI).
     Task<bool> IsClaudeCodeEnabledAsync();
+
+    Task SetClaudeCodeEnabledAsync(bool isEnabled);
+
+    // The providers the user can ask now, and their default (Settings › AI).
+    Task<AiChoice> GetChoiceAsync();
+
+    Task SetDefaultAsync(AiSource source);
 
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
@@ -68,6 +75,21 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         "There is no prompt: what it is about is no longer in the model. Close the dialog and review it again.";
 
     public async Task<bool> IsClaudeCodeEnabledAsync() => IsAvailable && (await configService.GetAsync()).UseClaudeCode;
+
+    public Task SetClaudeCodeEnabledAsync(bool isEnabled) =>
+        configService.SetAsync(config => config.UseClaudeCode = isEnabled);
+
+    public async Task<AiChoice> GetChoiceAsync()
+    {
+        if (!IsAvailable)
+            return AiChoice.ChatOnly;
+        var config = await configService.GetAsync();
+        List<AiProvider> providers = [.. AiProvider.All.Where(p => p != AiProvider.ClaudeCode || config.UseClaudeCode)];
+        var isOffered = providers.Any(p => p.Source == config.DefaultAiProvider);
+        return new AiChoice(providers, isOffered ? config.DefaultAiProvider : null);
+    }
+
+    public Task SetDefaultAsync(AiSource source) => configService.SetAsync(config => config.DefaultAiProvider = source);
 
     public async Task<Result<string>> AskAsync(
         AiSource route,

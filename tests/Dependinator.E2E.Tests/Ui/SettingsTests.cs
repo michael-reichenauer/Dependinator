@@ -10,7 +10,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // embedded, so the triggered re-parse short-circuits and the node set does not change --
 // this asserts the toggle state itself, which is what the menu owns. "Invert Scroll Zoom"
 // is an app-wide toggle stored in the config that flips the mouse wheel zoom direction, and
-// "Use Claude Code" turns on the experimental Claude Code route in the AI review dialogs.
+// "AI …" picks the AI the app asks by default and turns on the experimental Claude Code route.
 public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -27,39 +27,64 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await ToggleIncludeTestProjectsAsync(expectOn: false);
     }
 
-    // The experimental Claude Code route: off by default, turned on only through a warning that
-    // can be cancelled, and then offered as "Ask Claude Code" in the review dialogs (answered by
-    // the app itself in test mode).
+    // Settings › AI: the experimental Claude Code route is off by default and turned on only
+    // through a warning that can be cancelled; the default provider is what the review dialogs
+    // ask, and their menu asks another one once (answered by the app itself in test mode).
     [E2EFact]
-    public async Task UseClaudeCode_ShouldAskFirst_AndOfferClaudeCodeInTheReviewDialogs()
+    public async Task AiSettings_ShouldAskBeforeClaudeCode_AndSetTheProviderTheDialogsAsk()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: false);
-        await ExpectClaudeCodeOfferedAsync(isOffered: false);
+        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        ILocator useCode = Page.GetByTestId("ai-settings-use-claude-code");
+        await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
+        await Expect(Page.GetByTestId("ai-settings-no-default")).ToBeVisibleAsync();
 
         // Cancelling the warning leaves it off.
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
+        await useCode.ClickAsync();
         ILocator confirm = Page.GetByTestId("use-claude-code-confirm");
         await Expect(confirm).ToBeVisibleAsync();
-        await Page.GetByRole(AriaRole.Button, new() { Name = "Cancel" }).ClickAsync();
+        await Page.GetByTestId("use-claude-code-cancel").ClickAsync();
         await Expect(confirm).ToHaveCountAsync(0);
-        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: false);
+        await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
+        await Page.GetByTestId("ai-settings-close").ClickAsync();
+        await Expect(useCode).ToHaveCountAsync(0);
 
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-use-claude-code")).ClickAsync();
-        await confirm.ClickAsync();
-        await Expect(confirm).ToHaveCountAsync(0);
-        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-use-claude-code", isChecked: true);
-        await ExpectClaudeCodeOfferedAsync(isOffered: true);
+        // On, and the default: the dialog's one button asks Claude Code.
+        await App.SetAiSettingsAsync(useClaudeCode: true, defaultProvider: "code");
+        await OpenCycleReviewAsync();
+        ILocator ask = Page.GetByTestId("accept-cycle-ask");
+        await Expect(ask).ToHaveAttributeAsync("data-provider", "code");
+        await Expect(ask).ToHaveTextAsync("Ask Claude Code");
+        await Expect(Page.GetByTestId("accept-cycle-route-claude")).ToHaveCountAsync(0);
+        await ask.ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-suggestion")).ToContainTextAsync("Claude Code");
 
-        // Turning it off needs no confirmation.
-        await App.ToggleSubMenuItemAsync("menu-settings", "menu-use-claude-code", expectChecked: false);
-        await ExpectClaudeCodeOfferedAsync(isOffered: false);
+        // The menu asks Claude once; the default stays.
+        await Page.GetByTestId("accept-cycle-ask-menu").ClickAsync();
+        await Page.GetByTestId("accept-cycle-ask-with-claude").ClickAsync();
+        ILocator answers = Page.GetByTestId("accept-cycle-answer");
+        await Expect(answers).ToHaveCountAsync(2);
+        await Expect(answers.Last).ToContainTextAsync("Claude ·");
+        await Expect(ask).ToHaveAttributeAsync("data-provider", "code");
+        await CloseCycleReviewAsync();
+
+        // Off again (no confirmation): the default is gone with it, so the dialog shows the
+        // providers to choose from, without Claude Code.
+        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        await useCode.ClickAsync();
+        await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
+        await Expect(Page.GetByTestId("ai-settings-no-default")).ToBeVisibleAsync();
+        await Page.GetByTestId("ai-settings-close").ClickAsync();
+        await Expect(useCode).ToHaveCountAsync(0);
+        await OpenCycleReviewAsync();
+        await Expect(Page.GetByTestId("accept-cycle-route-claude")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-route-code")).ToHaveCountAsync(0);
+        await CloseCycleReviewAsync();
     }
 
-    // Opens a cycle's review dialog, checks for the Claude Code route (asking it when offered),
-    // and closes the dialog again.
-    async Task ExpectClaudeCodeOfferedAsync(bool isOffered)
+    // Opens the review dialog of a cycle, its AI section open.
+    async Task OpenCycleReviewAsync()
     {
         ILocator pair = Page.GetByTestId("cycles-item").Filter(new() { HasTextString = "Result<T>" });
         // The panel stays open after the first time.
@@ -67,18 +92,10 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
             await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         await pair.GetByTestId("cycles-review").ClickAsync();
         await Page.GetByTestId("accept-cycle-expand").ClickAsync();
-        await Expect(Page.GetByTestId("accept-cycle-suggest")).ToHaveTextAsync("Ask Claude");
-        ILocator askCode = Page.GetByTestId("accept-cycle-suggest-code");
-        if (isOffered)
-        {
-            await askCode.ClickAsync();
-            ILocator suggestion = Page.GetByTestId("accept-cycle-suggestion");
-            await Expect(suggestion).ToContainTextAsync("Claude Code");
-        }
-        else
-        {
-            await Expect(askCode).ToHaveCountAsync(0);
-        }
+    }
+
+    async Task CloseCycleReviewAsync()
+    {
         await Page.GetByTestId("accept-cycle-cancel").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-cancel")).ToHaveCountAsync(0);
     }

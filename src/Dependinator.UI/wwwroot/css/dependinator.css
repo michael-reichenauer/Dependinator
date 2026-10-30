@@ -353,6 +353,101 @@
     font-size: 0.75rem;
 }
 
+/* The default's button and, joined to it, the arrow of its provider menu (AiProviderMenu). */
+.dep-ai__ask-split {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+.dep-ai__ask-split > .mud-button-root:first-child {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dep-ai__ask-split .mud-menu {
+    margin-left: -1px;
+}
+
+.dep-ai-menu__arrow {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.dep-ai__asking {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* The menu's rows: the provider, "default" beside the default, and what it uses and costs. */
+.dep-ai-menu__item {
+    display: flex;
+    flex-direction: column;
+    max-width: 320px;
+}
+
+.dep-ai-menu__name {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.dep-ai-menu__tag,
+.dep-ai-menu__detail {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    white-space: normal;
+}
+
+/* The Ask panel's chip: the provider that answers, opening the menu. */
+.dep-ai-menu__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 2px 0 6px;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 12px;
+    background: none;
+    font: inherit;
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-primary);
+    cursor: pointer;
+}
+
+.dep-ai-menu__chip:hover {
+    border-color: var(--mud-palette-primary);
+}
+
+.dep-ai-menu__chip .mud-icon-root {
+    font-size: 1rem;
+}
+
+/* Settings › AI: a row per provider, the default picked by its radio. */
+.dep-ai-settings {
+    display: flex;
+    flex-direction: column;
+    margin: 8px 0;
+}
+
+.dep-ai-settings__row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+}
+
+.dep-ai-settings__row--off .dep-ai-settings__text {
+    opacity: 0.55;
+}
+
+.dep-ai-settings__text {
+    flex: 1;
+    min-width: 0;
+}
+
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
 .dep-ai__ask-claude .mud-button-icon-start,
 .dep-ai__claude-icon {
@@ -1273,8 +1368,7 @@ button.dep-rules__node:hover {
     font-size: 0.75rem;
 }
 
-.dep-ask__steps-toggle,
-.dep-ask__route {
+.dep-ask__steps-toggle {
     padding: 0 6px;
     border: 0;
     border-radius: 8px;
@@ -1287,25 +1381,9 @@ button.dep-rules__node:hover {
     cursor: pointer;
 }
 
-.dep-ask__steps-toggle:hover,
-.dep-ask__route:hover {
+.dep-ask__steps-toggle:hover {
     color: var(--mud-palette-primary);
 }
 
-.dep-ask__meta .dep-ai__show-prompt {
-    white-space: nowrap;
-    flex-shrink: 0;
-}
 
-.dep-ask__route--on {
-    background: var(--mud-palette-action-default-hover);
-    color: var(--mud-palette-text-primary);
-}
 
-.dep-ask__route-text {
-    min-width: 0;
-    margin-left: 4px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
