@@ -20,7 +20,7 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
-        await DeselectNavigatedNodeAsync();
+        await App.DeselectAsync();
 
         await Expect(Page.Locator(RestingLine).First).ToHaveCSSAsync("opacity", "0.4");
 
@@ -29,7 +29,7 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.Locator("#svgcanvas g.line-lit").First).ToHaveCSSAsync("opacity", "1");
 
         // Off: every resting line at full strength.
-        await DeselectAsync();
+        await App.DeselectAsync();
         await App.ToggleSettingAsync("settings-soft-lines", expectChecked: false);
         await Expect(Page.Locator(RestingLine).First).ToHaveCSSAsync("opacity", "1");
 
@@ -43,7 +43,7 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
-        await DeselectNavigatedNodeAsync();
+        await App.DeselectAsync();
 
         // An icon with lines: the end node id of a drawn line that has a preview target.
         string id = await Page.EvaluateAsync<string>(
@@ -75,18 +75,5 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         // Leaving the canvas ends the preview.
         await Page.Mouse.MoveAsync(0, 0);
         await Page.WaitForFunctionAsync("() => document.getElementById('line-preview-style').textContent === ''");
-    }
-
-    // Search selects the node it goes to, once its animation ends: wait for that, then clear it.
-    async Task DeselectNavigatedNodeAsync()
-    {
-        await Expect(Page.Locator("#svgcanvas g.line-dim")).Not.ToHaveCountAsync(0);
-        await DeselectAsync();
-    }
-
-    async Task DeselectAsync()
-    {
-        await Page.Keyboard.PressAsync("Escape");
-        await Expect(Page.Locator("#svgcanvas g.line-dim")).ToHaveCountAsync(0);
     }
 }
