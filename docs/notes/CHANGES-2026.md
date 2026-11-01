@@ -116,6 +116,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Look and feel (Jun–Jul).** Lighter toolbars and theme, a new app icon, coloured node icons per
   kind (class, interface, enum, record), descriptions on nodes, a first-time demo message and a
   help page.
+- **Softer dark theme (Nov 1).** A very dark grey canvas (#101113) instead of near black,
+  pastel container frames instead of full-strength colors (the red frame read as an error), and
+  container fills a small step lighter than the canvas instead of near-black stains; off-white
+  text. Lighter greys were tried and looked misty.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
