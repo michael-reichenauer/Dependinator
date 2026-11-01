@@ -10,7 +10,6 @@
 @inject IPointerEventService pointerEventService
 @inject IApplicationEvents applicationEvents
 @inject IAiService aiService
-@inject IJSInterop jsInterop
 @inject ISnackbar snackbar
 
 @* Menu › Settings …: the preferences set once and then left alone, in one column of sections.
@@ -84,6 +83,7 @@
         <div class="dep-settings__section">
           <MudText Typo="Typo.overline" Class="dep-settings__heading">This model</MudText>
           <MudCheckBox T="bool" Value="includeTestProjects" ValueChanged="SetIncludeTestProjectsAsync" Dense="true"
+                       Disabled="isParsing"
                        Color="Color.Primary" Label="Include test projects"
                        title="Re-parses the solution. Test projects are excluded by default."
                        data-checked="@Checked(includeTestProjects)" data-testid="settings-include-test-projects" />
@@ -93,9 +93,9 @@
 
       @if (aiService.IsAvailable)
       {
-        <div class="dep-settings__section" id="@AiSectionId">
+        <div class="dep-settings__section">
           <MudText Typo="Typo.overline" Class="dep-settings__heading">AI</MudText>
-          <AiSettings />
+          <AiSettings ScrollIntoView="ShowAi" />
         </div>
       }
 
@@ -114,11 +114,9 @@
 </MudDialog>
 
 @code {
-  const string AiSectionId = "dep-settings-ai";
-
   [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
-  // Opened from an AI provider menu's "AI settings …": scrolls to the AI section.
+  // Opened from an AI provider menu's "AI settings …": scrolls to the AI section once it is shown.
   [Parameter] public bool ShowAi { get; set; }
 
   static readonly (AppTheme Theme, string Label, string? Title)[] Themes =
@@ -137,6 +135,7 @@
 
   NodeLayoutDensity density = NodeLayout.Density;
   bool includeTestProjects;
+  bool isParsing; // The re-parse after Include test projects changed, which a second click must not overlap
 
   public static async Task ShowAsync(IDialogService dialogService, bool showAi = false)
   {
@@ -147,12 +146,6 @@
   }
 
   protected override void OnInitialized() => includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
-
-  protected override async Task OnAfterRenderAsync(bool firstRender)
-  {
-    if (firstRender && ShowAi && aiService.IsAvailable)
-      await jsInterop.Call("scrollIntoView", AiSectionId);
-  }
 
   // Test projects only exist in C# solutions, and only the hosts that parse can re-parse.
   bool CanIncludeTestProjects =>
@@ -169,32 +162,25 @@
     await configService.SetAsync(config => config.LayoutDensity = value);
   }
 
-  async Task SetDimUnrelatedLinesAsync(bool isOn)
-  {
-    viewOptions.SetDimUnrelatedLines(isOn);
-    await configService.SetAsync(config => config.DimUnrelatedLines = isOn);
-    RedrawTiles(); // Dimming is baked into the cached tiles
-  }
+  // The diagram settings are baked into the cached tiles, so the tiles are drawn again.
+  Task SetDimUnrelatedLinesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetDimUnrelatedLines(isOn), config => config.DimUnrelatedLines = isOn);
 
-  async Task SetLinkCountWidthsAsync(bool isOn)
-  {
-    viewOptions.SetLinkCountWidthsShown(isOn);
-    await configService.SetAsync(config => config.ShowLinkCountWidths = isOn);
-    RedrawTiles(); // Line widths are baked into the cached tiles
-  }
+  Task SetLinkCountWidthsAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetLinkCountWidthsShown(isOn), config => config.ShowLinkCountWidths = isOn);
 
-  async Task SetProblemBadgesAsync(bool isOn)
-  {
-    viewOptions.SetProblemBadgesShown(isOn);
-    await configService.SetAsync(config => config.ShowProblemBadges = isOn);
-    RedrawTiles(); // The badges are baked into the tiles
-  }
+  Task SetProblemBadgesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetProblemBadgesShown(isOn), config => config.ShowProblemBadges = isOn);
 
-  async Task SetHiddenBadgesAsync(bool isOn)
+  Task SetHiddenBadgesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetHiddenBadgesShown(isOn), config => config.ShowHiddenBadges = isOn);
+
+  async Task SetTileOptionAsync(Action setViewOption, Action<Config> saveConfig)
   {
-    viewOptions.SetHiddenBadgesShown(isOn);
-    await configService.SetAsync(config => config.ShowHiddenBadges = isOn);
-    RedrawTiles(); // The badges are baked into the tiles
+    setViewOption();
+    await configService.SetAsync(saveConfig);
+    modelService.ClearCache();
+    applicationEvents.TriggerUIStateChanged();
   }
 
   async Task SetInvertScrollZoomAsync(bool isOn)
@@ -206,19 +192,23 @@
 
   async Task SetIncludeTestProjectsAsync(bool isOn)
   {
+    if (isParsing)
+      return;
+    isParsing = true;
     includeTestProjects = isOn;
     // The refresh path only shows discreet progress, so say what is happening.
     snackbar.Add(isOn ? "Parsing with test projects ..." : "Parsing without test projects ...", Severity.Info);
 
     // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
-    await modelService.SetIncludeTestProjectsAsync(isOn);
-    includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
-  }
-
-  void RedrawTiles()
-  {
-    modelService.ClearCache();
-    applicationEvents.TriggerUIStateChanged();
+    try
+    {
+      await modelService.SetIncludeTestProjectsAsync(isOn);
+    }
+    finally
+    {
+      isParsing = false;
+      includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
+    }
   }
 
   void Close() => MudDialog.Close();

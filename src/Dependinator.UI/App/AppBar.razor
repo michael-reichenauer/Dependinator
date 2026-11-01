@@ -729,7 +729,6 @@
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
 
-
     async Task ToggleMinimapAsync()
     {
         var newValue = !viewOptions.IsMinimapShown;
@@ -850,8 +849,6 @@
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
     string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
 
-
-
     Task ToggleEditMode() => SetEditModeAsync(!viewOptions.IsEditingEnabled);
 
     async Task SetEditModeAsync(bool isEnabled)
@@ -872,7 +869,6 @@
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
-
 
     static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
 

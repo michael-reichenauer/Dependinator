@@ -148,17 +148,39 @@ public sealed class AppPage
         await Expect(ToolbarEdit).ToHaveAttributeAsync("data-checked", "true");
     }
 
-    // Menu › Settings … (SettingsDialog): opens the dialog and waits for it.
+    // Menu › Settings … (SettingsDialog): opens the dialog and waits for it. The menu item can
+    // be re-rendered (detached) under the click, so the open is retried until the dialog shows;
+    // a click on an item that is not there opens nothing, so a retry cannot open two dialogs.
     public async Task OpenSettingsAsync()
     {
-        await (await OpenMenuItemAsync("menu-settings")).ClickAsync();
-        await Expect(page.GetByTestId("settings-dialog")).ToBeVisibleAsync();
+        ILocator dialog = page.GetByTestId("settings-dialog");
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await (await OpenMenuItemAsync("menu-settings")).ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                await dialog.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                if (await dialog.IsVisibleAsync())
+                    return;
+                await page.Keyboard.PressAsync("Escape"); // Close a menu left open
+            }
+        }
     }
 
+    // Closes the dialog and waits until its overlay is gone too, since a fading overlay would
+    // take the next click (e.g. reopening the menu).
     public async Task CloseSettingsAsync()
     {
+        // Another dialog may stay open below (Settings opened from a review dialog's AI menu).
+        ILocator containers = page.Locator(".mud-dialog-container");
+        int open = await containers.CountAsync();
         await page.GetByTestId("settings-close").ClickAsync();
         await Expect(page.GetByTestId("settings-dialog")).ToHaveCountAsync(0);
+        await Expect(containers).ToHaveCountAsync(Math.Max(0, open - 1));
     }
 
     // Asserts a Settings dialog checkbox or radio (data-checked), then closes the dialog again.
