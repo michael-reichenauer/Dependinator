@@ -118,7 +118,7 @@ function getWebviewHtml(
             var isDark = document.body.classList.contains("vscode-dark")
                 || document.body.classList.contains("vscode-high-contrast");
             document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-            document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+            document.body.style.backgroundColor = isDark ? "#101113" : "#FAFAFA";
         })();
     </script>
     <div id="app">
