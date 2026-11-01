@@ -215,8 +215,10 @@ class SvgService : ISvgService
     internal static bool IsLineLit(Line line, RenderSelection selection) =>
         !selection.IsEmpty && !IsLineDimmed(line, selection);
 
+    // The real selection only: a cycle picked in the cycles panel lights nothing more than its
+    // own lines, which are cycle lines and full strength anyway.
     static bool IsLineLit(Line line, RenderContext context) =>
-        !IsOtherCycleLine(line, context) && IsLineLit(line, context.Flags.DimSelection);
+        !IsOtherCycleLine(line, context) && IsLineLit(line, context.Flags.Selection);
 
     // While a dependency path is shown, everything off the path fades so the chain stands out.
     // While one cycle is picked in the cycles panel, the other cycles' lines fade.
@@ -541,7 +543,13 @@ class SvgService : ISvgService
     {
         foreach (var (line, _) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
         {
-            var labelSvg = LineSvg.GetLineLabelSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+            var labelSvg = LineSvg.GetLineLabelSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                IsLineLit(line, context)
+            );
             if (labelSvg.Length > 0)
                 yield return labelSvg;
         }

@@ -11,7 +11,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // on a node icon lights its lines (the hover preview in jsInterop.js).
 public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
 {
-    const string RestingLine = "#svgcanvas g.line-vis:not(.line-lit):not(.line-accent):not(.line-cycle)";
+    const string RestingLine =
+        "#svgcanvas g.line-vis:not(.line-lit):not(.line-accent):not(.line-cycle):not(.line-path):not(.line-rule)";
 
     [E2EFact]
     public async Task RestingLines_ShouldBeSoft_UnlessTurnedOff()

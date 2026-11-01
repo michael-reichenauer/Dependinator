@@ -77,15 +77,23 @@ static class LineSvg
 
     // A line's label on its own, for the label layer SvgService draws above the child nodes
     // (the sibling lines themselves lie under the nodes, which would cover a label drawn with
-    // them). Dimmed like its line; hovering the line does not restore it, which is fine.
-    public static string GetLineLabelSvg(Line line, Pos nodeCanvasPos, double childrenZoom, bool isDimmed)
+    // them). Dimmed, softened and hover-previewed like its line (the same classes and data-n);
+    // hovering the line does not restore it, which is fine.
+    public static string GetLineLabelSvg(
+        Line line,
+        Pos nodeCanvasPos,
+        double childrenZoom,
+        bool isDimmed,
+        bool isLit = false
+    )
     {
         if (!line.HasLabel || !LinePathGeometry.TryGetLocalEndpoints(line, out _))
             return "";
 
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var text = LabelSvg(line, polylinePoints, childrenZoom);
-        return isDimmed ? $"""<g class="line-dim">{text}</g>""" : text;
+        var labelClass = "line-vis" + (isDimmed ? " line-dim" : "") + (isLit ? " line-lit" : "");
+        return $"""<g class="{labelClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">{text}</g>""";
     }
 
     public static string GetDirectLineSvg(

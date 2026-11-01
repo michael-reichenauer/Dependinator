@@ -469,7 +469,8 @@ export function addPointerEventListener(elementId, eventName, instance, function
 // (data-line-preview, NodeSvg) for a moment lights that node's lines and fades the others to
 // --line-preview-dim (Canvas.razor.cs), like a short-lived selection. Each line names its two
 // end nodes in data-n (LineSvg), so one stylesheet rule does it, without a redraw; the rule
-// also covers tiles drawn while it is on. A press, the wheel or leaving the node ends it.
+// also covers tiles drawn while it is on. Lines that mean something (explorer, cycle, path, rule)
+// are not faded. A press, a key, the wheel or leaving the node ends it.
 const linePreviewDelayMs = 250;
 
 export function initLinePreview(elementId) {
@@ -477,9 +478,14 @@ export function initLinePreview(elementId) {
   if (!svg || svg.dataset.linePreviewInit) return;
   svg.dataset.linePreviewInit = "1";
 
-  const style = document.createElement("style");
-  style.id = "line-preview-style";
-  document.head.appendChild(style);
+  // One style element, reused if the canvas is created again (cleared, so no stale rule).
+  let style = document.getElementById("line-preview-style");
+  if (!style) {
+    style = document.createElement("style");
+    style.id = "line-preview-style";
+    document.head.appendChild(style);
+  }
+  style.textContent = "";
   let shownId = null;
   let pendingId = null;
   let timer = null;
@@ -487,7 +493,7 @@ export function initLinePreview(elementId) {
   function show(id) {
     shownId = id;
     style.textContent = id
-      ? `#${elementId} .line-vis:not([data-n~="${id}"]) { opacity: var(--line-preview-dim) !important; }
+      ? `#${elementId} .line-vis:not([data-n~="${id}"]):not(.line-accent, .line-cycle, .line-path, .line-rule) { opacity: var(--line-preview-dim) !important; }
          #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }`
       : "";
   }
@@ -514,6 +520,7 @@ export function initLinePreview(elementId) {
   svg.addEventListener("pointerdown", clear);
   svg.addEventListener("wheel", clear, { passive: true });
   svg.addEventListener("pointerleave", clear);
+  document.addEventListener("keydown", clear);
 }
 
 const openDatabases = new Map();
