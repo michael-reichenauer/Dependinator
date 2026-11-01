@@ -420,7 +420,36 @@
     font-size: 1rem;
 }
 
-/* Settings › AI: a row per provider, the default picked by its radio. */
+/* Menu › Settings …: one column of sections (SettingsDialog). */
+.dep-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dep-settings__heading {
+    display: block;
+    line-height: 1.6;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-settings__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+
+.dep-settings__label {
+    min-width: 110px;
+}
+
+.dep-settings__hint {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Settings › AI (AiSettings): a row per provider, the default picked by its radio. */
 .dep-ai-settings {
     display: flex;
     flex-direction: column;

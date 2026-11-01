@@ -57,13 +57,12 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Saved in the config: still on after a reload, and it turns off again.
         await App.GotoMainPageAsync();
-        await App.ExpectSubMenuItemCheckedAsync("menu-view", "menu-link-count-widths", true);
+        await App.ExpectSettingAsync("settings-link-count-widths", true);
         await ToggleWidthsAsync(expectOn: false);
     }
 
-    // Click the toggle and verify it really flipped (which also closes the menu).
-    Task ToggleWidthsAsync(bool expectOn) =>
-        App.ToggleSubMenuItemAsync("menu-view", "menu-link-count-widths", expectOn);
+    // Click the Settings checkbox and verify it really flipped (the dialog is closed again).
+    Task ToggleWidthsAsync(bool expectOn) => App.ToggleSettingAsync("settings-link-count-widths", expectOn);
 
     // The visible polyline of the line with the given hover title ("Source→Target (n)", see
     // AppPage.LineTitle). The Has filter is resolved relative to each line group, so the title

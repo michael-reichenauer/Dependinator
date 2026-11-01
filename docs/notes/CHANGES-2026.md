@@ -123,6 +123,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Light theme by default (Nov 1).** View › Theme starts on Light instead of System (light
   still looks better, and is what most users expect); System and Dark stay as options. A stored
   Light or Dark choice is kept; the old stored System counts as unset.
+- **Settings dialog (Nov 1).** Menu › Settings … opens one dialog for the preferences set once:
+  Appearance (theme, and layout density, which had no UI before), Diagram (dim unrelated lines,
+  line widths by link count, problem and hidden node badges), Mouse (invert scroll zoom), This
+  model (include test projects) and AI (the former Settings › AI dialog). They left the View and
+  Settings menus, which keep the toggles flipped many times a session (edit mode, panels, the
+  Lines and Rows filters). An AI menu's "AI settings …" opens the dialog at its AI section.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and

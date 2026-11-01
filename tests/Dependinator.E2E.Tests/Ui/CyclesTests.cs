@@ -61,14 +61,14 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     // Clicking a cycle frames its nodes inside their opened container and picks it: its lines
     // stay red while the other cycles' lines fade (the demo's Core Utils namespace holds two
     // cycles), and so do the lines that do not touch its nodes, as if they were selected (but
-    // without the selection's thicker lines, even with View › Line Widths by Link Count on).
+    // without the selection's thicker lines, even with Settings › Line widths by link count on).
     // Clicking it again shows all cycles alike.
     [E2EFact]
     public async Task ClickCycle_ShouldShowItsNodes_AndDimTheOtherCycles_UntilClickedAgain()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await App.ToggleSubMenuItemAsync("menu-view", "menu-link-count-widths", true);
+        await App.ToggleSettingAsync("settings-link-count-widths", true);
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         ILocator row = Page.GetByTestId("cycles-item-show").Filter(new() { HasText = "ExceptionHandling" });
         ILocator dimmedCycleLines = Page.Locator("#svgcanvas .line-cycle.line-dim");
@@ -113,19 +113,19 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     // The diagram marks where the cycles are: the top-level solution node has a badge counting
-    // the problems inside it, which the View menu turns off and on again.
+    // the problems inside it, which Settings turns off and on again.
     [E2EFact]
-    public async Task ProblemBadges_ShouldMarkTheSolution_AndFollowTheViewMenu()
+    public async Task ProblemBadges_ShouldMarkTheSolution_AndFollowTheSetting()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         ILocator badges = Page.Locator(".problemBadge");
         await Expect(Page.Locator(".problemBadge:not([data-warnings='0'])").First).ToBeAttachedAsync();
 
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await App.ToggleSettingAsync("settings-problem-badges", false);
         await Expect(badges).ToHaveCountAsync(0);
 
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await App.ToggleSettingAsync("settings-problem-badges", true);
         await Expect(badges.First).ToBeAttachedAsync();
     }
 

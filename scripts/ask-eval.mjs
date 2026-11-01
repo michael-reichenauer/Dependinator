@@ -60,8 +60,7 @@ async function waitForModel(page) {
 // never changes the setting in the user's own browser.
 async function turnOnClaudeCode(page) {
   await page.getByTestId("appbar-menu").click();
-  await page.getByTestId("menu-settings").hover();
-  await page.getByTestId("menu-ai-settings").click();
+  await page.getByTestId("menu-settings").click();
   const item = page.getByTestId("ai-settings-use-claude-code");
   await item.waitFor();
   if ((await item.getAttribute("data-checked")) !== "true") {
@@ -69,7 +68,7 @@ async function turnOnClaudeCode(page) {
     await page.getByTestId("use-claude-code-confirm").click();
     await page.waitForTimeout(1000); // The setting is saved after the click returns.
   }
-  await page.getByTestId("ai-settings-close").click();
+  await page.getByTestId("settings-close").click();
 }
 
 async function ask(page, question) {
