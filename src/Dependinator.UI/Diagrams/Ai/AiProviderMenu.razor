@@ -8,7 +8,8 @@
    prompt" where the place has one and "AI settings …" (the Settings dialog at its AI section, SettingsDialog). A provider that cannot
    do what the place needs (Need) is listed greyed, with why, so the user knows it is there. It
    opens from a small arrow next to the place's own button (Split), or from a chip that names the
-   current provider (Chip). Choosing a provider asks it once; the default stays. *@
+   current provider (Chip). Choosing a provider asks it once; the default stays. A place can add
+   its own items under the providers (MoreItems: "Copy prompt" in Improve Comments). *@
 <MudMenu AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Dense="true" PopoverClass="@MenuClass"
          Disabled="Disabled" data-testid="@($"{TestId}-providers")">
   <ActivatorContent>
@@ -54,6 +55,7 @@
         </div>
       </MudMenuItem>
     }
+    @MoreItems
     @if (OnShowPrompt.HasDelegate || aiService.IsAvailable)
     {
       <MudDivider />
@@ -93,6 +95,9 @@
   [Parameter] public bool Disabled { get; set; }
 
   [Parameter] public EventCallback<AiProvider> OnChoose { get; set; }
+
+  // The place's own items, under the providers.
+  [Parameter] public RenderFragment? MoreItems { get; set; }
 
   // "Show prompt" in the menu, where the place has no link of its own.
   [Parameter] public EventCallback OnShowPrompt { get; set; }
