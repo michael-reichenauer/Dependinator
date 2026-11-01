@@ -31,7 +31,7 @@ tests run only with `./scripts/e2e -s`). The full gate (`./scripts/e2e -a -s`) w
 
 - View history separate from undo: Back/Forward toolbar buttons, Alt+←/→, Backspace /
   Shift+Backspace; only jumps create entries (search, explorer, breadcrumb, double-click, fit).
-- Breadcrumb bar: the selected node's chain, or the container under the view centre.
+- Breadcrumb bar: the selected node's chain, or the container under the view centre (since Nov 2026 shown only while a node is selected).
 - Alt+Up / context menu "Zoom Out One Level"; Fit button in the toolbar; floating toolbars
   clamped below the app chrome.
 

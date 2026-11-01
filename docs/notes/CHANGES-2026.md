@@ -123,6 +123,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Light theme by default (Nov 1).** View › Theme starts on Light instead of System (light
   still looks better, and is what most users expect); System and Dark stay as options. A stored
   Light or Dark choice is kept; the old stored System counts as unset.
+- **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
+  node is selected, to keep the diagram clear; the "you are here" chain under the view center
+  still drives Escape and the context menu, but is no longer shown on its own.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and

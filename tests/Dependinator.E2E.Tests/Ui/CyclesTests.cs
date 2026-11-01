@@ -77,7 +77,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await row.ClickAsync();
         await Expect(row).ToHaveAttributeAsync("data-selected", "true");
-        await Expect(Page.GetByTestId("breadcrumb-item").Last).ToHaveTextAsync("Utils");
+        // Picking a cycle selects no node, so the breadcrumb stays hidden.
+        await Expect(Page.GetByTestId("breadcrumb")).ToBeHiddenAsync();
         await Expect(App.NodeLabel("ExceptionHandling")).ToBeVisibleAsync();
         await Expect(dimmedCycleLines.First).ToBeAttachedAsync();
         await Expect(brightCycleLines.First).ToBeAttachedAsync();

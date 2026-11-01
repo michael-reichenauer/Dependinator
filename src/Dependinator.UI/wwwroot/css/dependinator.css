@@ -73,11 +73,6 @@
     padding: 0 1px;
 }
 
-/* With nothing selected the chain is the view's location rather than a choice: shown dimmer. */
-.dep-breadcrumb--context .dep-breadcrumb__item:not(.dep-breadcrumb__model) {
-    opacity: 0.78;
-}
-
 /* The legend card (Legend.razor), bottom-left over the diagram. */
 .dep-legend {
     position: fixed;
