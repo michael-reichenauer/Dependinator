@@ -32,6 +32,10 @@ class Config
     public AppTheme CurrentTheme => SelectedTheme ?? (Theme is AppTheme.Dark ? AppTheme.Dark : AppTheme.Light);
     public bool DimUnrelatedLines { get; set; } = true;
 
+    // Lines drawn faint until a node is selected or hovered (Settings › Diagram › Soft lines);
+    // the default since Nov 2026, when many lines made the diagram feel overwhelming.
+    public bool SoftLines { get; set; } = true;
+
     // The selection's lines drawn at their link-count width (Settings › Line widths by link count);
     // off by default, since thick lines on every selection made the diagram look heavy.
     public bool ShowLinkCountWidths { get; set; } = false;

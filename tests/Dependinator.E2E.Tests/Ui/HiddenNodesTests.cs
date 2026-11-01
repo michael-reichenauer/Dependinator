@@ -39,6 +39,9 @@ public class HiddenNodesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.WaitForModelRenderedAsync();
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
+        // The navigation selects its node after its animation; clear that first, or it can land
+        // after the DemoTheme click and the hide hits OnInitialized instead (a CI flake).
+        await App.DeselectAsync();
         await App.SelectNodeByVisibleNameAsync("DemoTheme");
         await App.ClickNodeMenuItemAsync("node-menu-hide");
 

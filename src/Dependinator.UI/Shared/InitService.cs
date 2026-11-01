@@ -68,6 +68,7 @@ class InitService : IInitService
         Node.LegacyHiddenVisibility = config.ShowHiddenNodes ? NodeVisibility.Dimmed : NodeVisibility.Hidden;
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
+        viewOptions.SetSoftLines(config.SoftLines);
         viewOptions.SetLinkCountWidthsShown(config.ShowLinkCountWidths);
         viewOptions.SetMinimapShown(config.ShowMinimap);
         viewOptions.SetProblemBadgesShown(config.ShowProblemBadges);

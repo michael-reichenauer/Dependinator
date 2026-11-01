@@ -53,6 +53,10 @@
 
       <div class="dep-settings__section">
         <MudText Typo="Typo.overline" Class="dep-settings__heading">Diagram</MudText>
+        <MudCheckBox T="bool" Value="viewOptions.IsSoftLines" ValueChanged="SetSoftLinesAsync" Dense="true"
+                     Color="Color.Primary" Label="Soft lines"
+                     title="Draw lines faint until you select or hover a node; its lines, cycles, broken rules and paths stay at full strength (off: every line at full strength)."
+                     data-checked="@Checked(viewOptions.IsSoftLines)" data-testid="settings-soft-lines" />
         <MudCheckBox T="bool" Value="viewOptions.DimUnrelatedLines" ValueChanged="SetDimUnrelatedLinesAsync" Dense="true"
                      Color="Color.Primary" Label="Dim unrelated lines while a node or line is selected"
                      data-checked="@Checked(viewOptions.DimUnrelatedLines)" data-testid="settings-dim-unrelated-lines" />
@@ -160,6 +164,13 @@
     density = value;
     NodeLayout.SetDensity(value);
     await configService.SetAsync(config => config.LayoutDensity = value);
+  }
+
+  async Task SetSoftLinesAsync(bool isOn)
+  {
+    viewOptions.SetSoftLines(isOn);
+    await configService.SetAsync(config => config.SoftLines = isOn);
+    applicationEvents.TriggerUIStateChanged(); // Only the canvas CSS changes, the tiles stay
   }
 
   // The diagram settings are baked into the cached tiles, so the tiles are drawn again.

@@ -129,6 +129,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   model (include test projects) and AI (the former Settings › AI dialog). They left the View and
   Settings menus, which keep the toggles flipped many times a session (edit mode, panels, the
   Lines and Rows filters). An AI menu's "AI settings …" opens the dialog at its AI section.
+- **Soft lines (Nov 1).** Many lines made busy diagrams overwhelming: resting lines are now drawn
+  at 40%, the selected node's lines at full strength and the unrelated ones at 10%; cycle, rule,
+  path and explorer lines stay at full strength. Resting the mouse on a node icon or member row
+  lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
+  turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
+  ones) and fading only lines that leave their container.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
