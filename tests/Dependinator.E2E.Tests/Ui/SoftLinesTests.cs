@@ -45,26 +45,32 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.WaitForContainerNodeAsync("Main");
         await App.DeselectAsync();
 
-        // An icon with lines: the end node id of a drawn line that has a preview target.
-        string id = await Page.EvaluateAsync<string>(
+        // An icon with lines, inside the viewport: its id and the centre of its hover rect, read
+        // in one go and polled, since the tiles can be redrawn while the view settles.
+        IJSHandle found = await Page.WaitForFunctionAsync(
             """
             () => {
-              const ids = new Set([...document.querySelectorAll('#svgcanvas [data-line-preview]')]
-                .map(g => g.id.split('.')[0]));
+              const ids = new Set();
               for (const line of document.querySelectorAll('#svgcanvas g.line-vis[data-n]'))
-                for (const n of line.dataset.n.split(' '))
-                  if (ids.has(n)) return n;
-              return '';
+                for (const n of line.dataset.n.split(' ')) ids.add(n);
+              for (const g of document.querySelectorAll('#svgcanvas [data-line-preview]')) {
+                const id = g.id.split('.')[0];
+                const r = g.querySelector('rect')?.getBoundingClientRect();
+                if (!ids.has(id) || !r || r.width < 4 || r.height < 4) continue;
+                const x = r.x + r.width / 2, y = r.y + r.height / 2;
+                if (x < 0 || y < 80 || x > innerWidth || y > innerHeight) continue;
+                if (document.elementFromPoint(x, y)?.closest('[data-line-preview]') !== g) continue;
+                return { id, x, y };
+              }
+              return null;
             }
             """
         );
-        Assert.NotEmpty(id);
+        string id = await found.EvaluateAsync<string>("f => f.id");
+        float x = await found.EvaluateAsync<float>("f => f.x");
+        float y = await found.EvaluateAsync<float>("f => f.y");
 
-        // The mouse on the icon's hover rect (a forced locator hover lands on whatever is on top).
-        LocatorBoundingBoxResult? box = await Page.Locator($"#svgcanvas [id='{id}.n'][data-line-preview] rect")
-            .First.BoundingBoxAsync();
-        Assert.NotNull(box);
-        await Page.Mouse.MoveAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
+        await Page.Mouse.MoveAsync(x, y);
         await Page.WaitForFunctionAsync(
             "id => document.getElementById('line-preview-style').textContent.includes(id)",
             id
