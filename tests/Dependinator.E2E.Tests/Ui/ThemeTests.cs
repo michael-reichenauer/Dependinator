@@ -16,7 +16,7 @@ public class ThemeTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         ILocator html = Page.Locator("html");
 
-        // Headless browsers report a light system scheme, so System (the default) is light.
+        // Light is the default.
         await Expect(html).ToHaveAttributeAsync("data-theme", "light");
 
         // The dark palette is process-wide in this host, so it is switched back whatever happens
