@@ -1,15 +1,13 @@
 @using MudBlazor
 @inject IAiService aiService
 @inject IApplicationEvents applicationEvents
+@inject IJSInterop jsInterop
 
-@* Settings › AI: the AI the app asks by default (AiChoice), and the experimental Claude Code route,
-   turned on only after a warning, since it uses the user's Claude login. Every place that asks
-   uses the default, and its menu (▾) asks another provider once. Changes are saved at once. *@
-<MudDialog>
-  <TitleContent>
-    <MudText Typo="Typo.h6">AI</MudText>
-  </TitleContent>
-  <DialogContent>
+@* The AI section of the Settings dialog (Settings › AI): the AI the app asks by default (AiChoice),
+   and the experimental Claude Code route, turned on only after a warning, since it uses the user's
+   Claude login. Every place that asks uses the default, and its menu (▾) asks another provider once.
+   Changes are saved at once. *@
+<div id="@SectionId" data-testid="settings-ai-section">
     <div class="dep-about__text">
       The AI the app asks by default. Wherever the app asks, the menu next to the button asks another one, once.
     </div>
@@ -64,27 +62,29 @@
         </div>
       }
     }
-  </DialogContent>
-  <DialogActions>
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="ai-settings-close">Close</MudButton>
-  </DialogActions>
-</MudDialog>
+</div>
 
 @code {
-  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+  const string SectionId = "dep-settings-ai";
 
+  // Opened from an AI provider menu's "AI settings …": scrolls the section into view once its
+  // choices are shown (they arrive asynchronously, over RPC in VS Code).
+  [Parameter] public bool ScrollIntoView { get; set; }
+
+  bool isScrolled;
   AiChoice? choice;
   bool isClaudeCodeOn;
   bool isConfirmingClaudeCode;
 
-  public static async Task ShowAsync(IDialogService dialogService)
-  {
-    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-    var dialog = await dialogService.ShowAsync<AiSettingsDialog>((string?)null, options);
-    await dialog.Result;
-  }
-
   protected override Task OnInitializedAsync() => RefreshAsync();
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!ScrollIntoView || isScrolled || choice is null)
+      return;
+    isScrolled = true;
+    await jsInterop.Call("scrollIntoView", SectionId);
+  }
 
   async Task RefreshAsync()
   {
@@ -126,5 +126,4 @@
     applicationEvents.TriggerUIStateChanged();
   }
 
-  void Close() => MudDialog.Close();
 }

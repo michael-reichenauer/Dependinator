@@ -717,7 +717,7 @@ class SvgService : ISvgService
     {
         public RenderSelection Selection { get; init; }
 
-        // Emphasized lines are drawn at their link-count width (View › Line Widths by Link Count).
+        // Emphasized lines are drawn at their link-count width (Settings › Line widths by link count).
         public bool LinkCountWidths { get; init; }
 
         // The selection, or the picked cycle's nodes while nothing is selected (see FindDimSelection).

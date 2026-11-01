@@ -5,7 +5,7 @@
 
 @* The provider menu every place that asks an AI shares (AiOpinion, the Ask panel): the providers
    the user can ask (AiChoice), each with what it uses and costs, the default marked, then "Show
-   prompt" where the place has one and "AI settings …" (AiSettingsDialog). A provider that cannot
+   prompt" where the place has one and "AI settings …" (the Settings dialog at its AI section, SettingsDialog). A provider that cannot
    do what the place needs (Need) is listed greyed, with why, so the user knows it is there. It
    opens from a small arrow next to the place's own button (Split), or from a chip that names the
    current provider (Chip). Choosing a provider asks it once; the default stays. *@
@@ -105,7 +105,7 @@
 
   async Task ShowSettingsAsync()
   {
-    await AiSettingsDialog.ShowAsync(dialogService);
+    await Dependinator.UI.App.SettingsDialog.ShowAsync(dialogService, showAi: true);
     await OnSettingsChanged.InvokeAsync();
   }
 }

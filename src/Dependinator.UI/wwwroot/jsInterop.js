@@ -842,3 +842,8 @@ export function scrollToEnd(elementId) {
   const element = document.getElementById(elementId);
   if (element) element.scrollTop = element.scrollHeight;
 }
+
+// Scrolls an element into view (the Settings dialog's AI section, opened from an AI menu).
+export function scrollIntoView(elementId) {
+  document.getElementById(elementId)?.scrollIntoView({ block: "start" });
+}

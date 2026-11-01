@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the light/dark theme: View › Theme sets it, the page marks the choice on the root
+// Exercises the light/dark theme: Settings › Theme sets it, the page marks the choice on the root
 // element (data-theme, set by applyTheme in jsInterop.js), and the choice is stored in the
 // config so it survives a reload. The SVG palette itself is process-wide in this host, so only
 // the per-page signal is asserted here.
@@ -23,7 +23,7 @@ public class ThemeTests(ITestOutputHelper output) : E2ETestBase(output)
         // here; a test left dark would change what every later test renders.
         try
         {
-            await SetThemeAsync("menu-theme-dark");
+            await SetThemeAsync("settings-theme-dark");
             await Expect(html).ToHaveAttributeAsync("data-theme", "dark");
 
             await App.GotoMainPageAsync();
@@ -31,11 +31,11 @@ public class ThemeTests(ITestOutputHelper output) : E2ETestBase(output)
         }
         finally
         {
-            await SetThemeAsync("menu-theme-light");
+            await SetThemeAsync("settings-theme-light");
         }
         await Expect(html).ToHaveAttributeAsync("data-theme", "light");
     }
 
-    // Click the theme item and verify it is the checked one.
-    Task SetThemeAsync(string itemTestId) => App.ToggleSubMenuItemAsync("menu-view", itemTestId, expectChecked: true);
+    // Click the theme radio and verify it is the checked one.
+    Task SetThemeAsync(string radioTestId) => App.ToggleSettingAsync(radioTestId, expectChecked: true);
 }

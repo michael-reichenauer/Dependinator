@@ -20,7 +20,7 @@ class Config
     // chrome (link handles, resize handles) would otherwise clutter the diagram.
     public bool IsEditingEnabled { get; set; } = false;
 
-    // The theme the user picked in View › Theme; null until they pick one, which means Light.
+    // The theme the user picked in Settings › Theme; null until they pick one, which means Light.
     public AppTheme? SelectedTheme { get; set; }
 
     // The theme setting before Light became the default (Nov 2026), when System was the
@@ -32,7 +32,7 @@ class Config
     public AppTheme CurrentTheme => SelectedTheme ?? (Theme is AppTheme.Dark ? AppTheme.Dark : AppTheme.Light);
     public bool DimUnrelatedLines { get; set; } = true;
 
-    // The selection's lines drawn at their link-count width (View › Line Widths by Link Count);
+    // The selection's lines drawn at their link-count width (Settings › Line widths by link count);
     // off by default, since thick lines on every selection made the diagram look heavy.
     public bool ShowLinkCountWidths { get; set; } = false;
     public bool HideExternalLines { get; set; } = false;
@@ -56,10 +56,10 @@ class Config
     // The minimap in the corner of the diagram (View › Show Minimap).
     public bool ShowMinimap { get; set; } = false;
 
-    // Badges on the nodes that contain problems (View › Show Problem Badges).
+    // Badges on the nodes that contain problems (Settings › Problem badges).
     public bool ShowProblemBadges { get; set; } = true;
 
-    // The badge on a node with children the user hid (View › Show Hidden Node Badges).
+    // The badge on a node with children the user hid (Settings › Hidden node badges).
     public bool ShowHiddenBadges { get; set; } = true;
 
     // The experimental Claude Code provider (Settings › AI), turned on after a warning: `claude -p`
