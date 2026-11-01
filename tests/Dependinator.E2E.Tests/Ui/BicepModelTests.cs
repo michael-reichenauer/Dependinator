@@ -27,10 +27,8 @@ public class BicepModelTests(ITestOutputHelper output) : E2ETestBase(output)
         // ("web" is not "webHost"), unlike the substring match of a label.
         await Expect(App.Node("main.bicep")).ToBeVisibleAsync(new() { Timeout = 60_000 });
 
-        // A deployment is a parseable model: it has the Parse button and names its kind.
+        // A deployment is a parseable model: it has the Parse button.
         await Expect(Page.GetByTestId("toolbar-parse")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("breadcrumb-model"))
-            .ToHaveAttributeAsync("title", new Regex(@"main\.bicep \(Bicep deployment\)"));
 
         // At the initial zoom the deployment is one icon; navigate into it through the search
         // dialog. The menu button's tooltip tends to stay open after the model item click (the
@@ -46,5 +44,8 @@ public class BicepModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.Node("web")).ToBeVisibleAsync();
         await Expect(App.Node("plan")).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("breadcrumb-item").Filter(new() { HasText = "storage" })).ToBeVisibleAsync();
+        // The navigation selected storage, so the breadcrumb shows and names the model's kind.
+        await Expect(Page.GetByTestId("breadcrumb-model"))
+            .ToHaveAttributeAsync("title", new Regex(@"main\.bicep \(Bicep deployment\)"));
     }
 }

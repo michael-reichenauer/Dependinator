@@ -135,6 +135,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
   turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
   ones) and fading only lines that leave their container.
+- **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
+  node is selected, to keep the diagram clear; the "you are here" chain under the view center
+  still drives Escape and the context menu, but is no longer shown on its own.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
