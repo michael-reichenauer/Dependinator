@@ -27,13 +27,12 @@ public class SoftLinesTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.SelectContainerNodeAsync("Demo.UI.Main");
         await Expect(Page.Locator("#svgcanvas g.line-lit").First).ToHaveCSSAsync("opacity", "1");
 
-        // Off: every resting line at full strength (closing the dialog keeps the selection).
-        await App.ToggleSettingAsync("settings-soft-lines", expectChecked: false);
+        // Off: every resting line at full strength.
         await DeselectAsync();
+        await App.ToggleSettingAsync("settings-soft-lines", expectChecked: false);
         await Expect(Page.Locator(RestingLine).First).ToHaveCSSAsync("opacity", "1");
 
         await App.ToggleSettingAsync("settings-soft-lines", expectChecked: true);
-        await DeselectAsync();
         await Expect(Page.Locator(RestingLine).First).ToHaveCSSAsync("opacity", "0.4");
     }
 
