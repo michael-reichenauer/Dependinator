@@ -25,6 +25,10 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.Node("rgPlatform.networking")).ToBeVisibleAsync();
         await Expect(App.Node("rgPlatform.keyVault")).ToBeVisibleAsync();
         await Expect(App.Node("rgPlatform.monitoring")).ToBeVisibleAsync();
+
+        // The navigation selected the module, so the breadcrumb shows and names the model's kind.
+        await Expect(Page.GetByTestId("breadcrumb-model"))
+            .ToHaveAttributeAsync("title", new Regex(@"Demo\.bicep \(Bicep deployment\)"));
     }
 
     // Lines that only carry a value into a parameter or variable row are left out by default;
@@ -86,8 +90,6 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.MenuItem("menu-model-item").Filter(new() { HasText = "Demo.bicep" }).ClickAsync();
 
         await Expect(App.Node("Demo.bicep")).ToBeVisibleAsync();
-        await Expect(Page.GetByTestId("breadcrumb-model"))
-            .ToHaveAttributeAsync("title", new Regex(@"Demo\.bicep \(Bicep deployment\)"));
     }
 
     async Task NavigateToAsync(string fullName)

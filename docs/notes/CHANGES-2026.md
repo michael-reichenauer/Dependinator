@@ -129,6 +129,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   model (include test projects) and AI (the former Settings › AI dialog). They left the View and
   Settings menus, which keep the toggles flipped many times a session (edit mode, panels, the
   Lines and Rows filters). An AI menu's "AI settings …" opens the dialog at its AI section.
+- **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
+  node is selected, to keep the diagram clear; the "you are here" chain under the view center
+  still drives Escape and the context menu, but is no longer shown on its own.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
