@@ -148,11 +148,78 @@ public sealed class AppPage
         await Expect(ToolbarEdit).ToHaveAttributeAsync("data-checked", "true");
     }
 
-    // Settings › AI (AiSettingsDialog): turns on the experimental Claude Code route through its
-    // warning, and makes a provider ("claude", "code", "chat") the default, then closes the dialog.
+    // Menu › Settings … (SettingsDialog): opens the dialog and waits for it. The menu item can
+    // be re-rendered (detached) under the click, so the open is retried until the dialog shows;
+    // a click on an item that is not there opens nothing, so a retry cannot open two dialogs.
+    public async Task OpenSettingsAsync()
+    {
+        ILocator dialog = page.GetByTestId("settings-dialog");
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                await (await OpenMenuItemAsync("menu-settings")).ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                await dialog.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts)
+            {
+                if (await dialog.IsVisibleAsync())
+                    return;
+                await page.Keyboard.PressAsync("Escape"); // Close a menu left open
+            }
+        }
+    }
+
+    // Closes the dialog and waits until its overlay is gone too, since a fading overlay would
+    // take the next click (e.g. reopening the menu).
+    public async Task CloseSettingsAsync()
+    {
+        // Another dialog may stay open below (Settings opened from a review dialog's AI menu).
+        ILocator containers = page.Locator(".mud-dialog-container");
+        int open = await containers.CountAsync();
+        await page.GetByTestId("settings-close").ClickAsync();
+        await Expect(page.GetByTestId("settings-dialog")).ToHaveCountAsync(0);
+        await Expect(containers).ToHaveCountAsync(Math.Max(0, open - 1));
+    }
+
+    // Asserts a Settings dialog checkbox or radio (data-checked), then closes the dialog again.
+    public async Task ExpectSettingAsync(string testId, bool isChecked)
+    {
+        await OpenSettingsAsync();
+        await Expect(page.GetByTestId(testId)).ToHaveAttributeAsync("data-checked", isChecked ? "true" : "false");
+        await CloseSettingsAsync();
+    }
+
+    // Clicks a Settings dialog checkbox or radio and verifies its new state, then closes the
+    // dialog. The click is not retried: clicking a checkbox twice would flip it back.
+    public async Task ToggleSettingAsync(string testId, bool expectChecked)
+    {
+        await OpenSettingsAsync();
+        ILocator setting = page.GetByTestId(testId);
+        await setting.ClickAsync();
+        await Expect(setting).ToHaveAttributeAsync("data-checked", expectChecked ? "true" : "false");
+        await CloseSettingsAsync();
+    }
+
+    // Sets a Settings dialog checkbox to a state (no click when it already is), then closes it.
+    public async Task SetSettingAsync(string testId, bool isChecked)
+    {
+        await OpenSettingsAsync();
+        ILocator setting = page.GetByTestId(testId);
+        string expected = isChecked ? "true" : "false";
+        if (await setting.GetAttributeAsync("data-checked") != expected)
+            await setting.ClickAsync();
+        await Expect(setting).ToHaveAttributeAsync("data-checked", expected);
+        await CloseSettingsAsync();
+    }
+
+    // Settings › AI (the AI section of SettingsDialog): turns on the experimental Claude Code
+    // route through its warning, and makes a provider ("claude", "code", "chat") the default,
+    // then closes the dialog.
     public async Task SetAiSettingsAsync(bool useClaudeCode = false, string? defaultProvider = null)
     {
-        await (await OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        await OpenSettingsAsync();
         ILocator useCode = page.GetByTestId("ai-settings-use-claude-code");
         await Expect(useCode).ToBeVisibleAsync();
         if (useClaudeCode && await useCode.GetAttributeAsync("data-checked") != "true")
@@ -167,8 +234,7 @@ public sealed class AppPage
             await radio.ClickAsync();
             await Expect(radio).ToHaveAttributeAsync("data-checked", "true");
         }
-        await page.GetByTestId("ai-settings-close").ClickAsync();
-        await Expect(useCode).ToHaveCountAsync(0);
+        await CloseSettingsAsync();
     }
 
     // The cloud sync/auth button (AppBar.razor). Clicking it while signed out starts login.

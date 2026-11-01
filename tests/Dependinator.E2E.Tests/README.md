@@ -191,8 +191,9 @@ Useful app-specific selectors:
   Hooks: app menu activator `appbar-menu`; its items `menu-undo`, `menu-redo`,
   `menu-search`, `menu-fit-to-screen`, `menu-refresh`, `menu-show-hidden-nodes`,
   `menu-edit-mode`, `menu-delete-model`, `menu-local-paths`, `menu-cloud-models`,
-  `menu-login`/`menu-logout`, `menu-about`, `menu-whats-new`, `menu-settings` +
-  `menu-include-test-projects`; toolbar buttons `toolbar-cloud`,
+  `menu-login`/`menu-logout`, `menu-about`, `menu-whats-new`, `menu-settings` (the
+  Settings dialog: `settings-dialog`, `settings-close`, `settings-*` checkboxes and radios
+  with `data-checked`, e.g. `settings-include-test-projects`); toolbar buttons `toolbar-cloud`,
   `toolbar-search`, `toolbar-undo`, `toolbar-redo`, `toolbar-refresh`,
   `toolbar-edit`. The node context toolbar uses `node-*` (e.g. `node-menu`,
   `node-references`, `node-show-source`) and the line toolbar `line-*`. Add a new

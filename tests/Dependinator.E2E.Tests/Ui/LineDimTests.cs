@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises selection dimming (SvgService.IsLineDimmed + the line-dim CSS): with a node
-// selected, lines that do not touch it get the line-dim class; View › Dim Unrelated Lines turns
+// selected, lines that do not touch it get the line-dim class; Settings › Dim unrelated lines turns
 // it off, and the setting is stored in the config.
 public class LineDimTests(ITestOutputHelper output) : E2ETestBase(output)
 {
@@ -37,7 +37,7 @@ public class LineDimTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(dimmed).ToHaveCountAsync(0);
     }
 
-    // Click the toggle and verify it really flipped; the menu is left closed, so the canvas is
-    // free again.
-    Task ToggleDimAsync(bool expectOn) => App.ToggleSubMenuItemAsync("menu-view", "menu-dim-unrelated-lines", expectOn);
+    // Click the Settings checkbox and verify it really flipped; the dialog is closed again, so
+    // the canvas is free.
+    Task ToggleDimAsync(bool expectOn) => App.ToggleSettingAsync("settings-dim-unrelated-lines", expectOn);
 }
