@@ -120,6 +120,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   pastel container frames instead of full-strength colors (the red frame read as an error), and
   container fills a small step lighter than the canvas instead of near-black stains; off-white
   text. Lighter greys were tried and looked misty.
+- **Light theme by default (Nov 1).** View › Theme starts on Light instead of System (light
+  still looks better, and is what most users expect); System and Dark stay as options. A stored
+  Light or Dark choice is kept; the old stored System counts as unset.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and

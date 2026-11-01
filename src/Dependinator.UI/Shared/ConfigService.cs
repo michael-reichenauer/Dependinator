@@ -19,7 +19,17 @@ class Config
     // Edit mode is off by default in every host: most sessions only explore, and edit-only
     // chrome (link handles, resize handles) would otherwise clutter the diagram.
     public bool IsEditingEnabled { get; set; } = false;
+
+    // The theme the user picked in View › Theme; null until they pick one, which means Light.
+    public AppTheme? SelectedTheme { get; set; }
+
+    // The theme setting before Light became the default (Nov 2026), when System was the
+    // default. Only read, for configs saved before then: every config stored it, so a stored
+    // System cannot be told from one never changed, and counts as unset (Light). A stored Light
+    // or Dark was a choice and is kept.
     public AppTheme Theme { get; set; } = AppTheme.System;
+
+    public AppTheme CurrentTheme => SelectedTheme ?? (Theme is AppTheme.Dark ? AppTheme.Dark : AppTheme.Light);
     public bool DimUnrelatedLines { get; set; } = true;
 
     // The selection's lines drawn at their link-count width (View › Line Widths by Link Count);

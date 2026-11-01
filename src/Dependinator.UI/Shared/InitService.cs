@@ -92,7 +92,7 @@ class InitService : IInitService
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;
         // The theme must be applied before the first model render, since the SVG tiles bake the
         // palette in.
-        await themeService.InitAsync(config.Theme);
+        await themeService.InitAsync(config.CurrentTheme);
         await keyboardService.InitAsync();
         await screenService.InitAsync(component);
         await pointerEventService.InitAsync();
