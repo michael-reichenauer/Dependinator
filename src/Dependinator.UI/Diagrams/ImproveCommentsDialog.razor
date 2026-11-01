@@ -2,21 +2,25 @@
 @using MudBlazor
 @inject IClipboardService clipboardService
 @inject IDialogService dialogService
+@inject IAiService aiService
 
-@* Improve Comments (ImproveCommentsService): Claude Code adds or rewrites the comments of a node's
-   namespaces and types, or of everything inside it, which the diagram shows as their
-   descriptions. The scope shows how many that is and in how many files, with a warning when one
-   run may not finish in time. "Improve with Claude Code" (ClaudeCodeFix, where the experimental
-   route is on) runs it on the code as it is, on the current branch; "Copy prompt" is for any AI
-   that can change the code. Once Claude Code changed files, only "Done" is left. *@
-<MudDialog>
+@* Improve Comments (ImproveCommentsService): an AI that can change the code adds or rewrites the
+   comments of a node's namespaces and types, or of everything inside it, which the diagram shows as
+   their descriptions. The scope shows how many that is and in how many files, with a warning when
+   one run may not finish in time. Under it, the AI section looks like the review dialogs' (AiOpinion):
+   one button for the AI that does it, the provider menu beside it (AiProviderMenu, with "Copy prompt"
+   added) and "Show prompt". Claude Code is the only provider that changes code, so its "Improve with
+   Claude Code" (ClaudeCodeFix, where the experimental route is on) is the button when it can run here,
+   on the code as it is, on the current branch; otherwise "Copy prompt" is, for any AI that can change
+   the code. The dialog's own row only closes it: Close, or Done once Claude Code changed files. *@
+<MudDialog ActionsClass="dep-ai__actions">
   <TitleContent>
     <MudText Typo="Typo.h6">Improve comments</MudText>
   </TitleContent>
   <DialogContent>
     <div class="dep-about__text">
-      Claude Code adds or rewrites the comments of namespaces and types, which the diagram shows as their
-      descriptions. It reads the code and the dependencies first, changes comments only, and runs no commands.
+      An AI adds or rewrites the comments of namespaces and types, which the diagram shows as their descriptions.
+      It reads the code and the dependencies first, and changes comments only.
     </div>
     @if (HasChildren)
     {
@@ -38,13 +42,56 @@
     @if (scope.Targets > CommentsPrompt.ManyTargets)
     {
       <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2" data-testid="improve-comments-many">
-        That is a lot for one run: Claude Code may not finish in time. A smaller part, a namespace say, works better.
+        That is a lot for one run: the AI may not finish in time. A smaller part, a namespace say, works better.
       </MudAlert>
     }
-    @if (!CanRun && scope.Targets > 0)
+    @if (!IsDone)
+    {
+      <div class="dep-ai__header dep-ai" data-testid="improve-comments-ai">
+        <span class="dep-ai__ask-split">
+          @if (CanRun)
+          {
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+                       Disabled="@(IsEmpty || IsLocked)" OnClick="() => fixPanel!.StartAsync()"
+                       title="Claude Code improves the comments in the model's folder now (experimental)"
+                       data-testid="improve-comments-run">Improve with Claude Code</MudButton>
+          }
+          else
+          {
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+                       Disabled="@IsEmpty" OnClick="CopyPromptAsync"
+                       title="Copy the prompt for Claude Code, or another AI that can change the code"
+                       data-testid="improve-comments-copy">Copy prompt</MudButton>
+          }
+          @if (HasMenu)
+          {
+            <AiProviderMenu Choice="choice" Need="AiCapability.EditCode" UnableText="Cannot change the code"
+                            TestId="improve-comments" Variant="Variant.Filled" Color="Color.Primary"
+                            Disabled="@(IsEmpty || IsLocked)" OnChoose="ChooseAsync" OnSettingsChanged="OnSettingsChanged">
+              <MoreItems>
+                @if (CanRun)
+                {
+                  <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
+                               OnClick="CopyPromptAsync" data-testid="improve-comments-copy">
+                    <div class="dep-ai-menu__item">
+                      <div class="dep-ai-menu__name">Copy prompt</div>
+                      <div class="dep-ai-menu__detail">For another AI that can change the code</div>
+                    </div>
+                  </MudMenuItem>
+                }
+              </MoreItems>
+            </AiProviderMenu>
+          }
+        </span>
+        <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt" Disabled="@IsEmpty"
+                   title="Show the prompt that Claude Code gets, or that is copied" OnClick="ShowPromptAsync"
+                   data-testid="improve-comments-show-prompt">Show prompt</MudButton>
+      </div>
+    }
+    @if (!CanRun && !IsEmpty)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-no-claude-code">
-        Copy the prompt into Claude Code, or another AI that can change the code. Turn on Claude Code in Settings › AI
+        Paste the prompt into Claude Code, or another AI that can change the code. Turn on Claude Code in Settings › AI
         (in VS Code) to run it from here.
       </div>
     }
@@ -60,25 +107,13 @@
     }
   </DialogContent>
   <DialogActions>
-    <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="@(scope.Targets == 0)" OnClick="ShowPromptAsync"
-               data-testid="improve-comments-show-prompt">Show prompt</MudButton>
-    <MudSpacer />
     @if (IsDone)
     {
       <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="improve-comments-done">Done</MudButton>
     }
     else
     {
-      <MudButton OnClick="Close" data-testid="improve-comments-cancel">Cancel</MudButton>
-      <MudButton Variant="@(CanRun ? Variant.Text : Variant.Filled)" Color="@(CanRun ? Color.Default : Color.Primary)"
-                 StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Disabled="@(scope.Targets == 0)"
-                 OnClick="CopyPromptAsync" data-testid="improve-comments-copy">Copy prompt</MudButton>
-      @if (CanRun)
-      {
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
-                   Disabled="@(scope.Targets == 0 || IsLocked)" OnClick="() => fixPanel!.StartAsync()"
-                   data-testid="improve-comments-run">Improve with Claude Code</MudButton>
-      }
+      <MudButton OnClick="Close" data-testid="improve-comments-cancel">Close</MudButton>
     }
   </DialogActions>
 </MudDialog>
@@ -98,6 +133,7 @@
   [Parameter, EditorRequired] public Func<bool, string> GetPrompt { get; set; } = null!;
 
   ClaudeCodeFix? fixPanel;
+  AiChoice choice = AiChoice.ChatOnly;
   bool isBelow;
   CommentsScope scope = new(0, 0);
   string? copyNote;
@@ -107,17 +143,37 @@
 
   bool IsDone => fixPanel is { HasChanged: true };
 
+  bool IsEmpty => scope.Targets == 0;
+
+  // The menu lists the providers that answer, greyed (only Claude Code changes code), and leads
+  // to AI settings, where Claude Code is turned on; the standalone browser app has neither.
+  bool HasMenu => aiService.IsAvailable;
+
   string CountText =>
     scope.Targets == 0
       ? "Nothing here has a comment Dependinator reads: only namespaces and types (Bicep modules and resources) do."
       : $"{Count(scope.Targets, "namespace or type", "namespaces and types")} in {Count(scope.Files, "file", "files")}";
 
   // A node with children starts with everything inside it: commenting a namespace alone is rarely the point.
-  protected override void OnInitialized()
+  protected override async Task OnInitializedAsync()
   {
     isBelow = HasChildren;
     scope = GetScope(isBelow);
+    await RefreshChoiceAsync();
   }
+
+  // An AI chat cannot change code, and Claude Code is listed only where it can run here.
+  async Task RefreshChoiceAsync() =>
+    choice = (await aiService.GetChoiceAsync()).Where(p =>
+      p.Source is not AiSource.Chat && (p.Source is not AiSource.ClaudeCode || CanRun));
+
+  // Only Claude Code can be chosen here (the others are greyed): its run.
+  Task ChooseAsync(AiProvider provider) =>
+    provider.Source is AiSource.ClaudeCode && CanRun ? fixPanel!.StartAsync() : Task.CompletedTask;
+
+  // Turning Claude Code on in AI settings shows up the next time the dialog opens: whether it can
+  // run also needs the model's folder, which the dialog is given when it opens.
+  Task OnSettingsChanged() => RefreshChoiceAsync();
 
   void SetBelow(bool value)
   {

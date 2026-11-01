@@ -69,7 +69,7 @@ class SourceParser : ISourceParser
         if (projects.Count == 0)
             return new Error(
                 $"'{solutionName}' contains only test projects. "
-                    + "Enable Settings > Include Test Projects in the menu to parse them."
+                    + "Turn on Include test projects in Menu > Settings to parse them."
             );
 
         Log.Info($"Solution projects: {projects.Count} ({string.Join(", ", projects.Select(p => p.Name))})");
