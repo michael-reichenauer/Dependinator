@@ -465,6 +465,57 @@ export function addPointerEventListener(elementId, eventName, instance, function
   document.getElementById(elementId).addEventListener(eventName, eventHandler)
 }
 
+// Hover preview of a node's lines: resting the mouse on a node icon or member row
+// (data-line-preview, NodeSvg) for a moment lights that node's lines and fades the others to
+// --line-preview-dim (Canvas.razor.cs), like a short-lived selection. Each line names its two
+// end nodes in data-n (LineSvg), so one stylesheet rule does it, without a redraw; the rule
+// also covers tiles drawn while it is on. A press, the wheel or leaving the node ends it.
+const linePreviewDelayMs = 250;
+
+export function initLinePreview(elementId) {
+  const svg = document.getElementById(elementId);
+  if (!svg || svg.dataset.linePreviewInit) return;
+  svg.dataset.linePreviewInit = "1";
+
+  const style = document.createElement("style");
+  style.id = "line-preview-style";
+  document.head.appendChild(style);
+  let shownId = null;
+  let pendingId = null;
+  let timer = null;
+
+  function show(id) {
+    shownId = id;
+    style.textContent = id
+      ? `#${elementId} .line-vis:not([data-n~="${id}"]) { opacity: var(--line-preview-dim) !important; }
+         #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }`
+      : "";
+  }
+
+  function clear() {
+    clearTimeout(timer);
+    pendingId = null;
+    if (shownId) show(null);
+  }
+
+  svg.addEventListener("pointerover", event => {
+    if (event.pointerType !== "mouse" || event.buttons !== 0) return;
+    const group = event.target.closest?.("[data-line-preview]");
+    const id = group?.id?.split(".")[0] ?? null;
+    if (!id) return clear();
+    if (id === shownId || id === pendingId) return;
+    clear();
+    pendingId = id;
+    timer = setTimeout(() => {
+      pendingId = null;
+      show(id);
+    }, linePreviewDelayMs);
+  });
+  svg.addEventListener("pointerdown", clear);
+  svg.addEventListener("wheel", clear, { passive: true });
+  svg.addEventListener("pointerleave", clear);
+}
+
 const openDatabases = new Map();
 
 function formatDatabaseError(prefix, error) {

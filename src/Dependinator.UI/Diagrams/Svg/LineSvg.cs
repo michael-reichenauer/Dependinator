@@ -48,7 +48,8 @@ static class LineSvg
         bool isPath = false,
         bool isViolation = false,
         bool isWeighted = false,
-        bool includeLabel = true
+        bool includeLabel = true,
+        bool isLit = false
     )
     {
         if (!LinePathGeometry.TryGetLocalEndpoints(line, out var localEndpoints))
@@ -69,7 +70,8 @@ static class LineSvg
             isPath,
             isViolation,
             isWeighted,
-            includeLabel
+            includeLabel,
+            isLit
         );
     }
 
@@ -94,7 +96,8 @@ static class LineSvg
         bool isDimmed = false,
         bool isPath = false,
         bool isViolation = false,
-        bool isWeighted = false
+        bool isWeighted = false,
+        bool isLit = false
     )
     {
         if (line.RenderAncestor != ancestor)
@@ -107,7 +110,8 @@ static class LineSvg
             isDimmed,
             isPath: isPath,
             isViolation: isViolation,
-            isWeighted: isWeighted
+            isWeighted: isWeighted,
+            isLit: isLit
         );
     }
 
@@ -122,7 +126,8 @@ static class LineSvg
         bool isPath,
         bool isViolation,
         bool isWeighted,
-        bool includeLabel
+        bool includeLabel,
+        bool isLit
     )
     {
         // Explorer (focused) lines share the direct line's accent color and arrow. Dash patterns
@@ -191,8 +196,14 @@ static class LineSvg
         // hollow arrow head (its caps and joins come from the HoverClass rule).
         // The outer group lets a hover over the hit target restore a dimmed line (see the
         // line-dim CSS in Canvas.razor).
+        // Soft lines (Canvas.razor) draw resting lines faint and keep the classes below at full
+        // strength: line-lit for the selection's own lines, line-accent for explorer and direct
+        // lines. data-n names the line's two end nodes, for the hover preview (linePreview.js),
+        // which lights a hovered node's lines without a rerender.
         var visibleClass =
             (isDimmed ? "line-vis line-dim" : "line-vis")
+            + (isLit ? " line-lit" : "")
+            + (isAccent ? " line-accent" : "")
             + (isCyclic ? " line-cycle" : "")
             + (isPath ? " line-path" : "")
             + (isViolation ? " line-rule" : "");
@@ -200,7 +211,7 @@ static class LineSvg
             CultureInfo.InvariantCulture,
             $"""
             <g class="line">
-            <g class="{visibleClass}">
+            <g class="{visibleClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
             {labelSvg}

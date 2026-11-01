@@ -129,6 +129,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   model (include test projects) and AI (the former Settings › AI dialog). They left the View and
   Settings menus, which keep the toggles flipped many times a session (edit mode, panels, the
   Lines and Rows filters). An AI menu's "AI settings …" opens the dialog at its AI section.
+- **Soft lines (Nov 1).** Many lines made busy diagrams overwhelming: resting lines are now drawn
+  at 40%, the selected node's lines at full strength and the unrelated ones at 10%; cycle, rule,
+  path and explorer lines stay at full strength. Resting the mouse on a node icon or member row
+  lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
+  turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
+  ones) and fading only lines that leave their container.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
