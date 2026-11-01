@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
 using Xunit;
@@ -7,16 +8,14 @@ namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises "Improve Comments" through the browser: the scope (the node only, or everything inside
 // it) with its count, the prompt to copy where Claude Code is off, and a run with Claude Code (in
-// test mode the app reports a changed file without running it) that ends with Done.
+// test mode the app reports a changed file without running it) that ends with Done, its provider
+// menu offering the prompt to copy and Claude, which cannot change code, greyed.
 public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
     public async Task ImproveComments_ShouldCountTheScope_AndCopyThePrompt()
     {
-        await Page.AddInitScriptAsync(
-            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
-                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
-        );
+        await StubClipboardAsync();
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
@@ -42,6 +41,7 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
     [E2EFact]
     public async Task ImproveComments_ShouldRunClaudeCode_FromTheAboutDialog()
     {
+        await StubClipboardAsync();
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         await App.SetAiSettingsAsync(useClaudeCode: true);
@@ -49,6 +49,11 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
         await App.SelectNodeByFullNameAsync("Demo.sln");
         await App.ClickNodeMenuItemAsync("node-menu-about");
         await Page.GetByTestId("about-node-improve-comments").ClickAsync();
+
+        await Page.GetByTestId("improve-comments-menu").ClickAsync();
+        await Expect(Page.GetByTestId("improve-comments-with-claude")).ToHaveClassAsync(new Regex("mud-disabled"));
+        await Page.GetByTestId("improve-comments-copy").ClickAsync();
+        await Expect(Page.GetByTestId("improve-comments-copied")).ToContainTextAsync("The prompt is copied");
 
         ILocator run = Page.GetByTestId("improve-comments-run");
         await run.ClickAsync();
@@ -58,4 +63,10 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
         await Page.GetByTestId("improve-comments-done").ClickAsync();
         await Expect(Page.GetByTestId("improve-comments-count")).ToBeHiddenAsync();
     }
+
+    Task StubClipboardAsync() =>
+        Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
 }
