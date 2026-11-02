@@ -41,7 +41,7 @@
       var canDo = provider.Can(Need);
       <MudMenuItem Icon="@provider.Icon" IconColor="@(provider.IsClaude ? Color.Inherit : Color.Secondary)" Disabled="@(!canDo)"
                    Class="@(provider.IsClaude ? "dep-ai-menu__claude" : "")"
-                   OnClick="() => OnChoose.InvokeAsync(provider)"
+                   OnClick="() => Choose(provider)"
                    data-testid="@($"{TestId}-with-{provider.Id}")">
         <div class="dep-ai-menu__item">
           <div class="dep-ai-menu__name">
@@ -101,6 +101,23 @@
 
   // Told when the settings dialog closes, so the place reads the choice again.
   [Parameter] public EventCallback OnSettingsChanged { get; set; }
+
+  // Not awaited: MudMenu closes only once the item's handler returns, and asking or fixing can take
+  // minutes. The place re-renders when it is done all the same (EventCallback does that); a failure
+  // the place did not handle is logged rather than lost.
+  void Choose(AiProvider provider) => _ = ChooseAsync(provider);
+
+  async Task ChooseAsync(AiProvider provider)
+  {
+    try
+    {
+      await OnChoose.InvokeAsync(provider);
+    }
+    catch (Exception e)
+    {
+      Log.Warn($"Failed to use {provider.Name}: {e.Message}");
+    }
+  }
 
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 

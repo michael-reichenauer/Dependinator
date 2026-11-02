@@ -1,0 +1,130 @@
+@using MudBlazor
+@implements IDisposable
+@inject IAiService aiService
+
+@* The fix action of the review dialogs (AcceptCycleDialog, RuleReviewDialog), shaped like their ask
+   button (AiOpinion): one button for the AI that makes the change, the provider menu beside it
+   (AiProviderMenu, Need EditCode: providers that cannot change code are greyed) with "Copy fix
+   prompt" added. The button is the default provider where it can change code here, or else the
+   first that can (Claude Code before Copilot); where none can (the browser app, Claude Code off) it
+   is "Copy fix prompt", for any AI that can. Claude Code runs in the dialog (its ClaudeCodeFix
+   panel, OnClaudeCode); Copilot gets the prompt in Copilot Chat's agent mode (OnCopilot). Choosing
+   a provider in the menu fixes with it once; the default stays. The button waits for the choice
+   (in VS Code it lists VS Code's models first), so a quick click cannot start another provider than
+   the default. Turning Claude Code on in AI settings shows up the next time the dialog opens:
+   whether it can run also needs the model's folder, which the dialog reads when it opens; turning
+   it off takes effect at once. *@
+<span class="dep-ai__ask-split" data-testid="@($"{TestId}-fix")" data-provider="@Runner?.Id">
+  @if (Runner?.Source is AiSource.ClaudeCode)
+  {
+    <MudButton Variant="Variant.Text" Class="dep-ai-ask dep-ai__ask-claude" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+               Disabled="@(IsBusy || !isChoiceRead)" OnClick="OnClaudeCode"
+               title="Claude Code makes the change in the model's folder now (experimental)"
+               data-testid="@($"{TestId}-fix-claude-code")">Fix with Claude Code</MudButton>
+  }
+  else if (Runner?.Source is AiSource.Copilot)
+  {
+    <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@AiProvider.Copilot.Icon"
+               Disabled="@(IsBusy || !isChoiceRead)" OnClick="FixWithCopilotAsync"
+               title="Copilot Chat makes the change in agent mode; you keep or undo each edit there"
+               data-testid="@($"{TestId}-fix-copilot")">Fix with Copilot</MudButton>
+  }
+  else
+  {
+    <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+               title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
+               OnClick="OnCopy" data-testid="@($"{TestId}-copy-fix")">Copy fix prompt</MudButton>
+  }
+  @if (aiService.IsAvailable)
+  {
+    <AiProviderMenu Choice="choice" Need="AiCapability.EditCode" UnableText="Cannot change the code"
+                    TestId="@($"{TestId}-fix")" Disabled="@IsBusy" OnChoose="ChooseAsync"
+                    OnSettingsChanged="RefreshChoiceAsync">
+      <MoreItems>
+        @if (Runner is not null)
+        {
+          <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
+                       OnClick="OnCopy" data-testid="@($"{TestId}-copy-fix")">
+            <div class="dep-ai-menu__item">
+              <div class="dep-ai-menu__name">Copy fix prompt</div>
+              <div class="dep-ai-menu__detail">For another AI that can change the code</div>
+            </div>
+          </MudMenuItem>
+        }
+      </MoreItems>
+    </AiProviderMenu>
+  }
+</span>
+
+@code {
+  // The test id prefix: "<prefix>-fix-claude-code", "<prefix>-fix-copilot", "<prefix>-copy-fix",
+  // and the menu's "<prefix>-fix-menu" and "<prefix>-fix-with-<provider id>".
+  [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+  // Whether Claude Code can make the change here: the route is on and the model has a folder.
+  [Parameter] public bool CanRunClaudeCode { get; set; }
+
+  // Claude Code is making the change: nothing else starts meanwhile.
+  [Parameter] public bool IsRunning { get; set; }
+
+  [Parameter] public EventCallback OnClaudeCode { get; set; }
+  [Parameter] public EventCallback OnCopilot { get; set; }
+  [Parameter] public EventCallback OnCopy { get; set; }
+
+  AiChoice choice = AiChoice.ChatOnly;
+  bool isHandingToCopilot;
+  bool isChoiceRead;
+
+  bool IsBusy => IsRunning || isHandingToCopilot;
+
+  // Before the choice is read, Claude Code where it can run, shown disabled until then; after, only
+  // a provider still offered (Claude Code may have been turned off in AI settings).
+  AiProvider? Runner =>
+    choice.DefaultFor(AiCapability.EditCode) ?? (!isChoiceRead && CanRunClaudeCode ? AiProvider.ClaudeCode : null);
+
+  protected override async Task OnInitializedAsync()
+  {
+    aiService.ChoiceChanged += OnChoiceChanged;
+    await RefreshChoiceAsync();
+  }
+
+  // A default changed elsewhere (the ask button's menu above, AI settings) shows here at once.
+  void OnChoiceChanged() => InvokeAsync(async () =>
+  {
+    await RefreshChoiceAsync();
+    StateHasChanged();
+  });
+
+  public void Dispose() => aiService.ChoiceChanged -= OnChoiceChanged;
+
+  // An AI chat cannot change code (its route is "Copy fix prompt"), and Claude Code is listed only
+  // where it can run here.
+  async Task RefreshChoiceAsync()
+  {
+    choice = (await aiService.GetChoiceAsync()).Where(p =>
+      p.Source is not AiSource.Chat && (p.Source is not AiSource.ClaudeCode || CanRunClaudeCode));
+    isChoiceRead = true;
+  }
+
+  // Only Claude Code and Copilot can be chosen here (the others are greyed).
+  Task ChooseAsync(AiProvider provider) =>
+    provider.Source switch
+    {
+      AiSource.ClaudeCode when CanRunClaudeCode && !IsBusy => OnClaudeCode.InvokeAsync(),
+      AiSource.Copilot when !IsBusy => FixWithCopilotAsync(),
+      _ => Task.CompletedTask,
+    };
+
+  async Task FixWithCopilotAsync()
+  {
+    isHandingToCopilot = true;
+    try
+    {
+      await OnCopilot.InvokeAsync();
+    }
+    finally
+    {
+      isHandingToCopilot = false;
+    }
+  }
+}

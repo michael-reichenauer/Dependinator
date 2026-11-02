@@ -60,7 +60,7 @@
           }
           else if (Runner?.Source is AiSource.Copilot)
           {
-            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@AiProvider.Copilot.Icon"
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@AiProvider.Copilot.Icon"
                        Disabled="@(IsEmpty || IsLocked || isHandingToCopilot)" OnClick="ImproveWithCopilotAsync"
                        title="Copilot Chat improves the comments in agent mode; you keep or undo each edit there"
                        data-testid="improve-comments-run-copilot">Improve with Copilot</MudButton>

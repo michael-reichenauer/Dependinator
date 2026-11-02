@@ -391,8 +391,17 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await ask.ClickAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
 
-        // Stopped while it runs: an error, and it can be started again.
-        await fix.ClickAsync();
+        // One fix button for the default, like the ask button: its menu greys the Claude API (it
+        // cannot change code) and offers the fix prompt to copy instead.
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToHaveCountAsync(0);
+        await Page.GetByTestId("accept-cycle-fix-menu").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-claude")).ToHaveClassAsync(new Regex("mud-disabled"));
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-code")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-chat")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToBeVisibleAsync();
+
+        // Started from the menu, then stopped while it runs: an error, and it can be started again.
+        await Page.GetByTestId("accept-cycle-fix-with-code").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-fixing")).ToBeVisibleAsync();
         await Expect(fix).ToBeDisabledAsync();
         await Page.GetByTestId("accept-cycle-fix-stop").ClickAsync();

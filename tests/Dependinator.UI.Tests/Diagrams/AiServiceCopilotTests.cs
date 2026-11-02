@@ -70,10 +70,4 @@ public class AiServiceCopilotTests
         Assert.Equal(AiService.EmptyPromptError, error.Message);
         vsCodeModels.Verify(m => m.OpenAgentChatAsync(It.IsAny<string>()), Times.Never);
     }
-
-    [Fact]
-    public async Task CanFixWithCopilotAsync_ShouldBeFalse_OutsideVsCode()
-    {
-        Assert.False(await Service().CanFixWithCopilotAsync());
-    }
 }
