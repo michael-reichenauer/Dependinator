@@ -37,6 +37,45 @@ public class LspVsCodeModelServiceTests
             .Returns(returns.Object);
     }
 
+    void SetupOpenChat(Func<Task<VsCodeOpenChatResult>> answer)
+    {
+        Mock<IResponseRouterReturns> returns = new();
+        returns.Setup(r => r.Returning<VsCodeOpenChatResult>(It.IsAny<CancellationToken>())).Returns(answer);
+        server
+            .Setup(s =>
+                s.SendRequest(VsCodeOpenChatParams.Method, It.Is<VsCodeOpenChatParams>(p => p.Prompt == "fix it"))
+            )
+            .Returns(returns.Object);
+    }
+
+    [Fact]
+    public async Task OpenAgentChatAsync_ShouldSucceed_WhenTheExtensionOpenedTheChat()
+    {
+        SetupOpenChat(() => Task.FromResult(new VsCodeOpenChatResult(null)));
+
+        AssertOk(await CreateSut().OpenAgentChatAsync("fix it"));
+    }
+
+    [Fact]
+    public async Task OpenAgentChatAsync_ShouldReturnTheExtensionsError_WhenTheChatDidNotOpen()
+    {
+        SetupOpenChat(() => Task.FromResult(new VsCodeOpenChatResult("No chat")));
+
+        var error = AssertError(await CreateSut().OpenAgentChatAsync("fix it"));
+
+        Assert.Equal("No chat", error.Message);
+    }
+
+    [Fact]
+    public async Task OpenAgentChatAsync_ShouldReturnAnError_WhenTheRequestFails()
+    {
+        SetupOpenChat(() => Task.FromException<VsCodeOpenChatResult>(new IOException("gone")));
+
+        var error = AssertError(await CreateSut().OpenAgentChatAsync("fix it"));
+
+        Assert.Contains("gone", error.Message);
+    }
+
     [Fact]
     public async Task AskAsync_ShouldReturnTheJson_WhenTheModelAnswered()
     {

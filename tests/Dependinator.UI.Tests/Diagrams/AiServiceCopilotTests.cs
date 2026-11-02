@@ -51,4 +51,29 @@ public class AiServiceCopilotTests
         Assert.Equal("{\"a\":1}", json);
         vsCodeModels.Verify(m => m.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
     }
+
+    [Fact]
+    public async Task FixWithCopilotAsync_ShouldHandTheFixPromptToCopilotChat()
+    {
+        vsCodeModels.Setup(m => m.OpenAgentChatAsync("fix it")).ReturnsAsync(Result.Ok);
+
+        AssertOk(await Service().FixWithCopilotAsync("fix it"));
+
+        vsCodeModels.Verify(m => m.OpenAgentChatAsync("fix it"), Times.Once);
+    }
+
+    [Fact]
+    public async Task FixWithCopilotAsync_ShouldOpenNoChat_WhenThereIsNoPrompt()
+    {
+        var error = AssertError(await Service().FixWithCopilotAsync(""));
+
+        Assert.Equal(AiService.EmptyPromptError, error.Message);
+        vsCodeModels.Verify(m => m.OpenAgentChatAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CanFixWithCopilotAsync_ShouldBeFalse_OutsideVsCode()
+    {
+        Assert.False(await Service().CanFixWithCopilotAsync());
+    }
 }

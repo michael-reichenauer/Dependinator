@@ -9,10 +9,12 @@
    their descriptions. The scope shows how many that is and in how many files, with a warning when
    one run may not finish in time. Under it, the AI section looks like the review dialogs' (AiOpinion):
    one button for the AI that does it, the provider menu beside it (AiProviderMenu, with "Copy prompt"
-   added) and "Show prompt". Claude Code is the only provider that changes code, so its "Improve with
-   Claude Code" (ClaudeCodeFix, where the experimental route is on) is the button when it can run here,
-   on the code as it is, on the current branch; otherwise "Copy prompt" is, for any AI that can change
-   the code. The dialog's own row only closes it: Close, or Done once Claude Code changed files. *@
+   added) and "Show prompt". Claude Code and Copilot change code: "Improve with Claude Code"
+   (ClaudeCodeFix, where the experimental route is on) runs here, on the code as it is, on the current
+   branch; "Improve with Copilot" (in VS Code) hands the prompt to Copilot Chat in agent mode, which
+   makes the change in its own view. The default of the two is the button where it can run; otherwise
+   "Copy prompt" is, for any AI that can change the code. The dialog's own row only closes it: Close,
+   or Done once Claude Code changed files. *@
 <MudDialog ActionsClass="dep-ai__actions">
   <TitleContent>
     <MudText Typo="Typo.h6">Improve comments</MudText>
@@ -49,12 +51,19 @@
     {
       <div class="dep-ai__header dep-ai" data-testid="improve-comments-ai">
         <span class="dep-ai__ask-split">
-          @if (CanRun)
+          @if (Runner?.Source is AiSource.ClaudeCode)
           {
             <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
                        Disabled="@(IsEmpty || IsLocked)" OnClick="() => fixPanel!.StartAsync()"
                        title="Claude Code improves the comments in the model's folder now (experimental)"
                        data-testid="improve-comments-run">Improve with Claude Code</MudButton>
+          }
+          else if (Runner?.Source is AiSource.Copilot)
+          {
+            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@AiProvider.Copilot.Icon"
+                       Disabled="@(IsEmpty || IsLocked)" OnClick="ImproveWithCopilotAsync"
+                       title="Copilot Chat improves the comments in agent mode; you keep or undo each edit there"
+                       data-testid="improve-comments-run-copilot">Improve with Copilot</MudButton>
           }
           else
           {
@@ -69,7 +78,7 @@
                             TestId="improve-comments" Variant="Variant.Filled" Color="Color.Primary"
                             Disabled="@(IsEmpty || IsLocked)" OnChoose="ChooseAsync" OnSettingsChanged="OnSettingsChanged">
               <MoreItems>
-                @if (CanRun)
+                @if (Runner is not null)
                 {
                   <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
                                OnClick="CopyPromptAsync" data-testid="improve-comments-copy">
@@ -88,16 +97,20 @@
                    data-testid="improve-comments-show-prompt">Show prompt</MudButton>
       </div>
     }
-    @if (!CanRun && !IsEmpty)
+    @if (Runner is null && !IsEmpty)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-no-claude-code">
         Paste the prompt into Claude Code, or another AI that can change the code. Turn on Claude Code in Settings › AI
-        (in VS Code) to run it from here.
+        (in VS Code), or use Copilot in VS Code, to run it from here.
       </div>
     }
     @if (copyNote is not null)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-copied">@copyNote</div>
+    }
+    @if (copilotError is not null)
+    {
+      <div class="dep-ai__suggest-error mt-2" data-testid="improve-comments-copilot-error">@copilotError</div>
     }
     @if (CanRun)
     {
@@ -137,6 +150,7 @@
   bool isBelow;
   CommentsScope scope = new(0, 0);
   string? copyNote;
+  string? copilotError;
 
   // Claude Code runs or ran: the scope stays as it was asked.
   bool IsLocked => fixPanel is { IsRunning: true } or { HasChanged: true };
@@ -145,8 +159,12 @@
 
   bool IsEmpty => scope.Targets == 0;
 
-  // The menu lists the providers that answer, greyed (only Claude Code changes code), and leads
-  // to AI settings, where Claude Code is turned on; the standalone browser app has neither.
+  // The provider the main button runs: the default where it changes code here, or else the first
+  // that does (Claude Code before Copilot); none where only a copied prompt can.
+  AiProvider? Runner => choice.DefaultFor(AiCapability.EditCode);
+
+  // The menu lists the providers that answer, greyed (only Claude Code and Copilot change code), and
+  // leads to AI settings, where Claude Code is turned on; the standalone browser app has neither.
   bool HasMenu => aiService.IsAvailable;
 
   string CountText =>
@@ -167,9 +185,22 @@
     choice = (await aiService.GetChoiceAsync()).Where(p =>
       p.Source is not AiSource.Chat && (p.Source is not AiSource.ClaudeCode || CanRun));
 
-  // Only Claude Code can be chosen here (the others are greyed): its run.
+  // Only Claude Code and Copilot can be chosen here (the others are greyed).
   Task ChooseAsync(AiProvider provider) =>
-    provider.Source is AiSource.ClaudeCode && CanRun ? fixPanel!.StartAsync() : Task.CompletedTask;
+    provider.Source switch
+    {
+      AiSource.ClaudeCode when CanRun => fixPanel!.StartAsync(),
+      AiSource.Copilot => ImproveWithCopilotAsync(),
+      _ => Task.CompletedTask,
+    };
+
+  // Copilot Chat makes the change in its own view: the dialog only says so.
+  async Task ImproveWithCopilotAsync()
+  {
+    var handed = await aiService.FixWithCopilotAsync(Prompt());
+    copyNote = handed is Error ? null : AiService.CopilotFixNote;
+    copilotError = handed is Error e ? e.Message : null;
+  }
 
   // Turning Claude Code on in AI settings shows up the next time the dialog opens: whether it can
   // run also needs the model's folder, which the dialog is given when it opens.
@@ -180,12 +211,14 @@
     isBelow = value;
     scope = GetScope(isBelow);
     copyNote = null;
+    copilotError = null;
   }
 
   string Prompt() => GetPrompt(isBelow);
 
   async Task CopyPromptAsync()
   {
+    copilotError = null;
     copyNote = await clipboardService.CopyAsync(Prompt())
       ? "The prompt is copied. Paste it into Claude Code, or another AI that can change the code, then re-parse to see the comments."
       : "Could not copy to the clipboard.";

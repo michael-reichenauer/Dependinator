@@ -112,12 +112,14 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers; the user tried it (works
   in his normal VS Code; a debug VS Code had Copilot disabled). Phase 2 (Nov 2): the model tools
   (Ask panel, Suggest rules), the tool loop in C# in the LSP (`VsCodeToolsAgent` over
-  `McpAgentTools`), the extension making one `sendRequest` per turn. Editing
-  code later, two options discussed with the user: first hand the fix prompt to Copilot Chat in
-  agent mode (it edits with its own tools and Keep/Undo review; no changed-files report back, so
-  re-parse after), and only if that feels too disconnected, our own workspace-limited edit tools
-  (read file, replace text) applied as VS Code `WorkspaceEdit`s. Cannot be tried in a cloud session
-  (no Copilot login): the user checks it in VS Code.
+  `McpAgentTools`), the extension making one `sendRequest` per turn. Phase 3 (Nov 2): editing
+  code by handing the fix prompt to Copilot Chat in agent mode ("Fix with Copilot",
+  `OpenAgentChatAsync`, `workbench.action.chat.open` with `mode: "agent"`; it edits with its own
+  tools and Keep/Undo review, no changed-files report back, the file watcher re-parses). Chat uses
+  its own model picker, not Settings › AI's. Still open, only if the hand-off feels too
+  disconnected: our own workspace-limited edit tools (read file, replace text) applied as VS Code
+  `WorkspaceEdit`s. Cannot be tried in a cloud session (no Copilot login): the user checks it in
+  VS Code.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

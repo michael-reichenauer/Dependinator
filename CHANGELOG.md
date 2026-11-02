@@ -14,6 +14,7 @@ with the next official release.
 - **Menu › Settings …** opens one dialog for the preferences set once, saved as they change: **Appearance** (theme, and the layout density **Compact**, **Balanced** or **Spacious**), **Diagram** (soft lines, dimming unrelated lines, line widths by link count, problem and hidden node badges, which moved there from **View**), **Mouse** (inverted scroll zoom), **This model** (including test projects) and **AI**
 - Resting the mouse on a node's icon or member row lights its lines for a moment, without clicking
 - In VS Code, the AI help can ask **Copilot** (or another language model VS Code offers) for a review, About Node or suggested rules, with your Copilot plan, and Copilot can answer questions in the **Ask** panel too, looking things up in the model; **Settings › AI** picks it as the default and chooses the model
+- In VS Code, **Fix with Copilot** in the cycle and rule reviews, and **Improve with Copilot** in **Improve comments**, hand the prompt to Copilot Chat in agent mode, which makes the change and lets you keep or undo each edit; the diagram re-parses when the files change
 
 ### Improved
 

@@ -26,6 +26,13 @@ public record VsCodeAskParams(string Prompt, string JsonSchema, string? ModelId)
 
 public record VsCodeAskResult(string? Json, string? Error);
 
+public record VsCodeOpenChatParams(string Prompt)
+{
+    public static readonly string Method = "dependinator/lm/openChat";
+}
+
+public record VsCodeOpenChatResult(string? Error);
+
 // The UI's IVsCodeModelService in VS Code: each call is a request to the extension.
 class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer modelToolsServer) : IVsCodeModelService
 {
@@ -112,6 +119,26 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
             {
                 return new Error($"Could not ask VS Code's language model: {e.Message}", e);
             }
+        }
+    }
+
+    public async Task<Result> OpenAgentChatAsync(string prompt)
+    {
+        try
+        {
+            using CancellationTokenSource cts = new(modelsTimeout);
+            var result = await server
+                .SendRequest(VsCodeOpenChatParams.Method, new VsCodeOpenChatParams(prompt))
+                .Returning<VsCodeOpenChatResult>(cts.Token);
+            return result.Error is { Length: > 0 } error ? new Error(error) : Result.Ok;
+        }
+        catch (OperationCanceledException)
+        {
+            return new Error("VS Code did not open Copilot Chat in time.");
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not open Copilot Chat: {e.Message}", e);
         }
     }
 

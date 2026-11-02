@@ -79,6 +79,14 @@ interface IAiService
     Task<Result<ClaudeCodeFixReport>> FixWithClaudeCodeAsync(string fixPrompt);
 
     Task StopClaudeCodeFixAsync();
+
+    // Whether "Fix with Copilot" can hand a fix prompt to Copilot Chat: in VS Code, where the
+    // Copilot provider is offered.
+    Task<bool> CanFixWithCopilotAsync();
+
+    // Hands the fix prompt to Copilot Chat in agent mode (IVsCodeModelService.OpenAgentChatAsync),
+    // which makes the change with its own tools and review; the extension re-parses after.
+    Task<Result> FixWithCopilotAsync(string fixPrompt);
 }
 
 // The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host) and,
@@ -311,6 +319,29 @@ class AiService(
             // A key Claude did not accept: ask for a new one, once.
             if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)
                 return answer.Error;
+        }
+    }
+
+    public async Task<bool> CanFixWithCopilotAsync() =>
+        Dependinator.Core.Build.IsVsCodeExtWasm
+        && (await GetChoiceAsync()).Providers.Any(p => p.Source is AiSource.Copilot);
+
+    // Said where the fix prompt was handed to Copilot Chat: nothing comes back to the dialog.
+    public const string CopilotFixNote =
+        "The fix prompt is in Copilot Chat, in agent mode: it makes the change there, and you keep or undo "
+        + "each edit. Dependinator re-parses when the files change.";
+
+    public async Task<Result> FixWithCopilotAsync(string fixPrompt)
+    {
+        if (fixPrompt == "")
+            return new Error(EmptyPromptError);
+        try
+        {
+            return await vsCodeModelService.OpenAgentChatAsync(fixPrompt);
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not open Copilot Chat: {e.Message}", e);
         }
     }
 
