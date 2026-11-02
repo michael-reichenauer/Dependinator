@@ -41,6 +41,9 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
     // The extension gives up after 5 minutes; VS Code's consent dialog may wait on the user first.
     static readonly TimeSpan askTimeout = TimeSpan.FromMinutes(10);
 
+    // The extension answers within about 5 s (it counts the hand-off as made by then).
+    static readonly TimeSpan openChatTimeout = TimeSpan.FromSeconds(15);
+
     // A whole ask with the model tools, all its turns.
     static readonly TimeSpan toolsAskTimeout = TimeSpan.FromMinutes(15);
 
@@ -126,7 +129,7 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
     {
         try
         {
-            using CancellationTokenSource cts = new(modelsTimeout);
+            using CancellationTokenSource cts = new(openChatTimeout);
             var result = await server
                 .SendRequest(VsCodeOpenChatParams.Method, new VsCodeOpenChatParams(prompt))
                 .Returning<VsCodeOpenChatResult>(cts.Token);

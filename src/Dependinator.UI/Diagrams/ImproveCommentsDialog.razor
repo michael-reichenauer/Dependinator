@@ -61,7 +61,7 @@
           else if (Runner?.Source is AiSource.Copilot)
           {
             <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@AiProvider.Copilot.Icon"
-                       Disabled="@(IsEmpty || IsLocked)" OnClick="ImproveWithCopilotAsync"
+                       Disabled="@(IsEmpty || IsLocked || isHandingToCopilot)" OnClick="ImproveWithCopilotAsync"
                        title="Copilot Chat improves the comments in agent mode; you keep or undo each edit there"
                        data-testid="improve-comments-run-copilot">Improve with Copilot</MudButton>
           }
@@ -151,6 +151,7 @@
   CommentsScope scope = new(0, 0);
   string? copyNote;
   string? copilotError;
+  bool isHandingToCopilot;
 
   // Claude Code runs or ran: the scope stays as it was asked.
   bool IsLocked => fixPanel is { IsRunning: true } or { HasChanged: true };
@@ -161,7 +162,8 @@
 
   // The provider the main button runs: the default where it changes code here, or else the first
   // that does (Claude Code before Copilot); none where only a copied prompt can.
-  AiProvider? Runner => choice.DefaultFor(AiCapability.EditCode);
+  // Before the choice is read (it lists VS Code's models first), Claude Code where it can run.
+  AiProvider? Runner => choice.DefaultFor(AiCapability.EditCode) ?? (CanRun ? AiProvider.ClaudeCode : null);
 
   // The menu lists the providers that answer, greyed (only Claude Code and Copilot change code), and
   // leads to AI settings, where Claude Code is turned on; the standalone browser app has neither.
@@ -190,14 +192,18 @@
     provider.Source switch
     {
       AiSource.ClaudeCode when CanRun => fixPanel!.StartAsync(),
-      AiSource.Copilot => ImproveWithCopilotAsync(),
+      AiSource.Copilot when !IsLocked && !isHandingToCopilot => ImproveWithCopilotAsync(),
       _ => Task.CompletedTask,
     };
 
   // Copilot Chat makes the change in its own view: the dialog only says so.
   async Task ImproveWithCopilotAsync()
   {
+    copyNote = null;
+    copilotError = null;
+    isHandingToCopilot = true;
     var handed = await aiService.FixWithCopilotAsync(Prompt());
+    isHandingToCopilot = false;
     copyNote = handed is Error ? null : AiService.CopilotFixNote;
     copilotError = handed is Error e ? e.Message : null;
   }

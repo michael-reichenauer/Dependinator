@@ -322,14 +322,14 @@ class AiService(
         }
     }
 
+    // Copilot is offered only in VS Code (GetCopilotModelsAsync lists no models elsewhere).
     public async Task<bool> CanFixWithCopilotAsync() =>
-        Dependinator.Core.Build.IsVsCodeExtWasm
-        && (await GetChoiceAsync()).Providers.Any(p => p.Source is AiSource.Copilot);
+        (await GetChoiceAsync()).Providers.Any(p => p.Source is AiSource.Copilot);
 
-    // Said where the fix prompt was handed to Copilot Chat: nothing comes back to the dialog.
+    // Said where a prompt was handed to Copilot Chat: nothing comes back to the dialog.
     public const string CopilotFixNote =
-        "The fix prompt is in Copilot Chat, in agent mode: it makes the change there, and you keep or undo "
-        + "each edit. Dependinator re-parses when the files change.";
+        "The prompt is in Copilot Chat, in agent mode: it makes the change there, and you keep or undo each edit. "
+        + "Once the edits are kept, the diagram re-parses (or Re-parse shows a dot, with auto refresh off).";
 
     public async Task<Result> FixWithCopilotAsync(string fixPrompt)
     {

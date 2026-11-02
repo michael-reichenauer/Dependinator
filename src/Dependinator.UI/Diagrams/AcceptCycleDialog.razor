@@ -71,7 +71,7 @@
         @if (canFixWithCopilot)
         {
           <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@AiProvider.Copilot.Icon"
-                     OnClick="FixWithCopilotAsync"
+                     Disabled="@(isHandingToCopilot || fixPanel?.IsRunning == true)" OnClick="FixWithCopilotAsync"
                      title="Copilot Chat makes the change in agent mode; you keep or undo each edit there"
                      data-testid="accept-cycle-fix-copilot">Fix with Copilot</MudButton>
         }
@@ -157,6 +157,7 @@
   ClaudeCodeFix? fixPanel;
   bool canFixWithClaudeCode;
   bool canFixWithCopilot;
+  bool isHandingToCopilot;
   CycleSuggestion? Selected;
   string? prefilledReason;
   string? copyNote;
@@ -221,7 +222,11 @@
   // to decide later.
   async Task FixWithCopilotAsync()
   {
+    copyNote = null;
+    copyError = null;
+    isHandingToCopilot = true;
     var handed = await aiService.FixWithCopilotAsync(FixPromptText());
+    isHandingToCopilot = false;
     copyNote = handed is Error ? null : AiService.CopilotFixNote + " Or choose Fix later to keep the cycle on the list until then.";
     copyError = handed is Error e ? e.Message : null;
   }
