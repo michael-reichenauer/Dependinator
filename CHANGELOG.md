@@ -22,6 +22,7 @@ with the next official release.
 - The dark theme is softer: a very dark grey canvas instead of near black, pastel container frames instead of neon colors (a red frame no longer reads as an error), and off-white text
 - The **Improve Comments** dialog lays out its AI action like the review dialogs, with the AI menu beside it, and its button row only closes it
 - The buttons that ask an AI look the same everywhere: a soft tint that is easy to spot without shouting, instead of a filled blue button in one dialog, a grey outline that looked like a dropdown in another, and no frame at all once there was an answer
+- The cycle and rule reviews have one fix button, **Fix with** the default AI that can change code, with a **▾** menu beside it for another AI or **Copy fix prompt**, like the ask button
 
 ### Changed
 
