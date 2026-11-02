@@ -34,6 +34,9 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
     // The extension gives up after 5 minutes; VS Code's consent dialog may wait on the user first.
     static readonly TimeSpan askTimeout = TimeSpan.FromMinutes(10);
 
+    // A whole ask with the model tools, all its turns.
+    static readonly TimeSpan toolsAskTimeout = TimeSpan.FromMinutes(15);
+
     public async Task<VsCodeModel[]> GetModelsAsync()
     {
         try
@@ -84,16 +87,22 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
 
     public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema, string? modelId)
     {
-        if (modelToolsServer.Address is not { } address)
-            return new Error("The model tools are not ready yet. Please try again in a moment.");
-        var connected = await (ConnectTools ?? (() => McpAgentTools.ConnectAsync(address)))();
+        var connected = await (ConnectTools ?? ConnectModelToolsAsync)();
         if (connected is not IAgentTools tools)
             return connected.Error;
         await using (tools)
         {
+            // All turns together: a slow model that keeps looking things up stops at some point.
+            using CancellationTokenSource total = new(toolsAskTimeout);
             try
             {
-                return await VsCodeToolsAgent.AskAsync(AskTurnAsync, modelId, prompt, jsonSchema, tools);
+                return await VsCodeToolsAgent.AskAsync(
+                    turn => AskTurnAsync(turn, total.Token),
+                    modelId,
+                    prompt,
+                    jsonSchema,
+                    tools
+                );
             }
             catch (OperationCanceledException)
             {
@@ -109,9 +118,15 @@ class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer mode
     // The model tools of an ask; tests replace them.
     internal Func<Task<Result<IAgentTools>>>? ConnectTools { get; init; }
 
-    async Task<VsCodeTurnResult> AskTurnAsync(VsCodeTurnParams turn)
+    async Task<Result<IAgentTools>> ConnectModelToolsAsync() =>
+        modelToolsServer.Address is { } address
+            ? await McpAgentTools.ConnectAsync(address)
+            : new Error("The model tools are not ready yet. Please try again in a moment.");
+
+    async Task<VsCodeTurnResult> AskTurnAsync(VsCodeTurnParams turn, CancellationToken total)
     {
-        using CancellationTokenSource cts = new(askTimeout);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(total);
+        cts.CancelAfter(askTimeout);
         return await server.SendRequest(VsCodeTurnParams.Method, turn).Returning<VsCodeTurnResult>(cts.Token);
     }
 }

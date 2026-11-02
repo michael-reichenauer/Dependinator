@@ -9,7 +9,7 @@ namespace Dependinator.Lsp.Tests;
 // go back in the next turn, and the answer tool's input is the answer.
 public class VsCodeToolsAgentTests
 {
-    const string Schema = """{"type":"object","properties":{"answer":{"type":"string"}}}""";
+    const string Schema = """{"type":"object","properties":{"answer":{"type":"string"}},"required":["answer"]}""";
     const string Answer = """{"answer":"Roslyn parses"}""";
 
     readonly List<VsCodeTurnParams> turns = [];
@@ -73,6 +73,31 @@ public class VsCodeToolsAgentTests
 
         Assert.Equal(2, turns.Count);
         Assert.Contains("`answer` tool", turns[1].Messages[^1].Parts[0].Text);
+    }
+
+    [Fact]
+    public async Task AskAsync_ShouldNotTakeAQuotedSnippet_ForTheAnswer()
+    {
+        AssertOk(await AskAsync(Text("""I will look up {"nodeName":"X"} next."""), Calls(("c1", "answer", Answer))));
+
+        Assert.Equal(2, turns.Count);
+    }
+
+    [Fact]
+    public async Task AskAsync_ShouldAskForTheAnswerOnlyOnce_WhenTheModelKeepsWritingText()
+    {
+        var error = AssertError(await AskAsync(Text("Roslyn parses."), Text("As I said, Roslyn parses.")));
+
+        Assert.Equal(2, turns.Count);
+        Assert.Contains("required format", error.Message);
+    }
+
+    [Fact]
+    public async Task AskAsync_ShouldNotSendAnEmptyTurnBack()
+    {
+        AssertOk(await AskAsync(new VsCodeTurnResult([], null), Calls(("c1", "answer", Answer))));
+
+        Assert.DoesNotContain(turns[1].Messages, m => m.Parts.Length == 0);
     }
 
     [Fact]

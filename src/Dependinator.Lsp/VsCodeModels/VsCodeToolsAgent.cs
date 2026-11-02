@@ -44,10 +44,12 @@ public record VsCodeTurnResult(VsCodeTurnPart[]? Parts, string? Error);
 // The tool loop of the Copilot provider, like ModelToolsAgent's for Claude's API: the model gets
 // the prompt and the tools, and answers with tool calls or with its answer. VS Code's Language
 // Model API has no structured output, so the answer is a call of the extension's "answer" tool,
-// whose input schema is the answer's (a model that writes the JSON as text instead is read too).
+// whose input schema is the answer's (a model that writes the JSON as text instead is read too, if
+// it has the schema's required fields; one that answers in plain text is asked once more).
 // The loop runs the calls with Dependinator's model tools (McpAgentTools, the same MCP tools Claude
 // and Claude Code get), sends the results back, and asks again with the whole conversation. On the
-// last turn the model may only call the answer tool. A turn is one request to the extension, which
+// last turn it is told to answer now (all tools stay declared, since the history has their calls,
+// and some models take a required tool only when it is the only one). A turn is one request to the extension, which
 // makes it in VS Code; the cost is the user's Copilot plan, so it is unknown here.
 static class VsCodeToolsAgent
 {
@@ -80,6 +82,7 @@ static class VsCodeToolsAgent
             User(new VsCodeTurnPart(VsCodeTurnPart.TextKind, $"{prompt}\n\n{ToolsNote}")),
         ];
         var toolCalls = 0;
+        var hasAskedForAnswer = false;
 
         for (var turn = 1; turn <= MaxTurns; turn++)
         {
@@ -93,18 +96,24 @@ static class VsCodeToolsAgent
                 return new ToolsAnswer(answer.Input ?? "{}", toolCalls, null);
 
             var text = string.Concat(parts.Where(p => p.Kind == VsCodeTurnPart.TextKind).Select(p => p.Text));
-            if (calls.Count == 0 && JsonObjectIn(text) is { } json)
+            if (calls.Count == 0 && JsonObjectIn(text, jsonSchema) is { } json)
                 return new ToolsAnswer(json, toolCalls, null);
             if (isLastTurn)
                 return new Error("The model did not answer within the limit of tool calls. Please try again.");
 
-            messages.Add(new VsCodeTurnMessage("assistant", parts));
             if (calls.Count == 0)
             {
-                // Text without the answer tool: asked once more, for the answer.
+                // Text without the answer tool, or nothing: asked once more, for the answer.
+                if (hasAskedForAnswer)
+                    return new Error("The model did not give an answer in the required format. Please try again.");
+                hasAskedForAnswer = true;
+                if (parts.Length > 0)
+                    messages.Add(new VsCodeTurnMessage("assistant", parts));
                 messages.Add(User(new VsCodeTurnPart(VsCodeTurnPart.TextKind, AnswerNowNote)));
                 continue;
             }
+
+            messages.Add(new VsCodeTurnMessage("assistant", parts));
 
             List<VsCodeTurnPart> results = [];
             foreach (var call in calls)
@@ -138,8 +147,9 @@ static class VsCodeToolsAgent
         }
     }
 
-    // The JSON object in a text answer: all of it, or the outermost braces (in a code fence, say).
-    internal static string? JsonObjectIn(string text)
+    // The JSON object in a text answer: all of it, or the outermost braces (in a code fence, say),
+    // where it has the fields the schema requires; a snippet quoted while reasoning is not the answer.
+    internal static string? JsonObjectIn(string text, string jsonSchema)
     {
         var start = text.IndexOf('{');
         var end = text.LastIndexOf('}');
@@ -149,7 +159,14 @@ static class VsCodeToolsAgent
         try
         {
             using var document = JsonDocument.Parse(candidate);
-            return document.RootElement.ValueKind == JsonValueKind.Object ? candidate : null;
+            using var schema = JsonDocument.Parse(jsonSchema);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                return null;
+            var required =
+                schema.RootElement.TryGetProperty("required", out var r) && r.ValueKind == JsonValueKind.Array
+                    ? r.EnumerateArray().Select(x => x.GetString() ?? "")
+                    : [];
+            return required.All(name => document.RootElement.TryGetProperty(name, out _)) ? candidate : null;
         }
         catch (JsonException)
         {

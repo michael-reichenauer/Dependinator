@@ -215,25 +215,17 @@ class AiService(
             }
         }
 
-        if (route is AiSource.Copilot)
+        if (route is AiSource.Copilot && withModelTools)
         {
-            onStep(SuggestStep.AskingCopilot);
-            var copilotPrompt = await getPrompt();
-            if (copilotPrompt == "")
-                return new Error(EmptyPromptError);
-            try
-            {
-                var modelId = await GetCopilotModelIdAsync();
-                if (!withModelTools)
-                    return await vsCodeModelService.AskAsync(copilotPrompt, jsonSchema, modelId);
-                var toolsAnswer = await vsCodeModelService.AskWithModelToolsAsync(copilotPrompt, jsonSchema, modelId);
-                return toolsAnswer is ToolsAnswer answer ? answer.Json : toolsAnswer.Error;
-            }
-            catch (Exception e) when (e.IsNotFatal())
-            {
-                return new Error($"Could not ask Copilot: {e.Message}", e);
-            }
+            var toolsAnswer = await AskWithModelToolsAsync(route, getPrompt, jsonSchema, onStep);
+            return toolsAnswer is ToolsAnswer answer ? answer.Json : toolsAnswer.Error;
         }
+        if (route is AiSource.Copilot)
+            return await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskAsync(prompt, jsonSchema, modelId)
+            );
 
         return await WithApiKeyAsync(
             getPrompt,
@@ -250,21 +242,37 @@ class AiService(
         Action<SuggestStep> onStep
     )
     {
-        if (route is not AiSource.Copilot)
-            return await WithApiKeyAsync(
+        return route switch
+        {
+            AiSource.Claude => await WithApiKeyAsync(
                 getPrompt,
                 onStep,
                 prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema)
-            );
+            ),
+            AiSource.Copilot => await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId)
+            ),
+            _ => new Error($"{route.Name()} cannot look things up with the model tools here."),
+        };
+    }
 
+    // Copilot asks the VS Code model picked in Settings › AI (IVsCodeModelService, in the LSP).
+    async Task<Result<T>> AskCopilotAsync<T>(
+        Func<Task<string>> getPrompt,
+        Action<SuggestStep> onStep,
+        Func<string, string?, Task<Result<T>>> ask
+    )
+        where T : notnull
+    {
         onStep(SuggestStep.AskingCopilot);
         var prompt = await getPrompt();
         if (prompt == "")
             return new Error(EmptyPromptError);
         try
         {
-            var modelId = await GetCopilotModelIdAsync();
-            return await vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId);
+            return await ask(prompt, await GetCopilotModelIdAsync());
         }
         catch (Exception e) when (e.IsNotFatal())
         {

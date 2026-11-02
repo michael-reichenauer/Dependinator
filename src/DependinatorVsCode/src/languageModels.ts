@@ -158,7 +158,9 @@ async function askAsync(params: AskParams, requestToken: vscode.CancellationToke
 }
 
 // One turn: the model answers with text and tool calls, the answer tool's call among them when it
-// is done. On the last turn it may only call the answer tool, and must.
+// is done. All tools stay declared on the last turn too (the history has calls of them, which some
+// backends check, and some models take a required tool only when it is the only one); the LSP's
+// prompt tells the model to answer now.
 async function turnAsync(params: TurnParams, requestToken: vscode.CancellationToken): Promise<TurnResult> {
     const model = await selectModelAsync(params.modelId);
     if (!model)
@@ -188,8 +190,8 @@ async function turnAsync(params: TurnParams, requestToken: vscode.CancellationTo
 
     const options: vscode.LanguageModelChatRequestOptions = {
         justification: "Dependinator asks the model about the dependencies in your code, when you ask for AI help.",
-        tools: params.isLastTurn ? [answerTool] : [...modelTools, answerTool],
-        toolMode: params.isLastTurn ? vscode.LanguageModelChatToolMode.Required : vscode.LanguageModelChatToolMode.Auto
+        tools: [...modelTools, answerTool],
+        toolMode: vscode.LanguageModelChatToolMode.Auto
     };
 
     const cts = new vscode.CancellationTokenSource();
