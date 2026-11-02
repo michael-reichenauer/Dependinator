@@ -358,11 +358,13 @@
     color: var(--mud-palette-primary);
 }
 
-.mud-button-root.dep-ai-ask:hover {
-    background-color: rgba(var(--mud-palette-primary-rgb), 0.16);
+@media (hover: hover) and (pointer: fine) {
+    .mud-button-root.dep-ai-ask:hover {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.16);
+    }
 }
 
-.mud-button-root.dep-ai-ask.mud-button-disabled {
+.mud-button-root.dep-ai-ask:disabled {
     background-color: var(--mud-palette-action-disabled-background);
     color: var(--mud-palette-action-disabled);
 }
@@ -373,7 +375,7 @@
     align-items: stretch;
 }
 
-.dep-ai__ask-split > .mud-button-root:first-child {
+.dep-ai__ask-split > .mud-button-root:first-child:not(:last-child) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }

@@ -55,7 +55,7 @@
     </AiOpinion>
     @if (IsBreakSuggested && !IsDone)
     {
-      @* The fix, under the change it makes: copying its prompt is the main action. *@
+      @* The fix, under the change it makes: copy its prompt, or let Claude Code make it (both AI actions, so both dep-ai-ask). *@
       <div class="dep-ai__fix-actions">
         <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                    title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
