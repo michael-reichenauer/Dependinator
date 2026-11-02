@@ -8,6 +8,7 @@ using Dependinator.Core.Utils.Logging;
 using Dependinator.Lsp.Claude;
 using Dependinator.Lsp.CloudSync;
 using Dependinator.Lsp.Mcp;
+using Dependinator.Lsp.VsCodeModels;
 using Dependinator.Roslyn;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
@@ -40,6 +41,7 @@ internal class Program
                         services.AddSingleton<LspCloudSyncContext>();
                         services.AddSingleton<ICloudSyncApiContext>(sp => sp.GetRequiredService<LspCloudSyncContext>());
                         services.AddSingleton<CloudSyncRpcService>();
+                        services.AddSingleton<LspVsCodeModelService>();
                     })
                     .WithHandler<LspMessageHandler>()
                     .WithHandler<WorkspaceFolderChangeHandler>()

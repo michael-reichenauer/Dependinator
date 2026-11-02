@@ -1,4 +1,5 @@
 using Dependinator.Core.Claude;
+using Dependinator.Core.VsCodeModels;
 using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams.Ai;
@@ -11,6 +12,7 @@ public enum SuggestStep
     EnteringNewApiKey,
     AskingClaude,
     AskingClaudeCode,
+    AskingCopilot,
 }
 
 interface IAiService
@@ -29,6 +31,14 @@ interface IAiService
 
     Task SetDefaultAsync(AiSource source);
 
+    // The models VS Code offers the Copilot provider (none outside VS Code), and the one it asks
+    // (Config.CopilotModelId; null: Copilot's first model).
+    Task<VsCodeModel[]> GetCopilotModelsAsync();
+
+    Task<string?> GetCopilotModelIdAsync();
+
+    Task SetCopilotModelAsync(string? modelId);
+
     // Raised when Settings › AI changes the providers or the default.
     event Action? ChoiceChanged;
 
@@ -37,6 +47,8 @@ interface IAiService
     // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
     // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
     // withModelTools lets Claude Code ask the open model through Dependinator's MCP tools too.
+    // Copilot asks the VS Code model picked in Settings › AI, the same for a quick question, and
+    // without the model tools.
     Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
@@ -67,9 +79,15 @@ interface IAiService
     Task StopClaudeCodeFixAsync();
 }
 
-// The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
+// The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host) and,
+// in VS Code, IVsCodeModelService (the LSP asks the extension).
 [Scoped]
-class AiService(IClaudeService claudeService, IConfigService configService, IModelMgr modelMgr) : IAiService
+class AiService(
+    IClaudeService claudeService,
+    IVsCodeModelService vsCodeModelService,
+    IConfigService configService,
+    IModelMgr modelMgr
+) : IAiService
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
@@ -98,7 +116,18 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         if (!IsAvailable)
             return AiChoice.ChatOnly;
         var config = await configService.GetAsync();
-        List<AiProvider> providers = [.. AiProvider.All.Where(p => p != AiProvider.ClaudeCode || config.UseClaudeCode)];
+        var hasCopilot = (await GetCopilotModelsAsync()).Length > 0;
+        List<AiProvider> providers =
+        [
+            .. AiProvider.All.Where(p =>
+                p.Source switch
+                {
+                    AiSource.ClaudeCode => config.UseClaudeCode,
+                    AiSource.Copilot => hasCopilot,
+                    _ => true,
+                }
+            ),
+        ];
         var isOffered = providers.Any(p => p.Source == config.DefaultAiProvider);
         return new AiChoice(providers, isOffered ? config.DefaultAiProvider : null);
     }
@@ -106,6 +135,29 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
     public async Task SetDefaultAsync(AiSource source)
     {
         await configService.SetAsync(config => config.DefaultAiProvider = source);
+        ChoiceChanged?.Invoke();
+    }
+
+    public async Task<VsCodeModel[]> GetCopilotModelsAsync()
+    {
+        if (!Dependinator.Core.Build.IsVsCodeExtWasm)
+            return [];
+        try
+        {
+            return await vsCodeModelService.GetModelsAsync();
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Warn($"Could not list VS Code's language models: {e.Message}");
+            return [];
+        }
+    }
+
+    public async Task<string?> GetCopilotModelIdAsync() => (await configService.GetAsync()).CopilotModelId;
+
+    public async Task SetCopilotModelAsync(string? modelId)
+    {
+        await configService.SetAsync(config => config.CopilotModelId = modelId);
         ChoiceChanged?.Invoke();
     }
 
@@ -131,6 +183,23 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             catch (Exception e) when (e.IsNotFatal())
             {
                 return new Error($"Could not ask Claude Code: {e.Message}", e);
+            }
+        }
+
+        if (route is AiSource.Copilot)
+        {
+            onStep(SuggestStep.AskingCopilot);
+            var copilotPrompt = await getPrompt();
+            if (copilotPrompt == "")
+                return new Error(EmptyPromptError);
+            try
+            {
+                var modelId = await GetCopilotModelIdAsync();
+                return await vsCodeModelService.AskAsync(copilotPrompt, jsonSchema, modelId);
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                return new Error($"Could not ask Copilot: {e.Message}", e);
             }
         }
 

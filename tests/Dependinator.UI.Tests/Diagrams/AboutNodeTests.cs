@@ -153,7 +153,12 @@ public class AboutNodeTests
         claude
             .Setup(c => c.AskQuicklyAsync("the prompt", NodeAnswer.JsonSchema))
             .ReturnsAsync((Result<string>)"""{ "answer": "It parses." }""");
-        var ai = new AiService(claude.Object, Mock.Of<IConfigService>(), Mock.Of<IModelMgr>());
+        var ai = new AiService(
+            claude.Object,
+            Mock.Of<IVsCodeModelService>(),
+            Mock.Of<IConfigService>(),
+            Mock.Of<IModelMgr>()
+        );
 
         var json = AssertOk(
             await ai.AskAsync(

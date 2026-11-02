@@ -241,7 +241,7 @@ class AskModelService(
         // would make them through the tools, and a canned answer.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            onStep(route.AskingStep());
             var lookups = new ScopeModelQueries(modelQueries);
             await lookups.GetModelAsync();
             await lookups.SearchNodesAsync(question);

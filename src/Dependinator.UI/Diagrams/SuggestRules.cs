@@ -376,7 +376,7 @@ class SuggestRulesService(
         // The e2e tests exercise the dialog without a key or network.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
             return Check(TestModeAnswer() with { Source = route });
         }

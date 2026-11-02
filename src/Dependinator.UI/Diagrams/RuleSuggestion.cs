@@ -137,7 +137,7 @@ class RuleReviewService(IModelMgr modelMgr, IWorkspaceFileService workspaceFileS
         // it, the next allow it, so both verdicts and differing answers can be tried.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
             var answer = testModeAsks++ % 2 == 0 ? TestModeFix : TestModeAllow;
             return answer with { Source = route };

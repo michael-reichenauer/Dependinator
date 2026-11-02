@@ -307,6 +307,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   route buttons, cost line and Show prompt became one chip naming the provider, with the same menu.
   Another provider (Copilot, Codex, Gemini) is now one more `AiProvider` entry plus its route in
   `IAiService`.
+- **Copilot, a third AI provider (Nov 2).** In VS Code the review dialogs, About Node and Suggest
+  rules can ask a model VS Code offers to extensions (its Language Model API, `vscode.lm`):
+  Copilot's, or one picked in Settings › AI. Core's `[Rpc] IVsCodeModelService` goes to the LSP,
+  which asks the extension (`languageModels.ts`); the answer's JSON schema is the input schema of
+  an `answer` tool the model must call, since the API has no structured output. VS Code asks the
+  user once whether Dependinator may use its model. Answers only for now: no model tools (the Ask
+  panel) and no code changes (phase 1).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

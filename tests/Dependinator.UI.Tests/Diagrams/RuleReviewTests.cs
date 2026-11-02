@@ -178,7 +178,7 @@ public class RuleReviewTests
         var service = new RuleReviewService(
             modelMgr,
             Mock.Of<IWorkspaceFileService>(),
-            new AiService(claude.Object, Mock.Of<IConfigService>(), modelMgr)
+            new AiService(claude.Object, Mock.Of<IVsCodeModelService>(), Mock.Of<IConfigService>(), modelMgr)
         );
         List<SuggestStep> steps = [];
 
