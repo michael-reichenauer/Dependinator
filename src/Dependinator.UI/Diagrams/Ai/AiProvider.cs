@@ -12,8 +12,8 @@ public enum AiCapability
 }
 
 // An AI the app can ask, named by its AiSource: how the provider menus and Settings › AI show it
-// (icon, a line on what it uses and costs) and what it can do. Another provider (Copilot, Codex,
-// Gemini) is another AiSource value and another entry in All, asked through IAiService.
+// (icon, a line on what it uses and costs) and what it can do. Another provider (Codex, Gemini) is
+// another AiSource value and another entry in All, asked through IAiService.
 public sealed record AiProvider(AiSource Source, string Id, string Icon, string Detail, AiCapability Capabilities)
 {
     public static readonly AiProvider Claude = new(
@@ -32,6 +32,17 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
         AiCapability.Answer | AiCapability.ModelTools | AiCapability.EditCode
     );
 
+    // A model VS Code offers to extensions (its Language Model API), Copilot's unless the user picks
+    // another in Settings › AI. Only in the VS Code host, and only where VS Code has a model. Answers
+    // only, for now: no model tools (the Ask panel) and no code changes.
+    public static readonly AiProvider Copilot = new(
+        AiSource.Copilot,
+        "copilot",
+        MudBlazor.Icons.Material.Outlined.Code,
+        "A model VS Code offers, such as GitHub Copilot's, with your Copilot plan",
+        AiCapability.Answer
+    );
+
     public static readonly AiProvider Chat = new(
         AiSource.Chat,
         "chat",
@@ -41,7 +52,7 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
     );
 
     // In the order the menus list them.
-    public static readonly IReadOnlyList<AiProvider> All = [Claude, ClaudeCode, Chat];
+    public static readonly IReadOnlyList<AiProvider> All = [Claude, ClaudeCode, Copilot, Chat];
 
     public string Name => Source.Name();
 
@@ -60,8 +71,8 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
         : $"Ask {Name}";
 }
 
-// The providers the user can ask now (Claude Code only where it is turned on, only the AI chat in
-// the standalone browser app) and the one they made the default, if any (Settings › AI).
+// The providers the user can ask now (Claude Code only where it is turned on, Copilot only in VS
+// Code with a model, only the AI chat in the standalone browser app) and the one they made the default, if any (Settings › AI).
 public sealed record AiChoice(IReadOnlyList<AiProvider> Providers, AiSource? Default)
 {
     public static readonly AiChoice ChatOnly = new([AiProvider.Chat], null);

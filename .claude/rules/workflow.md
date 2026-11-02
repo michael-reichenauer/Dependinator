@@ -108,6 +108,15 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   last 3 exchanges in the prompt), the `read_source` tool, `./scripts/ask-eval` (run it after a
   prompt or tool change). Still open: tool results carried across follow-ups, more eval cases
   from real questions. No paste route (decided with the user: multi-turn tools).
+- **Copilot provider (roadmap idea 10), next:** phase 1 (Nov 2) asks a VS Code language model
+  (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers only. Phase 2: the Ask
+  panel's model tools, the tool loop in C# in the LSP (generalize `ModelToolsAgent` over a chat
+  model, tools through `McpAgentTools`), the extension making one `sendRequest` per turn. Editing
+  code later, two options discussed with the user: first hand the fix prompt to Copilot Chat in
+  agent mode (it edits with its own tools and Keep/Undo review; no changed-files report back, so
+  re-parse after), and only if that feels too disconnected, our own workspace-limited edit tools
+  (read file, replace text) applied as VS Code `WorkspaceEdit`s. Cannot be tried in a cloud session
+  (no Copilot login): the user checks it in VS Code.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

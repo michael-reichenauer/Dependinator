@@ -73,6 +73,10 @@ class Config
     // The AI the app asks by default (Settings › AI); none until the user picks one, the first
     // time they ask or in Settings. Stored as the AiSource number, so its values never change.
     public AiSource? DefaultAiProvider { get; set; }
+
+    // The VS Code language model the Copilot provider asks (VsCodeModel.Id, Settings › AI); none
+    // picks Copilot's first model.
+    public string? CopilotModelId { get; set; }
 }
 
 interface IConfigService

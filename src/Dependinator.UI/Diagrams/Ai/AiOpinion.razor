@@ -196,16 +196,20 @@ else if (HasAiHelp)
     </div>
   }
 }
-@if (step is SuggestStep.AskingClaude or SuggestStep.AskingClaudeCode)
+@if (step is SuggestStep.AskingClaude or SuggestStep.AskingClaudeCode or SuggestStep.AskingCopilot)
 {
   @* Where the answer will appear. *@
   <div class="dep-ai__suggestion dep-ai__suggestion--pending" data-testid="@Id("asking")">
     <div class="dep-ai__suggest-pending">
       <MudProgressCircular Size="Size.Small" Indeterminate="true" />
       <span>
-        @(step is SuggestStep.AskingClaudeCode
-          ? "Asking Claude Code on this computer, this can take a minute or two."
-          : "Asking Claude, this can take up to a minute.")
+        @(step switch
+          {
+            SuggestStep.AskingClaudeCode => "Asking Claude Code on this computer, this can take a minute or two.",
+            SuggestStep.AskingCopilot =>
+              "Asking Copilot, this can take up to a minute. The first time, VS Code asks whether Dependinator may use its model.",
+            _ => "Asking Claude, this can take up to a minute.",
+          })
       </span>
     </div>
   </div>
@@ -345,6 +349,7 @@ else if (Selected is { } s && AnswerContent is not null)
     {
       AiSource.Claude => "suggest",
       AiSource.ClaudeCode => "suggest-code",
+      AiSource.Copilot => "suggest-copilot",
       _ => "copy-prompt",
     };
 
@@ -353,6 +358,7 @@ else if (Selected is { } s && AnswerContent is not null)
     {
       AiSource.Claude => RouteText,
       AiSource.ClaudeCode => "Claude Code on this computer reads the prompt and answers here.",
+      AiSource.Copilot => "A model VS Code offers, such as Copilot's, reads the prompt and answers here.",
       _ => "Copy a prompt into claude.ai or any AI chat, then paste its answer back here.",
     };
 
@@ -361,6 +367,7 @@ else if (Selected is { } s && AnswerContent is not null)
     provider.Source switch
     {
       AiSource.ClaudeCode => "Your Claude login, experimental",
+      AiSource.Copilot => "Your Copilot plan",
       AiSource.Chat => "Free, works with any chat",
       _ => provider.Detail,
     };
@@ -374,6 +381,7 @@ else if (Selected is { } s && AnswerContent is not null)
     {
       AiSource.Claude => $"{AskTitle}, with your own API key",
       AiSource.ClaudeCode => $"{AskTitle}, through Claude Code on this computer (experimental)",
+      AiSource.Copilot => $"{AskTitle}, from a model VS Code offers (Copilot's, or the one picked in AI settings)",
       _ => answers.Count > 0 ? "Copy the prompt again, for another answer from an AI chat" : CopyTitle,
     };
 

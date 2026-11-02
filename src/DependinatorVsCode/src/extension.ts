@@ -7,6 +7,7 @@ import {
 } from "./languageServer";
 import * as logger from "./logger";
 import * as claudeApiKey from "./claudeApiKey";
+import * as languageModels from "./languageModels";
 import type { WebviewMessage } from "./types";
 import {
     createDependinatorWebviewPanel,
@@ -340,6 +341,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             if (event.newState !== 2)
                 resetLspReady();
         });
+
+        // Before the awaited import below, so the UI's first AI dialog finds it registered.
+        languageModels.registerLanguageModels(client);
 
         // Cloud sync auth handlers are node-only; loaded dynamically like the LSP itself.
         try {

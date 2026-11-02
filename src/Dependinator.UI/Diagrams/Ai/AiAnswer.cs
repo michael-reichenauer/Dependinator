@@ -3,13 +3,15 @@ using System.Text.RegularExpressions;
 namespace Dependinator.UI.Diagrams.Ai;
 
 // Where an AI answer in a review came from: Claude with the user's API key, Claude Code on this
-// computer (the experimental local route), or another AI chat, pasted back by the user.
+// computer (the experimental local route), another AI chat, pasted back by the user, or a model
+// VS Code offers to extensions (Copilot's, in the VS Code host only).
 // The numbers are stored (Config.DefaultAiProvider): a new provider gets a new number.
 public enum AiSource
 {
     Claude = 0,
     ClaudeCode = 1,
     Chat = 2,
+    Copilot = 3,
 }
 
 // An answer a review dialog shows (AiOpinion): where it came from, and its verdict, one of a few
@@ -28,6 +30,7 @@ public static class AiSourceExtensions
         {
             AiSource.Claude => "Claude",
             AiSource.ClaudeCode => "Claude Code",
+            AiSource.Copilot => "Copilot",
             _ => "Your AI chat",
         };
 
@@ -37,7 +40,17 @@ public static class AiSourceExtensions
         {
             AiSource.Claude => "Claude",
             AiSource.ClaudeCode => "Claude Code",
+            AiSource.Copilot => "Copilot",
             _ => "Chat",
+        };
+
+    // What a dialog says while this route answers (SuggestStep).
+    public static SuggestStep AskingStep(this AiSource source) =>
+        source switch
+        {
+            AiSource.ClaudeCode => SuggestStep.AskingClaudeCode,
+            AiSource.Copilot => SuggestStep.AskingCopilot,
+            _ => SuggestStep.AskingClaude,
         };
 }
 

@@ -131,12 +131,15 @@ public class CycleSuggestionTests
     readonly Mock<ICyclePromptService> prompts = new();
     readonly Mock<IClaudeService> claude = new();
     readonly Mock<IModelMgr> modelMgr = new();
+    readonly Mock<IVsCodeModelService> vsCodeModels = new();
+    readonly Mock<IConfigService> config = new();
     readonly List<SuggestStep> steps = [];
 
     public CycleSuggestionTests()
     {
         prompts.Setup(p => p.GetPromptAsync(Cycle)).ReturnsAsync("the prompt");
         modelMgr.Setup(m => m.WithModel(It.IsAny<Func<IModel, string>>())).Returns(ModelPath);
+        config.Setup(c => c.GetAsync()).ReturnsAsync(new Config { CopilotModelId = "gpt-model" });
     }
 
     // Claude Code may read the code in the model's folder.
@@ -145,7 +148,7 @@ public class CycleSuggestionTests
     Task<Result<CycleSuggestion>> SuggestAsync(AiSource route = AiSource.Claude) =>
         new CycleSuggestionService(
             prompts.Object,
-            new AiService(claude.Object, Mock.Of<IConfigService>(), modelMgr.Object)
+            new AiService(claude.Object, vsCodeModels.Object, config.Object, modelMgr.Object)
         ).SuggestAsync(Cycle, route, steps.Add);
 
     [Fact]
@@ -164,6 +167,34 @@ public class CycleSuggestionTests
         Assert.Equal([SuggestStep.AskingClaudeCode], steps);
         claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
         claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldAskTheChosenVsCodeModel_WithoutAnApiKey_WhenCopilotIsChosen()
+    {
+        vsCodeModels
+            .Setup(m => m.AskAsync("the prompt", CycleSuggestion.JsonSchema, "gpt-model"))
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        var suggestion = AssertOk(await SuggestAsync(AiSource.Copilot));
+
+        Assert.True(suggestion.IsAccept);
+        Assert.Equal(AiSource.Copilot, suggestion.Source);
+        Assert.Equal([SuggestStep.AskingCopilot], steps);
+        claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldReturnTheVsCodeModelsError_WhenItCannotAnswer()
+    {
+        vsCodeModels
+            .Setup(m => m.AskAsync("the prompt", CycleSuggestion.JsonSchema, "gpt-model"))
+            .ReturnsAsync((Result<string>)new Error("No permission"));
+
+        var error = AssertError(await SuggestAsync(AiSource.Copilot));
+
+        Assert.Equal("No permission", error.Message);
     }
 
     [Fact]
