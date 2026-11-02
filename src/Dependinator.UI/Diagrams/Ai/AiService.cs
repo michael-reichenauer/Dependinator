@@ -128,7 +128,11 @@ class AiService(
                 }
             ),
         ];
-        var isOffered = providers.Any(p => p.Source == config.DefaultAiProvider);
+        // A Copilot default stays while VS Code lists no model for a moment (Copilot still starting
+        // or signing in), so the first ask does not take another provider as the new default.
+        var isOffered =
+            config.DefaultAiProvider is AiSource.Copilot && Dependinator.Core.Build.IsVsCodeExtWasm
+            || providers.Any(p => p.Source == config.DefaultAiProvider);
         return new AiChoice(providers, isOffered ? config.DefaultAiProvider : null);
     }
 
@@ -138,10 +142,30 @@ class AiService(
         ChoiceChanged?.Invoke();
     }
 
+    // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI
+    // needs it, so it is kept a minute (an empty one a few seconds: Copilot may be starting).
+    static readonly TimeSpan CopilotModelsTtl = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan NoCopilotModelsTtl = TimeSpan.FromSeconds(5);
+    Task<VsCodeModel[]>? copilotModels;
+    DateTime copilotModelsTime;
+
     public async Task<VsCodeModel[]> GetCopilotModelsAsync()
     {
         if (!Dependinator.Core.Build.IsVsCodeExtWasm)
             return [];
+        if (copilotModels is { } cached)
+        {
+            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
+            if (!cached.IsCompleted || DateTime.UtcNow - copilotModelsTime < ttl)
+                return await cached;
+        }
+        copilotModelsTime = DateTime.UtcNow;
+        copilotModels = ListCopilotModelsAsync();
+        return await copilotModels;
+    }
+
+    async Task<VsCodeModel[]> ListCopilotModelsAsync()
+    {
         try
         {
             return await vsCodeModelService.GetModelsAsync();

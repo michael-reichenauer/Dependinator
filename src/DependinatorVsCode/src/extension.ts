@@ -342,6 +342,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 resetLspReady();
         });
 
+        // Before the awaited import below, so the UI's first AI dialog finds it registered.
+        languageModels.registerLanguageModels(client);
+
         // Cloud sync auth handlers are node-only; loaded dynamically like the LSP itself.
         try {
             const cloudSyncAuth = await import("./cloudSyncAuth");
@@ -350,7 +353,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             logger.error("Dependinator cloud sync auth failed to initialize", error);
         }
         claudeApiKey.registerClaudeApiKey(client, context);
-        languageModels.registerLanguageModels(client);
     });
 
     // Opens (or reveals) the webview hosting the WASM UI and shows the active editor's node.

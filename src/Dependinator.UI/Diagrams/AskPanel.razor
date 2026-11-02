@@ -364,7 +364,6 @@
       SuggestStep.EnteringNewApiKey when Dependinator.Core.Build.IsVsCodeExtWasm =>
         "Claude did not accept the stored API key. Enter a new one in the box at the top of the VS Code window.",
       SuggestStep.EnteringApiKey or SuggestStep.EnteringNewApiKey => "Checking the Claude API key ...",
-      SuggestStep.AskingCopilot => "Asking Copilot, this can take up to a minute.",
       _ when entry.Route is AiSource.ClaudeCode => "Asking Claude Code on this computer, this can take a minute or two.",
       _ => "Asking Claude, it looks things up in the model first. This can take a minute.",
     };

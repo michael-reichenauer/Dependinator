@@ -40,7 +40,7 @@
             <div class="dep-ai-settings__model">
               <MudSelect T="string" Value="@(copilotModelId ?? "")" ValueChanged="SetCopilotModelAsync" Dense="true"
                          Margin="Margin.Dense" Variant="Variant.Outlined" Label="Model" data-testid="ai-settings-copilot-model">
-                <MudSelectItem T="string" Value="@("")">Copilot's default</MudSelectItem>
+                <MudSelectItem T="string" Value="@("")">@AutomaticText</MudSelectItem>
                 @foreach (var model in copilotModels)
                 {
                   <MudSelectItem T="string" Value="@model.Id">@ModelName(model)</MudSelectItem>
@@ -107,7 +107,10 @@
     choice = await aiService.GetChoiceAsync();
     isClaudeCodeOn = choice.Providers.Contains(AiProvider.ClaudeCode);
     copilotModels = choice.Providers.Contains(AiProvider.Copilot) ? await aiService.GetCopilotModelsAsync() : [];
-    copilotModelId = await aiService.GetCopilotModelIdAsync();
+    // A picked model VS Code no longer offers shows as the automatic choice, which the extension
+    // then asks instead.
+    var modelId = await aiService.GetCopilotModelIdAsync();
+    copilotModelId = copilotModels.Any(m => m.Id == modelId) ? modelId : null;
   }
 
   async Task SetDefaultAsync(AiSource? source)
@@ -149,6 +152,12 @@
     Dependinator.Core.Build.IsVsCodeExtWasm
       ? "VS Code offers no language model: install GitHub Copilot and sign in to it"
       : "A model VS Code offers, such as GitHub Copilot's: only in the VS Code extension";
+
+  // The model asked when none is picked: Copilot's first, as the extension picks it (languageModels.ts).
+  string AutomaticText =>
+    (copilotModels.FirstOrDefault(m => m.Vendor == "copilot") ?? copilotModels.FirstOrDefault()) is { } first
+      ? $"Automatic: {ModelName(first)}"
+      : "Automatic";
 
   // "GPT-5 mini", or "Claude Sonnet 5.5 (anthropic)" for a model another extension adds.
   static string ModelName(VsCodeModel model) =>

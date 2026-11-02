@@ -43,7 +43,9 @@ export function registerLanguageModels(client: LanguageClient): void {
     client.onRequest(modelsRequestMethod, async (): Promise<{ models: ModelInfo[] }> => ({
         models: await listModelsAsync()
     }));
-    client.onRequest(askRequestMethod, (params: AskParams): Promise<AskResult> => askAsync(params));
+    client.onRequest(askRequestMethod, (params: AskParams, token: vscode.CancellationToken): Promise<AskResult> =>
+        askAsync(params, token)
+    );
 }
 
 async function listModelsAsync(): Promise<ModelInfo[]> {
@@ -62,7 +64,7 @@ async function listModelsAsync(): Promise<ModelInfo[]> {
     }
 }
 
-async function askAsync(params: AskParams): Promise<AskResult> {
+async function askAsync(params: AskParams, requestToken: vscode.CancellationToken): Promise<AskResult> {
     const model = await selectModelAsync(params.modelId);
     if (!model)
         return failure(
@@ -90,6 +92,8 @@ async function askAsync(params: AskParams): Promise<AskResult> {
 
     const cts = new vscode.CancellationTokenSource();
     const timer = setTimeout(() => cts.cancel(), askTimeoutMs);
+    // The LSP gave up (its own time limit, or it stopped): no point in an answer nobody reads.
+    const cancelled = requestToken.onCancellationRequested(() => cts.cancel());
     try {
         logger.log(`Asking ${model.vendor} model ${model.name} (${model.id})`);
         const response = await model.sendRequest(messages, options, cts.token);
@@ -109,6 +113,7 @@ async function askAsync(params: AskParams): Promise<AskResult> {
         return failure(errorText(error, model));
     } finally {
         clearTimeout(timer);
+        cancelled.dispose();
         cts.dispose();
     }
 }
