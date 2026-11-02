@@ -57,12 +57,12 @@
     {
       @* The fix, under the change it makes: copying its prompt is the main action. *@
       <div class="dep-ai__fix-actions">
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+        <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                    title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
                    OnClick="CopyFixPromptAsync" data-testid="rule-review-copy-fix">Copy fix prompt</MudButton>
         @if (CanFix)
         {
-          <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+          <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
                      Disabled="@(fixPanel?.IsRunning == true)" OnClick="() => fixPanel!.StartAsync()"
                      title="Claude Code makes the change in the model's folder now (experimental)"
                      data-testid="rule-review-fix-claude-code">Fix with Claude Code</MudButton>

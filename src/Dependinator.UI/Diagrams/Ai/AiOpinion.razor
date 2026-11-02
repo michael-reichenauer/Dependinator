@@ -315,24 +315,26 @@ else if (Selected is { } s && AnswerContent is not null)
   // The default's button, and the menu next to it that asks another provider once.
   RenderFragment? AskSplit => Primary is not { } primary ? null :
     @<span class="dep-ai__ask-split">
-      <MudButton StartIcon="@primary.Icon" Size="Size.Small"
-                 Variant="@(answers.Count > 0 ? Variant.Text : Variant.Outlined)" Disabled="isSuggesting"
-                 Class="@(primary.IsClaude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(primary)"
+      <MudButton StartIcon="@primary.Icon" Size="Size.Small" Variant="Variant.Text" Disabled="isSuggesting"
+                 Class="@AskClass(primary)" title="@AskTitleOf(primary)"
                  OnClick="() => RunAsync(primary)" data-testid="@Id("ask")" data-provider="@primary.Id">
         @AskLabel(primary)
       </MudButton>
       @if (choice.Providers.Count > 1 || aiService.IsAvailable)
       {
         <AiProviderMenu Choice="choice" TestId="@Id("ask")" OnChoose="RunAsync" OnSettingsChanged="RefreshChoiceAsync"
-                        Disabled="isSuggesting" Variant="@(answers.Count > 0 ? Variant.Text : Variant.Outlined)" />
+                        Disabled="isSuggesting" />
       }
     </span>;
+
+  // Every button that asks an AI shares one look (dep-ai-ask), whatever the place or its state.
+  static string AskClass(AiProvider provider) => provider.IsClaude ? "dep-ai-ask dep-ai__ask-claude" : "dep-ai-ask";
 
   // A card's button, before there is a default: picking it makes it the default.
   RenderFragment CardButton(AiProvider provider) =>
     @<MudButton StartIcon="@(provider.Source is AiSource.Chat ? MudBlazor.Icons.Material.Outlined.ContentCopy : provider.Icon)"
-                Size="Size.Small" Variant="Variant.Outlined" Disabled="isSuggesting"
-                Class="@(provider.IsClaude ? "dep-ai__ask-claude" : "")" title="@AskTitleOf(provider)"
+                Size="Size.Small" Variant="Variant.Text" Disabled="isSuggesting"
+                Class="@AskClass(provider)" title="@AskTitleOf(provider)"
                 OnClick="() => ChooseAsync(provider)" data-testid="@Id(CardButtonId(provider))">
       @if (provider.Source is AiSource.Chat)
       {

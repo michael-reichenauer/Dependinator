@@ -28,7 +28,7 @@
     }
     else
     {
-      <MudButton Size="Size.Small" Variant="Variant" Color="Color" Disabled="Disabled" Class="dep-ai-menu__arrow"
+      <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="Disabled" Class="dep-ai-ask dep-ai-menu__arrow"
                  title="Ask another AI, or change the default" aria-label="Choose which AI to ask"
                  OnClick="@(e => context.ToggleAsync(e))" data-testid="@($"{TestId}-menu")">
         <MudIcon Icon="@MudBlazor.Icons.Material.Filled.ArrowDropDown" Size="Size.Small" />
@@ -87,10 +87,6 @@
   // A chip naming Current opens it, instead of an arrow next to the place's own button.
   [Parameter] public bool IsChip { get; set; }
   [Parameter] public AiProvider? Current { get; set; }
-
-  // The arrow's look, matching the button it sits next to.
-  [Parameter] public Variant Variant { get; set; } = Variant.Outlined;
-  [Parameter] public Color Color { get; set; } = Color.Default;
 
   [Parameter] public bool Disabled { get; set; }
 

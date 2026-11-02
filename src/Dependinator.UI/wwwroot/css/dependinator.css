@@ -348,6 +348,25 @@
     font-size: 0.75rem;
 }
 
+/* Every button that asks an AI (AiOpinion, Improve comments, the fix actions) shares one look: a
+   soft primary tint, quieter than a filled button, yet a button at a glance and the same before and
+   after an answer. Its arrow (AiProviderMenu) carries the tint too, split off by a thin line. */
+.mud-button-root.dep-ai-ask {
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: rgba(var(--mud-palette-primary-rgb), 0.08);
+    color: var(--mud-palette-primary);
+}
+
+.mud-button-root.dep-ai-ask:hover {
+    background-color: rgba(var(--mud-palette-primary-rgb), 0.16);
+}
+
+.mud-button-root.dep-ai-ask.mud-button-disabled {
+    background-color: var(--mud-palette-action-disabled-background);
+    color: var(--mud-palette-action-disabled);
+}
+
 /* The default's button and, joined to it, the arrow of its provider menu (AiProviderMenu). */
 .dep-ai__ask-split {
     display: inline-flex;
@@ -359,11 +378,11 @@
     border-bottom-right-radius: 0;
 }
 
-.dep-ai__ask-split .mud-menu {
-    margin-left: -1px;
+.dep-ai__ask-split .dep-ai-menu__arrow {
+    border-left: 1px solid rgba(var(--mud-palette-primary-rgb), 0.25);
 }
 
-.dep-ai-menu__arrow {
+.mud-button-root.dep-ai-menu__arrow {
     min-width: 0;
     padding-left: 2px;
     padding-right: 2px;

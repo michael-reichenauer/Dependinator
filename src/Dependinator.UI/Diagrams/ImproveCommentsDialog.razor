@@ -51,14 +51,14 @@
         <span class="dep-ai__ask-split">
           @if (CanRun)
           {
-            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
                        Disabled="@(IsEmpty || IsLocked)" OnClick="() => fixPanel!.StartAsync()"
                        title="Claude Code improves the comments in the model's folder now (experimental)"
                        data-testid="improve-comments-run">Improve with Claude Code</MudButton>
           }
           else
           {
-            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
+            <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                        Disabled="@IsEmpty" OnClick="CopyPromptAsync"
                        title="Copy the prompt for Claude Code, or another AI that can change the code"
                        data-testid="improve-comments-copy">Copy prompt</MudButton>
@@ -66,7 +66,7 @@
           @if (HasMenu)
           {
             <AiProviderMenu Choice="choice" Need="AiCapability.EditCode" UnableText="Cannot change the code"
-                            TestId="improve-comments" Variant="Variant.Filled" Color="Color.Primary"
+                            TestId="improve-comments"
                             Disabled="@(IsEmpty || IsLocked)" OnChoose="ChooseAsync" OnSettingsChanged="OnSettingsChanged">
               <MoreItems>
                 @if (CanRun)
