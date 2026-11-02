@@ -47,8 +47,8 @@ interface IAiService
     // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
     // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
     // withModelTools lets Claude Code ask the open model through Dependinator's MCP tools too.
-    // Copilot asks the VS Code model picked in Settings › AI, the same for a quick question, and
-    // without the model tools.
+    // Copilot asks the VS Code model picked in Settings › AI, the same for a quick question, with
+    // the model tools too where withModelTools asks for them (the LSP's tool loop).
     Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
@@ -58,9 +58,11 @@ interface IAiService
         bool withModelTools = false
     );
 
-    // Asks Claude with the API key, letting it look things up first with Dependinator's model tools
-    // (IClaudeService.AskWithModelToolsAsync); the key is handled as for AskAsync.
+    // Asks Claude with the API key (IClaudeService.AskWithModelToolsAsync; the key is handled as
+    // for AskAsync) or Copilot (IVsCodeModelService.AskWithModelToolsAsync), letting it look things
+    // up first with Dependinator's model tools.
     Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep
@@ -213,22 +215,17 @@ class AiService(
             }
         }
 
-        if (route is AiSource.Copilot)
+        if (route is AiSource.Copilot && withModelTools)
         {
-            onStep(SuggestStep.AskingCopilot);
-            var copilotPrompt = await getPrompt();
-            if (copilotPrompt == "")
-                return new Error(EmptyPromptError);
-            try
-            {
-                var modelId = await GetCopilotModelIdAsync();
-                return await vsCodeModelService.AskAsync(copilotPrompt, jsonSchema, modelId);
-            }
-            catch (Exception e) when (e.IsNotFatal())
-            {
-                return new Error($"Could not ask Copilot: {e.Message}", e);
-            }
+            var toolsAnswer = await AskWithModelToolsAsync(route, getPrompt, jsonSchema, onStep);
+            return toolsAnswer is ToolsAnswer answer ? answer.Json : toolsAnswer.Error;
         }
+        if (route is AiSource.Copilot)
+            return await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskAsync(prompt, jsonSchema, modelId)
+            );
 
         return await WithApiKeyAsync(
             getPrompt,
@@ -238,11 +235,50 @@ class AiService(
         );
     }
 
-    public Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep
-    ) => WithApiKeyAsync(getPrompt, onStep, prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema));
+    )
+    {
+        return route switch
+        {
+            AiSource.Claude => await WithApiKeyAsync(
+                getPrompt,
+                onStep,
+                prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema)
+            ),
+            AiSource.Copilot => await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId)
+            ),
+            _ => new Error($"{route.Name()} cannot look things up with the model tools here."),
+        };
+    }
+
+    // Copilot asks the VS Code model picked in Settings › AI (IVsCodeModelService, in the LSP).
+    async Task<Result<T>> AskCopilotAsync<T>(
+        Func<Task<string>> getPrompt,
+        Action<SuggestStep> onStep,
+        Func<string, string?, Task<Result<T>>> ask
+    )
+        where T : notnull
+    {
+        onStep(SuggestStep.AskingCopilot);
+        var prompt = await getPrompt();
+        if (prompt == "")
+            return new Error(EmptyPromptError);
+        try
+        {
+            return await ask(prompt, await GetCopilotModelIdAsync());
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not ask Copilot: {e.Message}", e);
+        }
+    }
 
     // Without a key, or with one Claude did not accept, the user is asked for a key first (once).
     async Task<Result<T>> WithApiKeyAsync<T>(

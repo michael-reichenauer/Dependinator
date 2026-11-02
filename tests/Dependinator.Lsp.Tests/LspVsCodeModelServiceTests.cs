@@ -1,3 +1,4 @@
+using Dependinator.Core.ModelQueries;
 using Dependinator.Core.VsCodeModels;
 using Dependinator.Lsp.VsCodeModels;
 using OmniSharp.Extensions.JsonRpc;
@@ -11,7 +12,7 @@ public class LspVsCodeModelServiceTests
 {
     readonly Mock<ILanguageServerFacade> server = new();
 
-    LspVsCodeModelService CreateSut() => new(server.Object);
+    LspVsCodeModelService CreateSut() => new(server.Object, new ModelToolsServer());
 
     void SetupAsk(Func<Task<VsCodeAskResult>> answer)
     {
@@ -84,5 +85,14 @@ public class LspVsCodeModelServiceTests
         SetupModels(() => Task.FromException<VsCodeModelsResult>(new IOException("no handler")));
 
         Assert.Empty(await CreateSut().GetModelsAsync());
+    }
+
+    [Fact]
+    public async Task AskWithModelToolsAsync_ShouldFail_BeforeTheModelToolsServerHasStarted()
+    {
+        var error = AssertError(await CreateSut().AskWithModelToolsAsync("the prompt", "{}", "gpt"));
+
+        Assert.Contains("model tools are not ready", error.Message);
+        server.VerifyNoOtherCalls();
     }
 }

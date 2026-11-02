@@ -33,14 +33,14 @@ public sealed record AiProvider(AiSource Source, string Id, string Icon, string 
     );
 
     // A model VS Code offers to extensions (its Language Model API), Copilot's unless the user picks
-    // another in Settings › AI. Only in the VS Code host, and only where VS Code has a model. Answers
-    // only, for now: no model tools (the Ask panel) and no code changes.
+    // another in Settings › AI. Only in the VS Code host, and only where VS Code has a model. It
+    // looks things up with the model tools (the Ask panel) like Claude; it changes no code.
     public static readonly AiProvider Copilot = new(
         AiSource.Copilot,
         "copilot",
         MudBlazor.Icons.Material.Outlined.Code,
         "A model VS Code offers, such as GitHub Copilot's, with your Copilot plan",
-        AiCapability.Answer
+        AiCapability.Answer | AiCapability.ModelTools
     );
 
     public static readonly AiProvider Chat = new(

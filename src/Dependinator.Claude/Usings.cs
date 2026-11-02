@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Dependinator.Lsp")]
+[assembly: InternalsVisibleTo("Dependinator.Lsp.Tests")]
 [assembly: InternalsVisibleTo("Dependinator.Web")]
 [assembly: InternalsVisibleTo("Dependinator.Claude.Tests")]
 [assembly: AssemblyDescription(

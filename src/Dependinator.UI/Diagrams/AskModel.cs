@@ -188,8 +188,9 @@ static class AskModelPrompt
 // "Ask" (AskPanel): a question about the open model for an AI, which finds the answer with
 // Dependinator's model tools and names the nodes it is about, as links in the panel. Asked through
 // Claude with the user's API key (the host runs the tool-use loop, IClaudeService.
-// AskWithModelToolsAsync), or Claude Code on this computer (Settings › AI); both get
-// the tools through the app's MCP server. The panel sits top-right with the analysis panels, so
+// AskWithModelToolsAsync), Copilot in VS Code (the LSP runs the loop and asks the model a turn at a
+// time, IVsCodeModelService.AskWithModelToolsAsync), or Claude Code on this computer (Settings ›
+// AI); all of them get the tools through the app's MCP server. The panel sits top-right with the analysis panels, so
 // opening it closes them.
 interface IAskModelService
 {
@@ -273,11 +274,11 @@ class AskModelService(
         Result<ToolsAnswer> answered;
         try
         {
-            answered = await aiService.AskWithModelToolsAsync(GetPromptAsync, ModelAnswer.JsonSchema, onStep);
+            answered = await aiService.AskWithModelToolsAsync(route, GetPromptAsync, ModelAnswer.JsonSchema, onStep);
         }
         catch (Exception e) when (e.IsNotFatal())
         {
-            return new Error($"Could not ask Claude: {e.Message}", e);
+            return new Error($"Could not ask {route.Name()}: {e.Message}", e);
         }
         if (answered is not ToolsAnswer toolsAnswer)
             return answered.Error;
@@ -383,7 +384,7 @@ class AskModelService(
         return new ModelAnswer(text, [.. names.Select(n => new AnswerNode(n, "Test mode"))])
         {
             Source = route,
-            ToolCalls = route is AiSource.Claude ? 2 : null,
+            ToolCalls = route is AiSource.Claude or AiSource.Copilot ? 2 : null,
             CostUsd = route is AiSource.Claude ? 0.0123m : null,
         };
     }

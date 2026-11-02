@@ -1,3 +1,4 @@
+using Dependinator.Core.Claude;
 using Dependinator.Core.Rpc;
 
 namespace Dependinator.Core.VsCodeModels;
@@ -17,6 +18,12 @@ interface IVsCodeModelService
     // request shows VS Code's consent dialog, so it is made only when the user asked. An error
     // when there is no model, the user declined, or the model did not answer in the format.
     Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? modelId);
+
+    // Like AskAsync, but the model may first look things up with Dependinator's model tools (the
+    // MCP tools the host serves, see IModelToolsServer), as often as it needs up to a limit. The
+    // LSP runs the tool loop and the tools; the extension asks the model one turn at a time. The
+    // answer says how many tool calls it took; its cost is unknown (the user's Copilot plan).
+    Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema, string? modelId);
 }
 
 // A model VS Code offers: Id names it in AskAsync, Name is for the user ("GPT-5 mini"), Vendor the

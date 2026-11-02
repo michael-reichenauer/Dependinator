@@ -11,6 +11,7 @@ import * as logger from "./logger";
 // LSP protocol methods shared with Dependinator.Lsp/VsCodeModels.
 const modelsRequestMethod = "dependinator/lm/models";
 const askRequestMethod = "dependinator/lm/ask";
+const turnRequestMethod = "dependinator/lm/turn";
 
 // The name of the tool the model must call with its answer: the vscode.lm API has no structured
 // output, so the answer's JSON schema is the tool's input schema instead.
@@ -33,6 +34,41 @@ interface AskParams {
     modelId: string | null;
 }
 
+// One model turn of the LSP's tool loop (Dependinator.Lsp/VsCodeModels/VsCodeToolsAgent.cs): the
+// conversation so far, the model tools it may call (Dependinator's MCP tools; the LSP runs them),
+// and the answer's schema. Tool inputs travel as JSON text.
+interface TurnPart {
+    kind: "text" | "toolCall" | "toolResult";
+    text?: string | null;
+    callId?: string | null;
+    name?: string | null;
+    input?: string | null;
+}
+
+interface TurnMessage {
+    role: "user" | "assistant";
+    parts: TurnPart[];
+}
+
+interface TurnTool {
+    name: string;
+    description: string;
+    inputSchema: string;
+}
+
+interface TurnParams {
+    modelId: string | null;
+    messages: TurnMessage[];
+    tools: TurnTool[];
+    answerSchema: string;
+    isLastTurn: boolean;
+}
+
+interface TurnResult {
+    parts: TurnPart[] | null;
+    error: string | null;
+}
+
 interface AskResult {
     json: string | null;
     error: string | null;
@@ -45,6 +81,9 @@ export function registerLanguageModels(client: LanguageClient): void {
     }));
     client.onRequest(askRequestMethod, (params: AskParams, token: vscode.CancellationToken): Promise<AskResult> =>
         askAsync(params, token)
+    );
+    client.onRequest(turnRequestMethod, (params: TurnParams, token: vscode.CancellationToken): Promise<TurnResult> =>
+        turnAsync(params, token)
     );
 }
 
@@ -116,6 +155,88 @@ async function askAsync(params: AskParams, requestToken: vscode.CancellationToke
         cancelled.dispose();
         cts.dispose();
     }
+}
+
+// One turn: the model answers with text and tool calls, the answer tool's call among them when it
+// is done. All tools stay declared on the last turn too (the history has calls of them, which some
+// backends check, and some models take a required tool only when it is the only one); the LSP's
+// prompt tells the model to answer now.
+async function turnAsync(params: TurnParams, requestToken: vscode.CancellationToken): Promise<TurnResult> {
+    const model = await selectModelAsync(params.modelId);
+    if (!model)
+        return {
+            parts: null,
+            error: "VS Code offers no Copilot model. Install GitHub Copilot Chat and sign in, or pick another AI in Settings › AI."
+        };
+
+    let answerTool: vscode.LanguageModelChatTool;
+    let modelTools: vscode.LanguageModelChatTool[];
+    let messages: vscode.LanguageModelChatMessage[];
+    try {
+        answerTool = {
+            name: answerToolName,
+            description: "Gives the final answer, in the required format. Call it once, when you are done looking things up.",
+            inputSchema: JSON.parse(params.answerSchema) as object
+        };
+        modelTools = params.tools.map(t => ({
+            name: t.name,
+            description: t.description,
+            inputSchema: JSON.parse(t.inputSchema) as object
+        }));
+        messages = params.messages.map(toChatMessage);
+    } catch (error) {
+        return { parts: null, error: `The request could not be read: ${error instanceof Error ? error.message : String(error)}` };
+    }
+
+    const options: vscode.LanguageModelChatRequestOptions = {
+        justification: "Dependinator asks the model about the dependencies in your code, when you ask for AI help.",
+        tools: [...modelTools, answerTool],
+        toolMode: vscode.LanguageModelChatToolMode.Auto
+    };
+
+    const cts = new vscode.CancellationTokenSource();
+    const timer = setTimeout(() => cts.cancel(), askTimeoutMs);
+    const cancelled = requestToken.onCancellationRequested(() => cts.cancel());
+    try {
+        const response = await model.sendRequest(messages, options, cts.token);
+        const parts: TurnPart[] = [];
+        let text = "";
+        for await (const part of response.stream) {
+            if (part instanceof vscode.LanguageModelTextPart)
+                text += part.value;
+            else if (part instanceof vscode.LanguageModelToolCallPart)
+                parts.push({ kind: "toolCall", callId: part.callId, name: part.name, input: JSON.stringify(part.input) });
+        }
+        if (text !== "")
+            parts.unshift({ kind: "text", text });
+        logger.log(`${model.name} answered a turn: ${parts.filter(p => p.kind === "toolCall").map(p => p.name).join(", ") || "text"}`);
+        return { parts, error: null };
+    } catch (error) {
+        if (cts.token.isCancellationRequested)
+            return { parts: null, error: `${model.name} did not answer in time.` };
+        return { parts: null, error: errorText(error, model) };
+    } finally {
+        clearTimeout(timer);
+        cancelled.dispose();
+        cts.dispose();
+    }
+}
+
+function toChatMessage(message: TurnMessage): vscode.LanguageModelChatMessage {
+    if (message.role === "assistant") {
+        const parts: (vscode.LanguageModelTextPart | vscode.LanguageModelToolCallPart)[] = message.parts.map(p =>
+            p.kind === "toolCall"
+                ? new vscode.LanguageModelToolCallPart(p.callId ?? "", p.name ?? "", JSON.parse(p.input ?? "{}") as object)
+                : new vscode.LanguageModelTextPart(p.text ?? "")
+        );
+        return vscode.LanguageModelChatMessage.Assistant(parts);
+    }
+    const parts: (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart)[] = message.parts.map(p =>
+        p.kind === "toolResult"
+            ? new vscode.LanguageModelToolResultPart(p.callId ?? "", [new vscode.LanguageModelTextPart(p.text ?? "")])
+            : new vscode.LanguageModelTextPart(p.text ?? "")
+    );
+    return vscode.LanguageModelChatMessage.User(parts);
 }
 
 // The chosen model, or else the first of Copilot's. Never just any model: other extensions list

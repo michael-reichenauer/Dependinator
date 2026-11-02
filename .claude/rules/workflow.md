@@ -109,9 +109,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   prompt or tool change). Still open: tool results carried across follow-ups, more eval cases
   from real questions. No paste route (decided with the user: multi-turn tools).
 - **Copilot provider (roadmap idea 10), next:** phase 1 (Nov 2) asks a VS Code language model
-  (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers only. Phase 2: the Ask
-  panel's model tools, the tool loop in C# in the LSP (generalize `ModelToolsAgent` over a chat
-  model, tools through `McpAgentTools`), the extension making one `sendRequest` per turn. Editing
+  (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers; the user tried it (works
+  in his normal VS Code; a debug VS Code had Copilot disabled). Phase 2 (Nov 2): the model tools
+  (Ask panel, Suggest rules), the tool loop in C# in the LSP (`VsCodeToolsAgent` over
+  `McpAgentTools`), the extension making one `sendRequest` per turn. Editing
   code later, two options discussed with the user: first hand the fix prompt to Copilot Chat in
   agent mode (it edits with its own tools and Keep/Undo review; no changed-files report back, so
   re-parse after), and only if that feels too disconnected, our own workspace-limited edit tools
