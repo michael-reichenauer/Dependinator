@@ -9,6 +9,22 @@ with the next official release.
 
 ## [Unreleased]
 
+### New
+
+- **Menu › Settings …** opens one dialog for the preferences set once, saved as they change: **Appearance** (theme, and the layout density **Compact**, **Balanced** or **Spacious**), **Diagram** (soft lines, dimming unrelated lines, line widths by link count, problem and hidden node badges, which moved there from **View**), **Mouse** (inverted scroll zoom), **This model** (including test projects) and **AI**
+- Resting the mouse on a node's icon or member row lights its lines for a moment, without clicking
+
+### Improved
+
+- Lines are drawn soft so busy diagrams look calmer: a selected node's lines show at full strength and unrelated ones fade further, while cycle, broken rule and path lines always stay at full strength; **Settings › Diagram › Soft lines** turns it off
+- The dark theme is softer: a very dark grey canvas instead of near black, pastel container frames instead of neon colors (a red frame no longer reads as an error), and off-white text
+- The **Improve Comments** dialog lays out its AI action like the review dialogs, with the AI menu beside it, and its button row only closes it
+
+### Changed
+
+- The theme is **Light** by default instead of following the system; **System** and **Dark** stay as choices, and a stored Light or Dark choice is kept
+- The breadcrumb bar under the app bar shows only while a node is selected, to keep the diagram clear
+
 ## [v0.87.435765] - 2026-10-30
 
 ### New
