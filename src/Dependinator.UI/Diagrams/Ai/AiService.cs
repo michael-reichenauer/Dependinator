@@ -32,8 +32,8 @@ interface IAiService
     Task SetDefaultAsync(AiSource source);
 
     // The models VS Code offers the Copilot provider (none outside VS Code), and the one it asks
-    // (Config.CopilotModelId; null: Copilot's first model).
-    Task<VsCodeModel[]> GetCopilotModelsAsync();
+    // (Config.CopilotModelId; null: Copilot's first model). isFresh skips the cached list.
+    Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false);
 
     Task<string?> GetCopilotModelIdAsync();
 
@@ -116,7 +116,10 @@ class AiService(
         if (!IsAvailable)
             return AiChoice.ChatOnly;
         var config = await configService.GetAsync();
-        var hasCopilot = (await GetCopilotModelsAsync()).Length > 0;
+        // Offered with a model of Copilot's own, or one the user picked from another extension;
+        // other extensions also list placeholders that cannot answer (Foundry Toolkit's).
+        var models = await GetCopilotModelsAsync();
+        var hasCopilot = models.Any(m => m.IsCopilots || m.Id == config.CopilotModelId);
         List<AiProvider> providers =
         [
             .. AiProvider.All.Where(p =>
@@ -149,11 +152,11 @@ class AiService(
     Task<VsCodeModel[]>? copilotModels;
     DateTime copilotModelsTime;
 
-    public async Task<VsCodeModel[]> GetCopilotModelsAsync()
+    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false)
     {
         if (!Dependinator.Core.Build.IsVsCodeExtWasm)
             return [];
-        if (copilotModels is { } cached)
+        if (!isFresh && copilotModels is { } cached)
         {
             var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
             if (!cached.IsCompleted || DateTime.UtcNow - copilotModelsTime < ttl)

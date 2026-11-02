@@ -68,7 +68,7 @@ async function askAsync(params: AskParams, requestToken: vscode.CancellationToke
     const model = await selectModelAsync(params.modelId);
     if (!model)
         return failure(
-            "VS Code offers no language model. Install GitHub Copilot and sign in, or pick another AI in Settings › AI."
+            "VS Code offers no Copilot model. Install GitHub Copilot Chat and sign in, or pick another AI in Settings › AI."
         );
 
     let schema: object;
@@ -118,7 +118,8 @@ async function askAsync(params: AskParams, requestToken: vscode.CancellationToke
     }
 }
 
-// The chosen model, or else the first of Copilot's, or else any.
+// The chosen model, or else the first of Copilot's. Never just any model: other extensions list
+// placeholders too (Foundry Toolkit's "Select a Foundry project ..."), which cannot answer.
 async function selectModelAsync(modelId: string | null): Promise<vscode.LanguageModelChat | undefined> {
     if (modelId) {
         const [chosen] = await vscode.lm.selectChatModels({ id: modelId });
@@ -126,10 +127,7 @@ async function selectModelAsync(modelId: string | null): Promise<vscode.Language
             return chosen;
     }
     const [copilot] = await vscode.lm.selectChatModels({ vendor: "copilot" });
-    if (copilot)
-        return copilot;
-    const [any] = await vscode.lm.selectChatModels();
-    return any;
+    return copilot;
 }
 
 function errorText(error: unknown, model: vscode.LanguageModelChat): string {

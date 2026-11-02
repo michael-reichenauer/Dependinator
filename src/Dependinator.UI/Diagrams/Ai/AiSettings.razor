@@ -104,9 +104,10 @@
 
   async Task RefreshAsync()
   {
+    // Listed afresh (the choice then uses this list): Copilot may have started or signed in since.
+    copilotModels = await aiService.GetCopilotModelsAsync(isFresh: true);
     choice = await aiService.GetChoiceAsync();
     isClaudeCodeOn = choice.Providers.Contains(AiProvider.ClaudeCode);
-    copilotModels = choice.Providers.Contains(AiProvider.Copilot) ? await aiService.GetCopilotModelsAsync() : [];
     // A picked model VS Code no longer offers shows as the automatic choice, which the extension
     // then asks instead.
     var modelId = await aiService.GetCopilotModelIdAsync();
@@ -150,18 +151,18 @@
   // Why Copilot cannot be picked here.
   static string CopilotMissingText =>
     Dependinator.Core.Build.IsVsCodeExtWasm
-      ? "VS Code offers no language model: install GitHub Copilot and sign in to it"
+      ? "VS Code offers no Copilot model: install GitHub Copilot Chat and sign in to it"
       : "A model VS Code offers, such as GitHub Copilot's: only in the VS Code extension";
 
   // The model asked when none is picked: Copilot's first, as the extension picks it (languageModels.ts).
   string AutomaticText =>
-    (copilotModels.FirstOrDefault(m => m.Vendor == "copilot") ?? copilotModels.FirstOrDefault()) is { } first
+    copilotModels.FirstOrDefault(m => m.IsCopilots) is { } first
       ? $"Automatic: {ModelName(first)}"
-      : "Automatic";
+      : "Automatic: no Copilot model, pick one";
 
   // "GPT-5 mini", or "Claude Sonnet 5.5 (anthropic)" for a model another extension adds.
   static string ModelName(VsCodeModel model) =>
-    model.Vendor == "copilot" ? model.Name : $"{model.Name} ({model.Vendor})";
+    model.IsCopilots ? model.Name : $"{model.Name} ({model.Vendor})";
 
   async Task ChangedAsync()
   {

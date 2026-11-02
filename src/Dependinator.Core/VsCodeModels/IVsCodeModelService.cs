@@ -21,4 +21,8 @@ interface IVsCodeModelService
 
 // A model VS Code offers: Id names it in AskAsync, Name is for the user ("GPT-5 mini"), Vendor the
 // extension that adds it ("copilot").
-record VsCodeModel(string Id, string Name, string Vendor, string Family, int MaxInputTokens);
+record VsCodeModel(string Id, string Name, string Vendor, string Family, int MaxInputTokens)
+{
+    // One of GitHub Copilot's own models, which the Copilot provider asks when none is picked.
+    public bool IsCopilots => Vendor == "copilot";
+}
