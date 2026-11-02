@@ -7,7 +7,8 @@
    opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat, and the selected answer
    drives the rest: accepting fills in the reason, breaking shows the change to make, with a prompt
    for an AI that can change the code as the main action and "Fix with Claude Code" (ClaudeCodeFix,
-   where the experimental route is on) to make the change right away, both under the answer, and
+   where the experimental route is on) to make the change right away, or "Fix with Copilot" (VS Code)
+   to hand it to Copilot Chat in agent mode, all under the answer, and
    fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. A reason
    the dialog filled in follows the selected answer until the user edits it. Nothing is saved until
    the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows
@@ -66,6 +67,13 @@
                      Disabled="@(fixPanel?.IsRunning == true)" OnClick="() => fixPanel!.StartAsync()"
                      title="Claude Code makes the change in the model's folder now (experimental)"
                      data-testid="accept-cycle-fix-claude-code">Fix with Claude Code</MudButton>
+        }
+        @if (canFixWithCopilot)
+        {
+          <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@AiProvider.Copilot.Icon"
+                     Disabled="@(isHandingToCopilot || fixPanel?.IsRunning == true)" OnClick="FixWithCopilotAsync"
+                     title="Copilot Chat makes the change in agent mode; you keep or undo each edit there"
+                     data-testid="accept-cycle-fix-copilot">Fix with Copilot</MudButton>
         }
       </div>
     }
@@ -148,6 +156,8 @@
   MudTextField<string> reasonField = null!;
   ClaudeCodeFix? fixPanel;
   bool canFixWithClaudeCode;
+  bool canFixWithCopilot;
+  bool isHandingToCopilot;
   CycleSuggestion? Selected;
   string? prefilledReason;
   string? copyNote;
@@ -164,8 +174,11 @@
 
   string FixPromptText() => Selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
 
-  protected override async Task OnInitializedAsync() =>
+  protected override async Task OnInitializedAsync()
+  {
     canFixWithClaudeCode = await aiService.CanFixWithClaudeCodeAsync();
+    canFixWithCopilot = await aiService.CanFixWithCopilotAsync();
+  }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -203,6 +216,19 @@
     var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
     copyNote = isCopied ? FixPromptCopiedNote + " Or choose Fix later to keep the cycle on the list until then." : null;
     copyError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // Copilot Chat makes the change in its own view: the dialog only says so, and can be left open
+  // to decide later.
+  async Task FixWithCopilotAsync()
+  {
+    copyNote = null;
+    copyError = null;
+    isHandingToCopilot = true;
+    var handed = await aiService.FixWithCopilotAsync(FixPromptText());
+    isHandingToCopilot = false;
+    copyNote = handed is Error ? null : AiService.CopilotFixNote + " Or choose Fix later to keep the cycle on the list until then.";
+    copyError = handed is Error e ? e.Message : null;
   }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.

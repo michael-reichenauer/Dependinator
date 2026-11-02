@@ -12,6 +12,7 @@ import * as logger from "./logger";
 const modelsRequestMethod = "dependinator/lm/models";
 const askRequestMethod = "dependinator/lm/ask";
 const turnRequestMethod = "dependinator/lm/turn";
+const openChatRequestMethod = "dependinator/lm/openChat";
 
 // The name of the tool the model must call with its answer: the vscode.lm API has no structured
 // output, so the answer's JSON schema is the tool's input schema instead.
@@ -69,6 +70,18 @@ interface TurnResult {
     error: string | null;
 }
 
+interface OpenChatParams {
+    prompt: string;
+}
+
+// The chat answers in its own view; the command may not return until the agent is done, so the
+// hand-off counts as made once the command has not failed for a moment. A later failure is shown
+// as a VS Code error message, since the dialog was told it worked.
+const openChatSettleMs = 5000;
+
+// Agent mode is GitHub Copilot Chat's; without it the chat command opens VS Code's chat setup.
+const copilotChatExtensionId = "GitHub.copilot-chat";
+
 interface AskResult {
     json: string | null;
     error: string | null;
@@ -85,6 +98,38 @@ export function registerLanguageModels(client: LanguageClient): void {
     client.onRequest(turnRequestMethod, (params: TurnParams, token: vscode.CancellationToken): Promise<TurnResult> =>
         turnAsync(params, token)
     );
+    client.onRequest(openChatRequestMethod, (params: OpenChatParams): Promise<{ error: string | null }> =>
+        openAgentChatAsync(params.prompt)
+    );
+}
+
+// "Fix with Copilot": the fix prompt goes to Copilot Chat in agent mode, which makes the change with
+// its own tools and shows each edit to keep or undo. The extension's file watcher re-parses after.
+async function openAgentChatAsync(prompt: string): Promise<{ error: string | null }> {
+    if (!vscode.extensions.getExtension(copilotChatExtensionId))
+        return { error: "GitHub Copilot Chat is not installed: install it and sign in to fix code with Copilot." };
+
+    let isSettled = false;
+    const opened = Promise.resolve(
+        vscode.commands.executeCommand("workbench.action.chat.open", { query: prompt, mode: "agent", isPartialQuery: false })
+    ).then(
+        () => null,
+        (error: unknown) => {
+            logger.error("Could not open Copilot Chat", error);
+            const text = `Could not open Copilot Chat in agent mode: ${error instanceof Error ? error.message : String(error)}`;
+            if (isSettled)
+                void vscode.window.showErrorMessage(text);
+            return text;
+        }
+    );
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const settled = new Promise<null>(resolve => (timer = setTimeout(() => resolve(null), openChatSettleMs)));
+    try {
+        return { error: await Promise.race([opened, settled]) };
+    } finally {
+        isSettled = true;
+        clearTimeout(timer);
+    }
 }
 
 async function listModelsAsync(): Promise<ModelInfo[]> {

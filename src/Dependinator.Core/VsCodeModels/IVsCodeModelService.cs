@@ -24,6 +24,11 @@ interface IVsCodeModelService
     // LSP runs the tool loop and the tools; the extension asks the model one turn at a time. The
     // answer says how many tool calls it took; its cost is unknown (the user's Copilot plan).
     Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema, string? modelId);
+
+    // Hands a prompt that asks for a code change (a fix prompt) to Copilot Chat in agent mode, which
+    // makes the change with its own tools and lets the user keep or undo each edit. Nothing comes
+    // back but whether the chat opened: the extension's file watcher re-parses once files change.
+    Task<Result> OpenAgentChatAsync(string prompt);
 }
 
 // A model VS Code offers: Id names it in AskAsync, Name is for the user ("GPT-5 mini"), Vendor the

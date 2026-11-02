@@ -47,13 +47,13 @@ public class AiProviderTests
     }
 
     [Fact]
-    public void DefaultFor_ShouldBeCopilot_ForAnswersAndModelLookups_ButNotForCodeChanges()
+    public void DefaultFor_ShouldBeCopilot_ForAnswersModelLookupsAndCodeChanges()
     {
         var choice = new AiChoice([AiProvider.Copilot, AiProvider.Claude, AiProvider.Chat], AiSource.Copilot);
 
         Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.Answer));
         Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.ModelTools));
-        Assert.Null(new AiChoice([AiProvider.Copilot], AiSource.Copilot).DefaultFor(AiCapability.EditCode));
+        Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.EditCode));
     }
 
     [Fact]
