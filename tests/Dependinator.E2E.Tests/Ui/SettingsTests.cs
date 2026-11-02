@@ -10,8 +10,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // re-parse short-circuits and the node set does not change -- this asserts the checkbox state
 // itself, which is what the dialog owns. "Invert scroll zoom" is an app-wide preference stored
 // in the config that flips the mouse wheel zoom direction, the AI section picks the AI the app
-// asks by default and turns on the experimental Claude Code route, and the layout density is
-// stored in the config.
+// asks by default and turns on the experimental Claude Code route.
+// The layout density is tested on its own, without parallel tests (LayoutDensityTests).
 public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -110,25 +110,6 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await Page.GetByTestId("accept-cycle-cancel").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-cancel")).ToHaveCountAsync(0);
-    }
-
-    // The layout density is stored in the config. It is also process-wide in this host (the
-    // layout reads it), so it is set back to Balanced whatever happens here.
-    [E2EFact]
-    public async Task LayoutDensity_ShouldPersistAcrossReload()
-    {
-        await App.GotoMainPageAsync();
-        await App.ExpectSettingAsync("settings-density-balanced", isChecked: true);
-        try
-        {
-            await App.ToggleSettingAsync("settings-density-spacious", expectChecked: true);
-            await App.GotoMainPageAsync();
-            await App.ExpectSettingAsync("settings-density-spacious", isChecked: true);
-        }
-        finally
-        {
-            await App.ToggleSettingAsync("settings-density-balanced", expectChecked: true);
-        }
     }
 
     // Only wheel-down (a positive delta) is used to probe the zoom direction: headless

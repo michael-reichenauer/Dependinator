@@ -110,7 +110,10 @@ One `Dependinator.Web` process serves both parallel test classes, so statics are
 circuits, and a parallel test's page load resets a static toggle mid-test. Per-user settings live
 in scoped services (`IViewOptions`, `IPointerEventService`); `DColors.IsDark` and
 `NodeLayout.SetDensity` are still static. Theme tests assert per-circuit signals (html
-`data-theme`) and restore Light. Close menus with `App.CloseMenuAsync()` before wheel gestures (an
+`data-theme`) and restore Light. A test that sets such a static (the layout density test)
+goes in `[Collection(ProcessWideStateCollection.Name)]`, which runs alone after the parallel
+tests: run in parallel it flaked both ways (Nov 2026), its dialog read Balanced after another
+page load, and other tests laid out the demo Spacious and missed their container clicks. Close menus with `App.CloseMenuAsync()` before wheel gestures (an
 open menu overlay swallows them).
 
 ## Demo-model facts the tests rely on
