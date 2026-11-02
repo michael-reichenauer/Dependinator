@@ -1,3 +1,6 @@
+using Dependinator.Claude;
+using Dependinator.Core.Claude;
+using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Core.VsCodeModels;
@@ -24,7 +27,7 @@ public record VsCodeAskParams(string Prompt, string JsonSchema, string? ModelId)
 public record VsCodeAskResult(string? Json, string? Error);
 
 // The UI's IVsCodeModelService in VS Code: each call is a request to the extension.
-class LspVsCodeModelService(ILanguageServerFacade server) : IVsCodeModelService
+class LspVsCodeModelService(ILanguageServerFacade server, IModelToolsServer modelToolsServer) : IVsCodeModelService
 {
     static readonly TimeSpan modelsTimeout = TimeSpan.FromSeconds(10);
 
@@ -77,5 +80,38 @@ class LspVsCodeModelService(ILanguageServerFacade server) : IVsCodeModelService
         {
             return new Error($"Could not ask VS Code's language model: {e.Message}", e);
         }
+    }
+
+    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema, string? modelId)
+    {
+        if (modelToolsServer.Address is not { } address)
+            return new Error("The model tools are not ready yet. Please try again in a moment.");
+        var connected = await (ConnectTools ?? (() => McpAgentTools.ConnectAsync(address)))();
+        if (connected is not IAgentTools tools)
+            return connected.Error;
+        await using (tools)
+        {
+            try
+            {
+                return await VsCodeToolsAgent.AskAsync(AskTurnAsync, modelId, prompt, jsonSchema, tools);
+            }
+            catch (OperationCanceledException)
+            {
+                return new Error("VS Code's language model did not answer in time.");
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                return new Error($"Could not ask VS Code's language model: {e.Message}", e);
+            }
+        }
+    }
+
+    // The model tools of an ask; tests replace them.
+    internal Func<Task<Result<IAgentTools>>>? ConnectTools { get; init; }
+
+    async Task<VsCodeTurnResult> AskTurnAsync(VsCodeTurnParams turn)
+    {
+        using CancellationTokenSource cts = new(askTimeout);
+        return await server.SendRequest(VsCodeTurnParams.Method, turn).Returning<VsCodeTurnResult>(cts.Token);
     }
 }

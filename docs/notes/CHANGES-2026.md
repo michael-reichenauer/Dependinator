@@ -314,6 +314,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   an `answer` tool the model must call, since the API has no structured output. VS Code asks the
   user once whether Dependinator may use its model. Answers only for now: no model tools (the Ask
   panel) and no code changes (phase 1).
+- **Copilot looks things up (Nov 2).** The Ask panel and Suggest rules can ask Copilot too: the
+  LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
+  API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
+  is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
