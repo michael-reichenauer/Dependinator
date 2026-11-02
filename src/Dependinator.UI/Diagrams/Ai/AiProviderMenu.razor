@@ -103,8 +103,21 @@
   [Parameter] public EventCallback OnSettingsChanged { get; set; }
 
   // Not awaited: MudMenu closes only once the item's handler returns, and asking or fixing can take
-  // minutes. The place re-renders when it is done all the same (EventCallback does that).
-  void Choose(AiProvider provider) => _ = OnChoose.InvokeAsync(provider);
+  // minutes. The place re-renders when it is done all the same (EventCallback does that); a failure
+  // the place did not handle is logged rather than lost.
+  void Choose(AiProvider provider) => _ = ChooseAsync(provider);
+
+  async Task ChooseAsync(AiProvider provider)
+  {
+    try
+    {
+      await OnChoose.InvokeAsync(provider);
+    }
+    catch (Exception e)
+    {
+      Log.Warn($"Failed to use {provider.Name}: {e.Message}");
+    }
+  }
 
   string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 

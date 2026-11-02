@@ -80,10 +80,6 @@ interface IAiService
 
     Task StopClaudeCodeFixAsync();
 
-    // Whether "Fix with Copilot" can hand a fix prompt to Copilot Chat: in VS Code, where the
-    // Copilot provider is offered.
-    Task<bool> CanFixWithCopilotAsync();
-
     // Hands the fix prompt to Copilot Chat in agent mode (IVsCodeModelService.OpenAgentChatAsync),
     // which makes the change with its own tools and review; the extension re-parses after.
     Task<Result> FixWithCopilotAsync(string fixPrompt);
@@ -323,9 +319,6 @@ class AiService(
     }
 
     // Copilot is offered only in VS Code (GetCopilotModelsAsync lists no models elsewhere).
-    public async Task<bool> CanFixWithCopilotAsync() =>
-        (await GetChoiceAsync()).Providers.Any(p => p.Source is AiSource.Copilot);
-
     // Said where a prompt was handed to Copilot Chat: nothing comes back to the dialog.
     public const string CopilotFixNote =
         "The prompt is in Copilot Chat, in agent mode: it makes the change there, and you keep or undo each edit. "

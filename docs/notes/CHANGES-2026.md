@@ -322,7 +322,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
   `workbench.action.chat.open`), which edits with its own tools and Keep/Undo review. Nothing comes
-  back to the dialog; the extension's file watcher re-parses (phase 3).
+  back to the dialog; the extension's file watcher re-parses (phase 3). The same day the review
+  dialogs' fix buttons became one, like the ask button (`AiFixButton`): "Fix with" the default (or
+  the first that can change code), the others and "Copy fix prompt" in the menu beside it.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
