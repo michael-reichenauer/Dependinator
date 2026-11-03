@@ -28,6 +28,23 @@ public class CycleSuggestionTests
     );
 
     [Fact]
+    public void AsBreakAnswer_ShouldMakeABreakFollowUp_WithoutAReason_WhateverTheVerdict()
+    {
+        var stuck = new CycleSuggestion(true, "One concept.", "None", "Keep it", "Move X")
+        {
+            Source = AiSource.ClaudeCode,
+        };
+
+        var answer = stuck.AsBreakAnswer();
+
+        Assert.False(answer.IsAccept);
+        Assert.True(answer.IsFollowUp);
+        Assert.Equal("", answer.Reason);
+        Assert.Equal("Move X", answer.Change);
+        Assert.Equal(AiSource.ClaudeCode, answer.Source);
+    }
+
+    [Fact]
     public void Parse_ShouldReadAnAcceptingVerdict_WithTheReasonToStore()
     {
         var suggestion = AssertOk(CycleSuggestion.Parse(AcceptAnswer));

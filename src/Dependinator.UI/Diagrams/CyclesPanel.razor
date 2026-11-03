@@ -122,7 +122,8 @@
                   <span class="dep-cycles__gone">No longer a cycle; remove it if it is fixed.</span>
                 }
               </button>
-              @if (report.Cycle is { } cycle)
+              @* With no change planned there is nothing for a fix prompt to ask for. *@
+              @if (report.Cycle is { } cycle && report.Accepted.Reason != "")
               {
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
                                title="Copy a prompt that asks an AI that can change the code to make the planned change"
