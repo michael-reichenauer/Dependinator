@@ -30,6 +30,9 @@ project works.
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
   Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
+- **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
+  third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
+  "Ask how to break it" for accepted cycles, and an AI-planned tour of the codebase.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).

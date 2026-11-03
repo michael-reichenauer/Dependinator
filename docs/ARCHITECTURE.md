@@ -21,7 +21,7 @@ own notes, icons and hand-drawn nodes on top.
 | **Stack** | .NET 10 (built with the .NET 11 preview SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in |
 | **Size** | About 41k lines of product code, 70% of it in the shared UI library; about 25k lines of tests |
 | **Tests** | About 900 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
-| **Releases** | Version 0.83 (beta), about 30 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
+| **Releases** | Version 0.88 (beta), about 35 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
 
 ## 1. Context view: who uses Dependinator, and what it talks to
 
@@ -41,8 +41,10 @@ stores the synced models, and the **Anthropic Claude API** answers the AI featur
 asks (reviewing a cycle or a dependency that breaks a rule, suggesting rules, questions about a node
 or the model), with the user's own API key. Claude is called from the VS Code extension's language
 server and from the dev host, never from the browser app. The same features can instead run the
-user's local **Claude Code** (experimental) or go through any AI chat by copy and paste; the user
-picks the default in Settings › AI. The other way round, AI agents (Copilot or
+user's local **Claude Code** (experimental), in VS Code a model VS Code offers to extensions
+(**Copilot**'s by default, through its Language Model API, asked by the extension for the language
+server, with fixes handed to Copilot Chat's agent mode), or go through any AI chat by copy and
+paste; the user picks the default in Settings › AI. The other way round, AI agents (Copilot or
 Claude Code) can ask Dependinator about the open model through its **MCP server** on localhost.
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
