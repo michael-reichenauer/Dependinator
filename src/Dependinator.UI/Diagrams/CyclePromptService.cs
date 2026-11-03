@@ -8,7 +8,8 @@ interface ICyclePromptService
 {
     // The text that asks an AI whether the cycle is intended or should be broken (CyclePrompt),
     // with the source behind its thin directions where the host can read the files.
-    Task<string> GetPromptAsync(Cycle cycle);
+    // With an answer that suggested accepting it, the text asks how to break the cycle anyway.
+    Task<string> GetPromptAsync(Cycle cycle, CycleSuggestion? acceptedAnswer = null);
 
     // The text that asks an AI that can change the code to break the cycle as suggested.
     string GetFixPrompt(Cycle cycle, CycleSuggestion suggestion);
@@ -17,7 +18,7 @@ interface ICyclePromptService
 [Scoped]
 class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFileService) : ICyclePromptService
 {
-    public async Task<string> GetPromptAsync(Cycle cycle)
+    public async Task<string> GetPromptAsync(Cycle cycle, CycleSuggestion? acceptedAnswer = null)
     {
         IReadOnlyList<SourceRequest> requests = [];
         if (CanReadSource)
@@ -30,7 +31,7 @@ class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFile
         var sources = await ReadSourcesAsync(workspaceFileService, requests);
 
         using (var model = modelMgr.UseModel())
-            return CyclePrompt.Build(model, cycle, sources);
+            return CyclePrompt.Build(model, cycle, sources, acceptedAnswer);
     }
 
     public string GetFixPrompt(Cycle cycle, CycleSuggestion suggestion)

@@ -19,7 +19,9 @@
    passed to it (OnAnswerSelected), which decides what it means. In VS Code the API key is entered
    in an input box at the top of the window, which is easy to miss while watching the dialog, so
    the section points there while it waits. Test ids are the dialog's prefix and a suffix
-   ("accept-cycle-ask"). *@
+   ("accept-cycle-ask"). A dialog can offer a follow-up under an answer (FollowUp: "Ask how to
+   break it" under one that suggests accepting a cycle), asked like the first question, with its
+   own prompt, on the default or, from its menu, another provider; its answer joins the others. *@
 @if (isChatOpen)
 {
   @* The chat route's steps, all in view at once, each ticked off when done. *@
@@ -173,7 +175,7 @@ else if (HasAiHelp)
   @if (isAskError && GetPrompt is not null && !isChatOpen)
   {
     <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
-               Class="mt-1" OnClick="StartChatAsync" data-testid="@Id("copy-instead")">Use your AI chat instead</MudButton>
+               Class="mt-1" OnClick="() => StartChatAsync(failedPrompt)" data-testid="@Id("copy-instead")">Use your AI chat instead</MudButton>
   }
 }
 @if (answers.Count > 1)
@@ -217,6 +219,20 @@ else if (HasAiHelp)
 else if (Selected is { } s && AnswerContent is not null)
 {
   @AnswerContent(s)
+  @if (FollowUp is { } followUp && followUp.IsFor(s) && Primary is { } primary && !isChatOpen)
+  {
+    <div class="dep-ai__follow-up" data-testid="@Id(followUp.TestId)">
+      <span class="dep-ai__ask-split">
+        <MudButton StartIcon="@primary.Icon" Size="Size.Small" Variant="Variant.Text" Disabled="isSuggesting"
+                   Class="@AskClass(primary)" title="@($"{followUp.Title} ({primary.Name})")"
+                   OnClick="() => RunFollowUpAsync(s, primary)" data-testid="@Id($"{followUp.TestId}-ask")"
+                   data-provider="@primary.Id">@followUp.Label</MudButton>
+        <AiProviderMenu Choice="choice" TestId="@Id(followUp.TestId)" OnChoose="p => RunFollowUpAsync(s, p)"
+                        OnShowPrompt="() => ShowFollowUpPromptAsync(s)" IsShowPromptDisabled="isShowingPrompt"
+                        OnSettingsChanged="RefreshChoiceAsync" Disabled="isSuggesting" />
+      </span>
+    </div>
+  }
 }
 
 @code {
@@ -247,6 +263,9 @@ else if (Selected is { } s && AnswerContent is not null)
   [Parameter] public string ExpandText { get; set; } = "Get an AI opinion";
   [Parameter] public string AnswerTitle { get; set; } = "AI opinion";
 
+  // A question to ask about an answer, offered under it (see AiFollowUp).
+  [Parameter] public AiFollowUp<TAnswer>? FollowUp { get; set; }
+
   // Opens the routes at once, where asking is what the dialog is for.
   [Parameter] public bool IsExpandedAtStart { get; set; }
 
@@ -262,6 +281,10 @@ else if (Selected is { } s && AnswerContent is not null)
   bool isExpanded;
 
   bool isChatOpen;
+  // The chat route's prompt while it runs for a follow-up, else GetPrompt.
+  Func<Task<string>>? chatPrompt;
+  // The prompt of the ask that failed, for "Use your AI chat instead".
+  Func<Task<string>>? failedPrompt;
   bool isPromptCopied;
   bool isCopyingPrompt;
   bool isShowingPrompt;
@@ -389,7 +412,21 @@ else if (Selected is { } s && AnswerContent is not null)
 
   // Asks the provider once (the menu's override), or starts the AI chat route.
   Task RunAsync(AiProvider provider) =>
-    provider.Source is AiSource.Chat ? StartChatAsync() : AskAsync(provider.Source);
+    provider.Source is AiSource.Chat ? StartChatAsync(GetPrompt) : AskAsync(provider.Source, Ask, GetPrompt);
+
+  // The follow-up about an answer, asked the same way with its own prompt.
+  Task RunFollowUpAsync(TAnswer answer, AiProvider provider)
+  {
+    if (FollowUp is not { } followUp)
+      return Task.CompletedTask;
+    Task<string> GetFollowUpPrompt() => followUp.GetPrompt(answer);
+    return provider.Source is AiSource.Chat
+      ? StartChatAsync(GetFollowUpPrompt)
+      : AskAsync(provider.Source, (route, onStep) => followUp.Ask(answer, route, onStep), GetFollowUpPrompt);
+  }
+
+  Task ShowFollowUpPromptAsync(TAnswer answer) =>
+    FollowUp is { } followUp ? ShowPromptAsync(() => followUp.GetPrompt(answer)) : Task.CompletedTask;
 
   // The first pick, before there is a default, becomes the default; one this place cannot use (an
   // AI chat where there is no prompt to copy) stays the default elsewhere.
@@ -403,18 +440,21 @@ else if (Selected is { } s && AnswerContent is not null)
     await RunAsync(provider);
   }
 
-  RenderFragment? ShowPromptLink => GetPrompt is null ? null :
+  RenderFragment? ShowPromptLink => (isChatOpen ? chatPrompt : GetPrompt) is null ? null :
     @<MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-ai__show-prompt" Disabled="isShowingPrompt"
                 title="Show the prompt that is sent to Claude or Claude Code, or copied for an AI chat"
-                OnClick="ShowPromptAsync" data-testid="@Id("show-prompt")">
+                OnClick="() => ShowPromptAsync(isChatOpen ? chatPrompt : GetPrompt)" data-testid="@Id("show-prompt")">
       @(isShowingPrompt ? "Getting the prompt ..." : "Show prompt")
     </MudButton>;
 
   // Each answer is kept, and the new one selected; an error leaves the earlier answers as they are.
-  async Task AskAsync(AiSource route)
+  // An error offers the AI chat route with the same prompt (getPrompt).
+  async Task AskAsync(AiSource route, Func<AiSource, Action<SuggestStep>, Task<Result<TAnswer>>>? ask,
+    Func<Task<string>>? getPrompt)
   {
-    if (Ask is null)
+    if (ask is null)
       return;
+    failedPrompt = getPrompt;
     isSuggesting = true;
     askError = null;
     isAskError = false;
@@ -422,7 +462,7 @@ else if (Selected is { } s && AnswerContent is not null)
     Result<TAnswer> result;
     try
     {
-      result = await Ask(route, next =>
+      result = await ask(route, next =>
       {
         step = next;
         _ = InvokeAsync(StateHasChanged);
@@ -455,12 +495,12 @@ else if (Selected is { } s && AnswerContent is not null)
   }
 
   // Building the prompt can take a moment (in VS Code the source is read over the LSP).
-  async Task ShowPromptAsync()
+  async Task ShowPromptAsync(Func<Task<string>>? getPrompt)
   {
-    if (GetPrompt is null || isShowingPrompt)
+    if (getPrompt is null || isShowingPrompt)
       return;
     isShowingPrompt = true;
-    var prompt = await TryGetPromptAsync();
+    var prompt = await TryGetPromptAsync(getPrompt);
     isShowingPrompt = false;
     StateHasChanged();
     if (prompt is not null)
@@ -468,8 +508,9 @@ else if (Selected is { } s && AnswerContent is not null)
   }
 
   // The AI chat route: copies the prompt, its first step, and shows the steps.
-  async Task StartChatAsync()
+  async Task StartChatAsync(Func<Task<string>>? getPrompt)
   {
+    chatPrompt = getPrompt;
     isChatOpen = true;
     isPromptCopied = false;
     pastedAnswer = "";
@@ -482,10 +523,10 @@ else if (Selected is { } s && AnswerContent is not null)
   // Step 1 says so while the prompt is built; a result that arrives after Back is dropped.
   async Task CopyPromptAsync()
   {
-    if (GetPrompt is null || isCopyingPrompt)
+    if (chatPrompt is not { } getPrompt || isCopyingPrompt)
       return;
     isCopyingPrompt = true;
-    var prompt = await TryGetPromptAsync();
+    var prompt = await TryGetPromptAsync(getPrompt);
     var isCopied = isChatOpen && prompt is not null && await clipboardService.CopyAsync(prompt);
     if (isChatOpen && prompt is not null && !isCopied)
       askError = "Could not copy to the clipboard.";
@@ -495,11 +536,11 @@ else if (Selected is { } s && AnswerContent is not null)
 
   // The prompt, or null with the error shown: building it failed (reading the source over the
   // LSP, say), or what it is about is no longer in the model (a re-parse while the dialog is open).
-  async Task<string?> TryGetPromptAsync()
+  async Task<string?> TryGetPromptAsync(Func<Task<string>> getPrompt)
   {
     try
     {
-      var prompt = await GetPrompt!();
+      var prompt = await getPrompt();
       if (prompt != "")
         return prompt;
       askError = AiService.EmptyPromptError;

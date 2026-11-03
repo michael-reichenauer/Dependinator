@@ -1263,6 +1263,12 @@ button.dep-rules__node:hover {
     margin-top: 10px;
 }
 
+/* A follow-up question under an answer ("Ask how to break it"). */
+.dep-ai__follow-up {
+    display: flex;
+    margin-top: 8px;
+}
+
 /* The review dialogs' buttons wrap to a second row rather than squeezing their labels. */
 .dep-ai__actions {
     flex-wrap: wrap;

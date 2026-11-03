@@ -243,6 +243,50 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task AskHowToBreak_ShouldGiveAChangeToFix_WhenClaudeSuggestsAcceptingTheCycle()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator open = Page.GetByTestId("cycles-item");
+        await Expect(open.First).ToBeVisibleAsync();
+        int openCount = await open.CountAsync();
+
+        // In test mode a pair is accepted first (see AskClaude_ShouldFillInTheReason_...): no fix
+        // under it, but a way to ask how to break it, and fixing it later beside accepting.
+        await open.Filter(new() { HasTextString = "Result<T>" }).GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
+        await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept");
+        await Expect(Page.GetByTestId("accept-cycle-fix-later")).ToBeVisibleAsync();
+
+        // Asked how to break it, test mode always answers with a change, which the fix then makes.
+        ILocator askBreak = Page.GetByTestId("accept-cycle-break-ask");
+        await Expect(askBreak).ToHaveTextAsync("Ask how to break it");
+        await askBreak.ClickAsync();
+        ILocator answers = Page.GetByTestId("accept-cycle-answer");
+        await Expect(answers).ToHaveCountAsync(2);
+        await Expect(answers.Last).ToHaveTextAsync("Claude 2 · Break");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+        await Expect(askBreak).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
+
+        // Back on the accepting answer, Fix later lists the cycle with no change planned.
+        await answers.First.ClickAsync();
+        await Expect(askBreak).ToBeVisibleAsync();
+        await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
+        await Expect(open).ToHaveCountAsync(openCount - 1);
+        ILocator toFix = Page.GetByTestId("cycles-tofix-item");
+        await Expect(toFix.GetByTestId("cycles-tofix-change")).ToHaveTextAsync("No change planned");
+        await toFix.GetByTestId("cycles-tofix-remove").ClickAsync();
+        await Expect(open).ToHaveCountAsync(openCount);
+    }
+
+    [E2EFact]
     public async Task FixLater_ShouldListTheCycleToFix_WithItsFixPrompt_AndBackWhenRemoved()
     {
         await Page.AddInitScriptAsync(
