@@ -1,6 +1,5 @@
 using System.Text;
 using Dependinator.Core.Shared;
-using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using NodeType = Dependinator.Core.Parsing.NodeType;

@@ -424,9 +424,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     `Dependinator.Bicep` (Oct).
 - **Namespace refactors.** Modeling, Diagrams, Tiles and Commands namespaces (Mar). In Jul 10–12
   every project was cleaned up namespace by namespace: interaction services split out, `async
-  void` removed, SVG/CSS numbers formatted culture-invariant. On Nov 3 the 64 files in the
-  `Diagrams` root moved into a folder per feature (`Cycles`, `Rules`, `Lines`, `Navigation`,
-  `Tours`, `Ask`, `NodeHelp`), and `Interaction` was split into input and `Editing`.
+  void` removed, SVG/CSS numbers formatted culture-invariant. On Nov 3 the `Diagrams` root went
+  from 64 files to 19: the features moved into a folder each (`Cycles`, `Rules`, `Lines`,
+  `Navigation`, `Tours`, `Ask`, `NodeHelp`), and `Interaction` was split into input and `Editing`.
 - **Architecture tests (Jun 22).** NetArchTest enforces `Hosts → UI → Core → Shared`.
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
   types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. The GA follow-up is in

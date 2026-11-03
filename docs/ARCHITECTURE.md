@@ -247,7 +247,7 @@ so they need regenerating when the parser or the UI changes visibly.
 | C# parsing | `src/Dependinator.Roslyn/Parsing/SourceParser.cs` |
 | Bicep parsing | `src/Dependinator.Bicep/Parsing/BicepParser.cs`, `ModelBuilder.cs`, and [docs/notes/BICEP-PARSER.md](notes/BICEP-PARSER.md) |
 | The in-memory model | `src/Dependinator.UI/Modeling/Models/Model.cs`, `Node.cs` |
-| Rendering and zoom | `src/Dependinator.UI/Diagrams/Svg/SvgService.cs`, `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
+| Rendering and zoom | `src/Dependinator.UI/Diagrams/`: `Svg/SvgService.cs`, `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
 | Layout | `src/Dependinator.UI/Modeling/NodeLayout.cs`, `Layout/LayeredEngine.cs` |
 | The VS Code bridge | `src/DependinatorVsCode/src/extension.ts`, `src/Dependinator.Lsp/LspMessageHandler.cs`, `src/Dependinator.Core/Rpc/` |
 | Cloud sync | `src/Dependinator.UI/Shared/CloudSync/AppCloudSyncService.cs`, `src/Api/ModelFunctions.cs` |

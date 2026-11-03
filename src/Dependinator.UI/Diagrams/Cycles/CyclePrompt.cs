@@ -7,12 +7,6 @@ using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Diagrams.Cycles;
 
-// Code a prompt would show: for one direction of the cycle, the types that make its links.
-record SourceRequest(string Direction, IReadOnlyList<SourceUnit> Units);
-
-// The code read for a SourceRequest.
-record SourceSection(string Direction, IReadOnlyList<SourceExcerpt> Excerpts);
-
 // The text that asks an AI whether a circular dependency is intended, and can be accepted with
 // a reason to store, or should be broken, and how. The user pastes it into an AI chat. Its shape
 // was tried on real cycles: a sound verdict needs the members with their descriptions and the

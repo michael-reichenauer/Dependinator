@@ -111,3 +111,9 @@ static class SourceExcerpts
             yield return last;
     }
 }
+
+// Code a prompt would show: for one direction of a cycle or a rule's dependency, the types that make its links.
+record SourceRequest(string Direction, IReadOnlyList<SourceUnit> Units);
+
+// The code read for a SourceRequest.
+record SourceSection(string Direction, IReadOnlyList<SourceExcerpt> Excerpts);

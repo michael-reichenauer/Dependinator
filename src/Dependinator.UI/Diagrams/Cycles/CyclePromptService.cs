@@ -1,4 +1,5 @@
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
 
