@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.88.441194] - 2026-11-03
+
 ### New
 
 - **Menu › Settings …** opens one dialog for the preferences set once, saved as they change: **Appearance** (theme, and the layout density **Compact**, **Balanced** or **Spacious**), **Diagram** (soft lines, dimming unrelated lines, line widths by link count, problem and hidden node badges, which moved there from **View**), **Mouse** (inverted scroll zoom), **This model** (including test projects) and **AI**
