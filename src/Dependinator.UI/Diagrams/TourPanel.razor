@@ -119,8 +119,8 @@
 
   static string LeftOutText(CodebaseTour tour) =>
     tour.LeftOutCount == 1
-      ? $"1 stop {tour.Source.Name()} named is not a node in the model, so it was left out."
-      : $"{tour.LeftOutCount} stops {tour.Source.Name()} named are not nodes in the model, so they were left out.";
+      ? $"1 stop {tour.Source.Name()} named was left out: it is not a node in the model, or a node named twice."
+      : $"{tour.LeftOutCount} stops {tour.Source.Name()} named were left out: they are not nodes in the model, or nodes named twice.";
 
   public void Dispose()
   {

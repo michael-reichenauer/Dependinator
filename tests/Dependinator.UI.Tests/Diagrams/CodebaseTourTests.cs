@@ -32,6 +32,7 @@ public class CodebaseTourTests
         );
 
         using var model = modelMgr.UseModel();
+        model.Path = "/demo/Demo.sln";
         var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
         var views = AddNode(model, "UI.Views", ui, NodeType.Namespace);
         var view = AddNode(model, "UI.Views.View", views);
@@ -181,6 +182,37 @@ public class CodebaseTourTests
 
         Assert.Null(service.Playing);
         navigation.Verify(n => n.ShowNodeAsync(It.IsAny<NodeId>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task OnModelChanged_ShouldEndTheTour_WhenAnotherModelOpens()
+    {
+        var tour = AssertOk(service.ParsePasted("Stop: UI\nText: a"));
+        await service.StartAsync(tour);
+
+        using (var model = modelMgr.UseModel())
+            model.Path = "/other/model.sln";
+        service.OnModelChanged();
+
+        Assert.Null(service.Playing);
+    }
+
+    [Fact]
+    public async Task OnModelChanged_ShouldLeaveOutStopsWhoseNodeIsGone_AndStayOnTheShownStop()
+    {
+        var tour = AssertOk(
+            service.ParsePasted("Stop: UI\nText: a\n\nStop: Data.Repo\nText: b\n\nStop: Data\nText: c")
+        );
+        await service.StartAsync(tour, 2);
+
+        using (var model = modelMgr.UseModel())
+        {
+            model.RemoveNode(model.Nodes[NodeId.FromName("Data.Repo")]);
+        }
+        service.OnModelChanged();
+
+        Assert.Equal(["UI", "Data"], service.Playing!.Stops.Select(s => s.Name));
+        Assert.Equal(1, service.StopIndex);
     }
 
     static Node AddNode(IModel model, string name, Node parent, NodeType type = NodeType.ClassType)

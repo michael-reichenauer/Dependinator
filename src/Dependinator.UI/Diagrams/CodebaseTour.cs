@@ -277,16 +277,36 @@ interface ITourService
 }
 
 [Scoped]
-class TourService(
-    IModelMgr modelMgr,
-    IModelService modelService,
-    IAiService aiService,
-    IViewOptions viewOptions,
-    IPathFinderService pathFinderService,
-    INavigationService navigationService,
-    IApplicationEvents applicationEvents
-) : ITourService
+class TourService : ITourService
 {
+    readonly IModelMgr modelMgr;
+    readonly IModelService modelService;
+    readonly IAiService aiService;
+    readonly IViewOptions viewOptions;
+    readonly IPathFinderService pathFinderService;
+    readonly INavigationService navigationService;
+    readonly IApplicationEvents applicationEvents;
+
+    public TourService(
+        IModelMgr modelMgr,
+        IModelService modelService,
+        IAiService aiService,
+        IViewOptions viewOptions,
+        IPathFinderService pathFinderService,
+        INavigationService navigationService,
+        IApplicationEvents applicationEvents
+    )
+    {
+        this.modelMgr = modelMgr;
+        this.modelService = modelService;
+        this.aiService = aiService;
+        this.viewOptions = viewOptions;
+        this.pathFinderService = pathFinderService;
+        this.navigationService = navigationService;
+        this.applicationEvents = applicationEvents;
+        applicationEvents.ModelChanged += OnModelChanged;
+    }
+
     public bool IsAvailable => aiService.IsAvailable;
 
     public CodebaseTour? Playing { get; private set; }
@@ -376,6 +396,38 @@ class TourService(
             await navigationService.ShowNodeAsync(nodeId);
     }
 
+    // Another model opened: the tour ends. A re-parse of the same model removed a stop's node:
+    // that stop is left out, and the tour stays on the stop it showed where it can.
+    internal void OnModelChanged()
+    {
+        if (Playing is not { } tour)
+            return;
+        List<TourStop> stops;
+        using (var model = modelMgr.UseModel())
+        {
+            if (model.Path == "")
+                return; // Loading, maybe the same model again.
+            if (model.Path != tour.ModelPath)
+            {
+                End();
+                return;
+            }
+            stops = [.. tour.Stops.Where(s => s.Id is { } id && model.Nodes.ContainsKey(id))];
+        }
+        if (stops.Count == tour.Stops.Count)
+            return;
+        if (stops.Count == 0)
+        {
+            End();
+            return;
+        }
+        var shown = tour.Stops[StopIndex];
+        var index = stops.IndexOf(shown);
+        StopIndex = index >= 0 ? index : Math.Min(stops.Count - 1, tour.Stops.Take(StopIndex).Count(stops.Contains));
+        Playing = tour with { Stops = stops };
+        Changed?.Invoke();
+    }
+
     public void End()
     {
         if (Playing is null)
@@ -411,7 +463,8 @@ class TourService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    // The first three top-level nodes, and one that is not in the model (left out).
+    // The first three containers of the codebase itself (not its external references, which the
+    // prompt leaves out too), and one that is not in the model (left out).
     CodebaseTour TestModeAnswer()
     {
         List<Node> top;
@@ -419,8 +472,12 @@ class TourService(
             top =
             [
                 .. model
-                    .Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n))
+                    .Root.Children.Where(n =>
+                        !NodeViewPolicy.IsAnnotation(n) && n.Type != Dependinator.Core.Parsing.NodeType.Externals
+                    )
                     .OrderBy(n => n.Name, StringComparer.Ordinal)
+                    .SelectMany(n => n.DescendantsAndSelfPreOrder())
+                    .Where(n => !n.Type.IsMember && !NodeViewPolicy.IsAnnotation(n))
                     .Take(3),
             ];
         List<TourStop> stops =
