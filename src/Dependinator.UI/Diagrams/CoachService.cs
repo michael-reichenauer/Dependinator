@@ -196,7 +196,7 @@ class CoachService : ICoachService, IDisposable
                 "Zoom to look inside",
                 "Scroll (or pinch) over a node to zoom into it: its namespaces, classes and members come into "
                     + "view as you go. Drag to pan; <b>Fit to Screen</b> in the toolbar brings everything back. Try it now. "
-                    + "Zooming the wrong way? <b>Menu&nbsp;› Settings&nbsp;› Invert Scroll Zoom</b> flips it.",
+                    + "Zooming the wrong way? <b>Menu&nbsp;› Settings&nbsp;… › Invert scroll zoom</b> flips it.",
                 "Next"
             ),
             CoachStep.Select => new(

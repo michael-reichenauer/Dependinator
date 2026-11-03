@@ -15,6 +15,13 @@ public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, str
 
     public string Verdict => IsAccept ? "Accept" : "Break";
 
+    // An answer to "Ask how to break it": a change asked for, not an opinion of its own.
+    public bool IsFollowUp { get; init; }
+
+    // The answer to "Ask how to break it" is a Break whatever its verdict (a model may stick to
+    // Accept), without a reason to store; an empty change shows there is nothing to fix with.
+    public CycleSuggestion AsBreakAnswer() => this with { IsAccept = false, Reason = "", IsFollowUp = true };
+
     // The fields of CyclePrompt's answer format; structured output makes Claude's JSON match it.
     public const string JsonSchema = """
         {
@@ -84,8 +91,14 @@ interface ICycleSuggestionService
     // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    // Asks Claude (or Claude Code) about the cycle, see IAiService.AskAsync.
-    Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, AiSource route, Action<SuggestStep> onStep);
+    // Asks Claude (or Claude Code) about the cycle, see IAiService.AskAsync; with an answer that
+    // suggested accepting it, asks how to break it anyway.
+    Task<Result<CycleSuggestion>> SuggestAsync(
+        Cycle cycle,
+        AiSource route,
+        Action<SuggestStep> onStep,
+        CycleSuggestion? acceptedAnswer = null
+    );
 }
 
 // Asks Claude about a cycle with the prompt the user can also copy (CyclePromptService).
@@ -94,26 +107,47 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IAiService 
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, AiSource route, Action<SuggestStep> onStep)
+    public async Task<Result<CycleSuggestion>> SuggestAsync(
+        Cycle cycle,
+        AiSource route,
+        Action<SuggestStep> onStep,
+        CycleSuggestion? acceptedAnswer = null
+    )
     {
         // The e2e tests exercise the dialog without a key or network: a larger cycle is to be
-        // broken, a pair accepted and, asked again, broken, so differing answers can be tried too.
-        // A short wait lets them see the dialog while it asks.
+        // broken, a pair accepted and, asked again, broken, so differing answers can be tried too;
+        // asked how to break it, always broken. A short wait lets them see the dialog while it asks.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
-            var answer = cycle.Members.Count == 2 && testModeAsks++ % 2 == 0 ? TestModeAccept : TestModeBreak;
-            return answer with { Source = route };
+            var answer =
+                acceptedAnswer is null && cycle.Members.Count == 2 && testModeAsks++ % 2 == 0
+                    ? TestModeAccept
+                    : TestModeBreak;
+            return acceptedAnswer is null
+                ? answer with
+                {
+                    Source = route,
+                }
+                : answer.AsBreakAnswer() with
+                {
+                    Source = route,
+                };
         }
 
         var json = await aiService.AskAsync(
             route,
-            () => cyclePromptService.GetPromptAsync(cycle),
+            () => cyclePromptService.GetPromptAsync(cycle, acceptedAnswer),
             CycleSuggestion.JsonSchema,
             onStep
         );
-        return json is string text ? CycleSuggestion.Parse(text, route) : json.Error;
+        if (json is not string text)
+            return json.Error;
+        var parsed = CycleSuggestion.Parse(text, route);
+        return acceptedAnswer is null || parsed.Value is not CycleSuggestion suggestion
+            ? parsed
+            : suggestion.AsBreakAnswer();
     }
 
     int testModeAsks;

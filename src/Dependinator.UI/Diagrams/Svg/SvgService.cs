@@ -209,6 +209,17 @@ class SvgService : ISvgService
         !IsOtherCycleLine(line, context)
         && IsLineWeighted(line, context.Flags.Selection, context.Flags.LinkCountWidths);
 
+    // A line the user is looking at: one of the selection's own lines (those dimming keeps
+    // bright), whatever the Dim Unrelated Lines toggle says. Soft lines (Canvas.razor) draw these
+    // at full strength and the resting lines faint.
+    internal static bool IsLineLit(Line line, RenderSelection selection) =>
+        !selection.IsEmpty && !IsLineDimmed(line, selection);
+
+    // The real selection only: a cycle picked in the cycles panel lights nothing more than its
+    // own lines, which are cycle lines and full strength anyway.
+    static bool IsLineLit(Line line, RenderContext context) =>
+        !IsOtherCycleLine(line, context) && IsLineLit(line, context.Flags.Selection);
+
     // While a dependency path is shown, everything off the path fades so the chain stands out.
     // While one cycle is picked in the cycles panel, the other cycles' lines fade.
     static bool IsLineDimmed(Line line, RenderContext context)
@@ -517,7 +528,8 @@ class SvgService : ISvgService
                 IsLineOnPath(line, context),
                 IsLineViolating(line, context),
                 IsLineWeighted(line, context),
-                includeLabel: false
+                includeLabel: false,
+                isLit: IsLineLit(line, context)
             );
         }
     }
@@ -531,7 +543,13 @@ class SvgService : ISvgService
     {
         foreach (var (line, _) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
         {
-            var labelSvg = LineSvg.GetLineLabelSvg(line, nodeCanvasPos, childrenZoom, IsLineDimmed(line, context));
+            var labelSvg = LineSvg.GetLineLabelSvg(
+                line,
+                nodeCanvasPos,
+                childrenZoom,
+                IsLineDimmed(line, context),
+                IsLineLit(line, context)
+            );
             if (labelSvg.Length > 0)
                 yield return labelSvg;
         }
@@ -650,7 +668,8 @@ class SvgService : ISvgService
                 IsLineDimmed(directLine, context),
                 IsLineOnPath(directLine, context),
                 IsLineViolating(directLine, context),
-                IsLineWeighted(directLine, context)
+                IsLineWeighted(directLine, context),
+                IsLineLit(directLine, context)
             );
             if (svg.Length > 0)
                 yield return svg;
@@ -717,7 +736,7 @@ class SvgService : ISvgService
     {
         public RenderSelection Selection { get; init; }
 
-        // Emphasized lines are drawn at their link-count width (View › Line Widths by Link Count).
+        // Emphasized lines are drawn at their link-count width (Settings › Line widths by link count).
         public bool LinkCountWidths { get; init; }
 
         // The selection, or the picked cycle's nodes while nothing is selected (see FindDimSelection).

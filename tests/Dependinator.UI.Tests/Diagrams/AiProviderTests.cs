@@ -41,9 +41,27 @@ public class AiProviderTests
         var withoutChat = choice.Where(p => p.Source is not AiSource.Chat);
         var withChat = choice.Where(p => p.Source is not AiSource.ClaudeCode);
 
-        Assert.Equal([AiProvider.Claude, AiProvider.ClaudeCode], withoutChat.Providers);
+        Assert.Equal([AiProvider.Claude, AiProvider.ClaudeCode, AiProvider.Copilot], withoutChat.Providers);
         Assert.Null(withoutChat.Default);
         Assert.Equal(AiSource.Chat, withChat.Default);
+    }
+
+    [Fact]
+    public void DefaultFor_ShouldBeCopilot_ForAnswersModelLookupsAndCodeChanges()
+    {
+        var choice = new AiChoice([AiProvider.Copilot, AiProvider.Claude, AiProvider.Chat], AiSource.Copilot);
+
+        Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.Answer));
+        Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.ModelTools));
+        Assert.Equal(AiProvider.Copilot, choice.DefaultFor(AiCapability.EditCode));
+    }
+
+    [Fact]
+    public void AskingStep_ShouldSayWhichRouteIsAsked()
+    {
+        Assert.Equal(SuggestStep.AskingClaude, AiSource.Claude.AskingStep());
+        Assert.Equal(SuggestStep.AskingClaudeCode, AiSource.ClaudeCode.AskingStep());
+        Assert.Equal(SuggestStep.AskingCopilot, AiSource.Copilot.AskingStep());
     }
 
     [Fact]
@@ -51,6 +69,7 @@ public class AiProviderTests
     {
         Assert.Equal("Ask Claude Code", AiProvider.ClaudeCode.AskText(again: false));
         Assert.Equal("Ask Claude again", AiProvider.Claude.AskText(again: true));
+        Assert.Equal("Ask Copilot", AiProvider.Copilot.AskText(again: false));
         Assert.Equal("Use your AI chat", AiProvider.Chat.AskText(again: true));
     }
 

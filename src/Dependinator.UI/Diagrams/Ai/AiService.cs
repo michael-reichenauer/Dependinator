@@ -1,4 +1,5 @@
 using Dependinator.Core.Claude;
+using Dependinator.Core.VsCodeModels;
 using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams.Ai;
@@ -11,6 +12,7 @@ public enum SuggestStep
     EnteringNewApiKey,
     AskingClaude,
     AskingClaudeCode,
+    AskingCopilot,
 }
 
 interface IAiService
@@ -29,6 +31,14 @@ interface IAiService
 
     Task SetDefaultAsync(AiSource source);
 
+    // The models VS Code offers the Copilot provider (none outside VS Code), and the one it asks
+    // (Config.CopilotModelId; null: Copilot's first model). isFresh skips the cached list.
+    Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false);
+
+    Task<string?> GetCopilotModelIdAsync();
+
+    Task SetCopilotModelAsync(string? modelId);
+
     // Raised when Settings › AI changes the providers or the default.
     event Action? ChoiceChanged;
 
@@ -37,6 +47,8 @@ interface IAiService
     // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
     // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
     // withModelTools lets Claude Code ask the open model through Dependinator's MCP tools too.
+    // Copilot asks the VS Code model picked in Settings › AI, the same for a quick question, with
+    // the model tools too where withModelTools asks for them (the LSP's tool loop).
     Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
@@ -46,9 +58,11 @@ interface IAiService
         bool withModelTools = false
     );
 
-    // Asks Claude with the API key, letting it look things up first with Dependinator's model tools
-    // (IClaudeService.AskWithModelToolsAsync); the key is handled as for AskAsync.
+    // Asks Claude with the API key (IClaudeService.AskWithModelToolsAsync; the key is handled as
+    // for AskAsync) or Copilot (IVsCodeModelService.AskWithModelToolsAsync), letting it look things
+    // up first with Dependinator's model tools.
     Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep
@@ -65,11 +79,21 @@ interface IAiService
     Task<Result<ClaudeCodeFixReport>> FixWithClaudeCodeAsync(string fixPrompt);
 
     Task StopClaudeCodeFixAsync();
+
+    // Hands the fix prompt to Copilot Chat in agent mode (IVsCodeModelService.OpenAgentChatAsync),
+    // which makes the change with its own tools and review; the extension re-parses after.
+    Task<Result> FixWithCopilotAsync(string fixPrompt);
 }
 
-// The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host).
+// The AI routes the review dialogs share, over Core's IClaudeService (the LSP or the web host) and,
+// in VS Code, IVsCodeModelService (the LSP asks the extension).
 [Scoped]
-class AiService(IClaudeService claudeService, IConfigService configService, IModelMgr modelMgr) : IAiService
+class AiService(
+    IClaudeService claudeService,
+    IVsCodeModelService vsCodeModelService,
+    IConfigService configService,
+    IModelMgr modelMgr
+) : IAiService
 {
     public bool IsAvailable => Dependinator.Core.Build.IsWeb || Dependinator.Core.Build.IsVsCodeExtWasm;
 
@@ -98,14 +122,75 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         if (!IsAvailable)
             return AiChoice.ChatOnly;
         var config = await configService.GetAsync();
-        List<AiProvider> providers = [.. AiProvider.All.Where(p => p != AiProvider.ClaudeCode || config.UseClaudeCode)];
-        var isOffered = providers.Any(p => p.Source == config.DefaultAiProvider);
+        // Offered with a model of Copilot's own, or one the user picked from another extension;
+        // other extensions also list placeholders that cannot answer (Foundry Toolkit's).
+        var models = await GetCopilotModelsAsync();
+        var hasCopilot = models.Any(m => m.IsCopilots || m.Id == config.CopilotModelId);
+        List<AiProvider> providers =
+        [
+            .. AiProvider.All.Where(p =>
+                p.Source switch
+                {
+                    AiSource.ClaudeCode => config.UseClaudeCode,
+                    AiSource.Copilot => hasCopilot,
+                    _ => true,
+                }
+            ),
+        ];
+        // A Copilot default stays while VS Code lists no model for a moment (Copilot still starting
+        // or signing in), so the first ask does not take another provider as the new default.
+        var isOffered =
+            config.DefaultAiProvider is AiSource.Copilot && Dependinator.Core.Build.IsVsCodeExtWasm
+            || providers.Any(p => p.Source == config.DefaultAiProvider);
         return new AiChoice(providers, isOffered ? config.DefaultAiProvider : null);
     }
 
     public async Task SetDefaultAsync(AiSource source)
     {
         await configService.SetAsync(config => config.DefaultAiProvider = source);
+        ChoiceChanged?.Invoke();
+    }
+
+    // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI
+    // needs it, so it is kept a minute (an empty one a few seconds: Copilot may be starting).
+    static readonly TimeSpan CopilotModelsTtl = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan NoCopilotModelsTtl = TimeSpan.FromSeconds(5);
+    Task<VsCodeModel[]>? copilotModels;
+    DateTime copilotModelsTime;
+
+    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false)
+    {
+        if (!Dependinator.Core.Build.IsVsCodeExtWasm)
+            return [];
+        if (!isFresh && copilotModels is { } cached)
+        {
+            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
+            if (!cached.IsCompleted || DateTime.UtcNow - copilotModelsTime < ttl)
+                return await cached;
+        }
+        copilotModelsTime = DateTime.UtcNow;
+        copilotModels = ListCopilotModelsAsync();
+        return await copilotModels;
+    }
+
+    async Task<VsCodeModel[]> ListCopilotModelsAsync()
+    {
+        try
+        {
+            return await vsCodeModelService.GetModelsAsync();
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Warn($"Could not list VS Code's language models: {e.Message}");
+            return [];
+        }
+    }
+
+    public async Task<string?> GetCopilotModelIdAsync() => (await configService.GetAsync()).CopilotModelId;
+
+    public async Task SetCopilotModelAsync(string? modelId)
+    {
+        await configService.SetAsync(config => config.CopilotModelId = modelId);
         ChoiceChanged?.Invoke();
     }
 
@@ -134,6 +219,18 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             }
         }
 
+        if (route is AiSource.Copilot && withModelTools)
+        {
+            var toolsAnswer = await AskWithModelToolsAsync(route, getPrompt, jsonSchema, onStep);
+            return toolsAnswer is ToolsAnswer answer ? answer.Json : toolsAnswer.Error;
+        }
+        if (route is AiSource.Copilot)
+            return await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskAsync(prompt, jsonSchema, modelId)
+            );
+
         return await WithApiKeyAsync(
             getPrompt,
             onStep,
@@ -142,11 +239,50 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
         );
     }
 
-    public Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
+        AiSource route,
         Func<Task<string>> getPrompt,
         string jsonSchema,
         Action<SuggestStep> onStep
-    ) => WithApiKeyAsync(getPrompt, onStep, prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema));
+    )
+    {
+        return route switch
+        {
+            AiSource.Claude => await WithApiKeyAsync(
+                getPrompt,
+                onStep,
+                prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema)
+            ),
+            AiSource.Copilot => await AskCopilotAsync(
+                getPrompt,
+                onStep,
+                (prompt, modelId) => vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId)
+            ),
+            _ => new Error($"{route.Name()} cannot look things up with the model tools here."),
+        };
+    }
+
+    // Copilot asks the VS Code model picked in Settings › AI (IVsCodeModelService, in the LSP).
+    async Task<Result<T>> AskCopilotAsync<T>(
+        Func<Task<string>> getPrompt,
+        Action<SuggestStep> onStep,
+        Func<string, string?, Task<Result<T>>> ask
+    )
+        where T : notnull
+    {
+        onStep(SuggestStep.AskingCopilot);
+        var prompt = await getPrompt();
+        if (prompt == "")
+            return new Error(EmptyPromptError);
+        try
+        {
+            return await ask(prompt, await GetCopilotModelIdAsync());
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not ask Copilot: {e.Message}", e);
+        }
+    }
 
     // Without a key, or with one Claude did not accept, the user is asked for a key first (once).
     async Task<Result<T>> WithApiKeyAsync<T>(
@@ -179,6 +315,26 @@ class AiService(IClaudeService claudeService, IConfigService configService, IMod
             // A key Claude did not accept: ask for a new one, once.
             if (hasAskedForKey || await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Rejected)
                 return answer.Error;
+        }
+    }
+
+    // Copilot is offered only in VS Code (GetCopilotModelsAsync lists no models elsewhere).
+    // Said where a prompt was handed to Copilot Chat: nothing comes back to the dialog.
+    public const string CopilotFixNote =
+        "The prompt is in Copilot Chat, in agent mode: it makes the change there, and you keep or undo each edit. "
+        + "Once the edits are kept, the diagram re-parses (or Re-parse shows a dot, with auto refresh off).";
+
+    public async Task<Result> FixWithCopilotAsync(string fixPrompt)
+    {
+        if (fixPrompt == "")
+            return new Error(EmptyPromptError);
+        try
+        {
+            return await vsCodeModelService.OpenAgentChatAsync(fixPrompt);
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            return new Error($"Could not open Copilot Chat: {e.Message}", e);
         }
     }
 

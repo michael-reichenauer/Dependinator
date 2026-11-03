@@ -30,6 +30,9 @@ project works.
   and then manual previews and releases, a README and community-files rework, the Bicep parser, zones, line labels and aliases,
   node sizes by code and centrality in the automatic layout, accepted cycles, AI prompts and
   Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
+- **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
+  third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
+  "Ask how to break it" for accepted cycles, and an AI-planned tour of the codebase.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -116,6 +119,28 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Look and feel (Jun–Jul).** Lighter toolbars and theme, a new app icon, coloured node icons per
   kind (class, interface, enum, record), descriptions on nodes, a first-time demo message and a
   help page.
+- **Softer dark theme (Nov 1).** A very dark grey canvas (#101113) instead of near black,
+  pastel container frames instead of full-strength colors (the red frame read as an error), and
+  container fills a small step lighter than the canvas instead of near-black stains; off-white
+  text. Lighter greys were tried and looked misty.
+- **Light theme by default (Nov 1).** View › Theme starts on Light instead of System (light
+  still looks better, and is what most users expect); System and Dark stay as options. A stored
+  Light or Dark choice is kept; the old stored System counts as unset.
+- **Settings dialog (Nov 1).** Menu › Settings … opens one dialog for the preferences set once:
+  Appearance (theme, and layout density, which had no UI before), Diagram (dim unrelated lines,
+  line widths by link count, problem and hidden node badges), Mouse (invert scroll zoom), This
+  model (include test projects) and AI (the former Settings › AI dialog). They left the View and
+  Settings menus, which keep the toggles flipped many times a session (edit mode, panels, the
+  Lines and Rows filters). An AI menu's "AI settings …" opens the dialog at its AI section.
+- **Soft lines (Nov 1).** Many lines made busy diagrams overwhelming: resting lines are now drawn
+  at 40%, the selected node's lines at full strength and the unrelated ones at 10%; cycle, rule,
+  path and explorer lines stay at full strength. Resting the mouse on a node icon or member row
+  lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
+  turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
+  ones) and fading only lines that leave their container.
+- **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
+  node is selected, to keep the diagram clear; the "you are here" chain under the view center
+  still drives Escape and the context menu, but is no longer shown on its own.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
@@ -285,6 +310,35 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   route buttons, cost line and Show prompt became one chip naming the provider, with the same menu.
   Another provider (Copilot, Codex, Gemini) is now one more `AiProvider` entry plus its route in
   `IAiService`.
+- **Copilot, a third AI provider (Nov 2).** In VS Code the review dialogs, About Node and Suggest
+  rules can ask a model VS Code offers to extensions (its Language Model API, `vscode.lm`):
+  Copilot's, or one picked in Settings › AI. Core's `[Rpc] IVsCodeModelService` goes to the LSP,
+  which asks the extension (`languageModels.ts`); the answer's JSON schema is the input schema of
+  an `answer` tool the model must call, since the API has no structured output. VS Code asks the
+  user once whether Dependinator may use its model. Answers only for now: no model tools (the Ask
+  panel) and no code changes (phase 1).
+- **Copilot looks things up (Nov 2).** The Ask panel and Suggest rules can ask Copilot too: the
+  LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
+  API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
+  is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
+- **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
+  comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
+  Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
+  `workbench.action.chat.open`), which edits with its own tools and Keep/Undo review. Nothing comes
+  back to the dialog; the extension's file watcher re-parses (phase 3). The same day the review
+  dialogs' fix buttons became one, like the ask button (`AiFixButton`): "Fix with" the default (or
+  the first that can change code), the others and "Copy fix prompt" in the menu beside it.
+- **Ask how to break an accepted cycle (Nov 3).** Under an AI answer that suggests accepting a
+  cycle, "Ask how to break it" (with the provider menu beside it) asks again for a change only
+  (`CyclePrompt.Build(..., acceptedAnswer)`, an `AiFollowUp` of `AiOpinion`); its Break answer
+  brings the usual fix button. Fix later shows beside Accept too. No fix runs on an accepting
+  answer itself, since it has no change for the user to read first.
+- **Tour this codebase (Nov 3).** Help › Tour This Codebase … opens a panel (`TourPanel`) where
+  any AI provider plans a tour of 5–8 key nodes in reading order (`TourPrompt`, the model outline
+  of Suggest rules without the externals; the chat route reads "Stop:" lines back). Dependinator
+  leaves out the stops that are no nodes, and Start tour plays it in a callout like the tips
+  (`TourCallout`), zooming to and selecting each stop's node, with Back and Next. Phase 1: the tour
+  is not saved yet.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

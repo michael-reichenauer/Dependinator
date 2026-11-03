@@ -5,21 +5,22 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the Settings submenu in the app menu: the "Include Test Projects" item is a
-// checkbox-style toggle whose state is stored per model. The demo model is pre-parsed and
-// embedded, so the triggered re-parse short-circuits and the node set does not change --
-// this asserts the toggle state itself, which is what the menu owns. "Invert Scroll Zoom"
-// is an app-wide toggle stored in the config that flips the mouse wheel zoom direction, and
-// "AI …" picks the AI the app asks by default and turns on the experimental Claude Code route.
+// Exercises the Settings dialog (Menu › Settings …): "Include test projects" is a checkbox
+// whose state is stored per model. The demo model is pre-parsed and embedded, so the triggered
+// re-parse short-circuits and the node set does not change -- this asserts the checkbox state
+// itself, which is what the dialog owns. "Invert scroll zoom" is an app-wide preference stored
+// in the config that flips the mouse wheel zoom direction, the AI section picks the AI the app
+// asks by default and turns on the experimental Claude Code route.
+// The layout density is tested on its own, without parallel tests (LayoutDensityTests).
 public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
-    public async Task IncludeTestProjects_ShouldToggleViaSettingsMenu()
+    public async Task IncludeTestProjects_ShouldToggleViaSettingsDialog()
     {
         await App.GotoMainPageAsync();
 
         // Test projects are excluded by default.
-        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-include-test-projects", isChecked: false);
+        await App.ExpectSettingAsync("settings-include-test-projects", isChecked: false);
 
         await ToggleIncludeTestProjectsAsync(expectOn: true);
 
@@ -35,7 +36,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        await App.OpenSettingsAsync();
         ILocator useCode = Page.GetByTestId("ai-settings-use-claude-code");
         await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
         await Expect(Page.GetByTestId("ai-settings-no-default")).ToBeVisibleAsync();
@@ -47,7 +48,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("use-claude-code-cancel").ClickAsync();
         await Expect(confirm).ToHaveCountAsync(0);
         await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
-        await Page.GetByTestId("ai-settings-close").ClickAsync();
+        await App.CloseSettingsAsync();
         await Expect(useCode).ToHaveCountAsync(0);
 
         // On, and the default: the dialog's one button asks Claude Code.
@@ -67,15 +68,21 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(answers).ToHaveCountAsync(2);
         await Expect(answers.Last).ToContainTextAsync("Claude ·");
         await Expect(ask).ToHaveAttributeAsync("data-provider", "code");
+
+        // The menu's "AI settings …" opens the Settings dialog, at its AI section.
+        await Page.GetByTestId("accept-cycle-ask-menu").ClickAsync();
+        await Page.GetByTestId("accept-cycle-ask-settings").ClickAsync();
+        await Expect(Page.GetByTestId("settings-ai-section")).ToBeInViewportAsync();
+        await App.CloseSettingsAsync();
         await CloseCycleReviewAsync();
 
         // Off again (no confirmation): the default is gone with it, so the dialog shows the
         // providers to choose from, without Claude Code.
-        await (await App.OpenSubMenuItemAsync("menu-settings", "menu-ai-settings")).ClickAsync();
+        await App.OpenSettingsAsync();
         await useCode.ClickAsync();
         await Expect(useCode).ToHaveAttributeAsync("data-checked", "false");
         await Expect(Page.GetByTestId("ai-settings-no-default")).ToBeVisibleAsync();
-        await Page.GetByTestId("ai-settings-close").ClickAsync();
+        await App.CloseSettingsAsync();
         await Expect(useCode).ToHaveCountAsync(0);
         await OpenCycleReviewAsync(isChoosing: true);
         await Expect(Page.GetByTestId("accept-cycle-route-claude")).ToBeVisibleAsync();
@@ -132,14 +139,12 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await ExpectWheelDownToZoomAsync(zoomIn: false);
     }
 
-    // Assert the toggle state via the menu (which is closed again, so the canvas is free for
-    // wheel gestures: an open menu's overlay would swallow them).
-    Task ExpectInvertScrollZoomAsync(bool isOn) =>
-        App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-invert-scroll-zoom", isOn);
+    // Assert the checkbox via the dialog (which is closed again, so the canvas is free for
+    // wheel gestures: an open dialog's overlay would swallow them).
+    Task ExpectInvertScrollZoomAsync(bool isOn) => App.ExpectSettingAsync("settings-invert-scroll-zoom", isOn);
 
-    // Click the toggle and verify it really flipped (AppPage.ToggleSubMenuItemAsync).
-    Task ToggleInvertScrollZoomAsync(bool expectOn) =>
-        App.ToggleSubMenuItemAsync("menu-settings", "menu-invert-scroll-zoom", expectOn);
+    // Click the checkbox and verify it really flipped (AppPage.ToggleSettingAsync).
+    Task ToggleInvertScrollZoomAsync(bool expectOn) => App.ToggleSettingAsync("settings-invert-scroll-zoom", expectOn);
 
     // Scroll the wheel down over empty canvas and assert which way the root node changes size.
     // A wheel landing while the canvas re-renders is swallowed silently, so the gesture is
@@ -201,22 +206,20 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         return box.Width;
     }
 
-    // Click the toggle and verify the state flipped. A handled click closes the whole menu: let
-    // it finish fading out, or reopening it right away finds the old popover still showing and
-    // hovers an item that is about to vanish. The click also re-parses the model, and the
-    // re-parse's completion re-renders the app, which can close a menu opened meanwhile; so a
-    // refresh in progress (the discreet spinner) is let finish too. That wait can pass before
-    // the spinner shows (the click reaches the server asynchronously, and the embedded demo
-    // re-parses in an instant), so the reopening check is what makes the read reliable. The
-    // click is not retried: clicking a toggle twice would flip it back.
+    // Click the checkbox and verify the state flipped. The click re-parses the model, and the
+    // re-parse's completion re-renders the app; so a refresh in progress (the discreet spinner)
+    // is let finish before the state is read again in a freshly opened dialog. That wait can
+    // pass before the spinner shows (the embedded demo re-parses in an instant), so the
+    // reopened read is what makes the check reliable. The click is not retried: clicking a
+    // checkbox twice would flip it back.
     async Task ToggleIncludeTestProjectsAsync(bool expectOn)
     {
-        await (await OpenIncludeTestProjectsAsync()).ClickAsync();
-        await Expect(App.MenuItem("menu-search")).ToBeHiddenAsync();
+        await App.OpenSettingsAsync();
+        ILocator setting = Page.GetByTestId("settings-include-test-projects");
+        await setting.ClickAsync();
+        await Expect(setting).ToHaveAttributeAsync("data-checked", expectOn ? "true" : "false");
+        await App.CloseSettingsAsync();
         await Expect(Page.Locator(".app-progress-discreet")).ToHaveCountAsync(0);
-        await App.ExpectSubMenuItemCheckedAsync("menu-settings", "menu-include-test-projects", expectOn);
+        await App.ExpectSettingAsync("settings-include-test-projects", expectOn);
     }
-
-    Task<ILocator> OpenIncludeTestProjectsAsync() =>
-        App.OpenSubMenuItemAsync("menu-settings", "menu-include-test-projects");
 }

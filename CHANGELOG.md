@@ -9,6 +9,30 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.88.441194] - 2026-11-03
+
+### New
+
+- **Menu › Settings …** opens one dialog for the preferences set once, saved as they change: **Appearance** (theme, and the layout density **Compact**, **Balanced** or **Spacious**), **Diagram** (soft lines, dimming unrelated lines, line widths by link count, problem and hidden node badges, which moved there from **View**), **Mouse** (inverted scroll zoom), **This model** (including test projects) and **AI**
+- Resting the mouse on a node's icon or member row lights its lines for a moment, without clicking
+- In VS Code, the AI help can ask **Copilot** (or another language model VS Code offers) for a review, About Node or suggested rules, with your Copilot plan, and Copilot can answer questions in the **Ask** panel too, looking things up in the model; **Settings › AI** picks it as the default and chooses the model
+- **Help › Tour This Codebase …** has an AI (any of the providers, or your own AI chat) pick the 5 to 8 key parts of the codebase in the order a newcomer should read them; **Start tour** then zooms to each one with a few words on it, with **Back** and **Next**
+- When an AI suggests accepting a cycle, **Ask how to break it** under its answer asks for the change that would break it anyway, which then gets the fix button; **Fix later** is offered beside **Accept** too
+- In VS Code, **Fix with Copilot** in the cycle and rule reviews, and **Improve with Copilot** in **Improve comments**, hand the prompt to Copilot Chat in agent mode, which makes the change and lets you keep or undo each edit; the diagram re-parses when the files change
+
+### Improved
+
+- Lines are drawn soft so busy diagrams look calmer: a selected node's lines show at full strength and unrelated ones fade further, while cycle, broken rule and path lines always stay at full strength; **Settings › Diagram › Soft lines** turns it off
+- The dark theme is softer: a very dark grey canvas instead of near black, pastel container frames instead of neon colors (a red frame no longer reads as an error), and off-white text
+- The **Improve Comments** dialog lays out its AI action like the review dialogs, with the AI menu beside it, and its button row only closes it
+- The buttons that ask an AI look the same everywhere: a soft tint that is easy to spot without shouting, instead of a filled blue button in one dialog, a grey outline that looked like a dropdown in another, and no frame at all once there was an answer
+- The cycle and rule reviews have one fix button, **Fix with** the default AI that can change code, with a **▾** menu beside it for another AI or **Copy fix prompt**, like the ask button
+
+### Changed
+
+- The theme is **Light** by default instead of following the system; **System** and **Dark** stay as choices, and a stored Light or Dark choice is kept
+- The breadcrumb bar under the app bar shows only while a node is selected, to keep the diagram clear
+
 ## [v0.87.435765] - 2026-10-30
 
 ### New

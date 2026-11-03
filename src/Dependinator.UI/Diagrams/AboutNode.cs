@@ -137,7 +137,7 @@ class AboutNodeService(
         // The e2e tests exercise the dialog without a key or network.
         if (Dependinator.Core.Build.IsTestMode)
         {
-            onStep(route is AiSource.ClaudeCode ? SuggestStep.AskingClaudeCode : SuggestStep.AskingClaude);
+            onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
             return new NodeAnswer($"Test mode: Claude was not asked \"{question}\".")
             {

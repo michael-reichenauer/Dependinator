@@ -260,7 +260,8 @@ static partial class NodeSvg
             layout.Bounds,
             TitleName(node),
             node.HtmlDescription,
-            LinkHandleSvg(node, layout.LinkHandlePos, isEditing)
+            LinkHandleSvg(node, layout.LinkHandlePos, isEditing),
+            isLinePreview: true
         );
         var selectedOverlay = SelectedNodeSvg(node, layout.Bounds, isEditing);
         var descriptionSvg = BuildDescriptionSvg(
@@ -526,14 +527,19 @@ static partial class NodeSvg
         Rect geometry,
         string htmlLongName,
         string? htmlDescription,
-        string extraContent = ""
+        string extraContent = "",
+        bool isLinePreview = false
     )
     {
+        // data-line-preview marks the nodes whose lines the hover preview lights (linePreview in
+        // jsInterop.js): icons and member rows. Not open containers, which the pointer is
+        // always over when zoomed in, so they would keep the preview on.
+        var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
         var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}">
+                <g class="{cssClass}" id="{elementId}"{previewAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                   <title>{title}</title>
                   {extraContent}

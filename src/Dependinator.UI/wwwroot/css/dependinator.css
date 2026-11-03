@@ -8,7 +8,7 @@
 }
 
 :root[data-theme="dark"] .dep-toolbar-card {
-    background: rgba(32, 34, 40, 0.92);
+    background: rgba(32, 34, 38, 0.92);
 }
 
 /* A disabled toolbar button must still be visible (but clearly off): MudBlazor's disabled
@@ -71,11 +71,6 @@
 .dep-breadcrumb__sep {
     color: var(--mud-palette-text-secondary);
     padding: 0 1px;
-}
-
-/* With nothing selected the chain is the view's location rather than a choice: shown dimmer. */
-.dep-breadcrumb--context .dep-breadcrumb__item:not(.dep-breadcrumb__model) {
-    opacity: 0.78;
 }
 
 /* The legend card (Legend.razor), bottom-left over the diagram. */
@@ -353,22 +348,43 @@
     font-size: 0.75rem;
 }
 
+/* Every button that asks an AI (AiOpinion, Improve comments, the fix actions) shares one look: a
+   soft primary tint, quieter than a filled button, yet a button at a glance and the same before and
+   after an answer. Its arrow (AiProviderMenu) carries the tint too, split off by a thin line. */
+.mud-button-root.dep-ai-ask {
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: rgba(var(--mud-palette-primary-rgb), 0.08);
+    color: var(--mud-palette-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .mud-button-root.dep-ai-ask:hover {
+        background-color: rgba(var(--mud-palette-primary-rgb), 0.16);
+    }
+}
+
+.mud-button-root.dep-ai-ask:disabled {
+    background-color: var(--mud-palette-action-disabled-background);
+    color: var(--mud-palette-action-disabled);
+}
+
 /* The default's button and, joined to it, the arrow of its provider menu (AiProviderMenu). */
 .dep-ai__ask-split {
     display: inline-flex;
     align-items: stretch;
 }
 
-.dep-ai__ask-split > .mud-button-root:first-child {
+.dep-ai__ask-split > .mud-button-root:first-child:not(:last-child) {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.dep-ai__ask-split .mud-menu {
-    margin-left: -1px;
+.dep-ai__ask-split .dep-ai-menu__arrow {
+    border-left: 1px solid rgba(var(--mud-palette-primary-rgb), 0.25);
 }
 
-.dep-ai-menu__arrow {
+.mud-button-root.dep-ai-menu__arrow {
     min-width: 0;
     padding-left: 2px;
     padding-right: 2px;
@@ -420,7 +436,36 @@
     font-size: 1rem;
 }
 
-/* Settings › AI: a row per provider, the default picked by its radio. */
+/* Menu › Settings …: one column of sections (SettingsDialog). */
+.dep-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dep-settings__heading {
+    display: block;
+    line-height: 1.6;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-settings__row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+}
+
+.dep-settings__label {
+    min-width: 110px;
+}
+
+.dep-settings__hint {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* Settings › AI (AiSettings): a row per provider, the default picked by its radio. */
 .dep-ai-settings {
     display: flex;
     flex-direction: column;
@@ -441,6 +486,12 @@
 .dep-ai-settings__text {
     flex: 1;
     min-width: 0;
+}
+
+/* The Copilot provider's model (VS Code only), under its row, in line with its name. */
+.dep-ai-settings__model {
+    margin: 0 0 6px 66px;
+    max-width: 320px;
 }
 
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
@@ -902,6 +953,73 @@
     color: var(--mud-palette-warning-darken);
 }
 
+/* The codebase tour panel (TourPanel.razor): the AI's stops, numbered, each starts the tour
+   there; and the callout that plays it (TourCallout.razor), styled like the first-run tips. */
+.dep-tour {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-tour__verdict {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.dep-tour__stops {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+}
+
+.dep-tour__stop {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-tour__stop-number {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dep-tour__stop-number:hover,
+.dep-tour__stop-number:focus-visible {
+    outline: 2px solid var(--mud-palette-primary-lighten);
+    outline-offset: 1px;
+}
+
+.dep-tour__stop-body {
+    min-width: 0;
+}
+
+.dep-tour__stop-title {
+    font-weight: 600;
+}
+
+/* Opaque, unlike the tips: the stop's text is longer, and the diagram under it is busy. */
+.dep-tour-callout.dep-toolbar-card {
+    background: var(--mud-palette-surface);
+}
+
+.dep-tour-callout__node {
+    font-size: 0.8rem;
+}
+
+.dep-tour-callout__intro {
+    color: var(--mud-palette-text-secondary);
+}
+
 /* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
 .dep-rules__rule {
     padding: 4px 0;
@@ -1210,6 +1328,12 @@ button.dep-rules__node:hover {
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
+}
+
+/* A follow-up question under an answer ("Ask how to break it"). */
+.dep-ai__follow-up {
+    display: flex;
+    margin-top: 8px;
 }
 
 /* The review dialogs' buttons wrap to a second row rather than squeezing their labels. */

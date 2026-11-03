@@ -10,7 +10,8 @@ enum AppTheme
     Dark,
 }
 
-// The light/dark theme: the user's choice (or the system/VS Code theme when System), applied
+// The light/dark theme: the user's choice (Light by default, or the system/VS Code theme when
+// System), applied
 // to the MudBlazor palette (via Main.razor), the diagram palette (DColors) and the host page.
 interface IThemeService
 {
@@ -33,7 +34,7 @@ class ThemeService(
     DotNetObjectReference<ThemeService>? selfReference;
     bool isSystemDark;
 
-    public AppTheme Theme { get; private set; } = AppTheme.System;
+    public AppTheme Theme { get; private set; } = AppTheme.Light;
 
     public bool IsDark =>
         Theme switch
@@ -70,7 +71,7 @@ class ThemeService(
         if (Theme == theme)
             return;
         Theme = theme;
-        await configService.SetAsync(config => config.Theme = theme);
+        await configService.SetAsync(config => config.SelectedTheme = theme);
         await ApplyAsync(isInitial: false);
     }
 

@@ -16,6 +16,11 @@ interface IViewOptions
     // selection's own lines stand out (a hovered line shows at full strength).
     bool DimUnrelatedLines { get; }
 
+    // Resting lines drawn faint, the selection's or hovered node's lines and the lines that
+    // mean something (cycles, rule breaks, path, explorer) at full strength. CSS only (the
+    // line styles in Canvas.razor), so switching needs no redraw. Persisted in Config.SoftLines.
+    bool IsSoftLines { get; }
+
     // The lines of the selection (and explorer focus lines) drawn at their link-count width;
     // off, every line has one thin width (persisted in Config.ShowLinkCountWidths).
     bool IsLinkCountWidthsShown { get; }
@@ -56,6 +61,10 @@ interface IViewOptions
     // panels (IAskModelService opens and closes it).
     bool IsAskShown { get; }
 
+    // The tour panel (TourPanel), a guided tour of the model an AI picks, top-right like the
+    // other panels (ITourService opens and closes it). The Ask panel and it share the corner.
+    bool IsTourShown { get; }
+
     // While set, the hidden nodes panel lists only this node's hidden children (opened from its
     // node menu, List Hidden Children).
     NodeId? HiddenNodesParentId { get; }
@@ -72,6 +81,7 @@ interface IViewOptions
     void SetRevealHiddenNodes(bool reveal);
     void SetIsEditingEnabled(bool enabled);
     void SetDimUnrelatedLines(bool dim);
+    void SetSoftLines(bool soft);
     void SetLinkCountWidthsShown(bool shown);
     void SetLineFilter(LineFilter filter);
     void SetRowFilter(RowFilter filter);
@@ -83,6 +93,7 @@ interface IViewOptions
     void SetRuleSuggestionsShown(bool shown);
     void SetHiddenNodesShown(bool shown, NodeId? parentId = null);
     void SetAskShown(bool shown);
+    void SetTourShown(bool shown);
     void SetHiddenBadgesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
@@ -129,6 +140,7 @@ class ViewOptions : IViewOptions
     public bool RevealHiddenNodes { get; private set; }
     public bool IsEditingEnabled { get; private set; } = false;
     public bool DimUnrelatedLines { get; private set; } = true;
+    public bool IsSoftLines { get; private set; } = true;
     public bool IsLinkCountWidthsShown { get; private set; }
     public LineFilter LineFilter { get; private set; } = LineFilter.None;
     public RowFilter RowFilter { get; private set; } = RowFilter.None;
@@ -140,6 +152,7 @@ class ViewOptions : IViewOptions
     public bool IsRuleSuggestionsShown { get; private set; }
     public bool IsHiddenNodesShown { get; private set; }
     public bool IsAskShown { get; private set; }
+    public bool IsTourShown { get; private set; }
     public NodeId? HiddenNodesParentId { get; private set; }
     public bool IsHiddenBadgesShown { get; private set; } = true;
     public bool IsMinimapShown { get; private set; }
@@ -150,6 +163,8 @@ class ViewOptions : IViewOptions
     public void SetIsEditingEnabled(bool enabled) => IsEditingEnabled = enabled;
 
     public void SetDimUnrelatedLines(bool dim) => DimUnrelatedLines = dim;
+
+    public void SetSoftLines(bool soft) => IsSoftLines = soft;
 
     public void SetLinkCountWidthsShown(bool shown) => IsLinkCountWidthsShown = shown;
 
@@ -184,7 +199,17 @@ class ViewOptions : IViewOptions
         HiddenNodesParentId = shown ? parentId : null;
     }
 
-    public void SetAskShown(bool shown) => IsAskShown = shown;
+    public void SetAskShown(bool shown)
+    {
+        IsAskShown = shown;
+        IsTourShown = IsTourShown && !shown;
+    }
+
+    public void SetTourShown(bool shown)
+    {
+        IsTourShown = shown;
+        IsAskShown = IsAskShown && !shown;
+    }
 
     public void SetHiddenBadgesShown(bool shown) => IsHiddenBadgesShown = shown;
 

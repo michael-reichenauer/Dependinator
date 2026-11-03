@@ -6,9 +6,8 @@
    an exception, with why, listed under its rule in the rules panel; editing also offers to stop
    allowing it. "Get an AI opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat
    whether to fix the code or allow the dependency, and the selected answer drives the rest:
-   allowing fills in the reason, fixing shows the change to make, with a prompt for an AI that can
-   change the code as the main action and "Fix with Claude Code" (ClaudeCodeFix, where the experimental
-   route is on) to make the change right away, both under the answer, and allowing anyway as the
+   allowing fills in the reason, fixing shows the change to make, with one fix button under the
+   answer (AiFixButton, as in the cycle review), and allowing anyway as the
    dialog's alternative. A reason the dialog filled in follows the selected answer until the user
    edits it. Nothing is saved until the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows the
    dependency still there. *@
@@ -55,18 +54,11 @@
     </AiOpinion>
     @if (IsFixSuggested && !IsDone)
     {
-      @* The fix, under the change it makes: copying its prompt is the main action. *@
+      @* The fix, under the change it makes: one button for the AI that makes it, the provider menu
+         beside it (AiFixButton, like the ask button above), or "Copy fix prompt" where no AI can. *@
       <div class="dep-ai__fix-actions">
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
-                   title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
-                   OnClick="CopyFixPromptAsync" data-testid="rule-review-copy-fix">Copy fix prompt</MudButton>
-        @if (CanFix)
-        {
-          <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
-                     Disabled="@(fixPanel?.IsRunning == true)" OnClick="() => fixPanel!.StartAsync()"
-                     title="Claude Code makes the change in the model's folder now (experimental)"
-                     data-testid="rule-review-fix-claude-code">Fix with Claude Code</MudButton>
-        }
+        <AiFixButton TestId="rule-review" CanRunClaudeCode="CanFix" IsRunning="@(fixPanel?.IsRunning == true)"
+                     OnClaudeCode="() => fixPanel!.StartAsync()" OnCopilot="FixWithCopilotAsync" OnCopy="CopyFixPromptAsync" />
       </div>
     }
     @if (copyNote is not null)
@@ -163,8 +155,10 @@
 
   string FixPromptText() => selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
 
-  protected override async Task OnInitializedAsync() =>
+  protected override async Task OnInitializedAsync()
+  {
     canFixWithClaudeCode = await aiService.CanFixWithClaudeCodeAsync();
+  }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -202,6 +196,17 @@
     var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
     copyNote = isCopied ? FixPromptCopiedNote : null;
     copyError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // Copilot Chat makes the change in its own view: the dialog only says so, and can be left open
+  // to decide later.
+  async Task FixWithCopilotAsync()
+  {
+    copyNote = null;
+    copyError = null;
+    var handed = await aiService.FixWithCopilotAsync(FixPromptText());
+    copyNote = handed is Error ? null : AiService.CopilotFixNote;
+    copyError = handed is Error e ? e.Message : null;
   }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.

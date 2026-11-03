@@ -111,14 +111,14 @@ function getWebviewHtml(
 </head>
 <body>
     <script nonce="${nonce}">
-        // Paint the editor theme's background before Blazor boots (VS Code marks the body
-        // with vscode-light / vscode-dark / vscode-high-contrast); the app takes over from
-        // there and follows theme changes (see watchSystemTheme in jsInterop.js).
+        // Paint the last used theme's background before Blazor boots (the app stores it, see
+        // applyTheme in jsInterop.js), Light (the default) until then; the app takes over from
+        // there and follows the editor theme when the user picked System (watchSystemTheme).
         (function () {
-            var isDark = document.body.classList.contains("vscode-dark")
-                || document.body.classList.contains("vscode-high-contrast");
+            var isDark = false;
+            try { isDark = localStorage.getItem("dep-theme") === "dark"; } catch (e) { }
             document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-            document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+            document.body.style.backgroundColor = isDark ? "#101113" : "#FAFAFA";
         })();
     </script>
     <div id="app">

@@ -2,7 +2,9 @@ namespace Dependinator.UI.Shared;
 
 class DColors
 {
-    static readonly string CanvasBackgroundDark = "#0D0F11";
+    // A very dark grey rather than black: lighter greys (#1E1F22 and up) were tried and looked
+    // misty, and pure black makes the colored frames and white text glare.
+    static readonly string CanvasBackgroundDark = "#101113";
     static readonly string CanvasBackgroundLight = "#FAFAFA";
 
     // Item (node and line)
@@ -11,12 +13,12 @@ class DColors
     static readonly string ItemLineSelected = "#a7cff7";
 
     // Tests
-    static readonly string TextDark = "#FFFFFF";
+    static readonly string TextDark = "#ECECEC";
     static readonly string TextLight = "#1A1A1A";
 
     // Line Dark
-    static readonly string LineDark = "#999999";
-    static readonly string LineHiddenDark = "#2A2D30";
+    static readonly string LineDark = "#969AA1";
+    static readonly string LineHiddenDark = "#282A2E";
 
     // Line Light
     static readonly string LineLight = "#555555";
@@ -43,8 +45,8 @@ class DColors
 
     // Cousin (container-crossing) lines: slightly toned down from the normal line color so they
     // read as "crossing" without cluttering dense views. Move these toward LineDark/LineLight
-    // (#999999 / #555555) to make them more visible, or set them equal for no distinction.
-    static readonly string CousinLineDark = "#8A9099";
+    // (#969AA1 / #555555) to make them more visible, or set them equal for no distinction.
+    static readonly string CousinLineDark = "#82868D";
     static readonly string CousinLineLight = "#6E727A";
 
     // Marker glyph on manually added (user-drawn) nodes — neutral grey so it reads as
@@ -64,18 +66,22 @@ class DColors
     static readonly string NodeBorderDarkEdit = "#FFA64D";
     static readonly string NodeBackgroundDarkEdit = "#332312";
 
+    // The dark counterpart of the light palette below: soft pastel borders (HSL saturation 62%,
+    // lightness 66%) rather than full-strength colors, which glare on a dark canvas (a bright red
+    // frame reads as an error), and backgrounds a small step lighter than the canvas with a
+    // hue (saturation 25%, lightness 11%), so containers read as tinted panels, not dark stains.
     static readonly IReadOnlyList<DColor> nodeColorsDark =
     [
-        new("Gray", "#CCCCCC", "#1A1A1A"),
-        new("Blue", "#4DA6FF", "#0D1826"),
-        new("Cyan", "#33CCCC", "#0D1F1F"),
-        new("Teal", "#2ECC71", "#0D1A12"),
-        new("Green", "#A3E635", "#1A220D"),
-        new("Yellow", "#FFD633", "#1F1A0D"),
-        new("Orange", "#FF944D", "#1F120D"),
-        new("Red", "#FF4D4D", "#1A0D0D"),
-        new("Pink", "#FF66B2", "#1A0D12"),
-        new("Purple", "#B366FF", "#120D1A"),
+        new("Gray", "#BDBDBD", "#1A1B1E"),
+        new("Blue", "#73A8DE", "#151C23"),
+        new("Cyan", "#73DEDE", "#152323"),
+        new("Teal", "#73DE9F", "#15231B"),
+        new("Green", "#B1DE73", "#1D2315"),
+        new("Yellow", "#DEC973", "#232015"),
+        new("Orange", "#DE9E73", "#231B15"),
+        new("Red", "#DE7373", "#231515"),
+        new("Pink", "#DE73A8", "#23151C"),
+        new("Purple", "#A873DE", "#1C1523"),
     ];
 
     // Backgrounds are pastel tints a small step below the near-white canvas (~1.05:1 contrast
@@ -107,7 +113,7 @@ class DColors
     // deliberately overlap the auto palette's — resolution is separate (CustomNodeColorByName
     // vs NodeColorByName).
     const double CustomBaseHue = 210;
-    static readonly string CustomBackgroundDark = "#12243F";
+    static readonly string CustomBackgroundDark = "#172235";
     static readonly string CustomBackgroundLight = "#EAF3FF";
 
     static readonly IReadOnlyList<DColor> customNodeColorsDark = DeriveCustomColors(

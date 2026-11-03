@@ -68,6 +68,7 @@ class InitService : IInitService
         Node.LegacyHiddenVisibility = config.ShowHiddenNodes ? NodeVisibility.Dimmed : NodeVisibility.Hidden;
         viewOptions.SetIsEditingEnabled(config.IsEditingEnabled);
         viewOptions.SetDimUnrelatedLines(config.DimUnrelatedLines);
+        viewOptions.SetSoftLines(config.SoftLines);
         viewOptions.SetLinkCountWidthsShown(config.ShowLinkCountWidths);
         viewOptions.SetMinimapShown(config.ShowMinimap);
         viewOptions.SetProblemBadgesShown(config.ShowProblemBadges);
@@ -92,7 +93,7 @@ class InitService : IInitService
         pointerEventService.InvertScrollZoom = config.InvertScrollZoom;
         // The theme must be applied before the first model render, since the SVG tiles bake the
         // palette in.
-        await themeService.InitAsync(config.Theme);
+        await themeService.InitAsync(config.CurrentTheme);
         await keyboardService.InitAsync();
         await screenService.InitAsync(component);
         await pointerEventService.InitAsync();

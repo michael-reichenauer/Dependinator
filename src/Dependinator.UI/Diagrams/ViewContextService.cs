@@ -6,10 +6,10 @@ namespace Dependinator.UI.Diagrams;
 
 readonly record struct ViewContextItem(NodeId Id, string Name, string LongName);
 
-// Where the user is in the diagram, for wayfinding (the breadcrumb, Escape to zoom out). A map
-// app keeps a place name on screen at every zoom; here a container's name sits at its corner
-// and is off-screen once the user has zoomed into it, so the chain of containers around the
-// viewport center is computed instead: the "you are here".
+// Where the user is in the diagram, for wayfinding (the selected node's breadcrumb, Escape to
+// zoom out). A map app keeps a place name on screen at every zoom; here a container's name sits
+// at its corner and is off-screen once the user has zoomed into it, so the chain of containers
+// around the viewport center is computed instead: the "you are here".
 interface IViewContextService
 {
     // The containers from the top level down to the innermost open container under the

@@ -19,10 +19,24 @@ class Config
     // Edit mode is off by default in every host: most sessions only explore, and edit-only
     // chrome (link handles, resize handles) would otherwise clutter the diagram.
     public bool IsEditingEnabled { get; set; } = false;
+
+    // The theme the user picked in Settings › Theme; null until they pick one, which means Light.
+    public AppTheme? SelectedTheme { get; set; }
+
+    // The theme setting before Light became the default (Nov 2026), when System was the
+    // default. Only read, for configs saved before then: every config stored it, so a stored
+    // System cannot be told from one never changed, and counts as unset (Light). A stored Light
+    // or Dark was a choice and is kept.
     public AppTheme Theme { get; set; } = AppTheme.System;
+
+    public AppTheme CurrentTheme => SelectedTheme ?? (Theme is AppTheme.Dark ? AppTheme.Dark : AppTheme.Light);
     public bool DimUnrelatedLines { get; set; } = true;
 
-    // The selection's lines drawn at their link-count width (View › Line Widths by Link Count);
+    // Lines drawn faint until a node is selected or hovered (Settings › Diagram › Soft lines);
+    // the default since Nov 2026, when many lines made the diagram feel overwhelming.
+    public bool SoftLines { get; set; } = true;
+
+    // The selection's lines drawn at their link-count width (Settings › Line widths by link count);
     // off by default, since thick lines on every selection made the diagram look heavy.
     public bool ShowLinkCountWidths { get; set; } = false;
     public bool HideExternalLines { get; set; } = false;
@@ -46,10 +60,10 @@ class Config
     // The minimap in the corner of the diagram (View › Show Minimap).
     public bool ShowMinimap { get; set; } = false;
 
-    // Badges on the nodes that contain problems (View › Show Problem Badges).
+    // Badges on the nodes that contain problems (Settings › Problem badges).
     public bool ShowProblemBadges { get; set; } = true;
 
-    // The badge on a node with children the user hid (View › Show Hidden Node Badges).
+    // The badge on a node with children the user hid (Settings › Hidden node badges).
     public bool ShowHiddenBadges { get; set; } = true;
 
     // The experimental Claude Code provider (Settings › AI), turned on after a warning: `claude -p`
@@ -59,6 +73,10 @@ class Config
     // The AI the app asks by default (Settings › AI); none until the user picks one, the first
     // time they ask or in Settings. Stored as the AiSource number, so its values never change.
     public AiSource? DefaultAiProvider { get; set; }
+
+    // The VS Code language model the Copilot provider asks (VsCodeModel.Id, Settings › AI); none
+    // picks Copilot's first model.
+    public string? CopilotModelId { get; set; }
 }
 
 interface IConfigService

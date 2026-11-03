@@ -1,15 +1,14 @@
 @using MudBlazor
+@using Dependinator.Core.VsCodeModels
 @inject IAiService aiService
 @inject IApplicationEvents applicationEvents
+@inject IJSInterop jsInterop
 
-@* Settings › AI: the AI the app asks by default (AiChoice), and the experimental Claude Code route,
-   turned on only after a warning, since it uses the user's Claude login. Every place that asks
-   uses the default, and its menu (▾) asks another provider once. Changes are saved at once. *@
-<MudDialog>
-  <TitleContent>
-    <MudText Typo="Typo.h6">AI</MudText>
-  </TitleContent>
-  <DialogContent>
+@* The AI section of the Settings dialog (Settings › AI): the AI the app asks by default (AiChoice),
+   the experimental Claude Code route, turned on only after a warning, since it uses the user's
+   Claude login, and in VS Code the model the Copilot provider asks (VS Code's language models). Every place that asks uses the default, and its menu (▾) asks another provider once.
+   Changes are saved at once. *@
+<div id="@SectionId" data-testid="settings-ai-section">
     <div class="dep-about__text">
       The AI the app asks by default. Wherever the app asks, the menu next to the button asks another one, once.
     </div>
@@ -27,7 +26,7 @@
             <MudIcon Icon="@provider.Icon" Size="Size.Small" Class="@($"dep-ai-settings__icon {provider.IconClass}")" />
             <div class="dep-ai-settings__text">
               <div>@provider.Name</div>
-              <div class="dep-ai__route-meta">@provider.Detail</div>
+              <div class="dep-ai__route-meta">@(provider == AiProvider.Copilot && !isOffered ? CopilotMissingText : provider.Detail)</div>
             </div>
             @if (provider == AiProvider.ClaudeCode)
             {
@@ -36,6 +35,19 @@
                          data-testid="ai-settings-use-claude-code" data-checked="@(isClaudeCodeOn ? "true" : "false")" />
             }
           </div>
+          @if (provider == AiProvider.Copilot && isOffered)
+          {
+            <div class="dep-ai-settings__model">
+              <MudSelect T="string" Value="@(copilotModelId ?? "")" ValueChanged="SetCopilotModelAsync" Dense="true"
+                         Margin="Margin.Dense" Variant="Variant.Outlined" Label="Model" data-testid="ai-settings-copilot-model">
+                <MudSelectItem T="string" Value="@("")">@AutomaticText</MudSelectItem>
+                @foreach (var model in copilotModels)
+                {
+                  <MudSelectItem T="string" Value="@model.Id">@ModelName(model)</MudSelectItem>
+                }
+              </MudSelect>
+            </div>
+          }
           @if (provider == AiProvider.ClaudeCode && isConfirmingClaudeCode)
           {
             <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="ai-settings-claude-code-warning">
@@ -64,32 +76,42 @@
         </div>
       }
     }
-  </DialogContent>
-  <DialogActions>
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="ai-settings-close">Close</MudButton>
-  </DialogActions>
-</MudDialog>
+</div>
 
 @code {
-  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+  const string SectionId = "dep-settings-ai";
 
+  // Opened from an AI provider menu's "AI settings …": scrolls the section into view once its
+  // choices are shown (they arrive asynchronously, over RPC in VS Code).
+  [Parameter] public bool ScrollIntoView { get; set; }
+
+  bool isScrolled;
   AiChoice? choice;
   bool isClaudeCodeOn;
   bool isConfirmingClaudeCode;
-
-  public static async Task ShowAsync(IDialogService dialogService)
-  {
-    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-    var dialog = await dialogService.ShowAsync<AiSettingsDialog>((string?)null, options);
-    await dialog.Result;
-  }
+  VsCodeModel[] copilotModels = [];
+  string? copilotModelId;
 
   protected override Task OnInitializedAsync() => RefreshAsync();
 
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (!ScrollIntoView || isScrolled || choice is null)
+      return;
+    isScrolled = true;
+    await jsInterop.Call("scrollIntoView", SectionId);
+  }
+
   async Task RefreshAsync()
   {
+    // Listed afresh (the choice then uses this list): Copilot may have started or signed in since.
+    copilotModels = await aiService.GetCopilotModelsAsync(isFresh: true);
     choice = await aiService.GetChoiceAsync();
     isClaudeCodeOn = choice.Providers.Contains(AiProvider.ClaudeCode);
+    // A picked model VS Code no longer offers shows as the automatic choice, which the extension
+    // then asks instead.
+    var modelId = await aiService.GetCopilotModelIdAsync();
+    copilotModelId = copilotModels.Any(m => m.Id == modelId) ? modelId : null;
   }
 
   async Task SetDefaultAsync(AiSource? source)
@@ -120,11 +142,32 @@
     await ChangedAsync();
   }
 
+  async Task SetCopilotModelAsync(string modelId)
+  {
+    await aiService.SetCopilotModelAsync(modelId == "" ? null : modelId);
+    await ChangedAsync();
+  }
+
+  // Why Copilot cannot be picked here.
+  static string CopilotMissingText =>
+    Dependinator.Core.Build.IsVsCodeExtWasm
+      ? "VS Code offers no Copilot model: install GitHub Copilot Chat and sign in to it"
+      : "A model VS Code offers, such as GitHub Copilot's: only in the VS Code extension";
+
+  // The model asked when none is picked: Copilot's first, as the extension picks it (languageModels.ts).
+  string AutomaticText =>
+    copilotModels.FirstOrDefault(m => m.IsCopilots) is { } first
+      ? $"Automatic: {ModelName(first)}"
+      : "Automatic: no Copilot model, pick one";
+
+  // "GPT-5 mini", or "Claude Sonnet 5.5 (anthropic)" for a model another extension adds.
+  static string ModelName(VsCodeModel model) =>
+    model.IsCopilots ? model.Name : $"{model.Name} ({model.Vendor})";
+
   async Task ChangedAsync()
   {
     await RefreshAsync();
     applicationEvents.TriggerUIStateChanged();
   }
 
-  void Close() => MudDialog.Close();
 }

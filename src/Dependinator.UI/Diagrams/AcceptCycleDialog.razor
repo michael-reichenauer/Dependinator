@@ -5,10 +5,14 @@
 @* Reviews a circular dependency (or edits an acceptance): accept it as intended, with why, shown
    in the cycles panel; editing also offers to stop accepting it. Under the cycle, "Get an AI
    opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat, and the selected answer
-   drives the rest: accepting fills in the reason, breaking shows the change to make, with a prompt
-   for an AI that can change the code as the main action and "Fix with Claude Code" (ClaudeCodeFix,
-   where the experimental route is on) to make the change right away, both under the answer, and
-   fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. A reason
+   drives the rest: accepting fills in the reason, breaking shows the change to make, with one fix
+   button under the answer (AiFixButton): "Fix with Claude Code" (ClaudeCodeFix, where the
+   experimental route is on) or "Fix with Copilot" (VS Code, Copilot Chat in agent mode) for the
+   default, the others and "Copy fix prompt" in its menu, or "Copy fix prompt" where no AI can; and
+   fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. An
+   answer that suggests accepting offers "Ask how to break it" under it (a follow-up that asks for
+   a change, so a fix only ever runs on a change the user has read), and fixing later beside
+   accepting, for a user who disagrees. A reason
    the dialog filled in follows the selected answer until the user edits it. Nothing is saved until
    the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows
    the cycle still there. *@
@@ -26,7 +30,8 @@
                RouteText="Claude reads the cycle and its code and answers here."
                AskTitle="Ask Claude whether this cycle is intended or should be broken"
                CopyTitle="Copy a prompt with the cycle, its links and the code behind them"
-               PromptCopiedText="The prompt is copied, with the cycle, its links and the code behind them.">
+               PromptCopiedText="The prompt is copied, with the cycle, its links and the code behind them."
+               FollowUp="BreakFollowUp">
       <AnswerContent Context="s">
         <div class="dep-ai__suggestion" data-testid="accept-cycle-suggestion"
              data-verdict="@(s.IsAccept ? "accept" : "break")">
@@ -53,20 +58,13 @@
         </div>
       </AnswerContent>
     </AiOpinion>
-    @if (IsBreakSuggested && !IsDone)
+    @if (IsBreakSuggested && HasChange && !IsDone)
     {
-      @* The fix, under the change it makes: copying its prompt is the main action. *@
+      @* The fix, under the change it makes: one button for the AI that makes it, the provider menu
+         beside it (AiFixButton, like the ask button above), or "Copy fix prompt" where no AI can. *@
       <div class="dep-ai__fix-actions">
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
-                   title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
-                   OnClick="CopyFixPromptAsync" data-testid="accept-cycle-copy-fix">Copy fix prompt</MudButton>
-        @if (CanFix)
-        {
-          <MudButton Color="Color.Primary" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
-                     Disabled="@(fixPanel?.IsRunning == true)" OnClick="() => fixPanel!.StartAsync()"
-                     title="Claude Code makes the change in the model's folder now (experimental)"
-                     data-testid="accept-cycle-fix-claude-code">Fix with Claude Code</MudButton>
-        }
+        <AiFixButton TestId="accept-cycle" CanRunClaudeCode="CanFix" IsRunning="@(fixPanel?.IsRunning == true)"
+                     OnClaudeCode="() => fixPanel!.StartAsync()" OnCopilot="FixWithCopilotAsync" OnCopy="CopyFixPromptAsync" />
       </div>
     }
     @if (copyNote is not null)
@@ -111,10 +109,13 @@
       @if (IsBreakSuggested)
       {
         <MudButton Variant="Variant.Text" OnClick="Save" data-testid="accept-cycle-save">Accept anyway</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
-                   title="List the cycle under To fix, with the planned change">Fix later</MudButton>
       }
-      else
+      @if (Selected is { } answer && FixPrompt is not null)
+      {
+        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
+                   title="@(answer.IsAccept ? "List the cycle under To fix, though the AI suggests accepting it" : "List the cycle under To fix, with the planned change")">Fix later</MudButton>
+      }
+      @if (!IsBreakSuggested)
       {
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
           @(IsEdit ? "Save" : "Accept")
@@ -142,6 +143,11 @@
   // The prompt that asks an AI that can change the code to break the cycle as suggested.
   [Parameter] public Func<CycleSuggestion, string>? FixPrompt { get; set; }
 
+  // The prompt that asks any AI how to break the cycle, after an answer that suggested accepting
+  // it, and asking Claude (or Claude Code) with it; null where the host cannot ask.
+  [Parameter] public Func<CycleSuggestion, Task<string>>? CopyBreakPrompt { get; set; }
+  [Parameter] public Func<CycleSuggestion, AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? SuggestBreak { get; set; }
+
   // Whether the cycle is gone from the model, after "Fix with Claude Code".
   [Parameter] public Func<bool>? IsCycleGone { get; set; }
 
@@ -156,16 +162,28 @@
   // An AI suggests breaking the cycle: fixing it is the main action, accepting it the override.
   bool IsBreakSuggested => Selected is { IsAccept: false } && FixPrompt is not null;
 
+  // A change to make: an answer that asked for more information instead has none to fix with.
+  bool HasChange => Selected is { Change: not "" };
+
+  // Under an answer that suggests accepting: ask for a change that breaks the cycle anyway.
+  AiFollowUp<CycleSuggestion>? BreakFollowUp => CopyBreakPrompt is not { } getPrompt ? null :
+    new("Ask how to break it", "Ask for the change that would break this cycle anyway", "break",
+      s => s.IsAccept, getPrompt,
+      (s, route, onStep) => SuggestBreak is { } ask ? ask(s, route, onStep)
+        : Task.FromResult<Result<CycleSuggestion>>(new Error("Asking is not available here.")));
+
   // Claude Code changed the code: the dialog only closes, unless a re-parse shows the cycle is still there.
   bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };
 
   // Claude Code can make the suggested change itself, where the experimental route is on.
-  bool CanFix => IsBreakSuggested && canFixWithClaudeCode;
+  bool CanFix => IsBreakSuggested && HasChange && canFixWithClaudeCode;
 
   string FixPromptText() => Selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
 
-  protected override async Task OnInitializedAsync() =>
+  protected override async Task OnInitializedAsync()
+  {
     canFixWithClaudeCode = await aiService.CanFixWithClaudeCodeAsync();
+  }
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -180,6 +198,10 @@
     Selected = answer;
     copyNote = null;
     copyError = null;
+    // The change asked for after an accepting answer keeps that answer's reason: the AI did not
+    // suggest breaking the cycle, it was asked how.
+    if (answer.IsFollowUp)
+      return;
     if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
       UseReason(ReasonFrom(answer));
   }
@@ -205,6 +227,17 @@
     copyError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
+  // Copilot Chat makes the change in its own view: the dialog only says so, and can be left open
+  // to decide later.
+  async Task FixWithCopilotAsync()
+  {
+    copyNote = null;
+    copyError = null;
+    var handed = await aiService.FixWithCopilotAsync(FixPromptText());
+    copyNote = handed is Error ? null : AiService.CopilotFixNote + " Or choose Fix later to keep the cycle on the list until then.";
+    copyError = handed is Error e ? e.Message : null;
+  }
+
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
   public const string FixPromptCopiedNote =
     "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
@@ -221,8 +254,9 @@
 
   void Unaccept() => MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult("", true)));
 
+  // Only a change the dialog showed is kept as the plan: an accepting answer's is not shown.
   void FixLater() =>
-    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(Selected?.Change ?? "", false, IsFixLater: true)));
+    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(Selected is { IsAccept: false } s ? s.Change : "", false, IsFixLater: true)));
 
   void Cancel() => MudDialog.Cancel();
 }

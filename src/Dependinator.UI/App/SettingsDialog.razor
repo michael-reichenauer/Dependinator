@@ -1,0 +1,226 @@
+@using Dependinator.Core
+@using Dependinator.Core.Shared
+@using Dependinator.UI.Modeling
+@using MudBlazor
+@inject IConfigService configService
+@inject IThemeService themeService
+@inject IViewOptions viewOptions
+@inject IModelService modelService
+@inject Dependinator.UI.Modeling.Models.IModelMgr modelMgr
+@inject IPointerEventService pointerEventService
+@inject IApplicationEvents applicationEvents
+@inject IAiService aiService
+@inject ISnackbar snackbar
+
+@* Menu › Settings …: the preferences set once and then left alone, in one column of sections.
+   The toggles flipped many times a session (Edit Mode, the panels, the Lines and Rows filters)
+   stay in the menus. Every change is saved at once, like the AI section always was. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Settings</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-settings" data-testid="settings-dialog">
+      <div class="dep-settings__section">
+        <MudText Typo="Typo.overline" Class="dep-settings__heading">Appearance</MudText>
+        <div class="dep-settings__row">
+          <span class="dep-settings__label">Theme</span>
+          <MudRadioGroup T="AppTheme" Value="themeService.Theme" ValueChanged="SetThemeAsync" data-testid="settings-theme">
+            @foreach (var (theme, label, title) in Themes)
+            {
+              <MudRadio T="AppTheme" Value="theme" Dense="true" Color="Color.Primary" title="@title"
+                        data-checked="@(themeService.Theme == theme ? "true" : "false")"
+                        data-testid="@($"settings-theme-{theme.ToString().ToLowerInvariant()}")">@label</MudRadio>
+            }
+          </MudRadioGroup>
+        </div>
+        <div class="dep-settings__row">
+          <span class="dep-settings__label">Layout density</span>
+          <MudRadioGroup T="NodeLayoutDensity" Value="density" ValueChanged="SetDensityAsync" data-testid="settings-density">
+            @foreach (var (value, label) in Densities)
+            {
+              <MudRadio T="NodeLayoutDensity" Value="value" Dense="true" Color="Color.Primary"
+                        data-checked="@(density == value ? "true" : "false")"
+                        data-testid="@($"settings-density-{value.ToString().ToLowerInvariant()}")">@label</MudRadio>
+            }
+          </MudRadioGroup>
+        </div>
+        <div class="dep-settings__hint">
+          How much space the automatic layout leaves between nodes; used for the containers laid out from now on
+          (a new model, new parts after a parse, Reset Children Layout).
+        </div>
+      </div>
+
+      <div class="dep-settings__section">
+        <MudText Typo="Typo.overline" Class="dep-settings__heading">Diagram</MudText>
+        <MudCheckBox T="bool" Value="viewOptions.IsSoftLines" ValueChanged="SetSoftLinesAsync" Dense="true"
+                     Color="Color.Primary" Label="Soft lines"
+                     title="Draw lines faint until you select or hover a node; its lines, cycles, broken rules and paths stay at full strength (off: every line at full strength)."
+                     data-checked="@Checked(viewOptions.IsSoftLines)" data-testid="settings-soft-lines" />
+        <MudCheckBox T="bool" Value="viewOptions.DimUnrelatedLines" ValueChanged="SetDimUnrelatedLinesAsync" Dense="true"
+                     Color="Color.Primary" Label="Dim unrelated lines while a node or line is selected"
+                     data-checked="@Checked(viewOptions.DimUnrelatedLines)" data-testid="settings-dim-unrelated-lines" />
+        <MudCheckBox T="bool" Value="viewOptions.IsLinkCountWidthsShown" ValueChanged="SetLinkCountWidthsAsync"
+                     Dense="true" Color="Color.Primary" Label="Line widths by link count"
+                     title="Draw the selected node's or line's lines, and the Dependencies explorer's lines, thicker the more links they carry (off: one thin width)."
+                     data-checked="@Checked(viewOptions.IsLinkCountWidthsShown)" data-testid="settings-link-count-widths" />
+        <MudCheckBox T="bool" Value="viewOptions.IsProblemBadgesShown" ValueChanged="SetProblemBadgesAsync" Dense="true"
+                     Color="Color.Primary" Label="Problem badges on nodes"
+                     title="Marks the nodes that contain compile errors, cycles or dependencies that break a rule, with how many."
+                     data-checked="@Checked(viewOptions.IsProblemBadgesShown)" data-testid="settings-problem-badges" />
+        <MudCheckBox T="bool" Value="viewOptions.IsHiddenBadgesShown" ValueChanged="SetHiddenBadgesAsync" Dense="true"
+                     Color="Color.Primary" Label="Hidden node badges"
+                     title="Marks the nodes with children you hid, with how many."
+                     data-checked="@Checked(viewOptions.IsHiddenBadgesShown)" data-testid="settings-hidden-badges" />
+      </div>
+
+      <div class="dep-settings__section">
+        <MudText Typo="Typo.overline" Class="dep-settings__heading">Mouse</MudText>
+        <MudCheckBox T="bool" Value="pointerEventService.InvertScrollZoom" ValueChanged="SetInvertScrollZoomAsync"
+                     Dense="true" Color="Color.Primary" Label="Invert scroll zoom"
+                     title="Flips the mouse wheel zoom direction, e.g. for natural scrolling on macOS."
+                     data-checked="@Checked(pointerEventService.InvertScrollZoom)" data-testid="settings-invert-scroll-zoom" />
+      </div>
+
+      @if (CanIncludeTestProjects)
+      {
+        <div class="dep-settings__section">
+          <MudText Typo="Typo.overline" Class="dep-settings__heading">This model</MudText>
+          <MudCheckBox T="bool" Value="includeTestProjects" ValueChanged="SetIncludeTestProjectsAsync" Dense="true"
+                       Disabled="isParsing"
+                       Color="Color.Primary" Label="Include test projects"
+                       title="Re-parses the solution. Test projects are excluded by default."
+                       data-checked="@Checked(includeTestProjects)" data-testid="settings-include-test-projects" />
+          <div class="dep-settings__hint">Saved with this model; changing it parses the solution again.</div>
+        </div>
+      }
+
+      @if (aiService.IsAvailable)
+      {
+        <div class="dep-settings__section">
+          <MudText Typo="Typo.overline" Class="dep-settings__heading">AI</MudText>
+          <AiSettings ScrollIntoView="ShowAi" />
+        </div>
+      }
+
+      @if (Build.IsVsCodeExtWasm)
+      {
+        <div class="dep-settings__hint" data-testid="settings-vscode-hint">
+          More settings, such as following the active editor and refreshing on file changes, are in VS Code's
+          Settings under Extensions › Dependinator.
+        </div>
+      }
+    </div>
+  </DialogContent>
+  <DialogActions>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Close" data-testid="settings-close">Close</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // Opened from an AI provider menu's "AI settings …": scrolls to the AI section once it is shown.
+  [Parameter] public bool ShowAi { get; set; }
+
+  static readonly (AppTheme Theme, string Label, string? Title)[] Themes =
+  [
+    (AppTheme.System, "System", "Follows the system (or, in VS Code, the editor) color theme."),
+    (AppTheme.Light, "Light", null),
+    (AppTheme.Dark, "Dark", null),
+  ];
+
+  static readonly (NodeLayoutDensity Density, string Label)[] Densities =
+  [
+    (NodeLayoutDensity.Compact, "Compact"),
+    (NodeLayoutDensity.Balanced, "Balanced"),
+    (NodeLayoutDensity.Spacious, "Spacious"),
+  ];
+
+  NodeLayoutDensity density = NodeLayout.Density;
+  bool includeTestProjects;
+  bool isParsing; // The re-parse after Include test projects changed, which a second click must not overlap
+
+  public static async Task ShowAsync(IDialogService dialogService, bool showAi = false)
+  {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var parameters = new DialogParameters<SettingsDialog> { { d => d.ShowAi, showAi } };
+    var dialog = await dialogService.ShowAsync<SettingsDialog>((string?)null, parameters, options);
+    await dialog.Result;
+  }
+
+  protected override void OnInitialized() => includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
+
+  // Test projects only exist in C# solutions, and only the hosts that parse can re-parse.
+  bool CanIncludeTestProjects =>
+    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsSolution(modelMgr.ModelPath);
+
+  static string Checked(bool isOn) => isOn ? "true" : "false";
+
+  Task SetThemeAsync(AppTheme theme) => themeService.SetThemeAsync(theme);
+
+  async Task SetDensityAsync(NodeLayoutDensity value)
+  {
+    density = value;
+    NodeLayout.SetDensity(value);
+    await configService.SetAsync(config => config.LayoutDensity = value);
+  }
+
+  async Task SetSoftLinesAsync(bool isOn)
+  {
+    viewOptions.SetSoftLines(isOn);
+    await configService.SetAsync(config => config.SoftLines = isOn);
+    applicationEvents.TriggerUIStateChanged(); // Only the canvas CSS changes, the tiles stay
+  }
+
+  // The diagram settings are baked into the cached tiles, so the tiles are drawn again.
+  Task SetDimUnrelatedLinesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetDimUnrelatedLines(isOn), config => config.DimUnrelatedLines = isOn);
+
+  Task SetLinkCountWidthsAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetLinkCountWidthsShown(isOn), config => config.ShowLinkCountWidths = isOn);
+
+  Task SetProblemBadgesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetProblemBadgesShown(isOn), config => config.ShowProblemBadges = isOn);
+
+  Task SetHiddenBadgesAsync(bool isOn) =>
+    SetTileOptionAsync(() => viewOptions.SetHiddenBadgesShown(isOn), config => config.ShowHiddenBadges = isOn);
+
+  async Task SetTileOptionAsync(Action setViewOption, Action<Config> saveConfig)
+  {
+    setViewOption();
+    await configService.SetAsync(saveConfig);
+    modelService.ClearCache();
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  async Task SetInvertScrollZoomAsync(bool isOn)
+  {
+    pointerEventService.InvertScrollZoom = isOn;
+    await configService.SetAsync(config => config.InvertScrollZoom = isOn);
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  async Task SetIncludeTestProjectsAsync(bool isOn)
+  {
+    if (isParsing)
+      return;
+    isParsing = true;
+    includeTestProjects = isOn;
+    // The refresh path only shows discreet progress, so say what is happening.
+    snackbar.Add(isOn ? "Parsing with test projects ..." : "Parsing without test projects ...", Severity.Info);
+
+    // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
+    try
+    {
+      await modelService.SetIncludeTestProjectsAsync(isOn);
+    }
+    finally
+    {
+      isParsing = false;
+      includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
+    }
+  }
+
+  void Close() => MudDialog.Close();
+}

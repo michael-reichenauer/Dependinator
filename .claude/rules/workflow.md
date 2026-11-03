@@ -61,6 +61,13 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   `obj/.../AssemblyInfo.cs` changed during a parse: the Roslyn parser's design-time build of this
   solution rewrote Core's `BuildTime` metadata, and dotnet watch restarts on any Compile item change.
   Core now skips AssemblyInfo in design-time builds; keep build-time-varying values out of them.
+- The dev host's demo paths (`ExampleModel.WorkingSolutionPath`, the `gen-demo` output) are
+  hardcoded to `/workspaces/Dependinator`, the devcontainer path. In a cloud session (repo at
+  `/home/user/Dependinator`) the dev host shows "Solution file not found" and `record-demo` waits
+  for a model that never comes: `mkdir -p /workspaces && ln -sfn /home/user/Dependinator
+  /workspaces/Dependinator` first. The README images (`docs/images/hero.png`, `bicep.png`) can be
+  re-shot with a Playwright script that searches a node and steps the wheel zoom, saving a
+  screenshot per step to pick from (zoom drifts away from the pointer as containers open).
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 
@@ -108,6 +115,24 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   last 3 exchanges in the prompt), the `read_source` tool, `./scripts/ask-eval` (run it after a
   prompt or tool change). Still open: tool results carried across follow-ups, more eval cases
   from real questions. No paste route (decided with the user: multi-turn tools).
+- **Copilot provider (roadmap idea 10), next:** phase 1 (Nov 2) asks a VS Code language model
+  (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers; the user tried it (works
+  in his normal VS Code; a debug VS Code had Copilot disabled). Phase 2 (Nov 2): the model tools
+  (Ask panel, Suggest rules), the tool loop in C# in the LSP (`VsCodeToolsAgent` over
+  `McpAgentTools`), the extension making one `sendRequest` per turn. Phase 3 (Nov 2): editing
+  code by handing the fix prompt to Copilot Chat in agent mode ("Fix with Copilot",
+  `OpenAgentChatAsync`, `workbench.action.chat.open` with `mode: "agent"`; it edits with its own
+  tools and Keep/Undo review, no changed-files report back, the file watcher re-parses). Chat uses
+  its own model picker, not Settings › AI's. Still open, only if the hand-off feels too
+  disconnected: our own workspace-limited edit tools (read file, replace text) applied as VS Code
+  `WorkspaceEdit`s. Cannot be tried in a cloud session (no Copilot login): the user checks it in
+  VS Code.
+- **Codebase tour (roadmap idea 9), next:** phase 1 (Nov 3) is Help › Tour This Codebase
+  (`CodebaseTour.cs`: `TourPrompt`, `TourService`; `TourPanel`, `TourCallout`), all providers, the
+  tour played over the diagram, not saved. Phase 2: save the tour with the model (stops by node
+  name, so it survives a refresh and travels with cloud sync; plays in the browser app without AI),
+  edit it (remove, reorder, edit text, "Add to tour" from the node menu). Phase 3: topic tours
+  ("how does cloud sync work"), "Play as tour" from an Ask answer, `ask-eval` cases.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

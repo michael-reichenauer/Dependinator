@@ -2,20 +2,22 @@
 @using Dependinator.UI.Diagrams
 @inject IApplicationEvents applicationEvents
 @inject IViewContextService viewContext
+@inject Dependinator.UI.Diagrams.Interaction.ISelectionService selectionService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject INavigationService navigationService
 @inject ICanvasService canvasService
 @implements IDisposable
 
-@* Wayfinding bar under the app bar: the open model, then the chain of containers down to the
-   selected node or, with nothing selected, to the innermost open container under the viewport
-   center (the "you are here" a map app shows through its place labels). Every crumb pans and
-   zooms to that node; the model crumb fits the whole diagram. *@
-@if (ModelName.Length > 0)
+@* Wayfinding bar under the app bar, shown only while a node is selected: the open model, then
+   the chain of containers down to the selected node (just the model for a top-level node such
+   as the solution, which the model crumb already names). Every crumb pans and zooms to that node;
+   the model crumb fits the whole diagram. With nothing selected it is hidden, to keep the
+   diagram clear (the "you are here" chain under the viewport center still drives Escape and
+   the context menu, see ViewContextService). *@
+@if (ModelName.Length > 0 && selectionService.SelectedId.IsNode)
 {
-  var chain = Chain;
-  <nav class="dep-breadcrumb dep-toolbar-card @(IsSelectionChain ? "" : "dep-breadcrumb--context")"
-       aria-label="Location" data-testid="breadcrumb">
+  var chain = viewContext.GetSelectedChain();
+  <nav class="dep-breadcrumb dep-toolbar-card" aria-label="Location" data-testid="breadcrumb">
     <button type="button" class="dep-breadcrumb__item dep-breadcrumb__model" @onclick="FitToScreen"
             title="@ModelTitle" data-testid="breadcrumb-model">
       <MudIcon Icon="@ModelIcon" Size="Size.Small" Class="dep-breadcrumb__icon" />
@@ -33,18 +35,6 @@
 }
 
 @code {
-  bool IsSelectionChain;
-
-  IReadOnlyList<ViewContextItem> Chain
-  {
-    get
-    {
-      var selected = viewContext.GetSelectedChain();
-      IsSelectionChain = selected.Count > 0;
-      return IsSelectionChain ? selected : viewContext.GetViewCenterChain();
-    }
-  }
-
   string ModelPath => modelMgr.ModelPath;
   bool IsDesignModel => ModelPaths.IsDesignModel(ModelPath);
 

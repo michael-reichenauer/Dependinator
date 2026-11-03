@@ -33,11 +33,10 @@
         // flash the other theme (the app sets and stores the theme, see applyTheme).
         (function () {
             try {
-                var isDark = localStorage.getItem("dep-theme") === "dark"
-                    || (!localStorage.getItem("dep-theme")
-                        && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+                // Light until the app has stored a theme (Light is the default).
+                var isDark = localStorage.getItem("dep-theme") === "dark";
                 document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-                document.body.style.backgroundColor = isDark ? "#0D0F11" : "#FAFAFA";
+                document.body.style.backgroundColor = isDark ? "#101113" : "#FAFAFA";
             } catch (e) { }
         })();
     </script>

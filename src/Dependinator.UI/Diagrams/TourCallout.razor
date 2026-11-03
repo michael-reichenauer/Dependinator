@@ -1,0 +1,56 @@
+@using Dependinator.UI.Diagrams.Ai
+@inject ITourService tourService
+@implements IDisposable
+
+@* The codebase tour as it plays (TourService): one stop at a time over the bottom of the diagram,
+   like the first-run tips (CoachCallout), while the diagram zooms to and selects the stop's node.
+   Back and Next move between the stops; End tour (Done on the last stop) shows the tour panel again. *@
+@if (tourService.Playing is { } tour)
+{
+  var index = tourService.StopIndex;
+  var stop = tour.Stops[index];
+  var isLast = index == tour.Stops.Count - 1;
+  <div class="dep-coach dep-tour-callout dep-toolbar-card" role="dialog" aria-label="Codebase tour" data-testid="tour-callout"
+       data-stop="@(index + 1)">
+    <div class="dep-coach__header">
+      <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Route" Size="Size.Small" Color="Color.Tertiary" />
+      <span class="dep-coach__title" data-testid="tour-callout-title">@stop.Title</span>
+      <span class="dep-coach__count" data-testid="tour-callout-count">@(index + 1) of @tour.Stops.Count</span>
+    </div>
+    <div class="dep-tour-callout__node">
+      <RuleNodeLink Id="stop.Id" Display="@stop.LongName" TestId="tour-callout-node" />
+    </div>
+    @if (index == 0 && tour.Intro != "")
+    {
+      <div class="dep-coach__text dep-tour-callout__intro" data-testid="tour-callout-intro">@((MarkupString)SimpleMarkdown.ToHtml(tour.Intro))</div>
+    }
+    <div class="dep-coach__text dep-ai__markdown" data-testid="tour-callout-text">@((MarkupString)SimpleMarkdown.ToHtml(stop.Text))</div>
+    <div class="dep-coach__actions">
+      @if (!isLast)
+      {
+        <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="tourService.End" data-testid="tour-end">End tour</MudButton>
+      }
+      <MudSpacer />
+      <MudButton Size="Size.Small" Variant="Variant.Text" Disabled="index == 0" OnClick="tourService.BackAsync"
+                 StartIcon="@MudBlazor.Icons.Material.Filled.ChevronLeft" data-testid="tour-back">Back</MudButton>
+      @if (isLast)
+      {
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="tourService.End"
+                   data-testid="tour-done">Done</MudButton>
+      }
+      else
+      {
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="tourService.NextAsync"
+                   EndIcon="@MudBlazor.Icons.Material.Filled.ChevronRight" data-testid="tour-next">Next</MudButton>
+      }
+    </div>
+  </div>
+}
+
+@code {
+  protected override void OnInitialized() => tourService.Changed += OnChanged;
+
+  void OnChanged() => InvokeAsync(StateHasChanged);
+
+  public void Dispose() => tourService.Changed -= OnChanged;
+}

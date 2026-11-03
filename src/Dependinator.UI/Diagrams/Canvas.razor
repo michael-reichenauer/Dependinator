@@ -17,9 +17,11 @@
 <PathPanel />
 <RulesPanel />
 <AskPanel />
+<TourPanel />
 <HiddenNodesPanel />
 <Minimap />
 <CoachCallout />
+<TourCallout />
 <AppProgress />
 
 
@@ -61,12 +63,11 @@
                         stroke-opacity: 1;
                     }
 
-                    /* Lines unrelated to the selection fade; hovering one brings it back. */
-                    .line-dim {
-                        opacity: 0.18;
-                    }
+                    /* Lines unrelated to the selection fade, and with soft lines on, resting
+                       lines too (see LineCss); hovering a line brings it back. */
+                    @LineCss
 
-                    g.line:hover .line-dim {
+                    g.line:hover .line-vis {
                         opacity: 1;
                     }
 

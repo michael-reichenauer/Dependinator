@@ -1,9 +1,11 @@
 @inject ICoachService coach
+@inject ITourService tourService
 @implements IDisposable
 
 @* The first-run tour's callout (CoachService): one card at a time over the bottom of the
-   diagram, saying what to try; it moves on by itself when the user does it. *@
-@if (coach.IsActive)
+   diagram, saying what to try; it moves on by itself when the user does it. Hidden while a codebase
+   tour plays (TourCallout), which takes the same place. *@
+@if (coach.IsActive && tourService.Playing is null)
 {
   var card = coach.Card;
   <div class="dep-coach dep-toolbar-card" role="dialog" aria-label="Tips" data-testid="coach"
@@ -33,9 +35,17 @@
 }
 
 @code {
-  protected override void OnInitialized() => coach.Changed += OnChanged;
+  protected override void OnInitialized()
+  {
+    coach.Changed += OnChanged;
+    tourService.Changed += OnChanged;
+  }
 
   void OnChanged() => InvokeAsync(StateHasChanged);
 
-  public void Dispose() => coach.Changed -= OnChanged;
+  public void Dispose()
+  {
+    coach.Changed -= OnChanged;
+    tourService.Changed -= OnChanged;
+  }
 }

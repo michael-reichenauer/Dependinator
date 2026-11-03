@@ -61,14 +61,14 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     // Clicking a cycle frames its nodes inside their opened container and picks it: its lines
     // stay red while the other cycles' lines fade (the demo's Core Utils namespace holds two
     // cycles), and so do the lines that do not touch its nodes, as if they were selected (but
-    // without the selection's thicker lines, even with View › Line Widths by Link Count on).
+    // without the selection's thicker lines, even with Settings › Line widths by link count on).
     // Clicking it again shows all cycles alike.
     [E2EFact]
     public async Task ClickCycle_ShouldShowItsNodes_AndDimTheOtherCycles_UntilClickedAgain()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
-        await App.ToggleSubMenuItemAsync("menu-view", "menu-link-count-widths", true);
+        await App.ToggleSettingAsync("settings-link-count-widths", true);
         await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
         ILocator row = Page.GetByTestId("cycles-item-show").Filter(new() { HasText = "ExceptionHandling" });
         ILocator dimmedCycleLines = Page.Locator("#svgcanvas .line-cycle.line-dim");
@@ -77,7 +77,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await row.ClickAsync();
         await Expect(row).ToHaveAttributeAsync("data-selected", "true");
-        await Expect(Page.GetByTestId("breadcrumb-item").Last).ToHaveTextAsync("Utils");
+        // Picking a cycle selects no node, so the breadcrumb stays hidden.
+        await Expect(Page.GetByTestId("breadcrumb")).ToBeHiddenAsync();
         await Expect(App.NodeLabel("ExceptionHandling")).ToBeVisibleAsync();
         await Expect(dimmedCycleLines.First).ToBeAttachedAsync();
         await Expect(brightCycleLines.First).ToBeAttachedAsync();
@@ -113,19 +114,19 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     // The diagram marks where the cycles are: the top-level solution node has a badge counting
-    // the problems inside it, which the View menu turns off and on again.
+    // the problems inside it, which Settings turns off and on again.
     [E2EFact]
-    public async Task ProblemBadges_ShouldMarkTheSolution_AndFollowTheViewMenu()
+    public async Task ProblemBadges_ShouldMarkTheSolution_AndFollowTheSetting()
     {
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
         ILocator badges = Page.Locator(".problemBadge");
         await Expect(Page.Locator(".problemBadge:not([data-warnings='0'])").First).ToBeAttachedAsync();
 
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await App.ToggleSettingAsync("settings-problem-badges", false);
         await Expect(badges).ToHaveCountAsync(0);
 
-        await (await App.OpenSubMenuItemAsync("menu-view", "menu-problem-badges")).ClickAsync();
+        await App.ToggleSettingAsync("settings-problem-badges", true);
         await Expect(badges.First).ToBeAttachedAsync();
     }
 
@@ -239,6 +240,54 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         // Copying the fix prompt accepts nothing.
         await Page.GetByTestId("accept-cycle-cancel").ClickAsync();
         await Expect(cycle).ToBeVisibleAsync();
+    }
+
+    [E2EFact]
+    public async Task AskHowToBreak_ShouldGiveAChangeToFix_WhenClaudeSuggestsAcceptingTheCycle()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-cycles")).ClickAsync();
+        ILocator open = Page.GetByTestId("cycles-item");
+        await Expect(open.First).ToBeVisibleAsync();
+        int openCount = await open.CountAsync();
+
+        // In test mode a pair is accepted first (see AskClaude_ShouldFillInTheReason_...): no fix
+        // under it, but a way to ask how to break it, and fixing it later beside accepting.
+        await open.Filter(new() { HasTextString = "Result<T>" }).GetByTestId("cycles-review").ClickAsync();
+        await Page.GetByTestId("accept-cycle-expand").ClickAsync();
+        await Page.GetByTestId("accept-cycle-suggest").ClickAsync();
+        ILocator verdict = Page.GetByTestId("accept-cycle-suggestion");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "accept");
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept");
+        await Expect(Page.GetByTestId("accept-cycle-fix-later")).ToBeVisibleAsync();
+
+        // Asked how to break it, test mode always answers with a change, which the fix then makes.
+        ILocator askBreak = Page.GetByTestId("accept-cycle-break-ask");
+        await Expect(askBreak).ToHaveTextAsync("Ask how to break it");
+        await askBreak.ClickAsync();
+        ILocator answers = Page.GetByTestId("accept-cycle-answer");
+        await Expect(answers).ToHaveCountAsync(2);
+        await Expect(answers.Last).ToHaveTextAsync("Claude 2 · Break");
+        await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+        // Asked for, the change is no second opinion, and the accepting answer's reason stays.
+        await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-reason")).ToHaveValueAsync("Suggested in test mode");
+        await Expect(askBreak).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
+
+        // Back on the accepting answer, Fix later lists the cycle with no change planned.
+        await answers.First.ClickAsync();
+        await Expect(askBreak).ToBeVisibleAsync();
+        await Page.GetByTestId("accept-cycle-fix-later").ClickAsync();
+        await Expect(open).ToHaveCountAsync(openCount - 1);
+        ILocator toFix = Page.GetByTestId("cycles-tofix-item");
+        await Expect(toFix.GetByTestId("cycles-tofix-change")).ToHaveTextAsync("No change planned");
+        await Expect(toFix.GetByTestId("cycles-tofix-copy-fix")).ToHaveCountAsync(0);
+        await toFix.GetByTestId("cycles-tofix-remove").ClickAsync();
+        await Expect(open).ToHaveCountAsync(openCount);
     }
 
     [E2EFact]
@@ -390,8 +439,17 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await ask.ClickAsync();
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
 
-        // Stopped while it runs: an error, and it can be started again.
-        await fix.ClickAsync();
+        // One fix button for the default, like the ask button: its menu greys the Claude API (it
+        // cannot change code) and offers the fix prompt to copy instead.
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToHaveCountAsync(0);
+        await Page.GetByTestId("accept-cycle-fix-menu").ClickAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-claude")).ToHaveClassAsync(new Regex("mud-disabled"));
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-code")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("accept-cycle-fix-with-chat")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToBeVisibleAsync();
+
+        // Started from the menu, then stopped while it runs: an error, and it can be started again.
+        await Page.GetByTestId("accept-cycle-fix-with-code").ClickAsync();
         await Expect(Page.GetByTestId("accept-cycle-fixing")).ToBeVisibleAsync();
         await Expect(fix).ToBeDisabledAsync();
         await Page.GetByTestId("accept-cycle-fix-stop").ClickAsync();

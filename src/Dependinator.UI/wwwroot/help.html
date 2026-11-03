@@ -179,8 +179,9 @@
                 add your own nodes, links, notes and zones, or sketch an architecture from an empty model.</li>
             <li class="feature"><b>Export</b> — save the current view, a selected area or the whole diagram
                 as an SVG or PNG image.</li>
-            <li class="feature"><b>Ask an AI</b> — ask about the model, review a cycle or a broken rule, get rules
-                suggested, or have Claude Code improve comments or make a fix (see <a href="#ai">AI help</a>).</li>
+            <li class="feature"><b>Ask an AI</b> — ask about the model, take a guided tour of the codebase, review a
+                cycle or a broken rule, get rules suggested, or have Claude Code or Copilot improve comments or make
+                a fix (see <a href="#ai">AI help</a>).</li>
             <li class="feature"><b>Optional device sync</b> — enable device sync to keep your models and
                 views in sync across devices.</li>
         </ul>
@@ -196,9 +197,9 @@
                 <i>PanZoomService</i>; <kbd>↑</kbd> <kbd>↓</kbd> and <kbd>Enter</kbd> pick a result.</li>
             <li>Use <b>Fit to Screen</b> (the toolbar button, <kbd>Home</kbd>, or the right-click menu) to
                 recenter and reset the view at any time.</li>
-            <li>The <b>breadcrumb</b> under the toolbar shows where you are: the model, then the containers down
-                to the selected node (or, with nothing selected, to the container around the middle of the
-                screen). Click any crumb to zoom to it; the model crumb fits the whole diagram.</li>
+            <li>The <b>breadcrumb</b> under the toolbar shows, while a node is selected, where it is: the model,
+                then the containers down to the selected node. Click any crumb to zoom to it; the model crumb fits
+                the whole diagram. With nothing selected it is hidden, to keep the diagram clear.</li>
             <li><b>Back</b> and <b>Forward</b> (the toolbar arrows, <kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd>,
                 or <kbd>Backspace</kbd> / <kbd>Shift</kbd>+<kbd>Backspace</kbd>) retrace your jumps: every
                 search result, explorer row, breadcrumb click, double-click and Fit to Screen is a step
@@ -218,7 +219,9 @@
         </p>
         <p>
             <b>New here?</b> On the first start a short tour walks through the basics (zoom, click a node,
-            open the explorer, search); <b>Menu › Help › Show Tips</b> brings it back any time.
+            open the explorer, search); <b>Menu › Help › Show Tips</b> brings it back any time. To get to know the
+            code itself, <b>Menu › Help › Tour This Codebase …</b> has an AI walk you through its key parts (see
+            <a href="#ai">AI help</a>).
         </p>
         <ul>
             <li class="feature"><b>Show references / dependencies</b> — open the Dependencies explorer for the
@@ -242,12 +245,15 @@
                 them again, until it is turned off (it is not saved). The eye count in the toolbar (or
                 <b>View › Show Hidden Nodes List</b>) lists the nodes you dimmed or hid, to switch them between dimmed
                 and hidden, go to one, or show them again. A grey badge on a node counts the children you hid
-                (<b>View › Show Hidden Node Badges</b>); its menu's <b>List Hidden Children</b> lists them.</li>
+                (<b>Settings › Hidden node badges</b>); its menu's <b>List Hidden Children</b> lists them.</li>
+            <li class="feature"><b>Soft lines</b> — lines are drawn faint, so the nodes stand out; select a node,
+                or rest the mouse on one for a moment, to see its lines at full strength. Cycles, broken rules and
+                paths always show at full strength (<b>Settings › Soft lines</b>, on by default).</li>
             <li class="feature"><b>See only its lines</b> — while a node (or line) is selected, every line that does
-                not touch it is faded (<b>View › Dim Unrelated Lines</b>, on by default); hover a faded line to
+                not touch it is faded (<b>Settings › Dim unrelated lines</b>, on by default); hover a faded line to
                 see it at full strength.</li>
             <li class="feature"><b>How many links</b> — hover a line to see how many links it carries. To compare
-                them at a glance, turn on <b>View › Line Widths by Link Count</b> (off by default): the selection's
+                them at a glance, turn on <b>Settings › Line widths by link count</b> (off by default): the selection's
                 lines and the Dependencies explorer's lines are then drawn thicker the more links they carry.</li>
             <li class="feature"><b>Legend</b> — <b>View › Show Legend</b> explains every line style and node icon.</li>
             <li class="feature"><b>While parsing</b> — the overlay shows the model being parsed and the time so far; "Continue in
@@ -263,12 +269,13 @@
                 whether the cycle is intended, or how to break it; the prompt includes the source code behind the cycle's
                 thinnest dependencies in VS Code and the local web app. For a second opinion, ask again or ask another AI:
                 each answer is kept, labeled by where it came from, and when they differ you pick the one that convinces
-                you. An accepting answer fills in the reason. A breaking one shows the change and offers <b>Copy fix
-                prompt</b>, a prompt for Claude Code (or another AI that can change the code) to make it, or <b>Fix with
-                Claude Code</b> when Claude Code is turned on; <b>Fix
-                later</b>, which moves the cycle to the <b>To fix</b> section with the planned change (its lines stay red,
-                and its fix prompt can be copied from there); or <b>Accept anyway</b>, with the suggested fix kept in the
-                reason. Nothing is saved until you decide. If a refactor breaks an accepted or to-fix cycle, or a node
+                you. An accepting answer fills in the reason; <b>Ask how to break it</b> under it asks for the change
+                that would break the cycle anyway. A breaking one shows the change and offers <b>Fix with</b> the default
+                AI that can change code (Claude Code, or Copilot in VS Code), with the <b>▾</b> menu beside it for another
+                one or <b>Copy fix prompt</b>, a prompt for any AI that can change the code (the button itself where none
+                can); <b>Fix later</b>, which moves the cycle to the <b>To fix</b> section with the planned change (its
+                lines stay red, and its fix prompt can be copied from there); or <b>Accept anyway</b>, with the suggested
+                fix kept in the reason. Nothing is saved until you decide. If a refactor breaks an accepted or to-fix cycle, or a node
                 joins one, the refresh message says so, and the entry is marked and listed first in its section until you
                 remove it.</li>
             <li class="feature"><b>Architecture rules</b> — <b>View › Show Architecture Rules</b> lets you declare
@@ -327,7 +334,7 @@
 
         <h2 id="ai">AI help</h2>
         <p>
-            Wherever Dependinator can use an AI, it asks the one you chose. There are three:
+            Wherever Dependinator can use an AI, it asks the one you chose. There are four:
         </p>
         <ul>
             <li class="feature"><b>Claude</b> — the Anthropic API with your own API key (from console.anthropic.com),
@@ -338,6 +345,9 @@
                 your own Claude login. It runs in the model's folder and reads the code to check its answer. It is off
                 until you turn it on in <b>Settings › AI</b>, after a warning: it is unclear whether Anthropic's terms
                 allow a third-party tool to use a Claude subscription this way.</li>
+            <li class="feature"><b>Copilot</b> — in VS Code, a language model VS Code offers to extensions, GitHub
+                Copilot's by default, with your Copilot plan. <b>Settings › AI</b> chooses the model. To change code it
+                hands the prompt to Copilot Chat in agent mode, where you keep or undo each edit.</li>
             <li class="feature"><b>Your AI chat</b> — free: copy the prompt into claude.ai or any AI chat, then paste its
                 answer back, where it is read as soon as it is pasted. <b>Open claude.ai</b> opens a chat to paste it
                 into.</li>
@@ -345,20 +355,24 @@
         <p>
             The first time you ask, the choices are shown side by side, and the one you pick becomes the
             <b>default</b>. From then on the button asks the default at once, and the <b>▾</b> menu beside it asks
-            another AI, once. <b>Settings › AI</b> changes the default and turns Claude Code on or off. If asking
+            another AI, once. <b>Settings › AI</b> changes the default, turns Claude Code on or off and picks Copilot's model. If asking
             fails (no key, a key not accepted, no credits left, Claude Code not installed), the AI chat route is
             offered instead. <b>Show prompt</b> shows what is sent or copied before you send it. Claude and Claude
-            Code are offered in VS Code and the local web app; the web app at dependinator.com offers the AI chat
-            route.
+            Code are offered in VS Code and the local web app, Copilot in VS Code; the web app at dependinator.com
+            offers the AI chat route.
         </p>
         <ul>
             <li class="feature"><b>Ask About the Model</b> — the speech-bubble button in the app bar (or
                 <b>View › Ask About the Model</b>) opens a panel for questions such as where something is handled or
-                what a change would touch. Claude or Claude Code looks the answer up in the model with Dependinator's
+                what a change would touch. Claude, Claude Code or Copilot looks the answer up in the model with Dependinator's
                 tools, and reads a node's code when it needs to; each lookup shows as a line while it works. Node names
                 in the answer are links to the diagram, and <b>Show all</b> zooms to every node it names. Ask
                 follow-ups: the AI sees the conversation until you clear it. The chip under the question box shows which AI
                 answers and switches to another. VS Code and the local web app only.</li>
+            <li class="feature"><b>Tour This Codebase …</b> — in <b>Menu › Help</b>: an AI reads the model's structure
+                and dependencies and picks 5 to 8 key parts in the order a newcomer should read them. <b>Start tour</b>
+                then zooms to each one with a few words on it; <b>Back</b> and <b>Next</b> step through the stops. The
+                tour is not saved yet: ask again for a new one.</li>
             <li class="feature"><b>Review a cycle or a broken rule</b> — <b>Get an AI opinion</b> in the review (see
                 <b>Find cycles</b> and <b>Architecture rules</b> above).</li>
             <li class="feature"><b>Suggest rules …</b> — in the Rules panel, asks for architecture rules from the
@@ -369,10 +383,13 @@
                 here?" by default).</li>
             <li class="feature"><b>Improve Comments …</b> — in the node menu and the About Node dialog: Claude Code
                 adds or rewrites the comments of namespaces and types, which the diagram shows as descriptions;
-                without Claude Code the prompt is copied for any coding agent.</li>
-            <li class="feature"><b>Fix with Claude Code</b> — when an answer suggests breaking a cycle or fixing a
-                broken rule, Claude Code makes the change in the model's folder (edits only, no commands), after a
-                warning about uncommitted changes, then lists the changed files and re-parses.</li>
+                <b>Improve with Copilot</b> hands the same prompt to Copilot Chat in VS Code, and without either the
+                prompt is copied for any coding agent.</li>
+            <li class="feature"><b>Fix with …</b> — when an answer suggests breaking a cycle or fixing a broken rule,
+                one button makes the change with the default AI that can change code. Claude Code makes it in the
+                model's folder (edits only, no commands), after a warning about uncommitted changes, then lists the
+                changed files and re-parses. Copilot makes it in Copilot Chat's agent mode, and the diagram re-parses
+                when the files change. The <b>▾</b> menu beside it picks another AI or copies the fix prompt.</li>
             <li class="feature"><b>AI agents can ask Dependinator</b> — in VS Code a local MCP server lets Copilot's
                 agent mode, and Claude Code after "Dependinator: Connect Claude Code", look up nodes, dependencies,
                 paths, cycles and rules of the open diagram.</li>
@@ -440,9 +457,10 @@
 
         <div class="card">
             <b>The menu</b> (the <span style="color:var(--brand-dark)">☰</span> button, top-left) is your
-            hub: search and fit, undo/redo and edit mode, export as image, view options and the light/dark
-            theme, your models (<b>Models › Manage Models</b> lists the workspace's solutions and Bicep deployments, recent models,
-            models in the cloud and design models), settings, and help.
+            hub: search and fit, undo/redo and edit mode, export as image, view options, your models
+            (<b>Models › Manage Models</b> lists the workspace's solutions and Bicep deployments, recent models,
+            models in the cloud and design models), <b>Settings …</b> (the theme, light by default, and the layout
+            density, diagram lines and badges, mouse zoom, this model's test projects and the AI), and help.
         </div>
 
         <h2>VS Code vs. the web app</h2>

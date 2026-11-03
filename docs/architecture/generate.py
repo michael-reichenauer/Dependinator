@@ -217,11 +217,12 @@ write("1-context.svg", d, "Context view of Dependinator: developers use the VS C
 # ------------------------------------------------------------------------------------------
 d = Diagram(1500, 700, "Dependinator hosts view")
 d.group(20, 60, 520, 620, "VS Code (the product)", "src/DependinatorVsCode · one .vsix per platform on the Marketplace")
-d.box("ext", 50, 110, 460, 125, "Extension host · TypeScript", [
+d.box("ext", 50, 110, 460, 145, "Extension host · TypeScript", [
     "extension.ts: commands, status bar, follow the active editor,",
     "    auto refresh on file changes, open a node's source",
     "languageServer.ts: starts the bundled server (server/<rid>/)",
-    "cloudSyncAuth.ts, claudeApiKey.ts: sign-in, secret storage"], icon="Utility")
+    "cloudSyncAuth.ts, claudeApiKey.ts: sign-in, secret storage",
+    "languageModels.ts: asks VS Code's models (vscode.lm)"], icon="Utility")
 d.box("webview", 50, 310, 220, 140, "Webview", [
     "**Blazor WebAssembly",
     "Dependinator.Wasm, .UI, .Core",
@@ -456,7 +457,7 @@ d.box("lmh", 1070, 110, 320, 100, "LspMessageHandler", ["notification lsp/messag
 d.box("rpc2", 1070, 260, 320, 90, "JsonRpcService (Core)", ["the same transport class as the UI"], icon="Communication")
 d.box("targets", 1070, 400, 320, 190, "[Rpc] targets", [
     "IParserService → Roslyn or Bicep parser", "IWorkspaceFileService: the workspace's", "  .sln files and Bicep entry points,", "  source text for excerpts",
-    "ICloudSyncRpcService → sync API (HTTP)", "IClaudeService → Anthropic API"], icon="Parsing", tint=ACCENT)
+    "ICloudSyncRpcService → sync API (HTTP)", "IClaudeService → Anthropic API", "IVsCodeModelService → the extension"], icon="Parsing", tint=ACCENT)
 d.box("wfs", 1070, 640, 320, 90, "WorkspaceFolderService", ["workspace folders from initialize", "and folder-change notifications"], icon="Files")
 d.edge("lmh.b", "rpc2.t", None, ACCENT, both=True)
 d.edge("rpc2.b", "targets.t", None, ACCENT, both=True)
