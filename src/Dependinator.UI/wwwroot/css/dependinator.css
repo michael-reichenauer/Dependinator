@@ -953,6 +953,73 @@
     color: var(--mud-palette-warning-darken);
 }
 
+/* The codebase tour panel (TourPanel.razor): the AI's stops, numbered, each starts the tour
+   there; and the callout that plays it (TourCallout.razor), styled like the first-run tips. */
+.dep-tour {
+    width: min(440px, calc(100vw - 30px));
+}
+
+.dep-tour__verdict {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.dep-tour__stops {
+    list-style: none;
+    margin: 4px 0 0;
+    padding: 0;
+}
+
+.dep-tour__stop {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-tour__stop-number {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.dep-tour__stop-number:hover,
+.dep-tour__stop-number:focus-visible {
+    outline: 2px solid var(--mud-palette-primary-lighten);
+    outline-offset: 1px;
+}
+
+.dep-tour__stop-body {
+    min-width: 0;
+}
+
+.dep-tour__stop-title {
+    font-weight: 600;
+}
+
+/* Opaque, unlike the tips: the stop's text is longer, and the diagram under it is busy. */
+.dep-tour-callout.dep-toolbar-card {
+    background: var(--mud-palette-surface);
+}
+
+.dep-tour-callout__node {
+    font-size: 0.8rem;
+}
+
+.dep-tour-callout__intro {
+    color: var(--mud-palette-text-secondary);
+}
+
 /* The architecture rules panel (RulesPanel.razor): rule rows with their violations, add form. */
 .dep-rules__rule {
     padding: 4px 0;

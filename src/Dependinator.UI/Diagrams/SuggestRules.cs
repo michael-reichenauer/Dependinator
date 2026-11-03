@@ -135,10 +135,9 @@ static class SuggestRulesPrompt
 
     public static string Build(IModel model)
     {
-        var (listed, leftOut) = ListContainers(model);
-        if (listed.Count == 0)
+        var outline = Outline(model);
+        if (outline == "")
             return "";
-        var typeCounts = TypeCounts(model);
 
         var text = new StringBuilder();
         text.AppendLine("# Suggest architecture rules").AppendLine();
@@ -149,8 +148,25 @@ static class SuggestRulesPrompt
                 + "dependencies that break each rule and draws them in the diagram, so a rule guards the "
                 + "architecture as the code changes."
         );
+        text.AppendLine().Append(outline);
+        AppendRules(text, model);
+        text.AppendLine().Append(TaskSection);
+        return text.ToString();
+    }
 
-        text.AppendLine().AppendLine($"## The structure of {DisplayPath(model, model.Path)}").AppendLine();
+    // The model's structure (containers, as many levels as fit) and the dependencies between the
+    // containers listed deepest, as sections of a prompt; empty when the model has no containers.
+    // The tour prompt (TourPrompt) shares it, without the external references (withExternals),
+    // which a tour does not visit and which would take the room of the codebase's own levels.
+    internal static string Outline(IModel model, bool withExternals = true)
+    {
+        var (listed, leftOut) = ListContainers(model, withExternals);
+        if (listed.Count == 0)
+            return "";
+        var typeCounts = TypeCounts(model);
+
+        var text = new StringBuilder();
+        text.AppendLine($"## The structure of {DisplayPath(model, model.Path)}").AppendLine();
         text.AppendLine("Containers, with the number of types inside each; deeper levels are left out.").AppendLine();
         var depth = listed.ToDictionary(n => n, n => n.Ancestors().Count(a => !a.IsRoot));
         foreach (var node in listed)
@@ -166,8 +182,6 @@ static class SuggestRulesPrompt
             text.AppendLine($"- … and {leftOut} more top-level containers, left out with their dependencies");
 
         AppendDependencies(text, listed);
-        AppendRules(text, model);
-        text.AppendLine().Append(TaskSection);
         return text.ToString();
     }
 
@@ -187,10 +201,12 @@ static class SuggestRulesPrompt
     // limit), each right after its parent so the indented list reads as a tree.
     internal static List<Node> ListedNodes(IModel model) => ListContainers(model).Listed;
 
-    static (List<Node> Listed, int LeftOut) ListContainers(IModel model)
+    static (List<Node> Listed, int LeftOut) ListContainers(IModel model, bool withExternals = true)
     {
         HashSet<Node> included = [];
-        var level = Containers(model.Root).ToList();
+        var level = Containers(model.Root)
+            .Where(n => withExternals || n.Type != Dependinator.Core.Parsing.NodeType.Externals)
+            .ToList();
         var leftOut = Math.Max(0, level.Count - MaxListedNodes);
         while (level.Count > 0)
         {

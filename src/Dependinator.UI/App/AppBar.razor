@@ -31,6 +31,7 @@
 @inject IKeyboardService keyboardService
 @inject Dependinator.UI.Diagrams.Interaction.IViewHistoryService viewHistory
 @inject Dependinator.UI.Diagrams.IAskModelService askModelService
+@inject Dependinator.UI.Diagrams.ITourService tourService
 @implements IDisposable
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
@@ -323,6 +324,11 @@
                              title="Replays the short tour of the basics shown on the first start."
                              data-testid="menu-tips">
                     Show Tips
+                </MudMenuItem>
+                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Route" OnClick="tourService.Open"
+                             title="An AI picks the key parts of this codebase, and the tour walks you through them."
+                             data-testid="menu-tour">
+                    Tour This Codebase …
                 </MudMenuItem>
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.NewReleases" OnClick="ShowWhatsNewAsync"
                              title="Opens the change log: what is new in each release, and what is coming in the next one."
@@ -752,6 +758,7 @@
             viewOptions.SetCyclesShown(false);
             viewOptions.SetHiddenNodesShown(false);
             viewOptions.SetAskShown(false);
+            viewOptions.SetTourShown(false);
             pathFinderService.Close();
         }
         viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
@@ -767,6 +774,7 @@
             viewOptions.SetRulesShown(false);
             viewOptions.SetHiddenNodesShown(false);
             viewOptions.SetAskShown(false);
+            viewOptions.SetTourShown(false);
         }
         viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
         modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles

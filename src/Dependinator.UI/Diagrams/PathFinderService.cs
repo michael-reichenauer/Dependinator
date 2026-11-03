@@ -115,6 +115,7 @@ class PathFinderService(
         viewOptions.SetRulesShown(false);
         viewOptions.SetHiddenNodesShown(false); // It sits in the same corner
         viewOptions.SetAskShown(false);
+        viewOptions.SetTourShown(false);
         Notify();
     }
 

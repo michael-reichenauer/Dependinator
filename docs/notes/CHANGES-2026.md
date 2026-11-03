@@ -330,6 +330,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   (`CyclePrompt.Build(..., acceptedAnswer)`, an `AiFollowUp` of `AiOpinion`); its Break answer
   brings the usual fix button. Fix later shows beside Accept too. No fix runs on an accepting
   answer itself, since it has no change for the user to read first.
+- **Tour this codebase (Nov 3).** Help › Tour This Codebase … opens a panel (`TourPanel`) where
+  any AI provider plans a tour of 5–8 key nodes in reading order (`TourPrompt`, the model outline
+  of Suggest rules without the externals; the chat route reads "Stop:" lines back). Dependinator
+  leaves out the stops that are no nodes, and Start tour plays it in a callout like the tips
+  (`TourCallout`), zooming to and selecting each stop's node, with Back and Next. Phase 1: the tour
+  is not saved yet.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

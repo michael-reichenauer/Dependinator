@@ -1,0 +1,130 @@
+@using Dependinator.UI.Diagrams.Ai
+@inject ITourService tourService
+@inject IViewOptions viewOptions
+@inject IApplicationEvents applicationEvents
+@inject Modeling.Models.IModelMgr modelMgr
+@implements IDisposable
+
+@* Tour This Codebase (TourService), on the right like the other panels so the diagram stays in
+   view: an AI picks a few key nodes in the order a newcomer should read them (AiOpinion, open at
+   once since asking is what the panel is for), Dependinator leaves out the ones that are no nodes,
+   and Start tour plays it (TourCallout), the panel hidden meanwhile. The panel stays alive while it
+   is closed, so an answer that takes a while still arrives; another model starts it over. *@
+@if (modelPath is not null)
+{
+  <div class="dep-panel dep-tour dep-toolbar-card"
+       style="@(viewOptions.IsTourShown && tourService.Playing is null ? "" : "display: none")" data-testid="tour-panel">
+    <div class="dep-panel__header">
+      <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Route" Size="Size.Small" />
+      <span class="dep-panel__title">Tour This Codebase</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="tourService.Close"
+                     data-testid="tour-close" />
+    </div>
+    <div class="dep-panel__list">
+      <div class="dep-panel__hint" data-testid="tour-intro">
+        An AI reads the model's structure and dependencies and picks the key parts, in the order a newcomer
+        should read them. The tour then zooms to each one, with a few words on it.
+      </div>
+      <AiOpinion @key="generation" TAnswer="CodebaseTour" TestId="tour" GetPrompt="GetPrompt" Ask="Ask"
+                 ParsePasted="tourService.ParsePasted" IsExpandedAtStart="true"
+                 ExpandText="Ask AI for a tour" AnswerTitle="Tour"
+                 RouteText="Claude reads the model's structure and dependencies and plans a tour here."
+                 AskTitle="Ask Claude to plan a tour of this codebase"
+                 CopyTitle="Copy a prompt with the model's structure and dependencies"
+                 PromptCopiedText="The prompt is copied, with the model's structure and dependencies.">
+        <AnswerContent Context="tour">
+          <div class="dep-ai__suggestion" data-testid="tour-answer">
+            <div class="dep-tour__verdict">
+              <span class="dep-ai__suggestion-verdict">@($"{tour.Source.Name()} plans {tour.Verdict}")</span>
+              <MudSpacer />
+              <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                         StartIcon="@MudBlazor.Icons.Material.Filled.PlayArrow"
+                         title="Walk through the stops, zooming to each one" OnClick="() => tourService.StartAsync(tour)"
+                         data-testid="tour-start">Start tour</MudButton>
+            </div>
+            @if (tour.Intro != "")
+            {
+              <div class="dep-ai__markdown" data-testid="tour-answer-intro">@((MarkupString)SimpleMarkdown.ToHtml(tour.Intro))</div>
+            }
+            <ol class="dep-tour__stops">
+              @for (var i = 0; i < tour.Stops.Count; i++)
+              {
+                var index = i;
+                var stop = tour.Stops[i];
+                <li class="dep-tour__stop" data-testid="tour-stop">
+                  <button type="button" class="dep-tour__stop-number" title="Start the tour here"
+                          @onclick="() => tourService.StartAsync(tour, index)" data-testid="tour-stop-start">@(index + 1)</button>
+                  <div class="dep-tour__stop-body">
+                    <div class="dep-tour__stop-title" data-testid="tour-stop-title">@stop.Title</div>
+                    <RuleNodeLink Id="stop.Id" Display="@stop.LongName" TestId="tour-stop-node" />
+                  </div>
+                </li>
+              }
+            </ol>
+            @if (tour.LeftOutCount > 0)
+            {
+              <div class="dep-ai__suggestion-note" data-testid="tour-left-out">@LeftOutText(tour)</div>
+            }
+          </div>
+        </AnswerContent>
+      </AiOpinion>
+    </div>
+  </div>
+}
+
+@code {
+  // The model the tour is about ("" while a model loads), null before the panel first opened.
+  string? modelPath;
+
+  // A new model starts the panel over: the answers name the old model's nodes.
+  int generation;
+
+  bool wasShown;
+
+  Func<AiSource, Action<SuggestStep>, Task<Result<CodebaseTour>>>? Ask =>
+    tourService.IsAvailable ? tourService.AskAsync : null;
+
+  Task<string> GetPrompt() => Task.FromResult(tourService.GetPrompt());
+
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    tourService.Changed += OnChanged;
+  }
+
+  void OnChanged() => InvokeAsync(StateHasChanged);
+
+  // Renders only while it is shown, or as it closes: the UI state changes on every click.
+  void OnUiStateChanged() => InvokeAsync(() =>
+  {
+    if (viewOptions.IsTourShown)
+      modelPath ??= modelMgr.WithModel(m => m.Path);
+    if (modelPath is not null)
+      StartOverForAnotherModel();
+    if (viewOptions.IsTourShown || wasShown)
+      StateHasChanged();
+    wasShown = viewOptions.IsTourShown;
+  });
+
+  void StartOverForAnotherModel()
+  {
+    var path = modelMgr.WithModel(m => m.Path);
+    if (path == "" || path == modelPath)
+      return;
+    if (modelPath != "")
+      generation++;
+    modelPath = path;
+  }
+
+  static string LeftOutText(CodebaseTour tour) =>
+    tour.LeftOutCount == 1
+      ? $"1 stop {tour.Source.Name()} named is not a node in the model, so it was left out."
+      : $"{tour.LeftOutCount} stops {tour.Source.Name()} named are not nodes in the model, so they were left out.";
+
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    tourService.Changed -= OnChanged;
+  }
+}
