@@ -1,6 +1,9 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling.Models;

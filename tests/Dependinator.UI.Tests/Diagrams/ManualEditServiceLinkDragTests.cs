@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;

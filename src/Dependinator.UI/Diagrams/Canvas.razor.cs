@@ -21,7 +21,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     IInitService initService { get; init; } = null!;
 
     [Inject]
-    Interaction.IManualEditService manualEditService { get; init; } = null!;
+    Editing.IManualEditService manualEditService { get; init; } = null!;
 
     [Inject]
     Interaction.IAreaSelectionService areaSelectionService { get; init; } = null!;

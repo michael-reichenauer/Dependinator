@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Tests.Diagrams;

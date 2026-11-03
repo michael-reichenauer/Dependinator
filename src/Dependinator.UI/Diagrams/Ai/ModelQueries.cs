@@ -1,5 +1,9 @@
 using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.NodeHelp;
+using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 

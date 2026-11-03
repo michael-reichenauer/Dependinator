@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Ai;
 using FileSpan = Dependinator.Core.Parsing.FileSpan;
 
 namespace Dependinator.UI.Tests.Diagrams;
