@@ -28,7 +28,8 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 ## Features
 
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
-  breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+  breadcrumb and search (`Ctrl+F`) take you anywhere in one step. Lines are
+  drawn soft until you select or hover a node, so busy diagrams stay readable.
 - **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
   deployments with the Bicep compiler; resources carry their Azure icons, local
   modules expand in place, and existing resources show as externals.
@@ -41,14 +42,18 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
   nodes and links, or sketch an architecture from an empty model. Every edit can
   be undone.
 - **Icon library** with curated Azure, AWS and Google Cloud service icons.
-- **Light and dark themes** (following VS Code), a mini-map, a legend, and
-  export of the diagram as an image.
+- **Light and dark themes**, a mini-map, a legend, and export of the diagram as
+  an image. One **Settings** dialog holds the theme, layout density, line and
+  badge options, and the AI.
 - **AI help.** Ask questions about the model (the nodes in the answer link to
-  the diagram), have a dependency cycle or a broken architecture rule reviewed,
-  get rules suggested, and let Claude Code improve comments or make a fix. Pick
-  the AI once in Settings › AI: Claude with your own Anthropic API key, Claude
-  Code on your computer with your Claude login (experimental), or any AI chat by
-  copying the prompt and pasting the answer back.
+  the diagram), take an AI-planned tour of the codebase's key parts (Help › Tour
+  This Codebase), have a dependency cycle or a broken architecture rule reviewed,
+  get rules suggested, and let Claude Code or Copilot improve comments or make a
+  fix. Pick the AI once in Settings › AI: **Copilot** (or another language model
+  VS Code offers) with your Copilot plan, Claude with your own Anthropic API key,
+  Claude Code on your computer with your Claude login (experimental), or any AI
+  chat by copying the prompt and pasting the answer back. Copilot makes fixes in
+  Copilot Chat's agent mode, where you keep or undo each edit.
 - **AI agents can ask about the map.** A local MCP server lets Copilot's agent
   mode (and Claude Code, after *Dependinator: Connect Claude Code*) look up
   nodes, dependencies, paths, cycles and architecture rules of the open diagram.

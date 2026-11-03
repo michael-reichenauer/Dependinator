@@ -46,7 +46,8 @@ inside, and jump from any node straight to its source.
 ## Features
 
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
-  breadcrumb and search (`Ctrl+F`) take you anywhere in one step.
+  breadcrumb and search (`Ctrl+F`) take you anywhere in one step. Lines are
+  drawn soft until you select or hover a node, so busy diagrams stay readable.
 - **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
   deployments with the Bicep compiler; resources carry their Azure icons, local
   modules expand in place, and existing resources show as externals.
@@ -60,12 +61,15 @@ inside, and jump from any node straight to its source.
   be undone.
 - **Icon library** with curated Azure, AWS and Google Cloud service icons.
 - **Light and dark themes**, a mini-map, a legend, and export of the diagram as
-  an image.
+  an image. One **Settings** dialog holds the theme, layout density, line and
+  badge options, and the AI.
 - **AI help.** Ask questions about the model and get answers that link to the
-  diagram, have a dependency cycle or a broken architecture rule reviewed, get
-  rules suggested, and let Claude Code improve comments or make a fix. Pick the
-  AI once in Settings › AI: Claude with your own API key, Claude Code on your
-  computer (experimental), or any AI chat by copying the prompt.
+  diagram, take an AI-planned tour of the codebase's key parts, have a dependency
+  cycle or a broken architecture rule reviewed, get rules suggested, and let
+  Claude Code or Copilot improve comments or make a fix. Pick the AI once in
+  Settings › AI: Claude with your own API key, Claude Code on your computer
+  (experimental), Copilot in VS Code with your Copilot plan, or any AI chat by
+  copying the prompt.
 - **Multiple models** per workspace, with optional sync across devices.
 
 ## Get started
