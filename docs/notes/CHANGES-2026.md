@@ -325,6 +325,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   back to the dialog; the extension's file watcher re-parses (phase 3). The same day the review
   dialogs' fix buttons became one, like the ask button (`AiFixButton`): "Fix with" the default (or
   the first that can change code), the others and "Copy fix prompt" in the menu beside it.
+- **Ask how to break an accepted cycle (Nov 3).** Under an AI answer that suggests accepting a
+  cycle, "Ask how to break it" (with the provider menu beside it) asks again for a change only
+  (`CyclePrompt.Build(..., acceptedAnswer)`, an `AiFollowUp` of `AiOpinion`); its Break answer
+  brings the usual fix button. Fix later shows beside Accept too. No fix runs on an accepting
+  answer itself, since it has no change for the user to read first.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

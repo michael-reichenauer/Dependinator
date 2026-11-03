@@ -51,7 +51,15 @@ static class CyclePrompt
         return requests;
     }
 
-    public static string Build(IModel model, Cycle cycle, IReadOnlyList<SourceSection>? sources = null)
+    // With an answer that suggested accepting the cycle (acceptedAnswer), the prompt asks how to
+    // break it anyway: the user disagrees, or wants to know what breaking it would take, and a fix
+    // only runs on a change they have read.
+    public static string Build(
+        IModel model,
+        Cycle cycle,
+        IReadOnlyList<SourceSection>? sources = null,
+        CycleSuggestion? acceptedAnswer = null
+    )
     {
         if (!model.Nodes.TryGetValue(cycle.ContainerId, out var container))
             return "";
@@ -59,9 +67,12 @@ static class CyclePrompt
 
         var text = new StringBuilder();
         text.AppendLine(
-            "I use Dependinator, a tool that maps the structure and dependencies of a codebase. It found a "
-                + "circular dependency, and I need to decide whether to accept it as intended (with a short "
-                + "reason that is stored with the model) or to break it."
+            acceptedAnswer is null
+                ? "I use Dependinator, a tool that maps the structure and dependencies of a codebase. It found a "
+                    + "circular dependency, and I need to decide whether to accept it as intended (with a short "
+                    + "reason that is stored with the model) or to break it."
+                : "I use Dependinator, a tool that maps the structure and dependencies of a codebase. It found a "
+                    + "circular dependency. A review suggested accepting it, but I want to know how to break it."
         );
         // The prompt may be pasted into an AI that can change the code (Claude Code, say), which
         // would take the asked-for change as a task; reading the code makes the verdict better.
@@ -82,7 +93,17 @@ static class CyclePrompt
                 "The code behind the directions made by only one or two types, the ones most likely to be broken or to be explained."
             );
 
-        text.AppendLine().Append(TaskSection);
+        if (acceptedAnswer is null)
+        {
+            text.AppendLine().Append(TaskSection);
+            return text.ToString();
+        }
+
+        text.AppendLine().AppendLine("## The earlier review").AppendLine();
+        text.AppendLine("It suggested accepting the cycle.");
+        if (acceptedAnswer.Why != "")
+            text.AppendLine().AppendLine($"Why: {acceptedAnswer.Why}");
+        text.AppendLine().Append(BreakTaskSection);
         return text.ToString();
     }
 
@@ -187,6 +208,23 @@ static class CyclePrompt
         Change: (only if Break) the smallest concrete change that removes one direction, and which direction (describe it; do not make it).
 
         If the information is not enough to decide, say what you would need to see instead of guessing.
+
+        """;
+
+    // Asked after an answer that suggested accepting: the verdict is Break, the change is the point.
+    const string BreakTaskSection = """
+        ## Your task
+
+        Propose how to break this cycle, even though the earlier review suggested accepting it. Find the smallest concrete change that removes one direction. Base it on the dependencies above: how many links go each way and what they are for. Say in Why what breaking it costs, and whether it is worth it.
+
+        Answer in this format:
+
+        Verdict: Break
+        Why: 2–4 sentences.
+        Assumptions: what you assumed about code that is not shown here, or "None".
+        Change: the smallest concrete change that removes one direction, and which direction (describe it; do not make it).
+
+        If the information is not enough to propose a change, say what you would need to see instead of guessing.
 
         """;
 

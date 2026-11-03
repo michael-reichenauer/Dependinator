@@ -324,6 +324,31 @@ public class CyclePromptTests
     }
 
     [Fact]
+    public void Build_ShouldAskHowToBreakTheCycle_AfterAnAnswerThatSuggestedAcceptingIt()
+    {
+        var cycle = AddParsingUtilsCycle();
+        using var model = modelMgr.UseModel();
+        var accepted = new CycleSuggestion(true, "They are one concept.", "None", "One concept", "");
+
+        var prompt = CyclePrompt.Build(model, cycle, acceptedAnswer: accepted).ReplaceLineEndings("\n");
+
+        Assert.Contains("A review suggested accepting it, but I want to know how to break it.", prompt);
+        Assert.Contains("Utils → Parsing (1 link)\n- Utils.Ext.IsMember → Parsing.NodeType\n", prompt);
+        Assert.Contains(
+            "## The earlier review\n\nIt suggested accepting the cycle.\n\nWhy: They are one concept.\n",
+            prompt
+        );
+        Assert.Contains(
+            "Propose how to break this cycle, even though the earlier review suggested accepting it.",
+            prompt
+        );
+        Assert.Contains("Verdict: Break\nWhy:", prompt);
+        Assert.DoesNotContain("Verdict: Accept or Break", prompt);
+        Assert.DoesNotContain("Reason to store", prompt);
+        Assert.Contains("This is a review only: do not change", prompt);
+    }
+
+    [Fact]
     public void BuildFix_ShouldAskToMakeTheSuggestedChange_CheckingTheAssumptionsFirst()
     {
         var cycle = AddParsingUtilsCycle();

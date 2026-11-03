@@ -9,7 +9,10 @@
    button under the answer (AiFixButton): "Fix with Claude Code" (ClaudeCodeFix, where the
    experimental route is on) or "Fix with Copilot" (VS Code, Copilot Chat in agent mode) for the
    default, the others and "Copy fix prompt" in its menu, or "Copy fix prompt" where no AI can; and
-   fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. A reason
+   fixing later or accepting anyway as the dialog's alternatives, plain buttons on one row. An
+   answer that suggests accepting offers "Ask how to break it" under it (a follow-up that asks for
+   a change, so a fix only ever runs on a change the user has read), and fixing later beside
+   accepting, for a user who disagrees. A reason
    the dialog filled in follows the selected answer until the user edits it. Nothing is saved until
    the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows
    the cycle still there. *@
@@ -27,7 +30,8 @@
                RouteText="Claude reads the cycle and its code and answers here."
                AskTitle="Ask Claude whether this cycle is intended or should be broken"
                CopyTitle="Copy a prompt with the cycle, its links and the code behind them"
-               PromptCopiedText="The prompt is copied, with the cycle, its links and the code behind them.">
+               PromptCopiedText="The prompt is copied, with the cycle, its links and the code behind them."
+               FollowUp="BreakFollowUp">
       <AnswerContent Context="s">
         <div class="dep-ai__suggestion" data-testid="accept-cycle-suggestion"
              data-verdict="@(s.IsAccept ? "accept" : "break")">
@@ -110,6 +114,11 @@
       }
       else
       {
+        @if (IsAcceptSuggested)
+        {
+          <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
+                     title="List the cycle under To fix, though the AI suggests accepting it">Fix later</MudButton>
+        }
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
           @(IsEdit ? "Save" : "Accept")
         </MudButton>
@@ -136,6 +145,11 @@
   // The prompt that asks an AI that can change the code to break the cycle as suggested.
   [Parameter] public Func<CycleSuggestion, string>? FixPrompt { get; set; }
 
+  // The prompt that asks any AI how to break the cycle, after an answer that suggested accepting
+  // it, and asking Claude (or Claude Code) with it; null where the host cannot ask.
+  [Parameter] public Func<CycleSuggestion, Task<string>>? CopyBreakPrompt { get; set; }
+  [Parameter] public Func<CycleSuggestion, AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? SuggestBreak { get; set; }
+
   // Whether the cycle is gone from the model, after "Fix with Claude Code".
   [Parameter] public Func<bool>? IsCycleGone { get; set; }
 
@@ -149,6 +163,16 @@
 
   // An AI suggests breaking the cycle: fixing it is the main action, accepting it the override.
   bool IsBreakSuggested => Selected is { IsAccept: false } && FixPrompt is not null;
+
+  // An AI suggests accepting the cycle: accepting is the main action, fixing it later the override.
+  bool IsAcceptSuggested => Selected is { IsAccept: true } && FixPrompt is not null;
+
+  // Under an answer that suggests accepting: ask for a change that breaks the cycle anyway.
+  AiFollowUp<CycleSuggestion>? BreakFollowUp => CopyBreakPrompt is not { } getPrompt ? null :
+    new("Ask how to break it", "Ask for the change that would break this cycle anyway", "break",
+      s => s.IsAccept, getPrompt,
+      (s, route, onStep) => SuggestBreak is { } ask ? ask(s, route, onStep)
+        : Task.FromResult<Result<CycleSuggestion>>(new Error("Asking is not available here.")));
 
   // Claude Code changed the code: the dialog only closes, unless a re-parse shows the cycle is still there.
   bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };

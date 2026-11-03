@@ -284,9 +284,14 @@
     Func<AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = cycleSuggestionService.IsAvailable
       ? (route, onStep) => cycleSuggestionService.SuggestAsync(cycle, route, onStep)
       : null;
+    Func<CycleSuggestion, AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggestBreak =
+      cycleSuggestionService.IsAvailable
+        ? (accepted, route, onStep) => cycleSuggestionService.SuggestAsync(cycle, route, onStep, accepted)
+        : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
       reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s),
-      () => cyclePromptService.GetPromptAsync(cycle), () => cycleService.GetCycles().All(c => c.Key != cycle.Key));
+      () => cyclePromptService.GetPromptAsync(cycle), () => cycleService.GetCycles().All(c => c.Key != cycle.Key),
+      suggestBreak, accepted => cyclePromptService.GetPromptAsync(cycle, accepted));
     if (result is null)
       return;
     if (result.IsFixLater)
@@ -308,7 +313,9 @@
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
     Func<AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
-    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null, Func<bool>? isCycleGone = null)
+    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null, Func<bool>? isCycleGone = null,
+    Func<CycleSuggestion, AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggestBreak = null,
+    Func<CycleSuggestion, Task<string>>? copyBreakPrompt = null)
   {
     var parameters = new DialogParameters
     {
@@ -320,6 +327,8 @@
       { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
       { nameof(AcceptCycleDialog.CopyPrompt), copyPrompt },
       { nameof(AcceptCycleDialog.IsCycleGone), isCycleGone },
+      { nameof(AcceptCycleDialog.SuggestBreak), suggestBreak },
+      { nameof(AcceptCycleDialog.CopyBreakPrompt), copyBreakPrompt },
     };
     // Wider for a review, with its header buttons and Claude's answer, which can run to a paragraph.
     var maxWidth = isEdit ? MaxWidth.ExtraSmall : MaxWidth.Small;

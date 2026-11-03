@@ -84,8 +84,14 @@ interface ICycleSuggestionService
     // Whether this host can ask Claude: the web host and VS Code, not the standalone browser app.
     bool IsAvailable { get; }
 
-    // Asks Claude (or Claude Code) about the cycle, see IAiService.AskAsync.
-    Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, AiSource route, Action<SuggestStep> onStep);
+    // Asks Claude (or Claude Code) about the cycle, see IAiService.AskAsync; with an answer that
+    // suggested accepting it, asks how to break it anyway.
+    Task<Result<CycleSuggestion>> SuggestAsync(
+        Cycle cycle,
+        AiSource route,
+        Action<SuggestStep> onStep,
+        CycleSuggestion? acceptedAnswer = null
+    );
 }
 
 // Asks Claude about a cycle with the prompt the user can also copy (CyclePromptService).
@@ -94,22 +100,30 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IAiService 
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    public async Task<Result<CycleSuggestion>> SuggestAsync(Cycle cycle, AiSource route, Action<SuggestStep> onStep)
+    public async Task<Result<CycleSuggestion>> SuggestAsync(
+        Cycle cycle,
+        AiSource route,
+        Action<SuggestStep> onStep,
+        CycleSuggestion? acceptedAnswer = null
+    )
     {
         // The e2e tests exercise the dialog without a key or network: a larger cycle is to be
-        // broken, a pair accepted and, asked again, broken, so differing answers can be tried too.
-        // A short wait lets them see the dialog while it asks.
+        // broken, a pair accepted and, asked again, broken, so differing answers can be tried too;
+        // asked how to break it, always broken. A short wait lets them see the dialog while it asks.
         if (Dependinator.Core.Build.IsTestMode)
         {
             onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
-            var answer = cycle.Members.Count == 2 && testModeAsks++ % 2 == 0 ? TestModeAccept : TestModeBreak;
+            var answer =
+                acceptedAnswer is null && cycle.Members.Count == 2 && testModeAsks++ % 2 == 0
+                    ? TestModeAccept
+                    : TestModeBreak;
             return answer with { Source = route };
         }
 
         var json = await aiService.AskAsync(
             route,
-            () => cyclePromptService.GetPromptAsync(cycle),
+            () => cyclePromptService.GetPromptAsync(cycle, acceptedAnswer),
             CycleSuggestion.JsonSchema,
             onStep
         );
