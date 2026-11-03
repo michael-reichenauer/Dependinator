@@ -61,6 +61,10 @@ interface IViewOptions
     // panels (IAskModelService opens and closes it).
     bool IsAskShown { get; }
 
+    // The tour panel (TourPanel), a guided tour of the model an AI picks, top-right like the
+    // other panels (ITourService opens and closes it). The Ask panel and it share the corner.
+    bool IsTourShown { get; }
+
     // While set, the hidden nodes panel lists only this node's hidden children (opened from its
     // node menu, List Hidden Children).
     NodeId? HiddenNodesParentId { get; }
@@ -89,6 +93,7 @@ interface IViewOptions
     void SetRuleSuggestionsShown(bool shown);
     void SetHiddenNodesShown(bool shown, NodeId? parentId = null);
     void SetAskShown(bool shown);
+    void SetTourShown(bool shown);
     void SetHiddenBadgesShown(bool shown);
     void SetMinimapShown(bool shown);
     void SetProblemBadgesShown(bool shown);
@@ -147,6 +152,7 @@ class ViewOptions : IViewOptions
     public bool IsRuleSuggestionsShown { get; private set; }
     public bool IsHiddenNodesShown { get; private set; }
     public bool IsAskShown { get; private set; }
+    public bool IsTourShown { get; private set; }
     public NodeId? HiddenNodesParentId { get; private set; }
     public bool IsHiddenBadgesShown { get; private set; } = true;
     public bool IsMinimapShown { get; private set; }
@@ -193,7 +199,17 @@ class ViewOptions : IViewOptions
         HiddenNodesParentId = shown ? parentId : null;
     }
 
-    public void SetAskShown(bool shown) => IsAskShown = shown;
+    public void SetAskShown(bool shown)
+    {
+        IsAskShown = shown;
+        IsTourShown = IsTourShown && !shown;
+    }
+
+    public void SetTourShown(bool shown)
+    {
+        IsTourShown = shown;
+        IsAskShown = IsAskShown && !shown;
+    }
 
     public void SetHiddenBadgesShown(bool shown) => IsHiddenBadgesShown = shown;
 

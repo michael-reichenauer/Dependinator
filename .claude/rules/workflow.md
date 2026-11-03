@@ -120,6 +120,12 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   disconnected: our own workspace-limited edit tools (read file, replace text) applied as VS Code
   `WorkspaceEdit`s. Cannot be tried in a cloud session (no Copilot login): the user checks it in
   VS Code.
+- **Codebase tour (roadmap idea 9), next:** phase 1 (Nov 3) is Help › Tour This Codebase
+  (`CodebaseTour.cs`: `TourPrompt`, `TourService`; `TourPanel`, `TourCallout`), all providers, the
+  tour played over the diagram, not saved. Phase 2: save the tour with the model (stops by node
+  name, so it survives a refresh and travels with cloud sync; plays in the browser app without AI),
+  edit it (remove, reorder, edit text, "Add to tour" from the node menu). Phase 3: topic tours
+  ("how does cloud sync work"), "Play as tour" from an Ask answer, `ask-eval` cases.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.
