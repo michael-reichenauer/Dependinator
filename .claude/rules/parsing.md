@@ -9,7 +9,7 @@ paths:
   - "src/Dependinator.Core/Shared/WorkspaceFileService.cs"
   - "src/Dependinator.UI/Modeling/ModelService.cs"
   - "src/Dependinator.UI/Modeling/StructureService.cs"
-  - "src/Dependinator.UI/Diagrams/CyclePrompt*.cs"
+  - "src/Dependinator.UI/Diagrams/Cycles/CyclePrompt*.cs"
   - "src/Dependinator.Web/Program.cs"
 ---
 

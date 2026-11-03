@@ -1,6 +1,9 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;

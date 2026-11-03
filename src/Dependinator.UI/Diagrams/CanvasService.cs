@@ -2,6 +2,7 @@ using System.Globalization;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
+using Dependinator.UI.Diagrams.Tours;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;

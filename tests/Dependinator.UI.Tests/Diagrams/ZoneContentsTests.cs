@@ -1,5 +1,5 @@
 using Dependinator.Core.Parsing;
-using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Shared.Types;
 using Node = Dependinator.UI.Modeling.Models.Node;
 

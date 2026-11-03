@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Tests.Diagrams;
