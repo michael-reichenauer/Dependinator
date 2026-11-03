@@ -61,6 +61,13 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   `obj/.../AssemblyInfo.cs` changed during a parse: the Roslyn parser's design-time build of this
   solution rewrote Core's `BuildTime` metadata, and dotnet watch restarts on any Compile item change.
   Core now skips AssemblyInfo in design-time builds; keep build-time-varying values out of them.
+- The dev host's demo paths (`ExampleModel.WorkingSolutionPath`, the `gen-demo` output) are
+  hardcoded to `/workspaces/Dependinator`, the devcontainer path. In a cloud session (repo at
+  `/home/user/Dependinator`) the dev host shows "Solution file not found" and `record-demo` waits
+  for a model that never comes: `mkdir -p /workspaces && ln -sfn /home/user/Dependinator
+  /workspaces/Dependinator` first. The README images (`docs/images/hero.png`, `bicep.png`) can be
+  re-shot with a Playwright script that searches a node and steps the wheel zoom, saving a
+  screenshot per step to pick from (zoom drifts away from the pointer as containers open).
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 
