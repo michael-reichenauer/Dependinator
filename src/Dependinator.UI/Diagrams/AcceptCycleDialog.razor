@@ -58,7 +58,7 @@
         </div>
       </AnswerContent>
     </AiOpinion>
-    @if (IsBreakSuggested && !IsDone)
+    @if (IsBreakSuggested && HasChange && !IsDone)
     {
       @* The fix, under the change it makes: one button for the AI that makes it, the provider menu
          beside it (AiFixButton, like the ask button above), or "Copy fix prompt" where no AI can. *@
@@ -109,16 +109,14 @@
       @if (IsBreakSuggested)
       {
         <MudButton Variant="Variant.Text" OnClick="Save" data-testid="accept-cycle-save">Accept anyway</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
-                   title="List the cycle under To fix, with the planned change">Fix later</MudButton>
       }
-      else
+      @if (Selected is { } answer && FixPrompt is not null)
       {
-        @if (IsAcceptSuggested)
-        {
-          <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
-                     title="List the cycle under To fix, though the AI suggests accepting it">Fix later</MudButton>
-        }
+        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="accept-cycle-fix-later"
+                   title="@(answer.IsAccept ? "List the cycle under To fix, though the AI suggests accepting it" : "List the cycle under To fix, with the planned change")">Fix later</MudButton>
+      }
+      @if (!IsBreakSuggested)
+      {
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="accept-cycle-save">
           @(IsEdit ? "Save" : "Accept")
         </MudButton>
@@ -164,8 +162,8 @@
   // An AI suggests breaking the cycle: fixing it is the main action, accepting it the override.
   bool IsBreakSuggested => Selected is { IsAccept: false } && FixPrompt is not null;
 
-  // An AI suggests accepting the cycle: accepting is the main action, fixing it later the override.
-  bool IsAcceptSuggested => Selected is { IsAccept: true } && FixPrompt is not null;
+  // A change to make: an answer that asked for more information instead has none to fix with.
+  bool HasChange => Selected is { Change: not "" };
 
   // Under an answer that suggests accepting: ask for a change that breaks the cycle anyway.
   AiFollowUp<CycleSuggestion>? BreakFollowUp => CopyBreakPrompt is not { } getPrompt ? null :
@@ -178,7 +176,7 @@
   bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };
 
   // Claude Code can make the suggested change itself, where the experimental route is on.
-  bool CanFix => IsBreakSuggested && canFixWithClaudeCode;
+  bool CanFix => IsBreakSuggested && HasChange && canFixWithClaudeCode;
 
   string FixPromptText() => Selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
 
@@ -200,6 +198,10 @@
     Selected = answer;
     copyNote = null;
     copyError = null;
+    // The change asked for after an accepting answer keeps that answer's reason: the AI did not
+    // suggest breaking the cycle, it was asked how.
+    if (answer.IsFollowUp)
+      return;
     if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
       UseReason(ReasonFrom(answer));
   }
@@ -252,8 +254,9 @@
 
   void Unaccept() => MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult("", true)));
 
+  // Only a change the dialog showed is kept as the plan: an accepting answer's is not shown.
   void FixLater() =>
-    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(Selected?.Change ?? "", false, IsFixLater: true)));
+    MudDialog.Close(DialogResult.Ok(new AcceptCycleDialogResult(Selected is { IsAccept: false } s ? s.Change : "", false, IsFixLater: true)));
 
   void Cancel() => MudDialog.Cancel();
 }

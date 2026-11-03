@@ -172,7 +172,7 @@ else if (HasAiHelp)
   <div class="dep-ai__suggest-error" data-testid="@Id("suggest-error")">@askError</div>
   @* Asking failed (no key, a key not accepted, no credits, no network, Claude Code missing): the
      AI chat route, whose answer can be pasted back, is always a way on. *@
-  @if (isAskError && GetPrompt is not null && !isChatOpen)
+  @if (isAskError && failedPrompt is not null && !isChatOpen)
   {
     <MudButton Size="Size.Small" Variant="Variant.Outlined" StartIcon="@MudBlazor.Icons.Material.Outlined.Forum"
                Class="mt-1" OnClick="() => StartChatAsync(failedPrompt)" data-testid="@Id("copy-instead")">Use your AI chat instead</MudButton>
@@ -227,9 +227,12 @@ else if (Selected is { } s && AnswerContent is not null)
                    Class="@AskClass(primary)" title="@($"{followUp.Title} ({primary.Name})")"
                    OnClick="() => RunFollowUpAsync(s, primary)" data-testid="@Id($"{followUp.TestId}-ask")"
                    data-provider="@primary.Id">@followUp.Label</MudButton>
-        <AiProviderMenu Choice="choice" TestId="@Id(followUp.TestId)" OnChoose="p => RunFollowUpAsync(s, p)"
-                        OnShowPrompt="() => ShowFollowUpPromptAsync(s)" IsShowPromptDisabled="isShowingPrompt"
-                        OnSettingsChanged="RefreshChoiceAsync" Disabled="isSuggesting" />
+        @if (choice.Providers.Count > 1 || aiService.IsAvailable)
+        {
+          <AiProviderMenu Choice="choice" TestId="@Id(followUp.TestId)" OnChoose="p => RunFollowUpAsync(s, p)"
+                          OnShowPrompt="() => ShowFollowUpPromptAsync(s)" IsShowPromptDisabled="isShowingPrompt"
+                          OnSettingsChanged="RefreshChoiceAsync" Disabled="isSuggesting" />
+        }
       </span>
     </div>
   }
@@ -312,7 +315,8 @@ else if (Selected is { } s && AnswerContent is not null)
     }
   }
 
-  bool AnswersDiffer => answers.Select(a => a.Verdict).Distinct().Count() > 1;
+  // Only between opinions: a follow-up's answer was asked for its verdict.
+  bool AnswersDiffer => answers.Where(a => !a.IsFollowUp).Select(a => a.Verdict).Distinct().Count() > 1;
 
   string Id(string suffix) => $"{TestId}-{suffix}";
 

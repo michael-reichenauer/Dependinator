@@ -15,11 +15,13 @@ public enum AiSource
 }
 
 // An answer a review dialog shows (AiOpinion): where it came from, and its verdict, one of a few
-// words ("Accept", "Break"), for the answer's label and to tell when answers differ.
+// words ("Accept", "Break"), for the answer's label and to tell when answers differ. An answer to
+// a follow-up (AiFollowUp) was asked for a given verdict, so it is no second opinion.
 public interface IAiAnswer
 {
     AiSource Source { get; }
     string Verdict { get; }
+    bool IsFollowUp => false;
 }
 
 public static class AiSourceExtensions

@@ -15,6 +15,13 @@ public record CycleSuggestion(bool IsAccept, string Why, string Assumptions, str
 
     public string Verdict => IsAccept ? "Accept" : "Break";
 
+    // An answer to "Ask how to break it": a change asked for, not an opinion of its own.
+    public bool IsFollowUp { get; init; }
+
+    // The answer to "Ask how to break it" is a Break whatever its verdict (a model may stick to
+    // Accept), without a reason to store; an empty change shows there is nothing to fix with.
+    public CycleSuggestion AsBreakAnswer() => this with { IsAccept = false, Reason = "", IsFollowUp = true };
+
     // The fields of CyclePrompt's answer format; structured output makes Claude's JSON match it.
     public const string JsonSchema = """
         {
@@ -118,7 +125,15 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IAiService 
                 acceptedAnswer is null && cycle.Members.Count == 2 && testModeAsks++ % 2 == 0
                     ? TestModeAccept
                     : TestModeBreak;
-            return answer with { Source = route };
+            return acceptedAnswer is null
+                ? answer with
+                {
+                    Source = route,
+                }
+                : answer.AsBreakAnswer() with
+                {
+                    Source = route,
+                };
         }
 
         var json = await aiService.AskAsync(
@@ -127,7 +142,12 @@ class CycleSuggestionService(ICyclePromptService cyclePromptService, IAiService 
             CycleSuggestion.JsonSchema,
             onStep
         );
-        return json is string text ? CycleSuggestion.Parse(text, route) : json.Error;
+        if (json is not string text)
+            return json.Error;
+        var parsed = CycleSuggestion.Parse(text, route);
+        return acceptedAnswer is null || parsed.Value is not CycleSuggestion suggestion
+            ? parsed
+            : suggestion.AsBreakAnswer();
     }
 
     int testModeAsks;

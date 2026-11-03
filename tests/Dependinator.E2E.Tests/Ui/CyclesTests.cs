@@ -271,6 +271,9 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(answers).ToHaveCountAsync(2);
         await Expect(answers.Last).ToHaveTextAsync("Claude 2 · Break");
         await Expect(verdict).ToHaveAttributeAsync("data-verdict", "break");
+        // Asked for, the change is no second opinion, and the accepting answer's reason stays.
+        await Expect(Page.GetByTestId("accept-cycle-answers-differ")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("accept-cycle-reason")).ToHaveValueAsync("Suggested in test mode");
         await Expect(askBreak).ToHaveCountAsync(0);
         await Expect(Page.GetByTestId("accept-cycle-copy-fix")).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("accept-cycle-save")).ToHaveTextAsync("Accept anyway");
@@ -282,6 +285,7 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(open).ToHaveCountAsync(openCount - 1);
         ILocator toFix = Page.GetByTestId("cycles-tofix-item");
         await Expect(toFix.GetByTestId("cycles-tofix-change")).ToHaveTextAsync("No change planned");
+        await Expect(toFix.GetByTestId("cycles-tofix-copy-fix")).ToHaveCountAsync(0);
         await toFix.GetByTestId("cycles-tofix-remove").ClickAsync();
         await Expect(open).ToHaveCountAsync(openCount);
     }
