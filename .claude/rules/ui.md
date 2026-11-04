@@ -81,6 +81,24 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - For WASM timings, publish `src/Dependinator.Wasm` in Release and serve its `wwwroot` with
   `python3 -I -m http.server 5000`.
 
+## Member cards
+
+- Member rows are laid out by `MemberCard` (sections, columns, `RowPitch` 16, off the 20-grid on
+  purpose); headings and the card are derived from row positions when rendering, nothing stored.
+  Rows never move or resize by hand (`NodeEditService` skips members), and a customized container
+  still re-arranges its rows (`NodeLayout.ArrangeCustomizedTypeChildren`).
+- A node of only members gets a non-square size shaped like its card (`NodeLayout.ShapedSize`)
+  and `MemberCardCoverage` 0.9; `ApplyContainerTransform` caps the zoom at 1, so a tiny card
+  covers less.
+- The summary card is part of `IsShowIcon` (lines attach to the type, a click selects it); it is
+  decided by `zoom * ContainerZoom`, so `SvgService.RenderNode` lays such nodes out before
+  deciding. Its rows use class `summaryMember`, never `memberName`, which the e2e node locators match.
+- "Show node" on a member frames it closer (`NodeViewPolicy.FramingZoomFactor`): rows readable and
+  the parent open, also 1.3x apart in a tile. A small type's card is at natural scale, so at 1 px
+  per unit its type would still be an icon (the e2e `WaitForContainerNodeAsync("Main")` failed).
+- Lines between members of one type carry `line-inner` (LineSvg) and are hidden unless lit or
+  hover-previewed (Canvas LineCss, jsInterop.js `initLinePreview`).
+
 ## Design layer: zones, notes, line labels, aliases, hide, rows
 
 - A zone is a manual node with `IsZone`. Its label is the `Alias`, and its name is a generated

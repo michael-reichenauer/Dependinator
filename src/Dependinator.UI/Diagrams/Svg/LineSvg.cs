@@ -209,8 +209,21 @@ static class LineSvg
         // strength: line-lit for the selection's own lines, line-accent for explorer and direct
         // lines. data-n names the line's two end nodes, for the hover preview (linePreview.js),
         // which lights a hovered node's lines without a rerender.
+        // A call between two members of the same type is shown only with one of them selected
+        // or hovered (line-inner in Canvas.razor and jsInterop.js): at rest a type's card would
+        // be crossed by all of its internal calls. Lines that mean something stay.
+        var isInner =
+            IsInnerMemberLine(line)
+            && !isAccent
+            && !isCyclic
+            && !isPath
+            && !isViolation
+            && !line.IsSelected
+            && !line.HasLabel;
+        var hitPointerEvents = isInner && !isLit ? " pointer-events=\"none\"" : "";
         var visibleClass =
             (isDimmed ? "line-vis line-dim" : "line-vis")
+            + (isInner ? " line-inner" : "")
             + (isLit ? " line-lit" : "")
             + (isAccent ? " line-accent" : "")
             + (isCyclic ? " line-cycle" : "")
@@ -227,7 +240,7 @@ static class LineSvg
             </g>
             <g class="hoverable" id="{elementId}">
               <polyline id="{elementId}" class="{HitClass}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
-                + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
+                + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round"{hitPointerEvents} />
               <polyline class="{HoverClass}" points="{points}" fill="none" pointer-events="none" />
               <title>{title}</title>
             </g>
@@ -236,6 +249,10 @@ static class LineSvg
             """
         );
     }
+
+    // Between two member rows of the same container (a call or use inside one type).
+    internal static bool IsInnerMemberLine(Line line) =>
+        line.Source.Type.IsMember && line.Target.Type.IsMember && line.Source.Parent == line.Target.Parent;
 
     // The user's label at the line's middle, with its description under it in the smaller italic
     // used for node descriptions. The lineLabel/lineDescription classes draw a background-colored

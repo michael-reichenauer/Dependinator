@@ -12,6 +12,17 @@ class DColors
     static readonly string ItemColorLightSelected = "#1A73E8";
     static readonly string ItemLineSelected = "#a7cff7";
 
+    // The member card behind a container's member rows, and the summary card of a type: a
+    // paper-like panel on the container's tint, with quiet headings and dividers.
+    static readonly string CardBackgroundDark = "#1A1B1F";
+    static readonly string CardBackgroundLight = "#FFFFFF";
+    static readonly string CardBorderDark = "#34363D";
+    static readonly string CardBorderLight = "#D9D7E0";
+    static readonly string CardDividerDark = "#2B2D33";
+    static readonly string CardDividerLight = "#E8E6EE";
+    static readonly string CardMutedTextDark = "#9C99AA";
+    static readonly string CardMutedTextLight = "#6E6A7C";
+
     // Tests
     static readonly string TextDark = "#ECECEC";
     static readonly string TextLight = "#1A1A1A";
@@ -161,6 +172,10 @@ class DColors
     public static string EditNodeBorder => IsDark ? NodeBorderDarkEdit : NodeBorderLightEdit;
     public static string EditNodeBackground => IsDark ? NodeBackgroundDarkEdit : NodeBackgroundLightEdit;
     public static string Text => IsDark ? TextDark : TextLight;
+    public static string CardBackground => IsDark ? CardBackgroundDark : CardBackgroundLight;
+    public static string CardBorder => IsDark ? CardBorderDark : CardBorderLight;
+    public static string CardDivider => IsDark ? CardDividerDark : CardDividerLight;
+    public static string CardMutedText => IsDark ? CardMutedTextDark : CardMutedTextLight;
 
     public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
     public static string LineSelected => ItemLineSelected;

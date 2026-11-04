@@ -18,8 +18,9 @@ enum AnchorPreference
     Bottom,
 }
 
-// Where lines attach to a node, in the node's local (unzoomed) coordinates. Member nodes anchor
-// on their icon (sources leave at the bottom, targets enter at a side); other nodes anchor at the
+// Where lines attach to a node, in the node's local (unzoomed) coordinates. Member rows anchor at
+// the vertical middle of the row, like the rows of a class box: lines leave at the row's right
+// edge (the column's) and enter at its left edge, before the icon; other nodes anchor at the
 // vertical middle of their left/right edge.
 static class NodeAnchors
 {
@@ -37,11 +38,17 @@ static class NodeAnchors
         {
             var metrics = GetMemberAnchorMetrics(node);
             if (role == LineAnchorRole.Source)
-                return (metrics.CenterX, metrics.Bottom + MemberIconGap);
+            {
+                return preference switch
+                {
+                    AnchorPreference.Left => (metrics.Left - MemberIconGap, metrics.CenterY),
+                    _ => (metrics.RowRight + MemberIconGap, metrics.CenterY),
+                };
+            }
 
             return preference switch
             {
-                AnchorPreference.Right => (metrics.Right, metrics.CenterY),
+                AnchorPreference.Right => (metrics.RowRight + MemberIconGap, metrics.CenterY),
                 _ => (metrics.Left - MemberIconGap, metrics.CenterY),
             };
         }
@@ -70,23 +77,11 @@ static class NodeAnchors
 
     static MemberAnchorMetrics GetMemberAnchorMetrics(Node node)
     {
+        // The member icon is drawn at the row's left edge, its name vertically centered in the
+        // row (see NodeSvg.CalculateMemberNodeLayout); the row is as wide as its card column.
         var boundary = node.Boundary;
-        // The member icon is drawn at the left edge with size equal to the base font size
-        // (see NodeSvg.CalculateMemberNodeLayout).
-        var iconSize = (double)NodeSvg.FontSize;
-        var left = boundary.X;
-        var right = boundary.X + iconSize;
-        var centerX = boundary.X + iconSize / 2.0;
-        var centerY = boundary.Y + boundary.Height / 2.0;
-        var bottom = centerY + iconSize / 2.0;
-        return new MemberAnchorMetrics(left, right, centerX, centerY, bottom);
+        return new MemberAnchorMetrics(boundary.X, boundary.X + boundary.Width, boundary.Y + boundary.Height / 2.0);
     }
 
-    readonly record struct MemberAnchorMetrics(
-        double Left,
-        double Right,
-        double CenterX,
-        double CenterY,
-        double Bottom
-    );
+    readonly record struct MemberAnchorMetrics(double Left, double RowRight, double CenterY);
 }

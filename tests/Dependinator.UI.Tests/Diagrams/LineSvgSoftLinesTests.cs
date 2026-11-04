@@ -58,4 +58,32 @@ public class LineSvgSoftLinesTests
         Assert.False(SvgService.IsLineLit(bc, selection));
         Assert.False(SvgService.IsLineLit(ab, new SvgService.RenderSelection(null, null)));
     }
+
+    // A call between two members of one type is hidden until one end is selected or hovered
+    // (line-inner); a line from a member to another type is not.
+    [Fact]
+    public void GetLineSvg_ShouldMarkLinesBetweenMembersOfOneType_AsInner()
+    {
+        var root = CreateRoot();
+        var type = AddNode(root, "Type", 0);
+        var other = AddNode(root, "Other", 300);
+        var caller = AddMember(type, "Type.Caller", 0);
+        var callee = AddMember(type, "Type.Callee", 20);
+        var outside = AddMember(other, "Other.Method", 0);
+
+        var inner = VisibleGroup(LineSvg.GetLineSvg(new Line(caller, callee), new Pos(0, 0), 1));
+        var crossing = new Line(caller, outside);
+
+        Assert.Contains("line-inner", ClassOf(inner));
+        Assert.True(LineSvg.IsInnerMemberLine(new Line(caller, callee)));
+        Assert.False(LineSvg.IsInnerMemberLine(crossing));
+        Assert.False(LineSvg.IsInnerMemberLine(new Line(type, other)));
+    }
+
+    static Node AddMember(Node type, string name, double y)
+    {
+        var member = new Node(name, type) { Type = NodeType.MethodMember, Boundary = new Rect(0, y, 120, 15) };
+        type.AddChild(member);
+        return member;
+    }
 }

@@ -60,7 +60,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Rect newBoundary;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+            // Member rows keep their place in the member card (MemberCard), so they do not move.
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
 
             nodeId = node.Id;
@@ -79,6 +80,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             nodeIds,
             node =>
             {
+                if (node.Type.IsMember)
+                    return null;
                 var nodeZoom = node.GetZoom() * zoom;
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
                 if (!node.IsRoot)
@@ -101,8 +104,11 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         {
             isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
                 .Any(node =>
-                    NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
-                    || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                    !node.Type.IsMember
+                    && (
+                        NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
+                        || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                    )
                 );
         }
         if (!isAnyOffGrid)
@@ -112,6 +118,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             nodeIds,
             node =>
             {
+                if (node.Type.IsMember)
+                    return null;
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
                 return new NodeEditCommand(node.Id)
@@ -147,8 +155,10 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 node.CustomColor == colorName ? null : new NodeEditCommand(node.Id) { CustomColor = colorName ?? "" }
         );
 
-    static NodeEditCommand SizeCommand(Node node, double diff)
+    static NodeEditCommand? SizeCommand(Node node, double diff)
     {
+        if (node.Type.IsMember)
+            return null; // Rows have the size of their card's column
         if (!node.IsRoot)
             node.Parent.IsChildrenLayoutCustomized = true;
         var width =
@@ -195,7 +205,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Rect newBoundary;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
             nodeId = node.Id;
             var snappedX = NodeGrid.Snap(node.Boundary.X);
@@ -217,7 +227,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Pos newContainerOffset;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+            // Member rows are placed by their card, off the grid on purpose
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
 
             nodeId = node.Id;
@@ -349,7 +360,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Pos newContainerOffset;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+            // Member rows have the size of their member card's column (MemberCard).
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
 
             nodeId = node.Id;

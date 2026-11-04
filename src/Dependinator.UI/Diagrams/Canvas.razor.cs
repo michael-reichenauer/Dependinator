@@ -70,7 +70,10 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
                 ? $".line-vis {{ opacity: {Px(SoftOpacity)}; }} "
                     + ".line-lit, .line-accent, .line-cycle, .line-path, .line-rule { opacity: 1; } "
                 : "";
-            return css + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }}";
+            // Calls inside a type (LineSvg.IsInnerMemberLine) show only when lit or hover-previewed.
+            return css
+                + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }} "
+                + ".line-inner:not(.line-lit) { opacity: 0; }";
         }
     }
 
