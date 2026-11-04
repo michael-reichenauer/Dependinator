@@ -32,7 +32,8 @@ project works.
   Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
-  "Ask how to break it" for accepted cycles, and an AI-planned tour of the codebase.
+  "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, and AI-suggested
+  line labels.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -339,6 +340,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   leaves out the stops that are no nodes, and Start tour plays it in a callout like the tips
   (`TourCallout`), zooming to and selecting each stop's node, with Back and Next. Phase 1: the tour
   is not saved yet.
+- **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
+  and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
+  and the labels on other lines, for a matching style), with up to three other labels to pick
+  from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
+  at once, else "Use suggestion" fills them; nothing is saved before Save.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
