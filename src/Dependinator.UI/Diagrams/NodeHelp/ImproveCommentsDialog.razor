@@ -5,7 +5,7 @@
 @inject IAiService aiService
 
 @* Improve Comments (ImproveCommentsService): an AI that can change the code adds or rewrites the
-   comments of a node's namespaces and types, or of everything inside it, which the diagram shows as
+   comments of a node's namespaces and types and the descriptions of its projects, or of everything inside it, which the diagram shows as
    their descriptions. The scope shows how many that is and in how many files, with a warning when
    one run may not finish in time. Under it, the AI section looks like the review dialogs' (AiOpinion):
    one button for the AI that does it, the provider menu beside it (AiProviderMenu, with "Copy prompt"
@@ -21,8 +21,9 @@
   </TitleContent>
   <DialogContent>
     <div class="dep-about__text">
-      An AI adds or rewrites the comments of namespaces and types, which the diagram shows as their descriptions.
-      It reads the code and the dependencies first, and changes comments only.
+      An AI adds or rewrites the comments of namespaces and types, and the descriptions of projects (their
+      AssemblyDescription attribute), which the diagram shows as their descriptions. It reads the code and the
+      dependencies first, and changes comments and descriptions only.
     </div>
     @if (HasChildren)
     {
@@ -171,8 +172,19 @@
 
   string CountText =>
     scope.Targets == 0
-      ? "Nothing here has a comment Dependinator reads: only namespaces and types (Bicep modules and resources) do."
-      : $"{Count(scope.Targets, "namespace or type", "namespaces and types")} in {Count(scope.Files, "file", "files")}";
+      ? "Nothing here has a comment Dependinator reads: only projects, namespaces and types (Bicep modules and resources) do."
+      : $"{TargetsText} in {Count(scope.Files, "file", "files")}";
+
+  string TargetsText
+  {
+    get
+    {
+      var others = scope.Targets - scope.Projects;
+      var projects = Count(scope.Projects, "project", "projects");
+      var parts = Count(others, "namespace or type", "namespaces and types");
+      return scope.Projects == 0 ? parts : others == 0 ? projects : $"{projects}, {parts}";
+    }
+  }
 
   // A node with children starts with everything inside it: commenting a namespace alone is rarely the point.
   protected override async Task OnInitializedAsync()
