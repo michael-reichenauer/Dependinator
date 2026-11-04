@@ -137,9 +137,11 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`),
   phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`), phase 3
   rule kinds (`RuleKind`: `OnlyMayUse`, `Layers`, then `Independent` and `NoCycles`, which reuses
-  `CycleService.Compute`; `RuleService.IsBreaking`). Still open: Suggest rules offering the new kinds (it suggests only
-  "must not use"; dismissals are must-not-use only), the MCP `check_rule` for other kinds.
-  Cycles stay their own always-on detector; only the decisions are shared.
+  `CycleService.Compute`; `RuleService.IsBreaking`), then `SiblingsIndependent` ("the parts of
+  X are independent"). Suggest rules proposes and checks every kind (`SuggestedRule.Kind/Nodes`,
+  answer `{kind, nodes, why}`), dismissals cover every kind (`KindDismissedRules`), and the MCP
+  `check_rule` takes a kind. Name-pattern rules ("*.Tests may use anything") were postponed by
+  Michael (Nov 4). Cycles stay their own always-on detector; only the decisions are shared.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

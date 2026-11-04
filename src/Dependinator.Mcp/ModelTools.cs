@@ -76,7 +76,7 @@ sealed class ModelTools(IModelQueryService queries)
     [McpServerTool(Name = "list_rules", ReadOnly = true, Idempotent = true)]
     [Description(
         "Lists the model's architecture rules (\"from must not use to\", \"only from may use to\", layers where each "
-            + "may use only the layers below it, \"from is independent\" or \"no cycles inside from\"; each rule's "
+            + "may use only the layers below it, \"from is independent\", \"no cycles inside from\" or \"the parts of from are independent\"; each rule's "
             + "text says which) with their current violations per type "
             + "pair, and the dependencies the user allowed with a reason."
     )]
@@ -84,13 +84,34 @@ sealed class ModelTools(IModelQueryService queries)
 
     [McpServerTool(Name = "check_rule", ReadOnly = true, Idempotent = true)]
     [Description(
-        "Evaluates the rule \"from must not use to\" without adding it: the violations it would report today. "
-            + "Use it to test a rule before suggesting it, or to check that a change keeps a layering."
+        "Evaluates a rule without adding it: the violations it would report today. Use it to test a rule before "
+            + "suggesting it, or to check that a change keeps a layering. Kinds: must_not_use (from must not use to), "
+            + "only_may_use (only from may use to), layers (layers top first, each may use only those below it), "
+            + "independent (from uses nothing else in the solution, only externals), no_cycles (no cycles inside from), "
+            + "siblings_independent (no child of from uses another child of from)."
     )]
     public async Task<CallToolResult> CheckRule(
-        [Description("The name of the node that must not depend on the other.")] string from,
-        [Description("The name of the node it must not use.")] string to
-    ) => Answer(await queries.CheckRuleAsync(from, to));
+        [Description(
+            "The node that must not use the other, that alone may use the other, or the one node of an "
+                + "independent, no_cycles or siblings_independent rule. Not used for layers."
+        )]
+            string from = "",
+        [Description("The node it must not use, or that only it may use. Empty for one-node kinds and layers.")]
+            string to = "",
+        [Description(
+            "must_not_use (the default), only_may_use, layers, independent, no_cycles or siblings_independent."
+        )]
+            string kind = "must_not_use",
+        [Description("For layers: the layers' node names, top first, at least two.")] string[]? layers = null
+    ) =>
+        Answer(
+            await queries.CheckRuleAsync(
+                kind,
+                kind.Equals("layers", StringComparison.OrdinalIgnoreCase) ? layers ?? []
+                    : to == "" ? [from]
+                    : [from, to]
+            )
+        );
 
     [McpServerTool(Name = "read_source", ReadOnly = true, Idempotent = true)]
     [Description(

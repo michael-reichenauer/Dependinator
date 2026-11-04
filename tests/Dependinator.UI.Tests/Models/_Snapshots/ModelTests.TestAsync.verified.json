@@ -127,6 +127,7 @@
   "DismissedRules": [],
   "AllowedViolations": [],
   "KindRules": [],
+  "KindDismissedRules": [],
   "KindAllowedViolations": [],
   "AcceptedCycles": [],
   "ParseProblems": []

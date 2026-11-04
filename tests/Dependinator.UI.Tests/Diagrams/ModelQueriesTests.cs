@@ -139,7 +139,16 @@ public class ModelQueriesTests
         Assert.True(result.IsRule);
         Assert.Equal(0, result.ViolationCount);
         Assert.Equal([new AllowedDependency(view.Name, repo.Name, "Legacy", 2)], result.Allowed);
-        Assert.Equal(result, listed with { Violations = result.Violations, Allowed = result.Allowed });
+        Assert.Equal(result.Nodes, listed.Nodes);
+        Assert.Equal(
+            result,
+            listed with
+            {
+                Violations = result.Violations,
+                Allowed = result.Allowed,
+                Nodes = result.Nodes,
+            }
+        );
     }
 
     [Fact]

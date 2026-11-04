@@ -367,6 +367,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   only externals) and "no cycles inside X" (the cycles the Cycles panel finds at or inside X,
   each of their links a violation with the usual review, Allow and Fix later; cycles accepted or
   marked to fix in the Cycles panel are left out, decisions both share).
+- **Suggest rules proposes every kind (Nov 4).** The AI picks the kind that says a rule best
+  (one layers rule rather than several "must not use", "is independent" for a shared part),
+  answering `{kind, nodes, why}`; pasted answers read every form. Dependinator checks each kind
+  itself, and dismissals remember every kind (`ModelDto.KindDismissedRules`). The MCP
+  `check_rule` takes a kind (and layers), so an agent can test any kind of rule. A new kind, "the
+  parts of X are independent" (`SiblingsIndependent`: no child of X may use another child), keeps
+  features or modules apart. Name-pattern rules were postponed.
 - **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
   and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
   and the labels on other lines, for a matching style), with up to three other labels to pick

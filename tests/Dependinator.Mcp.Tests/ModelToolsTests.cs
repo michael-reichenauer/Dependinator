@@ -75,7 +75,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
     public async Task CallTool_ShouldAnswerWithCompactJson()
     {
         queries
-            .Setup(q => q.CheckRuleAsync("Core", "UI"))
+            .Setup(q => q.CheckRuleAsync("must_not_use", new[] { "Core", "UI" }))
             .ReturnsAsync(
                 new RuleResult(
                     "Core",
@@ -98,7 +98,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
 
         Assert.NotEqual(true, result.IsError);
         Assert.Equal(
-            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0,"rule":"Core must not use UI"}""",
+            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0,"rule":"Core must not use UI","kind":"must_not_use"}""",
             Text(result)
         );
     }

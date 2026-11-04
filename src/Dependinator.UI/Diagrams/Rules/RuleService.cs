@@ -37,7 +37,8 @@ record ToFixReport(AllowedViolation Planned, string SourceName, string TargetNam
 }
 
 // A dismissed rule with the names as the user sees them (the stored ones for a node that is gone).
-record DismissedReport(DismissedRule Dismissed, string FromDisplay, string ToDisplay);
+// Text is the rule in words, as RuleReport.Text has it.
+record DismissedReport(DismissedRule Dismissed, string Text);
 
 // A rule with its evaluation: the names as the user sees them, whether both nodes exist in the
 // model, the violations found (empty for an unresolved rule), and the dependencies allowed under it.
@@ -101,8 +102,8 @@ interface IRuleService
     // panel lists them.
     IReadOnlyList<DismissedReport> GetDismissed();
 
-    // Remembers "from must not use to" (node names) as not to be suggested again, with why.
-    void Dismiss(string fromName, string toName, string reason);
+    // Remembers the rule as not to be suggested again, with why.
+    void Dismiss(ArchitectureRule rule, string reason);
 
     // Forgets a dismissal: Suggest rules may offer the rule again.
     void Undismiss(DismissedRule dismissed);
@@ -253,11 +254,11 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         using var model = modelMgr.UseModel();
         string Display(string name) =>
             model.Nodes.TryGetValue(NodeId.FromName(name), out var node) ? node.LongName : name;
-        return [.. model.DismissedRules.Select(d => new DismissedReport(d, Display(d.FromName), Display(d.ToName)))];
+        return [.. model.DismissedRules.Select(d => new DismissedReport(d, d.Rule.Describe(Display)))];
     }
 
-    public void Dismiss(string fromName, string toName, string reason) =>
-        commandService.Do(new DismissRuleCommand([new DismissedRule(fromName, toName, reason.Trim())], []));
+    public void Dismiss(ArchitectureRule rule, string reason) =>
+        commandService.Do(new DismissRuleCommand([DismissedRule.Of(rule, reason.Trim())], []));
 
     public void Undismiss(DismissedRule dismissed) => commandService.Do(new DismissRuleCommand([], [dismissed]));
 
@@ -479,7 +480,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
     // layer to inside a layer above it (layers are listed top first). The rule's nodes are all in
     // the model (Compute skips an unresolved rule). "Is independent" any link from inside it to
     // anything outside it but externals; "no cycles inside" any link between two members of one
-    // cycle (cycleOf, see CycleIndexes) whose container is at or inside the node.
+    // cycle (cycleOf, see CycleIndexes) whose container is at or inside the node; "the parts of it are
+    // independent" any link from inside one of its children to inside another.
     static bool IsBreaking(RuleKind kind, Node?[] nodes, Link link, IReadOnlyDictionary<NodeId, int> cycleOf)
     {
         switch (kind)
@@ -488,6 +490,12 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 return link.Source.IsAtOrInside(nodes[0]!)
                     && !link.Target.IsAtOrInside(nodes[0]!)
                     && !link.Target.IsExternal();
+            case RuleKind.SiblingsIndependent:
+                return link.Source.IsAtOrInside(nodes[0]!)
+                    && link.Target.IsAtOrInside(nodes[0]!)
+                    && ChildOn(link.Source, nodes[0]!) is { } sourceChild
+                    && ChildOn(link.Target, nodes[0]!) is { } targetChild
+                    && sourceChild != targetChild;
             case RuleKind.NoCycles:
                 return Cycles.CycleService.TryGetSiblingsUnderCommonAncestor(
                         link.Source,
@@ -510,6 +518,17 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             default:
                 return link.Source.IsAtOrInside(nodes[0]!) && link.Target.IsAtOrInside(nodes[1]!);
         }
+    }
+
+    // The child of the container that the node is at or inside; null for the container itself.
+    static Node? ChildOn(Node node, Node container)
+    {
+        for (var n = node; n.Parent is not null; n = n.Parent)
+        {
+            if (n.Parent == container)
+                return n;
+        }
+        return null;
     }
 
     // The cycle each cycle member is in, by an index per cycle: the open cycles the Cycles panel

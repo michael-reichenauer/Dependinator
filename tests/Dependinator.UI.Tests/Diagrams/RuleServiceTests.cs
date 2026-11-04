@@ -265,7 +265,7 @@ public class RuleServiceTests
     {
         using var model = modelMgr.UseModel();
         model.AddRule(new ArchitectureRule("A", "B", "Keeps A free of B."));
-        model.AddDismissedRule(new DismissedRule("B", "A", "Not intended."));
+        model.AddDismissedRule(DismissedRule.Of(new ArchitectureRule("B", "A"), "Not intended."));
         var dto = model.SerializeToDto();
 
         model.Clear();
@@ -273,7 +273,10 @@ public class RuleServiceTests
         model.SetFromDto("path", dto);
 
         Assert.Equal("Keeps A free of B.", Assert.Single(model.Rules).Reason);
-        Assert.Equal(new DismissedRule("B", "A", "Not intended."), Assert.Single(model.DismissedRules));
+        Assert.Equal(
+            DismissedRule.Of(new ArchitectureRule("B", "A"), "Not intended."),
+            Assert.Single(model.DismissedRules)
+        );
         Assert.Equal("Not intended.", model.DismissedRules[0].Reason);
     }
 
@@ -298,7 +301,7 @@ public class RuleServiceTests
     public void AddRuleCommand_ShouldTakeBackADismissal_AndUndoShouldRestoreIt()
     {
         using var model = modelMgr.UseModel();
-        model.AddDismissedRule(new DismissedRule("A", "B", "Said no."));
+        model.AddDismissedRule(DismissedRule.Of(new ArchitectureRule("A", "B"), "Said no."));
         var command = new AddRuleCommand(new ArchitectureRule("A", "B"));
 
         command.Execute(model);
@@ -329,8 +332,11 @@ public class RuleServiceTests
     public void DismissRuleCommand_ShouldBringBackOnlyTheStoredDismissal_OnUndo()
     {
         using var model = modelMgr.UseModel();
-        model.AddDismissedRule(new DismissedRule("A", "B", "Kept reason."));
-        var command = new DismissRuleCommand([], [new DismissedRule("A", "B"), new DismissedRule("C", "D")]);
+        model.AddDismissedRule(DismissedRule.Of(new ArchitectureRule("A", "B"), "Kept reason."));
+        var command = new DismissRuleCommand(
+            [],
+            [DismissedRule.Of(new ArchitectureRule("A", "B")), DismissedRule.Of(new ArchitectureRule("C", "D"))]
+        );
 
         command.Execute(model);
         Assert.Empty(model.DismissedRules);
@@ -643,6 +649,7 @@ public class RuleServiceTests
 
         AssertOk(service.AddRule(RuleKind.Independent, [core.Id]));
         AssertOk(service.AddRule(RuleKind.NoCycles, [core.Id]));
+        AssertOk(service.AddRule(RuleKind.SiblingsIndependent, [core.Id]));
         AssertError(service.AddRule(RuleKind.NoCycles, [core.Id])); // Exists
         AssertError(service.AddRule(RuleKind.Independent, [core.Id, core.Id])); // One node only
 
@@ -655,9 +662,62 @@ public class RuleServiceTests
             [
                 ArchitectureRule.ForNode(RuleKind.Independent, core.Name),
                 ArchitectureRule.ForNode(RuleKind.NoCycles, core.Name),
+                ArchitectureRule.ForNode(RuleKind.SiblingsIndependent, core.Name),
             ],
             m.Rules
         );
         Assert.Equal(rules, m.Rules);
+    }
+
+    [Fact]
+    public void Compute_SiblingsIndependent_ShouldReportUsesBetweenChildren_ButNotInsideOneOrOutside()
+    {
+        using var model = modelMgr.UseModel();
+        var features = AddNode(model, "Features", model.Root, NodeType.Assembly);
+        var core = AddNode(model, "Core", model.Root, NodeType.Assembly);
+        var orders = AddNode(model, "Features.Orders", features);
+        var users = AddNode(model, "Features.Users", features);
+        var list = AddNode(model, "Features.Orders.List", orders);
+        var edit = AddNode(model, "Features.Orders.Edit", orders);
+        var login = AddNode(model, "Features.Users.Login", users);
+        var service = AddNode(model, "Core.Service", core);
+        AddLink(model, list, edit); // Inside one child is fine
+        AddLink(model, list, service); // Outside is fine
+        AddLink(model, login, list); // Between children is not
+        model.AddRule(ArchitectureRule.ForNode(RuleKind.SiblingsIndependent, features.Name));
+
+        var (reports, _) = RuleService.Compute(model);
+
+        var violation = Assert.Single(Assert.Single(reports).Violations);
+        Assert.Equal((login.Id, list.Id), (violation.SourceId, violation.TargetId));
+        Assert.Equal("the parts of Features (dll) are independent of each other", reports[0].Text);
+    }
+
+    [Fact]
+    public void RemoveRule_ShouldRememberADismissalOfAnyKind_AndAddingItAgainForgetsIt()
+    {
+        Node core;
+        using (var model = modelMgr.UseModel())
+            core = AddNode(model, "Core", model.Root, NodeType.Assembly);
+        var commands = new Mock<ICommandService>();
+        commands
+            .Setup(c => c.Do(It.IsAny<Command>(), true, true))
+            .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
+        var service = new RuleService(modelMgr, commands.Object);
+        var rule = ArchitectureRule.ForNode(RuleKind.NoCycles, core.Name);
+        AssertOk(service.AddRule(RuleKind.NoCycles, [core.Id]));
+
+        service.RemoveRule(rule);
+
+        using (var m = modelMgr.UseModel())
+        {
+            Assert.True(Assert.Single(m.DismissedRules).IsFor(rule));
+            var dto = m.SerializeToDto();
+            Assert.Empty(dto.DismissedRules); // Older versions read only must-not-use dismissals
+            Assert.Equal((int)RuleKind.NoCycles, Assert.Single(dto.KindDismissedRules).Kind);
+        }
+        AssertOk(service.AddRule(RuleKind.NoCycles, [core.Id]));
+        using (var m = modelMgr.UseModel())
+            Assert.Empty(m.DismissedRules);
     }
 }

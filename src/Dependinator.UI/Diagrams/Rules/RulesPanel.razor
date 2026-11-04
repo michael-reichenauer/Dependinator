@@ -39,7 +39,7 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="rules-close" />
     </div>
-    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", layers, "this is independent" or "no cycles inside this". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
+    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", layers, "this is independent", "the parts of this are independent" or "no cycles inside this". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
 
     <div class="dep-panel__list">
       @if (reports.Count == 0)
@@ -69,6 +69,11 @@
                 case Modeling.Models.RuleKind.Independent:
                   <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
                   @(" ")<span class="dep-rules__arrow" title="uses nothing else in the solution, only externals">is independent</span>
+                  break;
+                case Modeling.Models.RuleKind.SiblingsIndependent:
+                  <span class="dep-rules__arrow">the parts of</span>@(" ")
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  @(" ")<span class="dep-rules__arrow">are independent</span>
                   break;
                 case Modeling.Models.RuleKind.NoCycles:
                   <span class="dep-rules__arrow">no cycles inside</span>@(" ")
@@ -224,10 +229,8 @@
             @foreach (var item in dismissed)
             {
               <div class="dep-rules__item" data-testid="rules-dismissed-item">
-                <span class="dep-panel__row dep-rules__violation" title="@($"{item.FromDisplay} must not use {item.ToDisplay}")">
-                  <span>@item.FromDisplay</span>
-                  <span class="dep-rules__arrow">must not use</span>
-                  <span>@item.ToDisplay</span>
+                <span class="dep-panel__row dep-rules__violation" title="@item.Text">
+                  <span>@item.Text</span>
                   @if (item.Dismissed.Reason != "")
                   {
                     <span class="dep-cycles__reason dep-rules__reason">@item.Dismissed.Reason</span>
@@ -251,6 +254,7 @@
         <option value="@Modeling.Models.RuleKind.Layers">Layers, top first</option>
         <option value="@Modeling.Models.RuleKind.Independent">X is independent</option>
         <option value="@Modeling.Models.RuleKind.NoCycles">No cycles inside X</option>
+        <option value="@Modeling.Models.RuleKind.SiblingsIndependent">The parts of X are independent</option>
       </select>
       <span class="dep-rules__kind-hint">@KindHint(addKind)</span>
     </div>
@@ -282,20 +286,24 @@
     }
     else if (Modeling.Models.ArchitectureRule.IsOneNodeKind(addKind))
     {
-      var isNoCycles = addKind == Modeling.Models.RuleKind.NoCycles;
+      var (before, after, pickTitle) = addKind switch
+      {
+        Modeling.Models.RuleKind.NoCycles => ("no cycles inside", "", "Choose the node that must have no cycles inside"),
+        Modeling.Models.RuleKind.SiblingsIndependent => ("the parts of", "are independent", "Choose the node whose children must not use each other"),
+        _ => ("", "is independent", "Choose the node that must use only externals"),
+      };
       <div class="dep-rules__add dep-rules__add--one">
-        @if (isNoCycles)
+        @if (before != "")
         {
-          <span class="dep-rules__arrow">no cycles inside</span>
+          <span class="dep-rules__arrow">@before</span>
         }
-        <button type="button" class="@PickClass(fromName)"
-                title="@(isNoCycles ? "Choose the node that must have no cycles inside" : "Choose the node that must use only externals")"
+        <button type="button" class="@PickClass(fromName)" title="@pickTitle"
                 @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
           @(fromName ?? "Choose a node …")
         </button>
-        @if (!isNoCycles)
+        @if (after != "")
         {
-          <span class="dep-rules__arrow">is independent</span>
+          <span class="dep-rules__arrow">@after</span>
         }
         <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null)"
                    OnClick="Add" data-testid="rules-add">
@@ -415,7 +423,7 @@
   void Undismiss(Modeling.Models.DismissedRule dismissed)
   {
     ruleService.Undismiss(dismissed);
-    suggestRulesService.AllowSuggestingAgain(dismissed.FromName, dismissed.ToName);
+    suggestRulesService.AllowSuggestingAgain(dismissed.Rule);
   }
 
   async Task EditReasonAsync(RuleReport report)
@@ -547,6 +555,7 @@
     Modeling.Models.RuleKind.OnlyMayUse => "Nothing else may depend on Y, say only Data may use the database client.",
     Modeling.Models.RuleKind.Layers => "Each layer may use only the layers below it, say UI › Domain › Data.",
     Modeling.Models.RuleKind.Independent => "X may use nothing else in the solution, only packages and the framework, say Shared is independent.",
+    Modeling.Models.RuleKind.SiblingsIndependent => "No part of X may use another part of X, say the feature folders of UI.",
     Modeling.Models.RuleKind.NoCycles => "No circular dependencies at any level inside X, say no cycles inside Core. Cycles accepted or marked to fix in the Cycles panel are left out.",
     _ => "Nothing in X may depend on anything in Y, say UI must not use Data.",
   };
@@ -566,6 +575,7 @@
       (Modeling.Models.RuleKind.OnlyMayUse, false) => "Rule: choose the node only it may use",
       (Modeling.Models.RuleKind.Independent, _) => "Rule: choose the node that must use only externals",
       (Modeling.Models.RuleKind.NoCycles, _) => "Rule: choose the node that must have no cycles inside",
+      (Modeling.Models.RuleKind.SiblingsIndependent, _) => "Rule: choose the node whose parts must not use each other",
       (_, true) => "Rule: choose the node that must not depend on the other",
       _ => "Rule: choose the node it must not depend on",
     };
