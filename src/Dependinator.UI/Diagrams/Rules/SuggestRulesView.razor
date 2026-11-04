@@ -6,7 +6,9 @@
    structure and dependencies (AiOpinion, open at once since asking is what the view is for).
    Dependinator checks each suggested rule itself and shows what it would break today, or why it
    cannot be added, again whenever the model or its rules change; the node names go to their node,
-   and each rule is added on its own or with the others. The Rules panel keeps this view alive
+   and each rule is added on its own (with the AI's why as its reason) or with the others, or
+   dismissed: saved with the model, so later answers leave it out (as they leave out the rules
+   earlier answers suggested), until the dismissal is undone here or in the Rules panel. The Rules panel keeps this view alive
    while it is hidden (back to the rules, or the panel closed), so an answer that takes a while
    still arrives, and the answers are there to come back to. *@
 <div class="dep-panel dep-rules dep-suggest-rules dep-toolbar-card" style="@(IsShown ? "" : "display: none")"
@@ -26,7 +28,7 @@
     </div>
     <AiOpinion TAnswer="RuleSuggestions" TestId="suggest-rules" GetPrompt="GetPrompt" Ask="Ask"
                ParsePasted="suggestRulesService.ParsePasted" IsExpandedAtStart="true"
-               ExpandText="Ask AI for rules" AnswerTitle="Suggested rules"
+               ExpandText="Ask AI for rules" AnswerTitle="Suggested rules" AnswersTitle="Suggested rules" IsVerdictCompared="false"
                RouteText="Claude reads the model's structure and dependencies and suggests rules here."
                AskTitle="Ask Claude to suggest rules for this model"
                CopyTitle="Copy a prompt with the model's structure and dependencies"
@@ -47,6 +49,18 @@
                          data-testid="suggest-rules-add-all">@($"Add all {addable.Count}")</MudButton>
             }
           </div>
+          @if (shown.Rules.Count == 0)
+          {
+            <div class="dep-ai__suggestion-note" data-testid="suggest-rules-none">
+              No new rules worth suggesting. The rules there are, and the ones dismissed or suggested before, seem to cover it.
+            </div>
+          }
+          else if (shown.LeftOutCount > 0)
+          {
+            <div class="dep-ai__suggestion-note" data-testid="suggest-rules-left-out">
+              @LeftOutText(shown.LeftOutCount)
+            </div>
+          }
           @foreach (var rule in shown.Rules)
           {
             <div class="dep-suggest-rules__rule" data-testid="suggest-rules-item" data-can-add="@(rule.CanAdd ? "yes" : "no")">
@@ -61,8 +75,17 @@
                 <span class="dep-panel__count" data-testid="suggest-rules-status">@Status(rule)</span>
                 @if (rule.CanAdd)
                 {
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ThumbDown" Size="Size.Small"
+                                 title="Dismiss: not a rule for this codebase, so it is not suggested again"
+                                 OnClick="() => suggestRulesService.Dismiss(rule)" data-testid="suggest-rules-dismiss" />
                   <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="dep-suggest-rules__add"
-                             title="Add this rule" OnClick="() => Add([rule])" data-testid="suggest-rules-add">Add</MudButton>
+                             title="Add this rule, with the why below as its reason" OnClick="() => Add([rule])" data-testid="suggest-rules-add">Add</MudButton>
+                }
+                else if (rule.Check.IsDismissed)
+                {
+                  <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-suggest-rules__add"
+                             title="Undo the dismissal: the rule can be added, and suggested again"
+                             OnClick="() => suggestRulesService.Undismiss(rule)" data-testid="suggest-rules-undismiss">Undo</MudButton>
                 }
                 else if (rule.Check.IsRule)
                 {
@@ -136,10 +159,16 @@
     {
       { Error: not null } => "cannot be added",
       { IsRule: true } => "already a rule",
+      { IsDismissed: true } => "dismissed",
       { ViolationCount: 0 } => "kept today",
       { ViolationCount: 1, LinkCount: var links } => $"1 broken ({Links(links)})",
       { ViolationCount: var count, LinkCount: var links } => $"{count} broken ({Links(links)})",
     };
+
+  static string LeftOutText(int count) =>
+    count == 1
+      ? "1 more was left out: you dismissed it, or an earlier answer suggested it."
+      : $"{count} more were left out: you dismissed them, or an earlier answer suggested them.";
 
   static string Links(int count) => count == 1 ? "1 link" : $"{count} links";
 }

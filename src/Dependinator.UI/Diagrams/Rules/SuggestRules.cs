@@ -17,11 +17,15 @@ public record SuggestedRule(string From, string To, string Why)
 {
     public RuleCheck Check { get; init; } = RuleCheck.Unchecked;
 
-    public bool CanAdd => Check.Error is null && !Check.IsRule;
+    public bool CanAdd => Check.Error is null && !Check.IsRule && !Check.IsDismissed;
+
+    // The rule's node names as checked (the AI's names where the check found none), the key that
+    // dismissals and the suggestions shown before are matched by.
+    public (string From, string To) Key => Check.Error is null ? (Check.FromName, Check.ToName) : (From, To);
 }
 
 // FromName and ToName are node names, the titles what the panel shows; Error says why the rule
-// cannot be added (a node not found, one inside the other).
+// cannot be added (a node not found, one inside the other). IsDismissed: the user said no to it.
 public record RuleCheck(
     string? Error,
     string FromName = "",
@@ -30,7 +34,8 @@ public record RuleCheck(
     string ToTitle = "",
     int ViolationCount = 0,
     int LinkCount = 0,
-    bool IsRule = false
+    bool IsRule = false,
+    bool IsDismissed = false
 )
 {
     public static readonly RuleCheck Unchecked = new("Not checked");
@@ -41,7 +46,17 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
 {
     public AiSource Source { get; init; } = AiSource.Claude;
 
-    public string Verdict => Rules.Count == 1 ? "1 rule" : $"{Rules.Count} rules";
+    public string Verdict =>
+        Rules.Count switch
+        {
+            0 => "no new rules",
+            1 => "1 rule",
+            _ => $"{Rules.Count} rules",
+        };
+
+    // How many rules the answer had that were left out: dismissed by the user, or suggested in an
+    // earlier answer already.
+    public int LeftOutCount { get; init; }
 
     // The fields of SuggestRulesPrompt's answer format; structured output makes the JSON match it.
     public const string JsonSchema = """
@@ -78,9 +93,8 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
                 .Where(r => !string.IsNullOrWhiteSpace(r.From) && !string.IsNullOrWhiteSpace(r.To))
                 .Select(r => new SuggestedRule(Name(r.From!), Name(r.To!), (r.Why ?? "").Trim())),
         ];
-        return rules.Count == 0
-            ? new Error($"{source.Name()} suggested no rules.")
-            : new RuleSuggestions(rules) { Source = source };
+        // No rules is a fine answer: the rules there are may cover the architecture already.
+        return new RuleSuggestions(rules) { Source = source };
     }
 
     record Answer(List<AnswerRule>? Rules);
@@ -133,7 +147,8 @@ static class SuggestRulesPrompt
     internal const int MaxListedNodes = 120;
     internal const int MaxDependencies = 150;
 
-    public static string Build(IModel model)
+    // suggestedBefore: the rules earlier answers suggested (node names), not to be repeated.
+    public static string Build(IModel model, IReadOnlyCollection<(string From, string To)>? suggestedBefore = null)
     {
         var outline = Outline(model);
         if (outline == "")
@@ -150,6 +165,7 @@ static class SuggestRulesPrompt
         );
         text.AppendLine().Append(outline);
         AppendRules(text, model);
+        AppendNotToSuggest(text, model, suggestedBefore);
         text.AppendLine().Append(TaskSection);
         return text.ToString();
     }
@@ -188,7 +204,7 @@ static class SuggestRulesPrompt
     static readonly string TaskSection = $"""
         ## Your task
 
-        Suggest up to {MaxSuggestions} rules worth keeping for this codebase: rules that state its intended layering or boundaries (which part may use which, or which part stays free of a technology), not rules that merely happen to hold. Prefer rules the code keeps today, or breaks with only a few dependencies; suggest a rule the code breaks widely only when the structure clearly intends it, and say so. Leave out the rules there are already, and pairs where one node contains the other. Name each node exactly as listed (the name in backticks). If you have Dependinator's tools, check each rule with check_rule before you suggest it.
+        Suggest the rules clearly worth keeping for this codebase, at most {MaxSuggestions}: rules that state its intended layering or boundaries (which part may use which, or which part stays free of a technology), not rules that merely happen to hold. Fewer is better than padding: suggest only rules you would defend, and none when the rules there are already cover the architecture. Prefer rules the code keeps today, or breaks with only a few dependencies; suggest a rule the code breaks widely only when the structure clearly intends it, and say so. Leave out the rules there are already, the rules not to suggest, and pairs where one node contains the other. Name each node exactly as listed (the name in backticks). If you have Dependinator's tools, check each rule with check_rule before you suggest it.
 
         Answer in this format, for each rule:
 
@@ -312,8 +328,34 @@ static class SuggestRulesPrompt
             return;
         text.AppendLine().AppendLine("## The rules there are").AppendLine();
         foreach (var rule in model.Rules)
-            text.AppendLine($"- `{rule.FromName}` must not use `{rule.ToName}`");
+            text.AppendLine($"- `{rule.FromName}` must not use `{rule.ToName}`{Because(rule.Reason)}");
     }
+
+    // The rules the user dismissed (with why, where they gave one) and those suggested before.
+    static void AppendNotToSuggest(
+        StringBuilder text,
+        IModel model,
+        IReadOnlyCollection<(string From, string To)>? suggestedBefore
+    )
+    {
+        var dismissed = model.DismissedRules;
+        var before = (suggestedBefore ?? [])
+            .Where(r => !dismissed.Any(d => d.IsFor(r.From, r.To)) && !model.Rules.Contains(new(r.From, r.To)))
+            .ToList();
+        if (dismissed.Count == 0 && before.Count == 0)
+            return;
+        text.AppendLine().AppendLine("## Rules not to suggest").AppendLine();
+        text.AppendLine("The user said no to these, or saw them suggested already; do not suggest them again.")
+            .AppendLine();
+        foreach (var rule in dismissed)
+            text.AppendLine(
+                $"- `{rule.FromName}` must not use `{rule.ToName}` (dismissed{Because(rule.Reason, ": ")})"
+            );
+        foreach (var (from, to) in before)
+            text.AppendLine($"- `{from}` must not use `{to}` (suggested before)");
+    }
+
+    static string Because(string reason, string separator = " — ") => reason == "" ? "" : $"{separator}{reason}";
 }
 
 // "Suggest rules" in the Rules panel: an AI (Claude, Claude Code with Dependinator's MCP tools, or
@@ -339,9 +381,19 @@ interface ISuggestRulesService
     // A key that changes whenever a check could give another result (a re-parse, a rule added).
     object CheckVersion { get; }
 
-    // Adds the rules, as one undo step, and tells the user how many were added (not for one rule
-    // added as asked: its row shows it).
+    // Adds the rules, with the AI's why as their reason, as one undo step, and tells the user how
+    // many were added (not for one rule added as asked: its row shows it).
     void Add(IReadOnlyList<SuggestedRule> chosen);
+
+    // Remembers the suggested rule as not wanted: later answers leave it out.
+    void Dismiss(SuggestedRule rule);
+
+    // Takes a dismissal back: the rule can be suggested again.
+    void Undismiss(SuggestedRule rule);
+
+    // Lets later answers suggest the rule again, though an earlier answer suggested it (its
+    // dismissal was taken back in the Rules panel).
+    void AllowSuggestingAgain(string fromName, string toName);
 }
 
 [Scoped]
@@ -361,7 +413,10 @@ class SuggestRulesService(
     {
         // Checked names, so two suggestions that name one rule differently add it once; a node
         // gone in a re-parse since the check leaves its rule out.
-        List<ArchitectureRule> rules = [.. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName))];
+        List<ArchitectureRule> rules =
+        [
+            .. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName, r.Why)),
+        ];
         var added = ruleService.AddRules(rules);
         var left = rules.Distinct().Count() - added;
         if (chosen.Count == 1 && added == 1)
@@ -375,16 +430,62 @@ class SuggestRulesService(
         applicationEvents.TriggerInfoReported(message);
     }
 
+    public void Dismiss(SuggestedRule rule) => ruleService.Dismiss(rule.Key.From, rule.Key.To, "");
+
+    public void Undismiss(SuggestedRule rule)
+    {
+        ruleService.Undismiss(new DismissedRule(rule.Key.From, rule.Key.To));
+        AllowSuggestingAgain(rule.Key.From, rule.Key.To);
+    }
+
+    public void AllowSuggestingAgain(string fromName, string toName) => suggestedBefore.Remove((fromName, toName));
+
     public Result<RuleSuggestions> ParsePasted(string text)
     {
         var parsed = RuleSuggestions.ParseText(text);
-        return parsed is RuleSuggestions suggestions ? Check(suggestions) : parsed.Error;
+        return parsed is RuleSuggestions suggestions ? New(Check(suggestions)) : parsed.Error;
     }
 
     public string GetPrompt()
     {
         using var model = modelMgr.UseModel();
-        return SuggestRulesPrompt.Build(model);
+        return SuggestRulesPrompt.Build(model, SuggestedBefore(model));
+    }
+
+    // The rules earlier answers suggested for the open model (node names as checked), so a new
+    // ask is told not to repeat them and its repeats are left out; forgotten for another model.
+    readonly HashSet<(string From, string To)> suggestedBefore = [];
+    string suggestedFor = "";
+
+    IReadOnlyCollection<(string From, string To)> SuggestedBefore(IModel model)
+    {
+        if (model.Path != suggestedFor)
+        {
+            suggestedBefore.Clear();
+            suggestedFor = model.Path;
+        }
+        return suggestedBefore;
+    }
+
+    // A checked answer without the rules the user dismissed and those an earlier answer
+    // suggested, each named once; the rest are remembered as suggested.
+    RuleSuggestions New(RuleSuggestions answer)
+    {
+        using var model = modelMgr.UseModel();
+        var before = SuggestedBefore(model);
+        HashSet<(string, string)> seen = [];
+        List<SuggestedRule> kept = [];
+        var leftOut = 0;
+        foreach (var rule in answer.Rules)
+        {
+            if (rule.Check.IsDismissed || before.Contains(rule.Key))
+                leftOut++;
+            else if (seen.Add(rule.Key))
+                kept.Add(rule); // A rule named twice in one answer is shown once, not counted as left out.
+        }
+        foreach (var rule in kept.Where(r => r.Check.Error is null))
+            suggestedBefore.Add(rule.Key);
+        return answer with { Rules = kept, LeftOutCount = leftOut };
     }
 
     public async Task<Result<RuleSuggestions>> AskAsync(AiSource route, Action<SuggestStep> onStep)
@@ -394,7 +495,7 @@ class SuggestRulesService(
         {
             onStep(route.AskingStep());
             await Task.Delay(TestModeAnswerDelay);
-            return Check(TestModeAnswer() with { Source = route });
+            return New(Check(TestModeAnswer() with { Source = route }));
         }
 
         var json = await aiService.AskAsync(
@@ -407,7 +508,7 @@ class SuggestRulesService(
         if (json is not string text)
             return json.Error;
         var parsed = RuleSuggestions.Parse(text, route);
-        return parsed is RuleSuggestions suggestions ? Check(suggestions) : parsed.Error;
+        return parsed is RuleSuggestions suggestions ? New(Check(suggestions)) : parsed.Error;
     }
 
     public RuleSuggestions Check(RuleSuggestions suggestions) =>
@@ -430,7 +531,8 @@ class SuggestRulesService(
             Title(model, result.To),
             result.ViolationCount,
             result.LinkCount,
-            result.IsRule
+            result.IsRule,
+            model.DismissedRules.Any(d => d.IsFor(result.From, result.To))
         );
     }
 

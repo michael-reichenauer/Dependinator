@@ -154,7 +154,7 @@ else if (HasAiHelp)
 {
   @* With an answer: one line, offering another opinion from the default or, from its menu, any provider. *@
   <div class="dep-ai__header dep-ai" data-testid="@Id("ai")">
-    <span class="dep-ai__title">@(answers.Count > 1 ? $"{AnswerTitle}s" : AnswerTitle)</span>
+    <span class="dep-ai__title">@(answers.Count > 1 ? AnswersTitle ?? $"{AnswerTitle}s" : AnswerTitle)</span>
     @ShowPromptLink
     <MudSpacer />
     @AskSplit
@@ -266,6 +266,13 @@ else if (Selected is { } s && AnswerContent is not null)
   [Parameter] public string ExpandText { get; set; } = "Get an AI opinion";
   [Parameter] public string AnswerTitle { get; set; } = "AI opinion";
 
+  // The title over several answers, where adding an "s" to AnswerTitle does not make it plural.
+  [Parameter] public string? AnswersTitle { get; set; }
+
+  // Whether differing verdicts are pointed out as a judgement call; not for answers whose
+  // "verdict" is a count, like suggested rules.
+  [Parameter] public bool IsVerdictCompared { get; set; } = true;
+
   // A question to ask about an answer, offered under it (see AiFollowUp).
   [Parameter] public AiFollowUp<TAnswer>? FollowUp { get; set; }
 
@@ -316,7 +323,7 @@ else if (Selected is { } s && AnswerContent is not null)
   }
 
   // Only between opinions: a follow-up's answer was asked for its verdict.
-  bool AnswersDiffer => answers.Where(a => !a.IsFollowUp).Select(a => a.Verdict).Distinct().Count() > 1;
+  bool AnswersDiffer => IsVerdictCompared && answers.Where(a => !a.IsFollowUp).Select(a => a.Verdict).Distinct().Count() > 1;
 
   string Id(string suffix) => $"{TestId}-{suffix}";
 

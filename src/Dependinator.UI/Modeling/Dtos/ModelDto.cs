@@ -29,6 +29,9 @@ record ModelDto
     // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<RuleDto> Rules { get; init; } = [];
 
+    // The rules not to suggest again (see DismissedRule). Defaulted (no FormatVersion bump).
+    public IReadOnlyList<RuleDto> DismissedRules { get; init; } = [];
+
     // Defaulted, so models saved before allowed violations existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AllowedViolationDto> AllowedViolations { get; init; } = [];
 
@@ -50,12 +53,14 @@ record ParseProblemDto
     public string? NodeName { get; init; }
 }
 
-// An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).
+// An architecture rule: "From" must not depend on "To", with why (node names, see
+// ArchitectureRule); also a dismissed rule (see DismissedRule).
 [Serializable]
 record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
+    public string Reason { get; init; } = "";
 }
 
 // A dependency that breaks the rule "From must not use To" and that the user allowed, with why:

@@ -49,6 +49,14 @@ interface IModel : IDisposable
     void AddRule(ArchitectureRule rule);
     void RemoveRule(ArchitectureRule rule);
 
+    // Replaces the rule (the same nodes) with one that has another reason, in its place.
+    void ReplaceRule(ArchitectureRule rule);
+
+    // The rules the user does not want suggested again; a change bumps RulesVersion.
+    IReadOnlyList<DismissedRule> DismissedRules { get; }
+    void AddDismissedRule(DismissedRule dismissed);
+    void RemoveDismissedRule(DismissedRule dismissed);
+
     // Dependencies that break a rule but are allowed, with why; a change bumps RulesVersion.
     IReadOnlyList<AllowedViolation> AllowedViolations { get; }
     void AddAllowedViolation(AllowedViolation allowed);
@@ -147,6 +155,32 @@ class Model : IModel
             RulesVersion++;
     }
 
+    public void ReplaceRule(ArchitectureRule rule)
+    {
+        var index = rules.IndexOf(rule);
+        if (index < 0 || rules[index].Reason == rule.Reason)
+            return;
+        rules[index] = rule;
+        RulesVersion++;
+    }
+
+    readonly List<DismissedRule> dismissedRules = [];
+    public IReadOnlyList<DismissedRule> DismissedRules => dismissedRules;
+
+    // One entry per rule: a new reason replaces the old one.
+    public void AddDismissedRule(DismissedRule dismissed)
+    {
+        dismissedRules.Remove(dismissed);
+        dismissedRules.Add(dismissed);
+        RulesVersion++;
+    }
+
+    public void RemoveDismissedRule(DismissedRule dismissed)
+    {
+        if (dismissedRules.Remove(dismissed))
+            RulesVersion++;
+    }
+
     readonly List<AllowedViolation> allowedViolations = [];
     public IReadOnlyList<AllowedViolation> AllowedViolations => allowedViolations;
 
@@ -203,7 +237,24 @@ class Model : IModel
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
-            Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
+            Rules =
+            [
+                .. rules.Select(r => new RuleDto
+                {
+                    From = r.FromName,
+                    To = r.ToName,
+                    Reason = r.Reason,
+                }),
+            ],
+            DismissedRules =
+            [
+                .. dismissedRules.Select(r => new RuleDto
+                {
+                    From = r.FromName,
+                    To = r.ToName,
+                    Reason = r.Reason,
+                }),
+            ],
             AllowedViolations =
             [
                 .. allowedViolations.Select(a => new AllowedViolationDto
@@ -284,7 +335,11 @@ class Model : IModel
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
         rules.Clear();
-        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To)).Distinct());
+        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To, r.Reason ?? "")).Distinct());
+        dismissedRules.Clear();
+        dismissedRules.AddRange(
+            modelDto.DismissedRules.Select(r => new DismissedRule(r.From, r.To, r.Reason ?? "")).Distinct()
+        );
         allowedViolations.Clear();
         allowedViolations.AddRange(
             modelDto
@@ -346,6 +401,7 @@ class Model : IModel
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
         rules.Clear();
+        dismissedRules.Clear();
         allowedViolations.Clear();
         RulesVersion++;
         acceptedCycles.Clear();

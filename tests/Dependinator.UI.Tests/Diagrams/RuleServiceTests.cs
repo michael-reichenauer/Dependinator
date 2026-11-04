@@ -259,4 +259,84 @@ public class RuleServiceTests
         model.SetFromDto("path", dto);
         Assert.Equal([allowed], model.AllowedViolations);
     }
+
+    [Fact]
+    public void Model_ShouldRoundTripRuleReasonsAndDismissedRulesThroughTheDto()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddRule(new ArchitectureRule("A", "B", "Keeps A free of B."));
+        model.AddDismissedRule(new DismissedRule("B", "A", "Not intended."));
+        var dto = model.SerializeToDto();
+
+        model.Clear();
+        Assert.Empty(model.DismissedRules);
+        model.SetFromDto("path", dto);
+
+        Assert.Equal("Keeps A free of B.", Assert.Single(model.Rules).Reason);
+        Assert.Equal(new DismissedRule("B", "A", "Not intended."), Assert.Single(model.DismissedRules));
+        Assert.Equal("Not intended.", model.DismissedRules[0].Reason);
+    }
+
+    [Fact]
+    public void RemoveRuleCommand_ShouldDismissTheRule_AndUndoShouldBringItBack()
+    {
+        using var model = modelMgr.UseModel();
+        var rule = new ArchitectureRule("A", "B", "Why.");
+        model.AddRule(rule);
+        var command = new RemoveRuleCommand(new ArchitectureRule("A", "B"));
+
+        command.Execute(model);
+        Assert.Empty(model.Rules);
+        Assert.Equal("Removed from the rules. Why.", Assert.Single(model.DismissedRules).Reason);
+
+        command.Revert(model);
+        Assert.Equal("Why.", Assert.Single(model.Rules).Reason);
+        Assert.Empty(model.DismissedRules);
+    }
+
+    [Fact]
+    public void AddRuleCommand_ShouldTakeBackADismissal_AndUndoShouldRestoreIt()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddDismissedRule(new DismissedRule("A", "B", "Said no."));
+        var command = new AddRuleCommand(new ArchitectureRule("A", "B"));
+
+        command.Execute(model);
+        Assert.Empty(model.DismissedRules);
+
+        command.Revert(model);
+        Assert.Empty(model.Rules);
+        Assert.Equal("Said no.", Assert.Single(model.DismissedRules).Reason);
+    }
+
+    [Fact]
+    public void SetRuleReasonCommand_ShouldReplaceTheReason_InPlace()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddRule(new ArchitectureRule("A", "B"));
+        model.AddRule(new ArchitectureRule("C", "D"));
+        var before = model.Rules[0];
+        var command = new SetRuleReasonCommand(before, before with { Reason = "New." });
+
+        command.Execute(model);
+        Assert.Equal(["New.", ""], model.Rules.Select(r => r.Reason));
+
+        command.Revert(model);
+        Assert.Equal(["", ""], model.Rules.Select(r => r.Reason));
+    }
+
+    [Fact]
+    public void DismissRuleCommand_ShouldBringBackOnlyTheStoredDismissal_OnUndo()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddDismissedRule(new DismissedRule("A", "B", "Kept reason."));
+        var command = new DismissRuleCommand([], [new DismissedRule("A", "B"), new DismissedRule("C", "D")]);
+
+        command.Execute(model);
+        Assert.Empty(model.DismissedRules);
+
+        command.Revert(model);
+        var restored = Assert.Single(model.DismissedRules);
+        Assert.Equal("Kept reason.", restored.Reason);
+    }
 }

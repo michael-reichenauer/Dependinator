@@ -29,6 +29,9 @@ record AllowedReport(AllowedViolation Allowed, string SourceName, string TargetN
     public bool IsGone => LinkCount == 0;
 }
 
+// A dismissed rule with the names as the user sees them (the stored ones for a node that is gone).
+record DismissedReport(DismissedRule Dismissed, string FromDisplay, string ToDisplay);
+
 // A rule with its evaluation: the names as the user sees them, whether both nodes exist in the
 // model, the violations found (empty for an unresolved rule), and the dependencies allowed under it.
 record RuleReport(
@@ -66,7 +69,21 @@ interface IRuleService
     // rules yet, as one undo step; the number added.
     int AddRules(IReadOnlyList<ArchitectureRule> rules);
 
+    // Removes the rule and remembers it as dismissed, so Suggest rules does not offer it again.
     void RemoveRule(ArchitectureRule rule);
+
+    // Changes why the rule exists.
+    void SetRuleReason(ArchitectureRule rule, string reason);
+
+    // The rules the user does not want suggested again, with their display names, as the Rules
+    // panel lists them.
+    IReadOnlyList<DismissedReport> GetDismissed();
+
+    // Remembers "from must not use to" (node names) as not to be suggested again, with why.
+    void Dismiss(string fromName, string toName, string reason);
+
+    // Forgets a dismissal: Suggest rules may offer the rule again.
+    void Undismiss(DismissedRule dismissed);
 
     // Allows a dependency that breaks the rule, with why: it is no longer reported.
     void Allow(ArchitectureRule rule, RuleViolation violation, string reason);
@@ -148,6 +165,27 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
     }
 
     public void RemoveRule(ArchitectureRule rule) => commandService.Do(new RemoveRuleCommand(rule));
+
+    public void SetRuleReason(ArchitectureRule rule, string reason)
+    {
+        var current = modelMgr.WithModel(m => m.Rules.FirstOrDefault(r => r == rule));
+        if (current is null || current.Reason == reason.Trim())
+            return;
+        commandService.Do(new SetRuleReasonCommand(current, current with { Reason = reason.Trim() }));
+    }
+
+    public IReadOnlyList<DismissedReport> GetDismissed()
+    {
+        using var model = modelMgr.UseModel();
+        string Display(string name) =>
+            model.Nodes.TryGetValue(NodeId.FromName(name), out var node) ? node.LongName : name;
+        return [.. model.DismissedRules.Select(d => new DismissedReport(d, Display(d.FromName), Display(d.ToName)))];
+    }
+
+    public void Dismiss(string fromName, string toName, string reason) =>
+        commandService.Do(new DismissRuleCommand([new DismissedRule(fromName, toName, reason.Trim())], []));
+
+    public void Undismiss(DismissedRule dismissed) => commandService.Do(new DismissRuleCommand([], [dismissed]));
 
     public void Allow(ArchitectureRule rule, RuleViolation violation, string reason)
     {
