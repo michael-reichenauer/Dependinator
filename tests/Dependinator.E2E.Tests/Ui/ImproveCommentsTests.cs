@@ -56,6 +56,7 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
         await Page.GetByTestId("improve-comments-only").ClickAsync();
         await Expect(Page.GetByTestId("improve-comments-count")).ToHaveTextAsync("1 project in 1 file");
         await Page.GetByTestId("improve-comments-copy").ClickAsync();
+        await Expect(Page.GetByTestId("improve-comments-copied")).ToContainTextAsync("The prompt is copied");
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.Contains("AssemblyDescription", prompt);
         Assert.Contains("Description now: \"Demo.Claude asks Claude", prompt);
