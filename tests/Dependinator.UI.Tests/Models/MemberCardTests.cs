@@ -229,6 +229,22 @@ public class MemberCardTests
     }
 
     [Fact]
+    public void RestoreLayoutState_ShouldAskForALayout_WhenTheSavedRowsDoNotMatchTheFold()
+    {
+        // Saved after a re-parse made the card foldable, before it was laid out again: every row
+        // still has its own place.
+        var type = LargeType(out _, out _);
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2);
+        type.IsChildrenLayoutRequired = false;
+
+        MemberCard.RestoreLayoutState(type);
+
+        Assert.True(type.IsChildrenLayoutRequired);
+        Assert.Equal(Rect.None, MemberCard.PrivateToggleRect(type));
+        Assert.All(type.Children, row => Assert.False(MemberCard.IsFoldedRow(row)));
+    }
+
+    [Fact]
     public void Bounds_ShouldKeepTheToggle_WhenNoPublicRowIsShown()
     {
         var type = LargeType(out _, out _);

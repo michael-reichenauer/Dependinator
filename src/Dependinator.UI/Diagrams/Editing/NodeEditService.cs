@@ -229,12 +229,15 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
     public CardToggleMove? TogglePrivateMembers(NodeId nodeId)
     {
         using var model = modelMgr.UseModel();
-        if (!model.Nodes.TryGetValue(nodeId, out var node) || !MemberCard.HasPrivateToggle(node))
+        // The toggle that was clicked is the one drawn: as laid out, whatever a re-parse changed since.
+        if (!model.Nodes.TryGetValue(nodeId, out var node) || MemberCard.PrivateToggleRect(node) == Rect.None)
             return null;
         var (from, zoomBefore) = ToggleCanvasPos(node);
         node.IsPrivateMembersShown = !node.IsPrivateMembersShown;
         NodeLayout.AdjustChildren(node);
         model.BumpStructureVersion();
+        if (MemberCard.PrivateToggleRect(node) == Rect.None)
+            return new CardToggleMove(from, from, 1); // The members changed: no toggle any more
         var (to, zoomAfter) = ToggleCanvasPos(node);
         return new CardToggleMove(from, to, zoomAfter / zoomBefore);
     }
@@ -246,8 +249,6 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         var (pos, zoom) = node.GetPosAndZoom();
         var rowZoom = zoom * node.ContainerZoom;
         var rect = MemberCard.PrivateToggleRect(node);
-        if (rect == Rect.None) // Not laid out with a toggle yet: keep the card's center in place
-            return (node.GetCenterPosAndZoom().pos, rowZoom);
         var offset = node.ContainerOffset;
         return (
             new Pos(

@@ -130,7 +130,8 @@ static class MemberParser
                 $"[{Parameters(indexer.Parameters, false)}]: {RefText(indexer.ReturnsByRef, indexer.ReturnsByRefReadonly)}{TypeText(indexer.Type)}",
             IPropertySymbol property =>
                 $": {RefText(property.ReturnsByRef, property.ReturnsByRefReadonly)}{TypeText(property.Type)}",
-            IFieldSymbol field => $": {TypeText(field.Type)}",
+            IFieldSymbol field =>
+                $": {RefText(field.RefKind != RefKind.None, field.RefKind == RefKind.RefReadOnly)}{TypeText(field.Type)}",
             IEventSymbol @event => $": {TypeText(@event.Type)}",
             _ => null,
         };

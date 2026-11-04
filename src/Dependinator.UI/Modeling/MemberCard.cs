@@ -85,6 +85,11 @@ static class MemberCard
             && (isShown?.Invoke(c) ?? true)
         );
 
+    // The toggle row is drawn: the card was laid out with one, and some of its private rows are
+    // shown (not all hidden by the user or View › Rows).
+    public static bool IsToggleShown(Node parent, Func<Node, bool>? isShown = null) =>
+        parent.LaidOutToggle != PrivateToggle.None && PrivateCount(parent, isShown) > 0;
+
     // The private toggle row's place, as laid out: below the last row (the flow keeps it in the
     // last row's column). Folded rows share it. Rect.None without a toggle.
     public static Rect PrivateToggleRect(Node parent) =>
@@ -101,28 +106,46 @@ static class MemberCard
     }
 
     // Sets the layout state Arrange keeps (Node.LaidOutToggle, IsFoldedAway, LaidOutToggleRect) from
-    // a loaded model's saved boundaries, which were laid out with the saved fold.
+    // a loaded model's saved boundaries. They were laid out with the saved fold, unless a re-parse
+    // changed the members and the model was saved before the card was laid out again: then the
+    // folded rows do not share one place (or other rows do), and the card is laid out again.
     public static void RestoreLayoutState(Node parent)
     {
         if (!HasMembers(parent))
             return;
         var toggle = ToggleOf(parent);
         var rows = parent.Children.Where(c => c.Type.IsMember).ToList();
-        if (rows.Any(r => r.Boundary == Rect.None))
-            toggle = PrivateToggle.None; // Not laid out yet: IsLayoutStale asks for a layout
         rows.ForEach(r => r.IsFoldedAway = toggle == PrivateToggle.Folded && (r.IsPrivate ?? false));
-        parent.LaidOutToggle = toggle;
-        parent.LaidOutToggleRect = toggle switch
+        var folded = rows.Where(r => r.IsFoldedAway).Select(r => r.Boundary).Distinct().ToList();
+        var placed = rows.Where(r => !r.IsFoldedAway).Select(r => r.Boundary).ToList();
+        var isConsistent =
+            rows.All(r => r.Boundary != Rect.None)
+            && folded.Count <= 1
+            && placed.Distinct().Count() == placed.Count
+            && !folded.Any(placed.Contains);
+        if (!isConsistent)
         {
-            PrivateToggle.Folded => rows.First(r => r.IsFoldedAway).Boundary,
-            PrivateToggle.Open => rows.MaxBy(r => (r.Boundary.X, r.Boundary.Y))!.Boundary is var last
-                ? last with
-                {
-                    Y = last.Y + RowPitch,
-                }
-                : Rect.None,
-            _ => Rect.None,
-        };
+            rows.ForEach(r => r.IsFoldedAway = false);
+            parent.LaidOutToggle = PrivateToggle.None;
+            parent.LaidOutToggleRect = Rect.None;
+            parent.IsChildrenLayoutRequired = true;
+            return;
+        }
+
+        parent.LaidOutToggle = toggle;
+        if (toggle == PrivateToggle.Folded)
+        {
+            parent.LaidOutToggleRect = folded[0];
+        }
+        else if (toggle == PrivateToggle.Open)
+        {
+            var last = rows.MaxBy(r => (r.Boundary.X, r.Boundary.Y))!.Boundary;
+            parent.LaidOutToggleRect = last with { Y = last.Y + RowPitch };
+        }
+        else
+        {
+            parent.LaidOutToggleRect = Rect.None;
+        }
     }
 
     // The plural title of a member kind ("Methods"), also used for counts in the summary card.
@@ -256,8 +279,8 @@ static class MemberCard
     public static Rect Bounds(Node parent, Func<Node, bool>? isShown = null)
     {
         var rows = LaidOutRows(parent, isShown).Select(r => r.Boundary).ToList();
-        if (PrivateToggleRect(parent) is var toggle && toggle != Rect.None)
-            rows.Add(toggle);
+        if (IsToggleShown(parent, isShown))
+            rows.Add(PrivateToggleRect(parent));
         if (rows.Count == 0)
             return Rect.None;
         var headings = Headings(parent, isShown);
