@@ -242,6 +242,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   comment in one file only). It runs like Fix with Claude Code, on the current branch (edits, no
   commands), with a warning above 150 namespaces and types; without the Claude Code route the prompt
   is copied for any coding agent. Claude Code's run limit went from 15 to 30 minutes for it.
+  Since Nov 4 it also covers projects: a dll's description, its `[assembly: AssemblyDescription]`
+  attribute (or the project file's `<Description>`), is added or rewritten like a comment.
 - **MCP server (Oct 27).** `Dependinator.Mcp` (the official MCP C# SDK, Streamable HTTP) gives AI
   agents read-only tools over the open diagram: `get_model`, `list_children`, `search_nodes`,
   `get_dependencies`, `find_paths`, `list_cycles`, `list_rules` and `check_rule`, which counts what

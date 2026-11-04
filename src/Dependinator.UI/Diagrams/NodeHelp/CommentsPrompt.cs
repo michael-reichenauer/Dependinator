@@ -7,8 +7,8 @@ using NodeType = Dependinator.Core.Parsing.NodeType;
 namespace Dependinator.UI.Diagrams.NodeHelp;
 
 // The text that asks an AI that can change the code (Claude Code) to add or improve the comments of
-// some namespaces and types (or Bicep modules and resources), which Dependinator shows as their
-// descriptions. Each one is listed with where it is declared, its comment now, and the parts
+// some namespaces and types (or Bicep modules and resources), and the descriptions of projects (their
+// [assembly: AssemblyDescription(...)] attribute), which Dependinator shows as their descriptions. Each one is listed with where it is declared, its comment now, and the parts
 // outside it that it uses and that use it, which a good comment puts it among. It says where a
 // comment must go for the parser to read it: right above the declaration, and for a namespace in
 // one file only, since the parser shows the comments above every declaration of it.
@@ -21,8 +21,8 @@ static class CommentsPrompt
     const int MaxLinkedUnits = 5;
 
     // The nodes whose comments to improve: the given ones, and with isBelow everything inside
-    // them, that the parser reads a comment for (namespaces and types with a place in the code,
-    // Bicep modules and resources), outermost first.
+    // them, that the parser reads a comment for (projects, namespaces and types with a place in the
+    // code, Bicep modules and resources), outermost first.
     public static IReadOnlyList<Node> Targets(IEnumerable<Node> nodes, bool isBelow) =>
         [
             .. nodes
@@ -35,7 +35,13 @@ static class CommentsPrompt
     public static bool IsCommentable(Node node) =>
         !node.IsManual
         && node.FileSpan is not null
-        && (node.Type.IsType || node.Type is NodeType.Namespace or NodeType.Module or NodeType.Resource);
+        && (
+            node.Type.IsType
+            || node.Type is NodeType.Assembly or NodeType.Namespace or NodeType.Module or NodeType.Resource
+        );
+
+    // A C# project, whose description is an attribute (or its project file's property), not a comment.
+    public static bool IsProject(Node node) => node.Type is NodeType.Assembly;
 
     public static string Build(IModel model, IReadOnlyList<Node> targets)
     {
@@ -43,11 +49,13 @@ static class CommentsPrompt
             return "";
 
         var isBicep = targets.Any(IsBicep);
-        var isCSharp = targets.Any(t => !IsBicep(t));
-        var parts =
-            isCSharp && isBicep ? "namespaces, types, modules and resources"
-            : isBicep ? "modules and resources"
-            : "namespaces and types";
+        var isProject = targets.Any(IsProject);
+        var isCSharp = targets.Any(t => !IsBicep(t) && !IsProject(t));
+        var parts = Join([
+            .. isProject ? ["projects"] : Array.Empty<string>(),
+            .. isCSharp ? ["namespaces", "types"] : Array.Empty<string>(),
+            .. isBicep ? ["modules", "resources"] : Array.Empty<string>(),
+        ]);
 
         var text = new StringBuilder();
         text.AppendLine(
@@ -59,8 +67,14 @@ static class CommentsPrompt
             text.AppendLine().AppendLine(codebase);
 
         text.AppendLine()
-            .Append(isCSharp ? GoodComment : GoodComment.Replace("namespace or type", "module or resource"));
+            .Append(
+                isCSharp || !isBicep ? GoodComment : GoodComment.Replace("namespace or type", "module or resource")
+            );
+        if (isProject)
+            text.Append(GoodProjectDescription);
         text.AppendLine().AppendLine("## Where a comment goes").AppendLine();
+        if (isProject)
+            text.Append(ProjectPlaces);
         if (isCSharp)
             text.Append(CSharpPlaces);
         if (isBicep)
@@ -87,6 +101,16 @@ static class CommentsPrompt
 
         """;
 
+    const string GoodProjectDescription = """
+        - For a project: what it does in the codebase and its place among the other projects, in one or two sentences.
+
+        """;
+
+    const string ProjectPlaces = """
+        - A project's description is its `[assembly: AssemblyDescription("...")]` attribute (from `System.Reflection`), in the file named for it below. Rewrite the attribute where it is, or, if the project has none, add it in that file, below its `using` lines (with `using System.Reflection;` if the file lacks it). If the named file is the project file (`.csproj`), or the project file already sets a `<Description>` property, change or add that `<Description>` instead and add no attribute: the build generates the attribute from it, and a second one does not compile.
+
+        """;
+
     const string CSharpPlaces = """
         - A type's comment goes right above its declaration (above its attributes), in the style the file or the codebase already uses: `//` lines or a `///` summary.
         - A namespace's comment goes right above its `namespace` line, with no blank line between them, and only in the file named for it below. Dependinator shows the comments above every declaration of a namespace, so do not add it to other files, and leave a comment in another file alone unless it describes the whole namespace (then move it into the named file). A comment with a blank line below it is read as a file header, not a description.
@@ -101,7 +125,7 @@ static class CommentsPrompt
     const string Rules = """
         ## Rules
 
-        - Change comments only: no code, no formatting, no renames, and no comments on members.
+        - Change comments only (and a project's description attribute or property): no code, no formatting, no renames, and no comments on members.
         - Lines like `-> Some.Target: text` in a comment describe a dependency line in the diagram: keep them, below the description.
         - Leave a comment that is already good as it is.
         - If you cannot tell what something is for, write what you can tell from the code, and say in your summary which ones need a closer look.
@@ -119,11 +143,13 @@ static class CommentsPrompt
     {
         var span = target.FileSpan!;
         text.AppendLine($"### {Kind(target.Type)} {target.LongName}");
-        var place = target.Type == NodeType.Namespace ? "Its comment goes in" : "Declared in";
+        var place =
+            IsProject(target) ? "Its description goes in"
+            : target.Type == NodeType.Namespace ? "Its comment goes in"
+            : "Declared in";
+        var now = IsProject(target) ? "Description now" : "Comment now";
         text.AppendLine($"{place} {DisplayPath(model, span.Path)}, line {span.StartLine + 1}");
-        text.AppendLine(
-            target.Description is { } description ? $"Comment now: \"{Clip(description)}\"" : "Comment now: none"
-        );
+        text.AppendLine(target.Description is { } description ? $"{now}: \"{Clip(description)}\"" : $"{now}: none");
         if (Names(NodePrompt.Uses(target)) is { } uses)
             text.AppendLine($"Uses: {uses}");
         if (Names(NodePrompt.UsedBy(target)) is { } usedBy)
@@ -140,4 +166,8 @@ static class CommentsPrompt
     }
 
     static bool IsBicep(Node node) => node.Type is NodeType.Module or NodeType.Resource;
+
+    // "a", "a and b", "a, b and c".
+    static string Join(IReadOnlyList<string> words) =>
+        words.Count < 2 ? string.Concat(words) : $"{string.Join(", ", words.SkipLast(1))} and {words[^1]}";
 }
