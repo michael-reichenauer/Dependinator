@@ -353,8 +353,7 @@
     rules == 0 ? ""
     : violations == 0 && toFix > 0 ? $"{toFix} to fix"
     : violations == 0 ? "all kept"
-    : violations == 1 ? "1 violation"
-    : $"{violations} violations";
+    : (violations == 1 ? "1 violation" : $"{violations} violations") + (toFix > 0 ? $", {toFix} to fix" : "");
 
   // A rule broken only by dependencies marked to fix is known work, not a new problem.
   static bool IsOnlyToFix(RuleReport report) =>
@@ -474,11 +473,13 @@
   // The planned change as a fixing answer, for the fix prompt.
   static RuleSuggestion PlannedFix(ToFixReport toFix) => new(true, "", "", "", toFix.Planned.Reason);
 
-  // Whether the rule still reports this dependency, say after Claude Code's fix and a re-parse.
+  // Whether the rule still has this dependency, reported or to fix, say after Claude Code's fix
+  // and a re-parse.
   bool IsViolated(Modeling.Models.ArchitectureRule rule, RuleViolation violation) =>
     ruleService.GetReports()
       .Any(r => r.Rule == rule
-        && r.Violations.Any(v => v.SourceId == violation.SourceId && v.TargetId == violation.TargetId));
+        && r.Violations.Concat(r.ToFix.Select(t => t.Violation).OfType<RuleViolation>())
+          .Any(v => v.SourceId == violation.SourceId && v.TargetId == violation.TargetId));
 
   async Task EditAllowedAsync(RuleReport report, AllowedReport allowed)
   {

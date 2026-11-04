@@ -248,11 +248,13 @@
 
   void Save() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult((Reason ?? "").Trim(), false)));
 
-  // A new review keeps the selected fixing answer's change as the plan (an allowing answer has
-  // none); editing one to fix keeps what the user typed.
+  // Editing one to fix keeps what the user typed; a new review too, when they typed their own
+  // words, else the selected fixing answer's change is the plan (an allowing answer has none).
   void FixLater()
   {
-    var plan = IsToFix ? (Reason ?? "").Trim() : selected is { IsFix: true } s ? s.Change : "";
+    var typed = (Reason ?? "").Trim();
+    var isOwnWords = typed != "" && Reason != prefilledReason;
+    var plan = IsToFix || isOwnWords ? typed : selected is { IsFix: true } s ? s.Change : "";
     MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult(plan, false, IsFixLater: true)));
   }
 
