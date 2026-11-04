@@ -120,22 +120,50 @@ static class MemberParser
     internal static string? Signature(ISymbol member) =>
         member switch
         {
-            IMethodSymbol method => $"({Parameters(method.Parameters)})"
+            IMethodSymbol method => $"({Parameters(method.Parameters, method.IsExtensionMethod)})"
                 + (
                     method.ReturnsVoid || method.MethodKind is MethodKind.Constructor or MethodKind.StaticConstructor
                         ? ""
-                        : $": {TypeText(method.ReturnType)}"
+                        : $": {RefText(method.ReturnsByRef, method.ReturnsByRefReadonly)}{TypeText(method.ReturnType)}"
                 ),
             IPropertySymbol { IsIndexer: true } indexer =>
-                $"[{Parameters(indexer.Parameters)}]: {TypeText(indexer.Type)}",
-            IPropertySymbol property => $": {TypeText(property.Type)}",
+                $"[{Parameters(indexer.Parameters, false)}]: {RefText(indexer.ReturnsByRef, indexer.ReturnsByRefReadonly)}{TypeText(indexer.Type)}",
+            IPropertySymbol property =>
+                $": {RefText(property.ReturnsByRef, property.ReturnsByRefReadonly)}{TypeText(property.Type)}",
             IFieldSymbol field => $": {TypeText(field.Type)}",
             IEventSymbol @event => $": {TypeText(@event.Type)}",
             _ => null,
         };
 
-    static string Parameters(IEnumerable<IParameterSymbol> parameters) =>
-        string.Join(", ", parameters.Select(p => $"{TypeText(p.Type)} {p.Name}"));
+    static string Parameters(IEnumerable<IParameterSymbol> parameters, bool isExtension) =>
+        string.Join(
+            ", ",
+            parameters.Select(
+                (p, index) =>
+                    (isExtension && index == 0 ? "this " : "")
+                    + (p.IsParams ? "params " : "")
+                    + p.RefKind switch
+                    {
+                        RefKind.Ref => "ref ",
+                        RefKind.Out => "out ",
+                        RefKind.In => "in ",
+                        RefKind.RefReadOnlyParameter => "ref readonly ",
+                        _ => "",
+                    }
+                    + $"{TypeText(p.Type)} {Identifier(p.Name)}"
+            )
+        );
+
+    static string RefText(bool isRef, bool isRefReadonly) =>
+        isRefReadonly ? "ref readonly "
+        : isRef ? "ref "
+        : "";
+
+    // A parameter named like a keyword is written @event, as declared.
+    static string Identifier(string name) =>
+        Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(name) != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
+            ? "@" + name
+            : name;
 
     static string TypeText(ITypeSymbol type) => type.ToDisplayString(SignatureTypeFormat);
 

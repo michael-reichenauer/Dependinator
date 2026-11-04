@@ -491,10 +491,7 @@ class ModelBuilder(string entryPath)
             : null;
 
     static string Describe(SemanticModel model, DeclaredSymbol symbol, string defaultText) =>
-        symbol.DeclaringSyntax is DecorableSyntax decorable
-        && DescriptionHelper.TryGetFromDecorator(model, decorable) is { } text
-            ? $"{text} ({defaultText})"
-            : defaultText;
+        DecoratorText(model, symbol) is { } text ? $"{text} ({defaultText})" : defaultText;
 
     void AddNode(
         string name,

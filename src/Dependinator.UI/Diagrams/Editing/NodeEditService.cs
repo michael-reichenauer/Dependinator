@@ -246,6 +246,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         var (pos, zoom) = node.GetPosAndZoom();
         var rowZoom = zoom * node.ContainerZoom;
         var rect = MemberCard.PrivateToggleRect(node);
+        if (rect == Rect.None) // Not laid out with a toggle yet: keep the card's center in place
+            return (node.GetCenterPosAndZoom().pos, rowZoom);
         var offset = node.ContainerOffset;
         return (
             new Pos(

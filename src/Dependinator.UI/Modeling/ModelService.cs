@@ -587,6 +587,9 @@ class ModelService : IModelService, IDisposable
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
         PassThroughService.UpdatePassThroughFlags(model);
+        // The saved rows were laid out with the saved fold of their cards' private rows.
+        foreach (var node in model.Nodes.Values)
+            MemberCard.RestoreLayoutState(node);
         RequireChildrenLayoutIfOlder(model, modelDto.LayoutVersion);
     }
 

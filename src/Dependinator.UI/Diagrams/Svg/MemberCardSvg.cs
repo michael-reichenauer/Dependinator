@@ -87,10 +87,10 @@ static partial class NodeSvg
         double X(double x) => childrenOffset.X + x * childrenZoom;
         double Y(double y) => childrenOffset.Y + y * childrenZoom;
         var textZoom = TextZoom(childrenZoom);
-        var rect = MemberCard.PrivateToggleRect(node, isRowShown);
-        if (rect == Rect.None)
-            return "";
-        var count = MemberCard.PrivateCount(node);
+        var rect = MemberCard.PrivateToggleRect(node);
+        var count = MemberCard.PrivateCount(node, isRowShown);
+        if (rect == Rect.None || count == 0)
+            return ""; // No toggle, or all its rows are hidden anyway
         var isFolded = MemberCard.IsPrivateFolded(node);
         var text = isFolded ? $"+ {count} private" : $"hide {count} private";
         var tooltip = isFolded ? "Show the private members" : "Fold the private members";

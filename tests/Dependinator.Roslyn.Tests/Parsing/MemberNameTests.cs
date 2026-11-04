@@ -64,6 +64,14 @@ public class SignatureSample
     public void Run() { }
 
     public SignatureSample(int start) { }
+
+    public bool TryGet(string @event, out int value, params string[] rest)
+    {
+        value = 0;
+        return true;
+    }
+
+    public ref readonly int First => ref count;
 }
 
 public class IndexerSample
@@ -134,6 +142,11 @@ public class MemberNameTests(RoslynFixture fixture)
         );
         Assert.Equal("()", items.Node<SignatureSample>("Run()").Properties.Signature);
         Assert.Equal("(int start)", items.Node<SignatureSample>("SignatureSample(int)").Properties.Signature);
+        Assert.Equal(
+            "(string @event, out int value, params string[] rest): bool",
+            items.Nodes().Single(n => n.Name.Contains(".TryGet(")).Properties.Signature
+        );
+        Assert.Equal(": ref readonly int", items.Node<SignatureSample>("First").Properties.Signature);
     }
 
     [Fact]

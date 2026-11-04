@@ -101,7 +101,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   counts the signature (up to `MaxColumnWidth`).
 - "+ N private" (`MemberCard.HasPrivateToggle`, `Node.IsPrivateMembersShown`, saved): folded
   private rows get the toggle row's rect (their lines end there) and are skipped in
-  `SvgService.IsRendered`. The toggle (`PointerId` sub-id "pt") is drawn after the lines, or a
+  `SvgService.IsRendered`. Rendering asks the fold as of the last layout (`Node.LaidOutToggle`,
+  `IsFoldedAway`, `LaidOutToggleRect`; runtime only, `MemberCard.RestoreLayoutState` on load),
+  never the live member counts: a re-parse can cross `FoldMinRows` or change a member's access
+  without a layout, and `MemberCard.IsLayoutStale` (checked in `SvgService.RenderNode`) asks for
+  one. Going to a folded member (`NavigationService.EnsureLayoutForPath`) opens the private rows. The toggle (`PointerId` sub-id "pt") is drawn after the lines, or a
   line polyline takes its click. Toggling re-lays out the card at once and the view follows
   (`CardToggleMove`, `PanZoomService.FollowPoint`): more rows in the same box means a smaller
   `ContainerZoom`, which otherwise drops the card back to its summary.

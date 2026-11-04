@@ -346,7 +346,8 @@ sealed class ModelQueries(
                 node.Type.ToString(),
                 node.Children.Count,
                 Shorten(node.Description),
-                node.Alias
+                node.Alias,
+                string.IsNullOrEmpty(node.Signature) ? null : node.Signature
             );
 
     static string? Shorten(string? text)

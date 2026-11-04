@@ -189,6 +189,59 @@ public class MemberCardTests
         Assert.Equal(["Fields", "Methods"], MemberCard.Headings(type).Select(h => h.Title).Order());
     }
 
+    [Fact]
+    public void IsLayoutStale_ShouldNoticeMembersThatChangedSinceTheLayout()
+    {
+        var type = LargeType(out var publicRows, out var privateRows);
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2, MemberCard.ToggleOf(type));
+        Assert.False(MemberCard.IsLayoutStale(type));
+
+        // A re-parse made a public member private: it is still drawn where it was laid out.
+        publicRows[0].IsPrivate = true;
+        Assert.True(MemberCard.IsLayoutStale(type));
+        Assert.False(MemberCard.IsFoldedRow(publicRows[0]));
+        publicRows[0].IsPrivate = false;
+
+        // Fewer members than FoldMinRows: no toggle any more, but the rows keep the fold they were
+        // laid out with until the next layout (not drawn stacked on the old toggle row).
+        privateRows[^3..].ForEach(row => type.Children.Remove(row));
+        Assert.False(MemberCard.HasPrivateToggle(type));
+        Assert.True(MemberCard.IsLayoutStale(type));
+        Assert.True(MemberCard.IsFoldedRow(privateRows[0]));
+    }
+
+    [Fact]
+    public void RestoreLayoutState_ShouldMatchTheLayoutOfALoadedCard()
+    {
+        var type = LargeType(out _, out var privateRows);
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2, MemberCard.ToggleOf(type));
+        var toggle = MemberCard.PrivateToggleRect(type);
+
+        // As loaded: the boundaries are saved, the layout state is not.
+        type.LaidOutToggle = MemberCard.PrivateToggle.None;
+        type.LaidOutToggleRect = Rect.None;
+        privateRows.ForEach(row => row.IsFoldedAway = false);
+        MemberCard.RestoreLayoutState(type);
+
+        Assert.False(MemberCard.IsLayoutStale(type));
+        Assert.Equal(toggle, MemberCard.PrivateToggleRect(type));
+        Assert.All(privateRows, row => Assert.True(MemberCard.IsFoldedRow(row)));
+    }
+
+    [Fact]
+    public void Bounds_ShouldKeepTheToggle_WhenNoPublicRowIsShown()
+    {
+        var type = LargeType(out _, out _);
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2, MemberCard.ToggleOf(type));
+
+        var bounds = MemberCard.Bounds(type, row => row.IsPrivate ?? false);
+
+        // The folded rows can still be opened: the card shows the toggle row alone.
+        var toggle = MemberCard.PrivateToggleRect(type);
+        Assert.NotEqual(Rect.None, bounds);
+        Assert.Equal(toggle.Y - MemberCard.Padding, bounds.Y);
+    }
+
     // More than FoldMinRows members: public methods and private fields and methods.
     static ModelNode LargeType(out List<ModelNode> publicRows, out List<ModelNode> privateRows)
     {

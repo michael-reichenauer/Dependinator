@@ -318,7 +318,10 @@ static partial class NodeSvg
             elementId,
             "hoverable",
             layout.Bounds,
-            TitleName(node),
+            // A member's signature on a line of its own (the name stays the title's prefix)
+            string.IsNullOrEmpty(node.Signature)
+                ? TitleName(node)
+                : $"{TitleName(node)}\n{HttpUtility.HtmlEncode(node.Signature)}",
             node.HtmlDescription,
             LinkHandleSvg(node, layout.LinkHandlePos, isEditing),
             isLinePreview: true

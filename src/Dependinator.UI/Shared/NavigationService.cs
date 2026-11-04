@@ -277,11 +277,18 @@ class NavigationService(
     static bool EnsureLayoutForPath(Modeling.Models.Node node)
     {
         var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
-        if (needsLayout.Count == 0)
-            return false;
-
         needsLayout.ForEach(ancestor => NodeLayout.AdjustChildren(ancestor));
-        return true;
+
+        // A private member folded into its card's "+ N private" row is not drawn: show the card's
+        // private rows (the fold is a view choice, like revealing a hidden node).
+        if (MemberCard.IsFoldedRow(node) && node.Parent is { } card)
+        {
+            card.IsPrivateMembersShown = true;
+            NodeLayout.AdjustChildren(card);
+            return true;
+        }
+
+        return needsLayout.Count > 0;
     }
 
     static FileLocation ParseFileLocation(string fileLocation)

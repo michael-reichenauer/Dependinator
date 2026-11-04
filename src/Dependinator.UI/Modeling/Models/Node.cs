@@ -114,6 +114,15 @@ class Node : IItem
     // (MemberCard.HasPrivateToggle).
     public bool IsPrivateMembersShown { get; set; }
 
+    // The member card's fold as of its last layout (MemberCard.Arrange, or MemberCard.RestoreLayoutState
+    // for a loaded model), not saved: the rows' boundaries match it, so rendering asks it rather
+    // than the current members, which a re-parse may have changed until the next layout.
+    public MemberCard.PrivateToggle LaidOutToggle { get; set; }
+    public Rect LaidOutToggleRect { get; set; } = Rect.None;
+
+    // A member row folded into its card's "+ N private" row at the last layout: not drawn.
+    public bool IsFoldedAway { get; set; }
+
     // The children got the fast layered layout only (too much work for the thorough pass when
     // first shown); LayoutRefineService refines it in idle moments. Transient, not saved.
     public bool IsChildrenLayoutRefinePending { get; set; }

@@ -59,7 +59,9 @@ record QueryNode(
     string Type,
     int ChildCount,
     string? Description = null,
-    string? Alias = null
+    string? Alias = null,
+    // A member's signature: "(string query): Task<int>", ": string" (Bicep: a parameter's type).
+    string? Signature = null
 );
 
 record ModelSummary(

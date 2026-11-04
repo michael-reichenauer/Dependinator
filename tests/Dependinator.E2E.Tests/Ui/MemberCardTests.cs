@@ -41,4 +41,20 @@ public class MemberCardTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(toggle).ToHaveAttributeAsync("data-folded", "true");
         await Expect(privateRow).ToHaveCountAsync(0);
     }
+
+    [E2EFact]
+    public async Task ShowNode_ShouldOpenTheFoldedPrivateRows_OfAPrivateMember()
+    {
+        await App.GotoMainPageAsync();
+
+        // ScrollToEndAsync is private, folded into AskPanel's "+ N private" row.
+        var search = await App.OpenSearchViaHotkeyAsync();
+        await search.FillAsync("Demo.UI.Diagrams.Ask.AskPanel.ScrollToEndAsync()");
+        await search.Results.First.ClickAsync();
+
+        await Expect(Page.Locator("#svgcanvas text.memberName[data-name='ScrollToEndAsync']").First)
+            .ToBeVisibleAsync(new() { Timeout = 20000 });
+        var toggle = Page.Locator("#svgcanvas [data-testid='private-toggle'][data-node='AskPanel']").First;
+        await Expect(toggle).ToHaveAttributeAsync("data-folded", "false");
+    }
 }
