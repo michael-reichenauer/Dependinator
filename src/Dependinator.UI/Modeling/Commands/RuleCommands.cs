@@ -31,7 +31,7 @@ class RemoveRuleCommand(ArchitectureRule rule) : Command
     public const string DismissReason = "Removed from the rules.";
 
     IReadOnlyList<AllowedViolation> removedAllowed = [];
-    ArchitectureRule removed = rule;
+    ArchitectureRule? removed;
     DismissedRule? replacedDismissal;
 
     public override void Execute(IModel model)
@@ -50,7 +50,7 @@ class RemoveRuleCommand(ArchitectureRule rule) : Command
         model.RemoveDismissedRule(new DismissedRule(rule.FromName, rule.ToName));
         if (replacedDismissal is not null)
             model.AddDismissedRule(replacedDismissal);
-        model.AddRule(removed);
+        model.AddRule(removed ?? rule);
         foreach (var allowed in removedAllowed)
             model.AddAllowedViolation(allowed);
     }
