@@ -154,6 +154,13 @@ static class RulePrompt
                     + string.Join(", ", rule.NodeNames.Select((_, i) => NodeSide(i)))
                     + ". Each layer may use only the layers below it: nothing at or inside a layer may depend on "
                     + "anything at or inside a layer above it.",
+                RuleKind.Independent => $"{NodeSide(0)} is independent: nothing at or inside it may depend on "
+                    + "anything else in the solution, only on externals (packages and the framework).",
+                RuleKind.SiblingsIndependent =>
+                    $"The parts of {NodeSide(0)} are independent of each other: nothing at or "
+                        + "inside one of its children may depend on anything at or inside another of its children.",
+                RuleKind.NoCycles => $"No cycles inside {NodeSide(0)}: nothing at or inside it may depend in a circle "
+                    + "(this dependency is part of a cycle there).",
                 _ => $"{NodeSide(0)} must not use {NodeSide(1)}: nothing at or inside the first "
                     + "may depend on anything at or inside the second.",
             }

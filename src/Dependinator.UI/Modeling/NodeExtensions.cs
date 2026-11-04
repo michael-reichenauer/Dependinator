@@ -16,6 +16,10 @@ static class NodeExtensions
     public static bool IsAtOrInside(this Node node, Node container) =>
         node == container || node.Ancestors().Contains(container);
 
+    // At or inside the Externals node: a package or framework reference, not the solution's own code.
+    public static bool IsExternal(this Node node) =>
+        node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
+
     public static IEnumerable<Node> AncestorsAndSelf(this Node node)
     {
         yield return node;

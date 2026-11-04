@@ -75,7 +75,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
     public async Task CallTool_ShouldAnswerWithCompactJson()
     {
         queries
-            .Setup(q => q.CheckRuleAsync("Core", "UI"))
+            .Setup(q => q.CheckRuleAsync("must_not_use", new[] { "Core", "UI" }))
             .ReturnsAsync(
                 new RuleResult(
                     "Core",
@@ -98,7 +98,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
 
         Assert.NotEqual(true, result.IsError);
         Assert.Equal(
-            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0,"rule":"Core must not use UI"}""",
+            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0,"rule":"Core must not use UI","kind":"must_not_use"}""",
             Text(result)
         );
     }
@@ -120,6 +120,40 @@ public sealed class ModelToolsTests : IAsyncLifetime
             """{"node":{"name":"Core","title":"Core (dll)","type":"Assembly","childCount":2},"isIncoming":false,"groups":[],"groupCount":0}""",
             Text(result)
         );
+    }
+
+    [Theory]
+    [InlineData("siblings_independent", "Core", "Core", null, "Core")]
+    [InlineData("no_cycles", "Core", "", null, "Core")]
+    [InlineData("layers", "UI", "Data", null, "UI|Data")]
+    [InlineData("layers", "", "", "UI|Core|Data", "UI|Core|Data")]
+    [InlineData("only_may_use", "Api", "Data", null, "Api|Data")]
+    public async Task CheckRule_ShouldPassTheNodesTheKindTakes(
+        string kind,
+        string from,
+        string to,
+        string? layers,
+        string expected
+    )
+    {
+        IReadOnlyList<string>? passed = null;
+        queries
+            .Setup(q => q.CheckRuleAsync(kind, It.IsAny<IReadOnlyList<string>>()))
+            .Callback<string, IReadOnlyList<string>>((_, nodes) => passed = nodes)
+            .ReturnsAsync(new Error("Checked"));
+
+        await Client.CallToolAsync(
+            "check_rule",
+            new Dictionary<string, object?>
+            {
+                ["kind"] = kind,
+                ["from"] = from,
+                ["to"] = to,
+                ["layers"] = layers?.Split('|'),
+            }
+        );
+
+        Assert.Equal(expected, string.Join("|", passed ?? []));
     }
 
     [Fact]

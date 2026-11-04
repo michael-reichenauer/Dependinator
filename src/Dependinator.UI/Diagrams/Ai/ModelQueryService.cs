@@ -1,4 +1,5 @@
 using Dependinator.Core.ModelQueries;
+using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams.Ai;
 
@@ -72,8 +73,11 @@ abstract class ModelQueryAnswers
 
     public Task<Result<IReadOnlyList<RuleResult>>> ListRulesAsync() => Ask("Listed the rules", q => q.ListRules());
 
-    public Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName) =>
-        Ask($"Checked the rule {Short(fromName)} must not use {Short(toName)}", q => q.CheckRule(fromName, toName));
+    public Task<Result<RuleResult>> CheckRuleAsync(string kind, IReadOnlyList<string> nodeNames) =>
+        Ask(
+            $"Checked the rule {(ArchitectureRule.KindNames.TryGetValue(kind, out var k) && ArchitectureRule.Of(k, nodeNames) is { } rule ? rule.Describe(Short) : string.Join(", ", nodeNames.Select(Short)))}",
+            q => q.CheckRule(kind, nodeNames)
+        );
 
     public Task<Result<NodeSource>> ReadSourceAsync(string nodeName) =>
         AskAsync($"Read the code of {Short(nodeName)}", q => q.ReadSourceAsync(nodeName));

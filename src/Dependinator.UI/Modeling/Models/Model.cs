@@ -241,12 +241,15 @@ class Model : IModel
             KindRules = [.. rules.Where(r => r.Kind != RuleKind.MustNotUse).Select(ToDto)],
             DismissedRules =
             [
-                .. dismissedRules.Select(r => new RuleDto
-                {
-                    From = r.FromName,
-                    To = r.ToName,
-                    Reason = r.Reason,
-                }),
+                .. dismissedRules
+                    .Where(d => d.Rule.Kind == RuleKind.MustNotUse)
+                    .Select(d => ToDto(d.Rule) with { Reason = d.Reason }),
+            ],
+            KindDismissedRules =
+            [
+                .. dismissedRules
+                    .Where(d => d.Rule.Kind != RuleKind.MustNotUse)
+                    .Select(d => ToDto(d.Rule) with { Reason = d.Reason }),
             ],
             AllowedViolations = [.. allowedViolations.Where(a => a.RuleKind == RuleKind.MustNotUse).Select(ToDto)],
             KindAllowedViolations = [.. allowedViolations.Where(a => a.RuleKind != RuleKind.MustNotUse).Select(ToDto)],
@@ -327,7 +330,16 @@ class Model : IModel
         );
         dismissedRules.Clear();
         dismissedRules.AddRange(
-            modelDto.DismissedRules.Select(r => new DismissedRule(r.From, r.To, r.Reason ?? "")).Distinct()
+            modelDto
+                .DismissedRules.Select(r => DismissedRule.Of(new ArchitectureRule(r.From, r.To), r.Reason ?? ""))
+                .Concat(
+                    modelDto
+                        .KindDismissedRules.Select(r =>
+                            ToRule(r) is { } rule ? DismissedRule.Of(rule, r.Reason ?? "") : null
+                        )
+                        .OfType<DismissedRule>()
+                )
+                .Distinct()
         );
         allowedViolations.Clear();
         allowedViolations.AddRange(
@@ -370,6 +382,8 @@ class Model : IModel
                 r.Layers is { Count: >= 2 } layers ? [.. layers] : [r.From, r.To],
                 r.Reason ?? ""
             );
+        if (ArchitectureRule.IsOneNodeKind(kind))
+            return ArchitectureRule.ForNode(kind, r.From, r.Reason ?? "");
         return new ArchitectureRule(r.From, r.To, r.Reason ?? "", kind);
     }
 

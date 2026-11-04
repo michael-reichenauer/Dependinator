@@ -39,8 +39,10 @@ interface IModelQueryService
     // The model's architecture rules with their violations and allowed dependencies.
     Task<Result<IReadOnlyList<RuleResult>>> ListRulesAsync();
 
-    // Evaluates "from must not use to" without adding it: the violations it would report today.
-    Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName);
+    // Evaluates a rule without adding it: the violations it would report today. Kind is one of
+    // must_not_use, only_may_use (nodes: from and to), layers (the layers top first), independent,
+    // no_cycles and siblings_independent (one node).
+    Task<Result<RuleResult>> CheckRuleAsync(string kind, IReadOnlyList<string> nodeNames);
 
     // The node's code (a type, a member, a Bicep resource), read from the workspace: a short file
     // whole, a long type cut to its members, a member within its type. An error for a node without
@@ -103,7 +105,8 @@ record CycleList(IReadOnlyList<CycleResult> Cycles, int Count);
 record AllowedDependency(string Source, string Target, string Reason, int LinkCount);
 
 // IsRule says whether the model has the rule already; IsResolved whether all its nodes exist.
-// Rule says it in words: "From must not use To", "only From may use To", or the layers top first.
+// Rule says it in words: "From must not use To", "only From may use To", or the layers top first;
+// Kind names its kind (as CheckRuleAsync takes it) and Nodes its nodes in order.
 // ViolationCount and LinkCount cover every violation, Violations only the largest ones;
 // AllowedCount counts every allowed dependency, Allowed only the first ones.
 record RuleResult(
@@ -116,7 +119,9 @@ record RuleResult(
     IReadOnlyList<UnitDependency> Violations,
     IReadOnlyList<AllowedDependency> Allowed,
     int AllowedCount,
-    string Rule = ""
+    string Rule = "",
+    string Kind = "must_not_use",
+    IReadOnlyList<string>? Nodes = null
 );
 
 // The node's code as excerpts, each headed by its file (relative to the model's folder where it is

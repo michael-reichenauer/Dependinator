@@ -272,13 +272,10 @@ class SvgService : ISvgService
             return true;
         if (filter.HideMember && (line.Source.Type.IsMember || line.Target.Type.IsMember))
             return true;
-        if (filter.HideExternal && (IsExternal(line.Source) || IsExternal(line.Target)))
+        if (filter.HideExternal && (line.Source.IsExternal() || line.Target.IsExternal()))
             return true;
         return line.Links.Count < filter.MinLinkCount;
     }
-
-    static bool IsExternal(Node node) =>
-        node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
 
     Tile CreateModelTile(
         IModel model,

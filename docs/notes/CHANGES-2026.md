@@ -34,8 +34,9 @@ project works.
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
   line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
-  Fix later for rule violations, two new kinds of rule: "only X may use Y" and layers, and member
-  cards: types show their members like a class box, with a summary card on the way in.
+  Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
+  independent" and "no cycles inside X", and member cards: types show their members like a class
+  box, with a summary card on the way in.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -363,6 +364,17 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   layers below it). `ArchitectureRule.Kind` and `LayerNames`, saved with the model; an unknown kind
   reads as "must not use". Reviews, prompts, Fix later and the MCP `list_rules` text know the
   kinds. Suggest rules still suggests only "must not use".
+- **One-node rules (Nov 4).** "X is independent" (nothing in X may use the rest of the solution,
+  only externals) and "no cycles inside X" (the cycles the Cycles panel finds at or inside X,
+  each of their links a violation with the usual review, Allow and Fix later; cycles accepted or
+  marked to fix in the Cycles panel are left out, decisions both share).
+- **Suggest rules proposes every kind (Nov 4).** The AI picks the kind that says a rule best
+  (one layers rule rather than several "must not use", "is independent" for a shared part),
+  answering `{kind, nodes, why}`; pasted answers read every form. Dependinator checks each kind
+  itself, and dismissals remember every kind (`ModelDto.KindDismissedRules`). The MCP
+  `check_rule` takes a kind (and layers), so an agent can test any kind of rule. A new kind, "the
+  parts of X are independent" (`SiblingsIndependent`: no child of X may use another child), keeps
+  features or modules apart. Name-pattern rules were postponed.
 - **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
   and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
   and the labels on other lines, for a matching style), with up to three other labels to pick

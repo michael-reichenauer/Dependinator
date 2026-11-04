@@ -29,8 +29,8 @@ sealed class TimeLimitedModelQueries(IModelQueryService inner, TimeSpan timeLimi
 
     public Task<Result<IReadOnlyList<RuleResult>>> ListRulesAsync() => Ask(inner.ListRulesAsync);
 
-    public Task<Result<RuleResult>> CheckRuleAsync(string fromName, string toName) =>
-        Ask(() => inner.CheckRuleAsync(fromName, toName));
+    public Task<Result<RuleResult>> CheckRuleAsync(string kind, IReadOnlyList<string> nodeNames) =>
+        Ask(() => inner.CheckRuleAsync(kind, nodeNames));
 
     public Task<Result<NodeSource>> ReadSourceAsync(string nodeName) => Ask(() => inner.ReadSourceAsync(nodeName));
 
