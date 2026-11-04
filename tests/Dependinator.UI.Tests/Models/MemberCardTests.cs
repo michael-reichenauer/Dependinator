@@ -144,6 +144,64 @@ public class MemberCardTests
         Assert.True(MemberCard.Bounds(type, row => row.Type != NodeType.FieldMember).Y > field.Boundary.Y);
     }
 
+    [Fact]
+    public void HasPrivateToggle_ShouldBeOnlyForLargeCardsWithPublicAndPrivateMembers()
+    {
+        var small = Type();
+        Member(small, "public", NodeType.MethodMember);
+        Member(small, "private", NodeType.MethodMember, isPrivate: true);
+        var onlyPrivate = Type();
+        for (var i = 0; i < MemberCard.FoldMinRows + 1; i++)
+            Member(onlyPrivate, $"m{i:00}", NodeType.MethodMember, isPrivate: true);
+
+        Assert.False(MemberCard.HasPrivateToggle(small));
+        Assert.False(MemberCard.HasPrivateToggle(onlyPrivate)); // Folding would leave an empty card
+        Assert.True(MemberCard.HasPrivateToggle(LargeType(out _, out _)));
+    }
+
+    [Fact]
+    public void Arrange_ShouldFoldPrivateRowsIntoTheToggleRow_UntilShown()
+    {
+        var type = LargeType(out var publicRows, out var privateRows);
+
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2, MemberCard.ToggleOf(type));
+
+        // Folded: the toggle row follows the last public row and the private rows share its rect,
+        // so their lines end at the toggle.
+        var toggle = MemberCard.PrivateToggleRect(type);
+        var lastPublic = publicRows.MaxBy(r => r.Boundary.Y)!.Boundary;
+        Assert.Equal(lastPublic.Y + MemberCard.RowPitch, toggle.Y);
+        Assert.All(privateRows, row => Assert.Equal(toggle, row.Boundary));
+        Assert.All(privateRows, row => Assert.True(MemberCard.IsFoldedRow(row)));
+        Assert.Equal(privateRows.Count, MemberCard.PrivateCount(type));
+        var bounds = MemberCard.Bounds(type);
+        Assert.True(bounds.Y + bounds.Height >= toggle.Y + toggle.Height);
+        Assert.Equal(["Methods"], MemberCard.Headings(type).Select(h => h.Title));
+
+        // Shown: every row has its own place and the toggle ("hide N private") comes last.
+        type.IsPrivateMembersShown = true;
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2, MemberCard.ToggleOf(type));
+
+        var shownToggle = MemberCard.PrivateToggleRect(type);
+        Assert.Equal(type.Children.Count, type.Children.Select(r => r.Boundary).Distinct().Count());
+        Assert.All(type.Children, row => Assert.False(MemberCard.IsFoldedRow(row)));
+        Assert.Equal(type.Children.Max(r => r.Boundary.Y) + MemberCard.RowPitch, shownToggle.Y);
+        Assert.Equal(["Fields", "Methods"], MemberCard.Headings(type).Select(h => h.Title).Order());
+    }
+
+    // More than FoldMinRows members: public methods and private fields and methods.
+    static ModelNode LargeType(out List<ModelNode> publicRows, out List<ModelNode> privateRows)
+    {
+        var type = Type();
+        publicRows = [.. Enumerable.Range(0, 4).Select(i => Member(type, $"public{i}", NodeType.MethodMember))];
+        privateRows =
+        [
+            .. Enumerable.Range(0, 5).Select(i => Member(type, $"field{i}", NodeType.FieldMember, isPrivate: true)),
+            .. Enumerable.Range(0, 6).Select(i => Member(type, $"private{i}", NodeType.MethodMember, isPrivate: true)),
+        ];
+        return type;
+    }
+
     static int ByName(ModelNode a, ModelNode b) => string.CompareOrdinal(a.Name, b.Name);
 
     static ModelNode Type()

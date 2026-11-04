@@ -38,6 +38,9 @@ record PointerId
 
     public static PointerId FromNodeLinkHandle(NodeId nodeId) => new(nodeId.Value, "lh", NodeResizeType.None);
 
+    // The "+ N private" row of a node's member card (MemberCard.HasPrivateToggle).
+    public static PointerId FromPrivateToggle(NodeId nodeId) => new(nodeId.Value, "pt", NodeResizeType.None);
+
     public static PointerId Parse(string elementId)
     {
         var parts = elementId.Split('.');
@@ -50,6 +53,7 @@ record PointerId
     public bool IsNode => SubId == "n";
     public bool IsCanvas => Id == CanvasElementId;
     public bool IsLinkHandle => SubId == "lh";
+    public bool IsPrivateToggle => SubId == "pt";
     public bool IsResize => NodeResizeType != NodeResizeType.None;
     public bool IsLine => SubId == "l";
     public bool IsLinePoint => LinePointIndex >= 0;

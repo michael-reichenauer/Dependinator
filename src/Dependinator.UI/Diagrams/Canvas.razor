@@ -173,6 +173,23 @@
                         pointer-events: none;
                     }
 
+                    .privateToggle {
+                        cursor: pointer;
+                    }
+
+                    .privateToggleText {
+                        font-family: Verdana, Helvetica, Arial, sans-serif;
+                        font-style: italic;
+                        fill:
+                            @DColors.CardMutedText
+                        ;
+                        text-anchor: start;
+                    }
+
+                    .privateToggle:hover .privateToggleText {
+                        text-decoration: underline;
+                    }
+
                     .memberSignature {
                         font-family: Verdana, Helvetica, Arial, sans-serif;
                         fill:

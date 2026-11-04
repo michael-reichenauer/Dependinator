@@ -379,11 +379,17 @@ class SvgService : ISvgService
                 ? NodeSvg.GetMemberCardSvg(node, childrenCanvasOffset, childrenZoom, row => IsRowShown(row, context))
                 : "";
 
+        var privateToggleSvg =
+            memberCardSvg.Length > 0
+                ? NodeSvg.GetPrivateToggleSvg(node, childrenCanvasOffset, childrenZoom, row => IsRowShown(row, context))
+                : "";
+
         return new[] { memberCardSvg }
             .Where(svg => svg.Length > 0)
             .Concat(zonesSvg)
             .Concat(linesSvg)
             .Concat(childNodeSvg)
+            .Append(privateToggleSvg)
             .Concat(lineLabelsSvg)
             .Concat(directLinesSvg)
             .Concat(zoneOverlaysSvg)
@@ -407,6 +413,8 @@ class SvgService : ISvgService
             return false;
         if (context.Flags.Rows.Hides(node.Type))
             return false;
+        if (MemberCard.IsFoldedRow(node))
+            return false; // Drawn as its card's "+ N private" row
         if (!RectOverlap(context.TileBounds, geometry.TileRect))
             return false;
         return geometry.TileRect.Width >= MinRenderSize || geometry.TileRect.Height >= MinRenderSize;

@@ -110,6 +110,10 @@ class Node : IItem
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
 
+    // The member card shows its private rows instead of folding them into "+ N private"
+    // (MemberCard.HasPrivateToggle).
+    public bool IsPrivateMembersShown { get; set; }
+
     // The children got the fast layered layout only (too much work for the thorough pass when
     // first shown); LayoutRefineService refines it in idle moments. Transient, not saved.
     public bool IsChildrenLayoutRefinePending { get; set; }
@@ -219,6 +223,7 @@ class Node : IItem
             IsUserSetHidden = UserVisibility != NodeVisibility.Visible,
             IsParentSetHidden = ParentVisibility != NodeVisibility.Visible,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
+            IsPrivateMembersShown = IsPrivateMembersShown,
             IsChildrenLayoutRequired = IsChildrenLayoutRequired,
             IsManual = IsManual,
             IsNote = IsNote,
@@ -247,6 +252,7 @@ class Node : IItem
         UserVisibility = VisibilityFromDto(dto.Visibility, dto.IsUserSetHidden);
         ParentVisibility = VisibilityFromDto(dto.ParentVisibility, dto.IsParentSetHidden);
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
+        IsPrivateMembersShown = dto.IsPrivateMembersShown;
         IsChildrenLayoutRequired = dto.IsChildrenLayoutRequired;
         IsManual = dto.IsManual;
         IsNote = dto.IsNote;

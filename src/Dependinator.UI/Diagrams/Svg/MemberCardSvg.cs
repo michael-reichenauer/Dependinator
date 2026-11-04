@@ -74,6 +74,35 @@ static partial class NodeSvg
         return svg.ToString();
     }
 
+    // The card's "+ N private" row (MemberCard.HasPrivateToggle): a click shows or folds the
+    // private rows (InteractionService, PointerId.IsPrivateToggle).
+    // Drawn after the lines, which would otherwise take its clicks (lines of folded rows start there).
+    public static string GetPrivateToggleSvg(
+        Node node,
+        Pos childrenOffset,
+        double childrenZoom,
+        Func<Node, bool>? isRowShown = null
+    )
+    {
+        double X(double x) => childrenOffset.X + x * childrenZoom;
+        double Y(double y) => childrenOffset.Y + y * childrenZoom;
+        var textZoom = TextZoom(childrenZoom);
+        var rect = MemberCard.PrivateToggleRect(node, isRowShown);
+        if (rect == Rect.None)
+            return "";
+        var count = MemberCard.PrivateCount(node);
+        var isFolded = MemberCard.IsPrivateFolded(node);
+        var text = isFolded ? $"+ {count} private" : $"hide {count} private";
+        var tooltip = isFolded ? "Show the private members" : "Fold the private members";
+        var elementId = PointerId.FromPrivateToggle(node.Id).ElementId;
+        var fontSize = FontSize * textZoom;
+        var (x, y, w, h) = (X(rect.X), Y(rect.Y), rect.Width * childrenZoom, rect.Height * childrenZoom);
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<g class="privateToggle" id="{elementId}" data-testid="private-toggle" data-node="{Encode(node.ShortName)}" data-folded="{(isFolded ? "true" : "false")}"><rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" fill="black" fill-opacity="0"/><text id="{elementId}" x="{x + fontSize * 1.5:0.##}" y="{y + h / 2:0.##}" class="privateToggleText" dominant-baseline="middle" font-size="{fontSize:0.##}px">{Encode(text)}</text><title>{tooltip}</title></g>"""
+        );
+    }
+
     // The summary card: a type (or a resource with auxiliary rows) opened far enough to show more
     // than an icon but not yet its readable rows. A header with the icon, name and kind, the member
     // counts, and as many members as fit, public first, with "+ N more". It is a leaf like an

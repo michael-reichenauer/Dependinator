@@ -390,6 +390,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   only for the selected or hovered member, and rows can no longer be dragged or resized. A Bicep
   module gets the card left of its resources. The layout version is 2, so saved models lay their
   containers out again.
+- **Member signatures and private rows (Nov 4).** Member rows show their signature after the
+  name (`(string query): Task<int>`, `: string`; Bicep parameters and outputs their type) and
+  their comment after it, in the row instead of squeezed under it. A large type (more than 12
+  members, public and private) folds its private rows into a "+ N private" row; a click shows
+  them ("hide N private" folds them again), saved with the model, and the view keeps the row
+  under the pointer. Lines from folded rows end at that row. Layout version 3.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

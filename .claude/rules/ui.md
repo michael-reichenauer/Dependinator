@@ -96,6 +96,15 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - "Show node" on a member frames it closer (`NodeViewPolicy.FramingZoomFactor`): rows readable and
   the parent open, also 1.3x apart in a tile. A small type's card is at natural scale, so at 1 px
   per unit its type would still be an icon (the e2e `WaitForContainerNodeAsync("Main")` failed).
+- A row's signature and description are `<tspan>`s inside its `text.memberName`, so the name
+  text has `data-name` (the e2e point finder reads `dataset.name ?? textContent`); `ColumnWidth`
+  counts the signature (up to `MaxColumnWidth`).
+- "+ N private" (`MemberCard.HasPrivateToggle`, `Node.IsPrivateMembersShown`, saved): folded
+  private rows get the toggle row's rect (their lines end there) and are skipped in
+  `SvgService.IsRendered`. The toggle (`PointerId` sub-id "pt") is drawn after the lines, or a
+  line polyline takes its click. Toggling re-lays out the card at once and the view follows
+  (`CardToggleMove`, `PanZoomService.FollowPoint`): more rows in the same box means a smaller
+  `ContainerZoom`, which otherwise drops the card back to its summary.
 - Lines between members of one type carry `line-inner` (LineSvg) and are hidden unless lit or
   hover-previewed (Canvas LineCss, jsInterop.js `initLinePreview`).
 
