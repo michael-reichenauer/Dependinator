@@ -32,6 +32,10 @@ record ArchitectureRule(
         new(layerNames[0], layerNames[^1], reason, RuleKind.Layers, layerNames);
 
     // The rule's nodes in the order the rule names them.
+    // A layers rule's layers as one string, "" for the other kinds: tells layers rules with the same
+    // top and bottom layers apart (AllowedViolation.LayersKey).
+    public string LayersKey => Kind == RuleKind.Layers ? string.Join('\n', NodeNames) : "";
+
     public IReadOnlyList<string> NodeNames =>
         Kind == RuleKind.Layers && LayerNames is { Count: > 0 } layers ? layers : [FromName, ToName];
 

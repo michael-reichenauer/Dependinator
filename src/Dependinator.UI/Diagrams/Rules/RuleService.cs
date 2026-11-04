@@ -257,7 +257,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             violation.TargetNodeName,
             reason.Trim(),
             isToFix,
-            rule.Kind
+            rule.Kind,
+            rule.LayersKey
         );
         var replaced = modelMgr.WithModel(m => m.AllowedViolations.Where(a => a.IsSameDependency(allowed)).ToList());
         commandService.Do(new AllowViolationCommand([allowed], replaced));
@@ -305,10 +306,12 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To, Node?[] Nodes)>();
         foreach (var rule in rules)
         {
+            var nodes = rule.NodeNames.Select(n => nodesByName.GetValueOrDefault(n)).ToArray();
             nodesByName.TryGetValue(rule.FromName, out var from);
             nodesByName.TryGetValue(rule.ToName, out var to);
-            var nodes = rule.NodeNames.Select(n => nodesByName.GetValueOrDefault(n)).ToArray();
-            resolved.Add((rule, from, to, nodes));
+            // From and To stand for the whole rule in the loop below: null unless all its nodes are there.
+            var isResolved = nodes.All(n => n is not null);
+            resolved.Add((rule, isResolved ? from : null, isResolved ? to : null, nodes));
         }
 
         // The allowed dependencies per rule, by the names of the units at both ends.
@@ -331,8 +334,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         {
             for (var i = 0; i < resolved.Count; i++)
             {
-                var (rule, _, _, nodes) = resolved[i];
-                if (!IsBreaking(rule.Kind, nodes, link))
+                var (rule, from, to, nodes) = resolved[i];
+                if (from is null || to is null || !IsBreaking(rule.Kind, nodes, link))
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
@@ -362,7 +365,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var reports = new List<RuleReport>();
         for (var i = 0; i < resolved.Count; i++)
         {
-            var (rule, from, to, nodes) = resolved[i];
+            var (rule, from, _, nodes) = resolved[i];
             var list = violations[i]
                 .OrderBy(kv => kv.Key.Item1.LongName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(kv => kv.Key.Item2.LongName, StringComparer.OrdinalIgnoreCase)
@@ -409,9 +412,9 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             reports.Add(
                 new RuleReport(
                     rule,
-                    from?.LongName ?? rule.FromName,
-                    to?.LongName ?? rule.ToName,
-                    nodes.All(n => n is not null),
+                    nodes[0]?.LongName ?? rule.FromName,
+                    nodes[^1]?.LongName ?? rule.ToName,
+                    from is not null,
                     list
                 )
                 {
@@ -422,8 +425,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                     ],
                     Allowed = allowedList,
                     ToFix = toFixList,
-                    FromId = from?.Id,
-                    ToId = to?.Id,
+                    FromId = nodes[0]?.Id,
+                    ToId = nodes[^1]?.Id,
                 }
             );
         }
@@ -432,11 +435,10 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
 
     // Whether the link breaks the rule: "from must not use to" any link from inside from to inside
     // to; "only from may use to" any link into to from outside both; layers any link from inside a
-    // layer to inside a layer above it (layers are listed top first). An unresolved rule breaks none.
+    // layer to inside a layer above it (layers are listed top first). The rule's nodes are all in
+    // the model (Compute skips an unresolved rule).
     static bool IsBreaking(RuleKind kind, Node?[] nodes, Link link)
     {
-        if (nodes.Any(n => n is null))
-            return false;
         switch (kind)
         {
             case RuleKind.OnlyMayUse:

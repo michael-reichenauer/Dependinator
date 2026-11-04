@@ -35,6 +35,13 @@ record ModelDto
     // Defaulted, so models saved before allowed violations existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AllowedViolationDto> AllowedViolations { get; init; } = [];
 
+    // The rules of the other kinds than "must not use" (RuleDto.Kind), and the dependencies allowed
+    // under them, in lists of their own: a version that knows only "must not use" skips them,
+    // instead of reading "only X may use Y" or layers as "X must not use Y". Defaulted (no
+    // FormatVersion bump).
+    public IReadOnlyList<RuleDto> KindRules { get; init; } = [];
+    public IReadOnlyList<AllowedViolationDto> KindAllowedViolations { get; init; } = [];
+
     // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
 
@@ -63,7 +70,8 @@ record RuleDto
     public required string To { get; init; }
     public string Reason { get; init; } = "";
 
-    // The rule's kind (RuleKind) and a layers rule's layers, top first. Defaulted (no FormatVersion bump).
+    // The rule's kind (RuleKind; only in ModelDto.KindRules) and a layers rule's layers, top first.
+    // Defaulted (no FormatVersion bump).
     public int Kind { get; init; }
     public IReadOnlyList<string>? Layers { get; init; }
 }
@@ -82,8 +90,10 @@ record AllowedViolationDto
     // Marked to fix later, with the planned change as the Reason. Defaulted (no FormatVersion bump).
     public bool IsToFix { get; init; }
 
-    // The kind of the rule it breaks (RuleKind). Defaulted (no FormatVersion bump).
+    // The kind of the rule it breaks (RuleKind; only in ModelDto.KindAllowedViolations) and, for
+    // layers, the rule's layers. Defaulted (no FormatVersion bump).
     public int RuleKind { get; init; }
+    public IReadOnlyList<string>? Layers { get; init; }
 }
 
 // A circular dependency the user accepted, with why, or marked to fix later, with the planned

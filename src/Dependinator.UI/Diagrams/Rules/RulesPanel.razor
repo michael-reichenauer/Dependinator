@@ -10,7 +10,9 @@
 @inject ISuggestRulesService suggestRulesService
 @implements IDisposable
 
-@* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
+@* Architecture rules: "X must not depend on Y", "only X may use Y" (both declared by picking two
+   nodes), or layers (picked top first, each may use only the layers below it), the kind chosen above
+   the picks. Each rule lists
    the dependencies that break it (per class pair, with link counts); while the panel is open those
    lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
    frames both of its classes with the lines between them. Each dependency can be reviewed

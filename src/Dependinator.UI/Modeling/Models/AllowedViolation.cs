@@ -14,17 +14,19 @@ record AllowedViolation(
     string TargetName,
     string Reason,
     bool IsToFix = false,
-    RuleKind RuleKind = RuleKind.MustNotUse
+    RuleKind RuleKind = RuleKind.MustNotUse,
+    string LayersKey = ""
 )
 {
-    // A layers rule is matched by its top and bottom layer, like it is named in From and To.
+    // A layers rule is matched by all its layers (LayersKey), not only its top and bottom ones.
     public bool IsFor(ArchitectureRule rule) =>
-        RuleKind == rule.Kind && FromName == rule.FromName && ToName == rule.ToName;
+        RuleKind == rule.Kind && FromName == rule.FromName && ToName == rule.ToName && LayersKey == rule.LayersKey;
 
     public bool IsSameDependency(AllowedViolation other) =>
         RuleKind == other.RuleKind
         && FromName == other.FromName
         && ToName == other.ToName
+        && LayersKey == other.LayersKey
         && SourceName == other.SourceName
         && TargetName == other.TargetName;
 }

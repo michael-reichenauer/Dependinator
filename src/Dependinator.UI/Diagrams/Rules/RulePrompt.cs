@@ -143,7 +143,7 @@ static class RulePrompt
     static void AppendRule(StringBuilder text, IModel model, ArchitectureRule rule)
     {
         text.AppendLine().AppendLine("## The rule").AppendLine();
-        var nodes = rule.NodeNames.Select(name => model.Nodes.Values.FirstOrDefault(n => n.Name == name)).ToList();
+        var nodes = rule.NodeNames.Select(name => model.Nodes.GetValueOrDefault(NodeId.FromName(name))).ToList();
         string NodeSide(int i) => Side(nodes[i], rule.NodeNames[i]);
         text.AppendLine(
             rule.Kind switch

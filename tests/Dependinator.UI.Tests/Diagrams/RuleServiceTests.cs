@@ -515,35 +515,50 @@ public class RuleServiceTests
     }
 
     [Fact]
-    public void Model_ShouldRoundTripRuleKindsThroughTheDto_AndReadAnUnknownKindAsMustNotUse()
+    public void Model_ShouldRoundTripRuleKindsThroughTheDto_InListsOfTheirOwn_AndSkipAnUnknownKind()
     {
         using var model = modelMgr.UseModel();
         var layers = ArchitectureRule.ForLayers(["A", "B", "C"], "Clean");
         var only = new ArchitectureRule("A", "B", Kind: RuleKind.OnlyMayUse);
-        var allowed = new AllowedViolation("A", "C", "C.X", "A.Y", "Ok", RuleKind: RuleKind.Layers);
+        var allowed = new AllowedViolation(
+            "A",
+            "C",
+            "C.X",
+            "A.Y",
+            "Ok",
+            RuleKind: RuleKind.Layers,
+            LayersKey: layers.LayersKey
+        );
         model.AddRule(layers);
         model.AddRule(only);
         model.AddAllowedViolation(allowed);
         var dto = model.SerializeToDto();
+
+        // A version that knows only "must not use" sees none of them.
+        Assert.Empty(dto.Rules);
+        Assert.Empty(dto.AllowedViolations);
+        Assert.Equal(2, dto.KindRules.Count);
 
         model.Clear();
         model.SetFromDto("path", dto);
         Assert.Equal([layers, only], model.Rules);
         Assert.Equal(["A", "B", "C"], model.Rules[0].NodeNames);
         Assert.Equal([allowed], model.AllowedViolations);
+        Assert.True(model.AllowedViolations[0].IsFor(layers));
+        Assert.False(model.AllowedViolations[0].IsFor(ArchitectureRule.ForLayers(["A", "D", "C"])));
 
         model.Clear();
         model.SetFromDto(
             "path",
             dto with
             {
-                Rules =
+                KindRules =
                 [
-                    dto.Rules[0] with
+                    dto.KindRules[0] with
                     {
                         Kind = 99,
                     },
-                    dto.Rules[1] with
+                    dto.KindRules[1] with
                     {
                         Layers = null,
                         Kind = (int)RuleKind.Layers,
@@ -551,6 +566,6 @@ public class RuleServiceTests
                 ],
             }
         );
-        Assert.Equal([new ArchitectureRule("A", "C"), new ArchitectureRule("A", "B")], model.Rules);
+        Assert.Equal([ArchitectureRule.ForLayers(["A", "B"])], model.Rules);
     }
 }
