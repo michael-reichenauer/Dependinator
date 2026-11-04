@@ -1122,6 +1122,13 @@ button.dep-rules__node:hover {
     color: var(--mud-palette-primary);
 }
 
+/* A rule's dependencies marked to fix later, above its allowed ones. */
+.dep-rules__tofix-title {
+    padding: 2px 0;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+}
+
 /* The rules not to suggest again, after the rules. */
 .dep-rules__dismissed {
     margin: 6px 0 2px 0;

@@ -73,6 +73,9 @@ record AllowedViolationDto
     public required string Source { get; init; }
     public required string Target { get; init; }
     public string Reason { get; init; } = "";
+
+    // Marked to fix later, with the planned change as the Reason. Defaulted (no FormatVersion bump).
+    public bool IsToFix { get; init; }
 }
 
 // A circular dependency the user accepted, with why, or marked to fix later, with the planned

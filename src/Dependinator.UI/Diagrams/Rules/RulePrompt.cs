@@ -164,7 +164,8 @@ static class RulePrompt
     // The dependencies the user allowed under the rule before, with why: what is considered fine.
     static void AppendAllowed(StringBuilder text, IModel model, ArchitectureRule rule)
     {
-        var allowed = model.AllowedViolations.Where(a => a.IsFor(rule)).ToList();
+        // Those marked to fix later are not fine, so their plans are no reasons to allow.
+        var allowed = model.AllowedViolations.Where(a => a.IsFor(rule) && !a.IsToFix).ToList();
         if (allowed.Count == 0)
             return;
         text.AppendLine().AppendLine("Dependencies allowed under this rule before, with why:").AppendLine();

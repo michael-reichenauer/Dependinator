@@ -134,6 +134,40 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
     }
 
+    // Fix later moves a violation to the rule's To fix list with the AI's suggested change as the
+    // plan: no longer a violation, but listed; editing it can report it again.
+    [E2EFact]
+    public async Task FixLater_ShouldListTheDependencyUnderToFix_WithThePlannedChange()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        ILocator violations = Page.GetByTestId("rules-violation-item");
+        await Expect(violations.First).ToBeVisibleAsync();
+        int count = await violations.CountAsync();
+
+        await violations.First.GetByTestId("rules-review").ClickAsync();
+        await Page.GetByTestId("rule-review-expand").ClickAsync();
+        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-suggestion")).ToHaveAttributeAsync("data-verdict", "fix");
+        await Page.GetByTestId("rule-review-fix-later").ClickAsync();
+
+        await Expect(violations).ToHaveCountAsync(count - 1);
+        ILocator toFix = Page.GetByTestId("rules-tofix-item");
+        await Expect(toFix).ToHaveCountAsync(1);
+        await Expect(toFix.GetByTestId("rules-tofix-change"))
+            .ToHaveTextAsync("Test mode: depend on an interface instead.");
+
+        // Editing it can change the plan, or report it again.
+        await toFix.GetByTestId("rules-tofix-edit").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-reason"))
+            .ToHaveValueAsync("Test mode: depend on an interface instead.");
+        await Page.GetByTestId("rule-review-disallow").ClickAsync();
+        await Expect(toFix).ToHaveCountAsync(0);
+        await Expect(violations).ToHaveCountAsync(count);
+    }
+
     // An AI suggests rules (in test mode the app answers for Claude) in a view the Rules panel
     // switches to: the prompt holds the model's structure and dependencies, Dependinator checks
     // each rule, one on a node that is not in the model cannot be added, a rule's node name goes to

@@ -134,8 +134,8 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   edit it (remove, reorder, edit text, "Add to tour" from the node menu). Phase 3: topic tours
   ("how does cloud sync work"), "Play as tour" from an Ask answer, `ask-eval` cases.
 - **Rules and cycles, next** (design doc https://claude.ai/artifact/MmaLqut6aKQvpEoRJxvGYi,
-  Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`).
-  Next, as Michael picks: Fix later for rule violations (like `AcceptedCycle.IsToFix`), then rule
+  Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`),
+  phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`). Next, rule
   kinds expanded to forbidden pairs (Layers and "only X may use Y" first, then "X is independent"
   and "no cycles inside X"). Cycles stay their own always-on detector; only the decisions are
   shared.
