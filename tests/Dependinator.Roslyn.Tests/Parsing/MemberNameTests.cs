@@ -52,6 +52,20 @@ public class ConversionTwinSample
     public static explicit operator ConversionTwinTargets.B.Item(ConversionTwinSample sample) => new();
 }
 
+public class SignatureSample
+{
+    public int count;
+
+    public string? Name { get; set; }
+
+    public System.Threading.Tasks.Task<int> CountAsync(string query, bool isExact) =>
+        System.Threading.Tasks.Task.FromResult(0);
+
+    public void Run() { }
+
+    public SignatureSample(int start) { }
+}
+
 public class IndexerSample
 {
     public int this[OtherClass key] => 0;
@@ -107,6 +121,21 @@ public class ExtensionBlockSampleUser
 [Collection(nameof(RoslynCollection))]
 public class MemberNameTests(RoslynFixture fixture)
 {
+    [Fact]
+    public void ParseType_ShouldGiveMembersASignature()
+    {
+        var items = Parse<SignatureSample>();
+
+        Assert.Equal(": int", items.Node<SignatureSample>("count").Properties.Signature);
+        Assert.Equal(": string?", items.Node<SignatureSample>("Name").Properties.Signature);
+        Assert.Equal(
+            "(string query, bool isExact): Task<int>",
+            items.Node<SignatureSample>("CountAsync(string,bool)").Properties.Signature
+        );
+        Assert.Equal("()", items.Node<SignatureSample>("Run()").Properties.Signature);
+        Assert.Equal("(int start)", items.Node<SignatureSample>("SignatureSample(int)").Properties.Signature);
+    }
+
     [Fact]
     public void ParseType_ShouldTypeConstructorsAsConstructorMembers()
     {

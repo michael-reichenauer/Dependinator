@@ -24,7 +24,6 @@ static partial class NodeSvg
     const int DescriptionMaxWidth = 100;
     const int DescriptionMaxLines = 7;
     const int IconDescriptionMaxLines = 5;
-    const int MemberDescriptionMaxLines = 1;
     const double DescriptionCharWidthFactor = 0.45;
     const double DescriptionLineHeightFactor = 1.2;
     const double DescriptionLineGap = 1;
@@ -214,6 +213,7 @@ static partial class NodeSvg
         var textZoom = TextZoom(parentZoom);
         var fontSize = FontSize * textZoom;
         var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
+        var rowEnd = nodeCanvasRect.X + nodeCanvasRect.Width;
 
         var layout = new LeafNodeLayout(
             IconRect: member.Icon,
@@ -222,15 +222,73 @@ static partial class NodeSvg
             TextBaseline: "middle",
             FontSize: fontSize,
             DescriptionClass: "memberDescription",
-            DescriptionY: member.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom,
-            DescriptionMaxLines: ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom),
-            Bounds: member.Bounds,
-            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y)
+            DescriptionY: member.Text.Y,
+            DescriptionMaxLines: 0, // On the row itself, see MemberDetailsSvg
+            // The whole row hovers and selects, not only its name
+            Bounds: member.Bounds with
+            {
+                Width = Math.Max(member.Bounds.Width, rowEnd - member.Bounds.X),
+            },
+            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y),
+            TextSuffix: MemberDetailsSvg(node, member.Text, rowEnd, fontSize, textZoom),
+            TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
         );
 
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
+
+    // A member row's signature and comment after its name, as tspans of the name's text so they
+    // follow it exactly, cut to the row's width: "(string query): Task  Finds the …". Text stops
+    // growing at deep zoom while the row keeps growing, so zooming in reveals more of the comment.
+    // The name alone is the row's label (data-name; e2e tests and the search match it exactly).
+    static string MemberDetailsSvg(Node node, Pos namePos, double rowEnd, double fontSize, double textZoom)
+    {
+        var signature = node.Signature ?? "";
+        var description = GetDescriptionLines(node.Description, int.MaxValue, 1).FirstOrDefault() ?? "";
+        if (signature.Length == 0 && description.Length == 0)
+            return "";
+
+        var gap = MemberSignatureGap * textZoom;
+        var available = rowEnd - (namePos.X + EstimateTextWidth(node.DisplayName, fontSize) + gap);
+        var charWidth = fontSize * AverageCharWidthFactor;
+        var svg = new System.Text.StringBuilder();
+        var signatureText = ClipRow(signature, (int)(available / charWidth));
+        if (signatureText.Length > 0)
+        {
+            svg.Append(
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"""<tspan class="memberSignature" dx="{gap:0.##}">{HttpUtility.HtmlEncode(signatureText)}</tspan>"""
+                )
+            );
+            available -= EstimateTextWidth(signatureText, fontSize) + 2 * gap;
+        }
+        if (signatureText.Length < signature.Length)
+            return svg.ToString();
+
+        var descriptionFontSize = fontSize * MemberDescriptionScale;
+        var descriptionText = ClipRow(description, (int)(available / (descriptionFontSize * AverageCharWidthFactor)));
+        if (descriptionText.Length > 0)
+        {
+            svg.Append(
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"""<tspan class="memberDescription" dx="{2 * gap:0.##}" font-size="{descriptionFontSize:0.##}px">{HttpUtility.HtmlEncode(descriptionText)}</tspan>"""
+                )
+            );
+        }
+        return svg.ToString();
+    }
+
+    // Clip, but nothing rather than a stub of a word or two letters.
+    static string ClipRow(string text, int maxChars) =>
+        text.Length <= maxChars ? text
+        : maxChars < 6 ? ""
+        : Clip(text, maxChars);
+
+    const double MemberSignatureGap = 3;
+    const double MemberDescriptionScale = 0.85;
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
     // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
@@ -246,7 +304,9 @@ static partial class NodeSvg
         int DescriptionMaxLines,
         Rect Bounds,
         Pos MarkerPos,
-        Pos? LinkHandlePos = null
+        Pos? LinkHandlePos = null,
+        string TextSuffix = "",
+        string TextAttributes = ""
     );
 
     static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize, bool isEditing)
@@ -279,7 +339,7 @@ static partial class NodeSvg
             CultureInfo.InvariantCulture,
             $"""
             <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
+            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity} {layout.TextAttributes}>{node.HtmlDisplayName}{layout.TextSuffix}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
@@ -409,6 +469,8 @@ static partial class NodeSvg
         int maxLines
     )
     {
+        if (maxLines <= 0)
+            return "";
         var lines = GetDescriptionLines(node.Description, maxWidth, maxLines);
         if (lines.Count == 0)
             return "";

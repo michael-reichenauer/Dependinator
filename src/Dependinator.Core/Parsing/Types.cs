@@ -32,6 +32,10 @@ class NodeProperties
     public string? Parent { get; init; }
     public bool? IsPrivate { get; init; }
 
+    // A member row's signature as shown after its name: "(string question): Task" for a
+    // method, ": int" for a field or property. Null for other nodes (and NoValue.String clears).
+    public string? Signature { get; init; }
+
     // For assembly nodes: the project builds an executable (OutputType Exe). SDK-built
     // executables still compile to a ".dll" module (the ".exe" is just the apphost), so
     // this cannot be derived from the module name.

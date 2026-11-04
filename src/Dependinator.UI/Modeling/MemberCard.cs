@@ -20,13 +20,14 @@ static class MemberCard
     public const double Padding = 10;
     const double ColumnGap = 2 * NodeGrid.SnapSize;
 
-    // A column is as wide as its widest row (estimated from the name), in grid steps.
+    // A column is as wide as its widest row (estimated from the name and signature), in grid steps.
     const double MinColumnWidth = 100;
-    const double MaxColumnWidth = 220;
+    const double MaxColumnWidth = 300;
     const double IconAndGapWidth = 12; // The 8-unit member icon and the gap to its name
     const double NameFontSize = 8; // NodeSvg.FontSize
     const double CharWidthFactor = 0.6; // NodeSvg.AverageCharWidthFactor
     const double RowEndPadding = 6;
+    const double SignatureGap = 3; // NodeSvg.MemberSignatureGap
 
     // A section of the card: the members of one kind, public before private.
     public sealed record Section(string Title, IReadOnlyList<Node> Rows);
@@ -178,8 +179,9 @@ static class MemberCard
     // The width every column gets: the widest row name, on the snap grid.
     static double ColumnWidth(IReadOnlyList<Section> sections)
     {
-        var widest = sections.SelectMany(s => s.Rows).Max(row => row.DisplayName.Length);
-        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + RowEndPadding;
+        // The name and its signature (NodeSvg.MemberDetailsSvg); a comment gets what is left.
+        var widest = sections.SelectMany(s => s.Rows).Max(row => row.DisplayName.Length + (row.Signature?.Length ?? 0));
+        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + SignatureGap + RowEndPadding;
         return Math.Clamp(Math.Ceiling(width / NodeGrid.SnapSize) * NodeGrid.SnapSize, MinColumnWidth, MaxColumnWidth);
     }
 

@@ -33,6 +33,9 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool? IsPrivate { get; set; }
+
+    // A member row's signature, shown after its name (Parsing.NodeProperties.Signature).
+    public string? Signature { get; set; }
     bool? isExecutable;
     FileSpan? fileSpan;
 
@@ -199,6 +202,7 @@ class Node : IItem
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
                 IsExecutable = IsExecutable,
+                Signature = Signature,
                 FileSpan = fileSpan,
                 IconName = IconName,
             },
@@ -227,6 +231,7 @@ class Node : IItem
 
         SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
+        Signature = dto.Properties.Signature;
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
         IconName = dto.Properties.IconName;
@@ -252,6 +257,7 @@ class Node : IItem
     {
         Type = node.Properties.Type ?? Type;
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
+        Signature = node.Properties.Signature == NoValue.String ? null : node.Properties.Signature ?? Signature;
         IsExecutable = node.Properties.IsExecutable ?? IsExecutable;
         SetDescription(
             node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description

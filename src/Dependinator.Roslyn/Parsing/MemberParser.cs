@@ -99,11 +99,45 @@ static class MemberParser
                     Description = leadingComment,
                     FileSpan = fileSpan,
                     IsPrivate = isPrivate,
+                    Signature = Signature(member) ?? NoValue.String,
                 }
             ),
             null
         );
     }
+
+    // The type names as written in code, without namespaces: "Task<string>", "int?".
+    static readonly SymbolDisplayFormat SignatureTypeFormat = new(
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameOnly,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+            | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
+            | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+    );
+
+    // What a member row shows after its name, UML style: "(string question): Task<int>" for a
+    // method (no return type when void or a constructor), ": int" for a field, property or event.
+    internal static string? Signature(ISymbol member) =>
+        member switch
+        {
+            IMethodSymbol method => $"({Parameters(method.Parameters)})"
+                + (
+                    method.ReturnsVoid || method.MethodKind is MethodKind.Constructor or MethodKind.StaticConstructor
+                        ? ""
+                        : $": {TypeText(method.ReturnType)}"
+                ),
+            IPropertySymbol { IsIndexer: true } indexer =>
+                $"[{Parameters(indexer.Parameters)}]: {TypeText(indexer.Type)}",
+            IPropertySymbol property => $": {TypeText(property.Type)}",
+            IFieldSymbol field => $": {TypeText(field.Type)}",
+            IEventSymbol @event => $": {TypeText(@event.Type)}",
+            _ => null,
+        };
+
+    static string Parameters(IEnumerable<IParameterSymbol> parameters) =>
+        string.Join(", ", parameters.Select(p => $"{TypeText(p.Type)} {p.Name}"));
+
+    static string TypeText(ITypeSymbol type) => type.ToDisplayString(SignatureTypeFormat);
 
     static bool IsSameAsContainingType(INamedTypeSymbol type, ISymbol member)
     {
