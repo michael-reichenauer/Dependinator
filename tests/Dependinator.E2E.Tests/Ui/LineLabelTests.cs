@@ -6,7 +6,7 @@ namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises line labels through the browser: label the demo's top-level line from the line
 // toolbar, see the text on the canvas, survive a reload (persisted with the line), edit it by
-// double-clicking the line and remove it again.
+// double-clicking the line and remove it again, and have an AI suggest one.
 public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -48,6 +48,39 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.DoubleClickLineAsync(line, field);
         await Page.GetByTestId("line-label-clear").ClickAsync();
         await Expect(LineLabel("calls")).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
+    public async Task LineLabel_ShouldBeSuggestedByAi_AndFillTheFields()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.EnableEditModeAsync();
+
+        await App.SelectLineAsync(App.Line("Demo.sln", "Externals"));
+        await Page.GetByTestId("line-label").ClickAsync();
+        ILocator field = Page.GetByTestId("line-label-text");
+        await Expect(field).ToBeVisibleAsync();
+
+        await Page.GetByTestId("line-label-expand").ClickAsync();
+        await Page.GetByTestId("line-label-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The line");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        // In test mode the app answers for Claude: empty fields are filled at once.
+        await Page.GetByTestId("line-label-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("line-label-suggested-label")).ToHaveTextAsync("test label");
+        await Expect(field).ToHaveValueAsync("test label");
+        await Expect(Page.GetByTestId("line-label-used")).ToBeVisibleAsync();
+
+        // An alternative fills the label only, and the suggestion can be used again.
+        await Page.GetByTestId("line-label-alternative").ClickAsync();
+        await Expect(field).ToHaveValueAsync("test alternative");
+        await Page.GetByTestId("line-label-use").ClickAsync();
+        await Expect(field).ToHaveValueAsync("test label");
+
+        await Page.GetByTestId("line-label-save").ClickAsync();
+        await Expect(LineLabel("test label")).ToBeVisibleAsync();
     }
 
     ILocator LineLabel(string text) => Page.Locator("#svgcanvas text.lineLabel", new() { HasText = text });
