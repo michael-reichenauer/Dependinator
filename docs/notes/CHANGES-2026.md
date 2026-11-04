@@ -34,7 +34,8 @@ project works.
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
   line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
-  Fix later for rule violations, and two new kinds of rule: "only X may use Y" and layers.
+  Fix later for rule violations, two new kinds of rule: "only X may use Y" and layers, and member
+  cards: types show their members like a class box, with a summary card on the way in.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -367,6 +368,16 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and the labels on other lines, for a matching style), with up to three other labels to pick
   from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
   at once, else "Use suggestion" fills them; nothing is saved before Save.
+- **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
+  section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
+  Variables, Resources, Outputs), public members first, flowed into as many columns as the box
+  takes (`MemberCard`). A type of only members is shaped like its card, so the card fills it.
+  Zooming in, the type is first an icon, then a summary card (kind, counts, the first members and
+  "+ N more", `NodeViewPolicy.IsMemberSummary`) until the rows are readable, then the full card.
+  Lines land on the member rows (in at the left, out at the right), calls inside one type show
+  only for the selected or hovered member, and rows can no longer be dragged or resized. A Bicep
+  module gets the card left of its resources. The layout version is 2, so saved models lay their
+  containers out again.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

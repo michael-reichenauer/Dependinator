@@ -376,7 +376,15 @@ class SvgService : ISvgService
             .Select(child => RenderZoneOverlay(child, childrenContext))
             .Where(svg => svg.Length > 0);
 
-        return zonesSvg
+        // A container's member rows sit on a card, drawn behind everything inside the container.
+        var memberCardSvg =
+            !node.IsRoot && NodeLayout.HasMemberChildren(node)
+                ? NodeSvg.GetMemberCardSvg(node, childrenCanvasOffset, childrenZoom)
+                : "";
+
+        return new[] { memberCardSvg }
+            .Where(svg => svg.Length > 0)
+            .Concat(zonesSvg)
             .Concat(linesSvg)
             .Concat(childNodeSvg)
             .Concat(lineLabelsSvg)
@@ -436,6 +444,21 @@ class SvgService : ISvgService
             var passThroughContentSvg = RenderNodeContent(node, passThroughContext);
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
+
+        // The summary card decides by the rows' size, so lay out the rows it may switch to first
+        // (a layout bumps NodeLayout.Generation, which redoes the render with synced lines).
+        if (node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node))
+            EnsureChildrenLayout(node);
+
+        if (NodeViewPolicy.IsMemberSummary(node, context.Zoom))
+            return NodeSvg.GetMemberSummarySvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context),
+                HiddenChildCountOf(node, context)
+            );
 
         if (NodeViewPolicy.IsShowIcon(node, context.Zoom))
             return NodeSvg.GetNodeIconSvg(

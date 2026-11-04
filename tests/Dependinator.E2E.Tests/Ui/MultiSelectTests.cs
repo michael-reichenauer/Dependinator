@@ -35,11 +35,15 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.WaitForTimeoutAsync(500); // Let the last zoom step's tiles settle before dragging
 
         // A band over the visible part of Main's inside (so Main itself is only partly covered
-        // and is looked into) picks the members inside it.
-        float x1 = canvas.X + 20;
-        float y1 = canvas.Y + 110;
-        float x2 = canvas.X + canvas.Width - 20;
-        float y2 = canvas.Y + canvas.Height - 30;
+        // and is looked into) picks the members inside it. Main may fit on screen (its member
+        // card is small), so the band starts inside Main's box rather than at the canvas edge.
+        LocatorBoundingBoxResult main =
+            await App.Node("Demo.UI.Main").First.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("No Main box");
+        float x1 = Math.Max(canvas.X + 20, main.X + 10);
+        float y1 = Math.Max(canvas.Y + 110, main.Y + 10);
+        float x2 = Math.Min(canvas.X + canvas.Width - 20, main.X + main.Width - 10);
+        float y2 = Math.Min(canvas.Y + canvas.Height - 30, main.Y + main.Height - 10);
         await Page.Keyboard.DownAsync("Shift");
         try
         {

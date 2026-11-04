@@ -156,6 +156,66 @@ public class NodeViewPolicyTests
         Assert.Equal(expected, NodeViewPolicy.FramingZoomFactor(node), 6);
     }
 
+    // A type opens to its summary card first and to its member rows once they are readable: rows
+    // are read at the children's zoom (the view zoom × the type's container zoom).
+    [Theory]
+    [InlineData(1.5, false)] // An icon
+    [InlineData(3.0, true)] // Open, rows at 0.75: the summary card
+    [InlineData(5.0, false)] // Rows at 1.25: the member card
+    public void IsMemberSummary_ShouldShowBetweenTheIconAndReadableRows(double zoom, bool expected)
+    {
+        var type = DefaultNode();
+        type.ContainerZoom = 0.25;
+        type.AddChild(new ModelNode("Node.Method", type) { Type = NodeType.MethodMember });
+
+        Assert.Equal(expected, NodeViewPolicy.IsMemberSummary(type, zoom));
+        Assert.Equal(zoom < 5.0, NodeViewPolicy.IsShowIcon(type, zoom)); // The summary acts as an icon
+    }
+
+    [Fact]
+    public void IsMemberSummary_ShouldBeFalse_ForAModuleWithResources()
+    {
+        // A Bicep module's resources are its content: it opens as a container right away.
+        var module = DefaultNode(NodeType.Module);
+        module.ContainerZoom = 0.25;
+        module.AddChild(new ModelNode("Node.param", module) { Type = NodeType.ParameterMember });
+        module.AddChild(new ModelNode("Node.storage", module) { Type = NodeType.Resource });
+
+        Assert.False(NodeViewPolicy.IsMemberSummary(module, 3.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(module, 3.0));
+    }
+
+    [Fact]
+    public void IsMemberSummary_ShouldBeFalse_ForATypeWithoutMembers()
+    {
+        var type = DefaultNode();
+        type.ContainerZoom = 0.25;
+        type.AddChild(new ModelNode("Node.Nested", type) { Type = NodeType.ClassType });
+
+        Assert.False(NodeViewPolicy.IsMemberSummary(type, 3.0));
+    }
+
+    [Theory]
+    [InlineData(180, 1.0)] // A small type: its card at natural scale
+    [InlineData(100, 1.0)]
+    [InlineData(180, 0.1)] // A large type: its card scaled down
+    public void FramingZoomFactor_Member_ShouldShowReadableRowsInAnOpenParent(double size, double containerZoom)
+    {
+        var type = NodeOfSize(size);
+        type.ContainerZoom = containerZoom;
+        var member = new ModelNode("Node.Method", type) { Type = NodeType.MethodMember };
+        type.AddChild(member);
+
+        // The parent's zoom with the member framed (at 1 / factor pixels per unit), also in a tile
+        // rendered 1.3 times either way.
+        var zoom = 1 / (containerZoom * NodeViewPolicy.FramingZoomFactor(member));
+        foreach (var tileZoom in new[] { zoom / 1.3, zoom, zoom * 1.3 })
+        {
+            Assert.False(NodeViewPolicy.IsShowIcon(type, tileZoom), $"Icon or summary at {tileZoom}");
+            Assert.False(NodeViewPolicy.IsTooLargeToBeSeen(type, tileZoom), $"Zoomed past at {tileZoom}");
+        }
+    }
+
     static ModelNode DefaultNode(NodeType type = NodeType.ClassType) => NodeOfSize(100, type);
 
     static ModelNode NodeOfSize(double size, NodeType type = NodeType.ClassType) =>

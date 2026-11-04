@@ -64,6 +64,16 @@ static class SvgExportDocument
                 dominant-baseline: hanging;
                 text-anchor: start;
             }
+            .memberHeading, .summaryPrivate, .summaryMuted {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.CardMutedText}};
+                text-anchor: start;
+            }
+            .summaryMember {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                text-anchor: start;
+            }
             .iconDescription {
                 font-family: Verdana, Helvetica, Arial, sans-serif;
                 font-style: italic;

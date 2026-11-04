@@ -592,10 +592,17 @@ class ModelService : IModelService, IDisposable
 
     // A model saved with an older automatic layout gets it redone (lazily, as containers are
     // shown), except in the containers the user arranged; the flags are saved with the model
-    // until each container is laid out.
+    // until each container is laid out. Member rows are never arranged by hand (their card
+    // keeps them in order), so containers with members are laid out again even when arranged.
     internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
     {
-        if (layoutVersion < NodeLayout.CurrentLayoutVersion)
-            RequireChildrenLayout(model);
+        if (layoutVersion >= NodeLayout.CurrentLayoutVersion)
+            return;
+        RequireChildrenLayout(model);
+        foreach (var node in model.Nodes.Values)
+        {
+            if (node.IsChildrenLayoutCustomized && NodeLayout.HasMemberChildren(node))
+                node.IsChildrenLayoutRequired = true;
+        }
     }
 }

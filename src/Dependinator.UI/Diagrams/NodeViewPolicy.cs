@@ -1,3 +1,4 @@
+using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -47,8 +48,24 @@ static class NodeViewPolicy
 
     // Multiplier for the model zoom that "show node" pans to (the node at 1 pixel per unit), so
     // that a node larger than MaxFramedNodeSize is framed smaller, as an icon.
-    public static double FramingZoomFactor(Node node) =>
-        Math.Max(1, Math.Max(node.Boundary.Width, node.Boundary.Height) / MaxFramedNodeSize);
+    // A member row is framed the other way, closer: its card's rows must be readable (not the
+    // summary card) and its parent open as a container (not an icon), also in a tile rendered
+    // TileKey.ZoomFactor (1.3) apart from the view's zoom.
+    public static double FramingZoomFactor(Node node)
+    {
+        if (node.Type.IsMember && node.Parent is { IsRoot: false } parent && parent.Boundary != Rect.None)
+        {
+            // The parent's size on screen with the member at 1 pixel per unit.
+            var parentSize = Math.Min(parent.Boundary.Width, parent.Boundary.Height) / parent.ContainerZoom;
+            return Math.Min(1 / TileZoomMargin, parentSize / MinFramedParentSize);
+        }
+        return Math.Max(1, Math.Max(node.Boundary.Width, node.Boundary.Height) / MaxFramedNodeSize);
+    }
+
+    const double TileZoomMargin = 1.3;
+
+    // Clearly past the container threshold (MinContainerZoom × ReferenceNodeSize) after TileZoomMargin.
+    const double MinFramedParentSize = 1.4 * MinContainerZoom * ReferenceNodeSize;
 
     public static bool IsTooLargeToBeSeen(Node node, double zoom) => EffectiveZoom(node, zoom) > MaxNodeZoom;
 
@@ -72,7 +89,31 @@ static class NodeViewPolicy
     public static bool IsRenderedFlat(double zoom) => zoom > MaxNestedViewportZoom;
 
     public static bool IsShowIcon(Node node, double zoom) =>
-        node.Type.IsMember || EffectiveZoom(node, zoom) <= MinContainerZoom;
+        node.Type.IsMember || EffectiveZoom(node, zoom) <= MinContainerZoom || IsMemberSummary(node, zoom);
+
+    // Member rows are shown once their names are this large on screen (the 8-unit member names
+    // at 8 px, the size the summary card's rows have); until then a member card container shows its summary card instead.
+    const double MinMemberRowZoom = 1.0;
+
+    // The node shows its summary card (NodeSvg.GetMemberSummarySvg): it is past its icon size, but
+    // its member rows would still be too small to read. It acts as an icon (lines attach to it, a
+    // click selects it), so it is part of IsShowIcon. Only containers whose rows are the point: a
+    // C# type, or a node of only member rows (a Bicep resource with auxiliary rows); a Bicep
+    // module, whose resources are the content, opens as a container right away.
+    public static bool IsMemberSummary(Node node, double zoom) =>
+        !node.Type.IsMember
+        && !node.IsRoot
+        && EffectiveZoom(node, zoom) > MinContainerZoom
+        && zoom * node.ContainerZoom < MinMemberRowZoom
+        && IsMemberCardNode(node);
+
+    public static bool IsMemberCardNode(Node node) =>
+        node.Children.Count > 0
+        && (
+            node.Type.IsType
+                ? MemberCard.HasMembers(node)
+                : node.Children.All(c => c.Type.IsMember || IsAnnotation(c)) && MemberCard.HasMembers(node)
+        );
 
     // The node is shown as an expanded box with visible children (not an icon and not zoomed
     // past visibility). Annotations (zones, notes) are leaves at every zoom: nothing is ever

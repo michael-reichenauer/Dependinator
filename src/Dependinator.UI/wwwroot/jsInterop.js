@@ -494,7 +494,8 @@ export function initLinePreview(elementId) {
     shownId = id;
     style.textContent = id
       ? `#${elementId} .line-vis:not([data-n~="${id}"]):not(.line-accent, .line-cycle, .line-path, .line-rule) { opacity: var(--line-preview-dim) !important; }
-         #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }`
+         #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }
+         #${elementId} .line-vis.line-inner:not([data-n~="${id}"]) { opacity: 0 !important; }`
       : "";
   }
 
