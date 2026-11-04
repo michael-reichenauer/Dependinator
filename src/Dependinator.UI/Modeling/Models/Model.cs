@@ -264,6 +264,7 @@ class Model : IModel
                     Source = a.SourceName,
                     Target = a.TargetName,
                     Reason = a.Reason,
+                    IsToFix = a.IsToFix,
                 }),
             ],
             AcceptedCycles =
@@ -343,7 +344,14 @@ class Model : IModel
         allowedViolations.Clear();
         allowedViolations.AddRange(
             modelDto
-                .AllowedViolations.Select(a => new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? ""))
+                .AllowedViolations.Select(a => new AllowedViolation(
+                    a.From,
+                    a.To,
+                    a.Source,
+                    a.Target,
+                    a.Reason ?? "",
+                    a.IsToFix
+                ))
                 .DistinctBy(a => (a.FromName, a.ToName, a.SourceName, a.TargetName))
         );
         RulesVersion++;

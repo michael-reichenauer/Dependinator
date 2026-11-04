@@ -10,10 +10,11 @@
    answer (AiFixButton, as in the cycle review), and allowing anyway as the
    dialog's alternative. A reason the dialog filled in follows the selected answer until the user
    edits it. Nothing is saved until the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows the
-   dependency still there. *@
+   dependency still there. Fix later lists the dependency under the rule's To fix, with the selected
+   answer's change as the plan; editing one to fix edits that plan, or reports it again. *@
 <MudDialog ActionsClass="dep-ai__actions">
   <TitleContent>
-    <MudText Typo="Typo.h6">@(IsEdit ? "Allowed dependency" : "Review dependency")</MudText>
+    <MudText Typo="Typo.h6">@(IsToFix ? "Dependency to fix" : IsEdit ? "Allowed dependency" : "Review dependency")</MudText>
   </TitleContent>
   <DialogContent>
     <div class="dep-cycles__dialog-cycle" data-testid="rule-review-text">
@@ -76,7 +77,14 @@
                      StillThereText="The dependency is still there after the re-parse. Ask again, fix it yourself, or decide below."
                      CheckingText="Once the model is re-parsed, this shows whether the dependency is gone." />
     }
-    @if (!IsDone)
+    @if (!IsDone && IsToFix)
+    {
+      <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Planned change" Lines="3"
+                    Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                    HelperText="Shown with the dependency under its rule's To fix; it is not counted as a problem meanwhile."
+                    data-testid="rule-review-reason" />
+    }
+    else if (!IsDone)
     {
       <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
                     Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
@@ -89,7 +97,8 @@
     @if (IsEdit)
     {
       <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Delete" OnClick="Disallow"
-                 data-testid="rule-review-disallow">Stop allowing</MudButton>
+                 title="Report it as a violation again"
+                 data-testid="rule-review-disallow">@(IsToFix ? "Report again" : "Stop allowing")</MudButton>
     }
     <MudSpacer />
     @if (IsDone)
@@ -100,7 +109,16 @@
     else
     {
       <MudButton OnClick="Cancel" data-testid="rule-review-cancel">Cancel</MudButton>
-      @if (IsFixSuggested)
+      @if (!IsEdit)
+      {
+        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="rule-review-fix-later"
+                   title="@(IsFixSuggested ? "List it under the rule's To fix, with the suggested change as the plan" : "List it under the rule's To fix: it stays drawn, but is not counted as a problem")">Fix later</MudButton>
+      }
+      @if (IsToFix)
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FixLater" data-testid="rule-review-save">Save</MudButton>
+      }
+      else if (IsFixSuggested)
       {
         <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
       }
@@ -123,6 +141,9 @@
   [Parameter] public string TargetName { get; set; } = "";
   [Parameter] public string Reason { get; set; } = "";
   [Parameter] public bool IsEdit { get; set; }
+
+  // Editing a dependency marked to fix later (with IsEdit): Reason is its planned change.
+  [Parameter] public bool IsToFix { get; set; }
 
   // The prompt that asks any AI about the dependency, to copy or show.
   [Parameter] public Func<Task<string>>? CopyPrompt { get; set; }
@@ -217,11 +238,23 @@
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
   void OnKeyDown(KeyboardEventArgs e)
   {
-    if (e.Key == "Enter" && (e.CtrlKey || e.MetaKey))
+    if (e.Key != "Enter" || !(e.CtrlKey || e.MetaKey))
+      return;
+    if (IsToFix)
+      FixLater();
+    else
       Save();
   }
 
   void Save() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult((Reason ?? "").Trim(), false)));
+
+  // A new review keeps the selected fixing answer's change as the plan (an allowing answer has
+  // none); editing one to fix keeps what the user typed.
+  void FixLater()
+  {
+    var plan = IsToFix ? (Reason ?? "").Trim() : selected is { IsFix: true } s ? s.Change : "";
+    MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult(plan, false, IsFixLater: true)));
+  }
 
   void Disallow() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult("", true)));
 

@@ -392,14 +392,23 @@ sealed class ModelQueries(
             ],
             [
                 .. report
-                    .Allowed.Take(MaxAllowed)
-                    .Select(a => new AllowedDependency(
+                    .Allowed.Select(a => new AllowedDependency(
                         a.Allowed.SourceName,
                         a.Allowed.TargetName,
                         a.Allowed.Reason,
                         a.LinkCount
-                    )),
+                    ))
+                    .Concat(
+                        // Marked to fix later: known, so not a violation, with the plan as the reason.
+                        report.ToFix.Select(t => new AllowedDependency(
+                            t.Planned.SourceName,
+                            t.Planned.TargetName,
+                            t.Planned.Reason == "" ? "To fix later." : $"To fix later: {t.Planned.Reason}",
+                            t.Violation?.LinkCount ?? 0
+                        ))
+                    )
+                    .Take(MaxAllowed),
             ],
-            report.Allowed.Count
+            report.Allowed.Count + report.ToFix.Count
         );
 }

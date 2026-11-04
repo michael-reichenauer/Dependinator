@@ -33,7 +33,8 @@ project works.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
-  line labels, and Suggest rules that remembers what was dismissed, with a reason on every rule.
+  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule, and
+  Fix later for rule violations.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -351,6 +352,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   at most 8, and an answer with none is fine. An added rule keeps the AI's why as its reason
   (`ArchitectureRule.Reason`), shown and editable in the Rules panel, whose "Not suggested again"
   list takes a dismissal back.
+- **Fix later for rule violations (Nov 4).** The rule review dialog has Fix later beside Allow,
+  like the cycle review: the dependency moves to the rule's To fix list (`AllowedViolation.IsToFix`,
+  saved with the model) with the AI's suggested change as the plan. It stays drawn as breaking the
+  rule but is no longer counted as a problem; its row copies a fix prompt for the plan, reviews it
+  again, edits the plan or reports it again.
 - **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
   and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
   and the labels on other lines, for a matching style), with up to three other labels to pick

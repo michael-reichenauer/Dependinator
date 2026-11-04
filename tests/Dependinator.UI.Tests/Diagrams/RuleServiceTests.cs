@@ -339,4 +339,56 @@ public class RuleServiceTests
         var restored = Assert.Single(model.DismissedRules);
         Assert.Equal("Kept reason.", restored.Reason);
     }
+
+    [Fact]
+    public async Task FixLater_ShouldListTheDependencyUnderToFix_StillDrawnButNotAViolation()
+    {
+        Node ui,
+            data,
+            view,
+            repo;
+        using (var model = modelMgr.UseModel())
+        {
+            ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+            view = AddNode(model, "UI.View", ui);
+            repo = AddNode(model, "Data.Repo", data);
+            AddLink(model, view, repo);
+            model.AddRule(new ArchitectureRule(ui.Name, data.Name));
+            model.AddAllowedViolation(new AllowedViolation(ui.Name, data.Name, "UI.Gone", repo.Name, "Done?", true));
+        }
+        var commands = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
+        var service = new RuleService(modelMgr, commands);
+        var report = Assert.Single(service.GetReports());
+
+        service.FixLater(report.Rule, Assert.Single(report.Violations), " Use an interface ");
+
+        report = Assert.Single(service.GetReports());
+        Assert.Empty(report.Violations);
+        Assert.Empty(report.Allowed);
+        Assert.Equal(0, service.ViolationCount);
+        Assert.NotEmpty(service.GetViolatingLineIds());
+        var toFix = report.ToFix.Single(t => t.Planned.SourceName == view.Name);
+        Assert.Equal("Use an interface", toFix.Planned.Reason);
+        Assert.True(toFix.Planned.IsToFix);
+        Assert.Equal(view.Id, toFix.Violation!.SourceId);
+        Assert.True(report.ToFix.Single(t => t.Planned.SourceName == "UI.Gone").IsGone);
+
+        await commands.Undo();
+        Assert.Single(Assert.Single(service.GetReports()).Violations);
+    }
+
+    [Fact]
+    public void Model_ShouldRoundTripADependencyToFixThroughTheDto()
+    {
+        using var model = modelMgr.UseModel();
+        var toFix = new AllowedViolation("A", "B", "A.X", "B.Y", "Plan", IsToFix: true);
+        model.AddAllowedViolation(toFix);
+        var dto = model.SerializeToDto();
+
+        model.Clear();
+        model.SetFromDto("path", dto);
+
+        Assert.Equal([toFix], model.AllowedViolations);
+    }
 }

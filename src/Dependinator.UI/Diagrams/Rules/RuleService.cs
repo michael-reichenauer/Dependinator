@@ -29,6 +29,13 @@ record AllowedReport(AllowedViolation Allowed, string SourceName, string TargetN
     public bool IsGone => LinkCount == 0;
 }
 
+// A dependency marked to fix later under a rule, with its planned change (Planned.Reason): the
+// dependency as it is now (null once no link makes it: it may be fixed), for its row and fix prompt.
+record ToFixReport(AllowedViolation Planned, string SourceName, string TargetName, RuleViolation? Violation)
+{
+    public bool IsGone => Violation is null;
+}
+
 // A dismissed rule with the names as the user sees them (the stored ones for a node that is gone).
 record DismissedReport(DismissedRule Dismissed, string FromDisplay, string ToDisplay);
 
@@ -43,6 +50,9 @@ record RuleReport(
 )
 {
     public IReadOnlyList<AllowedReport> Allowed { get; init; } = [];
+
+    // The dependencies marked to fix later: not violations (they are known), but still drawn.
+    public IReadOnlyList<ToFixReport> ToFix { get; init; } = [];
 
     // The rule's nodes, null for one that is not in the model.
     public NodeId? FromId { get; init; }
@@ -92,6 +102,10 @@ interface IRuleService
     void Disallow(AllowedViolation allowed);
 
     void SetAllowedReason(AllowedViolation allowed, string reason);
+
+    // Marks the dependency to fix later, with the planned change: it is listed under the rule's To
+    // fix instead of its violations, and no longer counted as a problem.
+    void FixLater(ArchitectureRule rule, RuleViolation violation, string plannedChange);
 }
 
 [Scoped]
@@ -187,18 +201,25 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
 
     public void Undismiss(DismissedRule dismissed) => commandService.Do(new DismissRuleCommand([], [dismissed]));
 
-    public void Allow(ArchitectureRule rule, RuleViolation violation, string reason)
+    public void Allow(ArchitectureRule rule, RuleViolation violation, string reason) =>
+        Allow(rule, violation, reason, isToFix: false);
+
+    void Allow(ArchitectureRule rule, RuleViolation violation, string reason, bool isToFix)
     {
         var allowed = new AllowedViolation(
             rule.FromName,
             rule.ToName,
             violation.SourceNodeName,
             violation.TargetNodeName,
-            reason.Trim()
+            reason.Trim(),
+            isToFix
         );
         var replaced = modelMgr.WithModel(m => m.AllowedViolations.Where(a => a.IsSameDependency(allowed)).ToList());
         commandService.Do(new AllowViolationCommand([allowed], replaced));
     }
+
+    public void FixLater(ArchitectureRule rule, RuleViolation violation, string plannedChange) =>
+        Allow(rule, violation, plannedChange, isToFix: true);
 
     public void Disallow(AllowedViolation allowed) => commandService.Do(new AllowViolationCommand([], [allowed]));
 
@@ -254,6 +275,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             )
             .ToList();
         var allowedLinks = resolved.Select(_ => new Dictionary<(string, string), int>()).ToList();
+        var toFixLinks = resolved.Select(_ => new Dictionary<(string, string), (Node, Node, List<Link>)>()).ToList();
 
         // Violations per rule, grouped by the units at both ends (a method calling a method is
         // the class depending on the class).
@@ -270,9 +292,19 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
-                if (allowed[i].ContainsKey(names))
+                if (allowed[i].TryGetValue(names, out var allowedOne))
                 {
-                    allowedLinks[i][names] = allowedLinks[i].GetValueOrDefault(names) + 1;
+                    if (allowedOne.IsToFix)
+                    {
+                        // Still drawn as breaking the rule, though it is known.
+                        if (!toFixLinks[i].TryGetValue(names, out var toFix))
+                            toFixLinks[i][names] = toFix = (pair.Item1, pair.Item2, []);
+                        toFix.Item3.Add(link);
+                        foreach (var line in link.Lines)
+                            lineIds.Add(line.Id);
+                    }
+                    else
+                        allowedLinks[i][names] = allowedLinks[i].GetValueOrDefault(names) + 1;
                     continue;
                 }
                 if (!violations[i].TryGetValue(pair, out var entry))
@@ -290,22 +322,32 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             var list = violations[i]
                 .OrderBy(kv => kv.Key.Item1.LongName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(kv => kv.Key.Item2.LongName, StringComparer.OrdinalIgnoreCase)
-                .Select(kv => new RuleViolation(
-                    kv.Key.Item1.Id,
-                    kv.Key.Item1.DisplayName,
-                    kv.Key.Item1.LongName,
-                    kv.Key.Item2.Id,
-                    kv.Key.Item2.DisplayName,
-                    kv.Key.Item2.LongName,
-                    kv.Value.Links.Count
-                )
+                .Select(kv => ToViolation(kv.Key.Item1, kv.Key.Item2, kv.Value.Links.Count))
+                .ToList();
+            var toFixList = allowed[i]
+                .Values.Where(a => a.IsToFix)
+                .Select(a =>
                 {
-                    SourceNodeName = kv.Key.Item1.Name,
-                    TargetNodeName = kv.Key.Item2.Name,
+                    if (toFixLinks[i].TryGetValue((a.SourceName, a.TargetName), out var found))
+                    {
+                        var violation = ToViolation(found.Item1, found.Item2, found.Item3.Count);
+                        return new ToFixReport(a, violation.SourceName, violation.TargetName, violation);
+                    }
+                    var source = nodesByName.GetValueOrDefault(a.SourceName);
+                    var target = nodesByName.GetValueOrDefault(a.TargetName);
+                    return new ToFixReport(
+                        a,
+                        source?.DisplayName ?? a.SourceName,
+                        target?.DisplayName ?? a.TargetName,
+                        null
+                    );
                 })
+                .OrderBy(a => a.SourceName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(a => a.TargetName, StringComparer.OrdinalIgnoreCase)
                 .ToList();
             var allowedList = allowed[i]
-                .Values.Select(a =>
+                .Values.Where(a => !a.IsToFix)
+                .Select(a =>
                 {
                     var source = nodesByName.GetValueOrDefault(a.SourceName);
                     var target = nodesByName.GetValueOrDefault(a.TargetName);
@@ -330,6 +372,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                 )
                 {
                     Allowed = allowedList,
+                    ToFix = toFixList,
                     FromId = from?.Id,
                     ToId = to?.Id,
                 }
@@ -337,8 +380,15 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         }
         return (reports, lineIds);
     }
+
+    static RuleViolation ToViolation(Node source, Node target, int linkCount) =>
+        new(source.Id, source.DisplayName, source.LongName, target.Id, target.DisplayName, target.LongName, linkCount)
+        {
+            SourceNodeName = source.Name,
+            TargetNodeName = target.Name,
+        };
 }
 
-// What the rule review dialog decided: allow the dependency with the reason, or (editing an
-// allowed one) stop allowing it.
-record RuleReviewDialogResult(string Reason, bool IsDisallow);
+// What the rule review dialog decided: allow the dependency with the reason, mark it to fix later
+// (IsFixLater, the reason is the planned change), or (editing an allowed one) stop allowing it.
+record RuleReviewDialogResult(string Reason, bool IsDisallow, bool IsFixLater = false);
