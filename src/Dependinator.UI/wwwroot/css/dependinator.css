@@ -1167,6 +1167,56 @@ button.dep-rules__node:hover {
     margin-top: 2px;
 }
 
+/* The kind of rule to add, above its node picks. */
+.dep-rules__add-kind {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__kind {
+    align-self: flex-start;
+    padding: 2px 4px;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-primary);
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-inputs);
+    border-radius: 4px;
+}
+
+.dep-rules__kind-hint {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-rules__add-kind + .dep-rules__add {
+    margin-top: 4px;
+    padding-top: 0;
+    border-top: none;
+}
+
+.dep-rules__layers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.dep-rules__layer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.dep-rules__layer:last-child {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
 /* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
 .dep-coach {
     position: fixed;

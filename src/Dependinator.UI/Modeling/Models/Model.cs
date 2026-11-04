@@ -244,6 +244,8 @@ class Model : IModel
                     From = r.FromName,
                     To = r.ToName,
                     Reason = r.Reason,
+                    Kind = (int)r.Kind,
+                    Layers = r.Kind == RuleKind.Layers ? r.LayerNames : null,
                 }),
             ],
             DismissedRules =
@@ -265,6 +267,7 @@ class Model : IModel
                     Target = a.TargetName,
                     Reason = a.Reason,
                     IsToFix = a.IsToFix,
+                    RuleKind = (int)a.RuleKind,
                 }),
             ],
             AcceptedCycles =
@@ -336,7 +339,7 @@ class Model : IModel
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
         rules.Clear();
-        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To, r.Reason ?? "")).Distinct());
+        rules.AddRange(modelDto.Rules.Select(r => ToRule(r)).Distinct());
         dismissedRules.Clear();
         dismissedRules.AddRange(
             modelDto.DismissedRules.Select(r => new DismissedRule(r.From, r.To, r.Reason ?? "")).Distinct()
@@ -350,9 +353,10 @@ class Model : IModel
                     a.Source,
                     a.Target,
                     a.Reason ?? "",
-                    a.IsToFix
+                    a.IsToFix,
+                    Enum.IsDefined((RuleKind)a.RuleKind) ? (RuleKind)a.RuleKind : RuleKind.MustNotUse
                 ))
-                .DistinctBy(a => (a.FromName, a.ToName, a.SourceName, a.TargetName))
+                .DistinctBy(a => (a.RuleKind, a.FromName, a.ToName, a.SourceName, a.TargetName))
         );
         RulesVersion++;
         acceptedCycles.Clear();
@@ -366,6 +370,18 @@ class Model : IModel
             .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
         ]);
         // Nodes and links will be set by model service in separate worker thread
+    }
+
+    // A rule of a kind this version does not know, or layers without at least two layers, reads as
+    // "must not use" between its From and To.
+    static ArchitectureRule ToRule(RuleDto r)
+    {
+        var kind = Enum.IsDefined((RuleKind)r.Kind) ? (RuleKind)r.Kind : RuleKind.MustNotUse;
+        if (kind == RuleKind.Layers)
+            return r.Layers is { Count: >= 2 } layers
+                ? ArchitectureRule.ForLayers([.. layers], r.Reason ?? "")
+                : new ArchitectureRule(r.From, r.To, r.Reason ?? "");
+        return new ArchitectureRule(r.From, r.To, r.Reason ?? "", kind);
     }
 
     public void TryAddNode(Node node)

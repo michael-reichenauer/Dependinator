@@ -53,17 +53,22 @@ record ParseProblemDto
     public string? NodeName { get; init; }
 }
 
-// An architecture rule: "From" must not depend on "To", with why (node names, see
-// ArchitectureRule); also a dismissed rule (see DismissedRule).
+// An architecture rule of its kind: "From" must not depend on "To", only "From" may use "To", or
+// layers (From the top one, To the bottom one), with why (node names, see ArchitectureRule); also
+// a dismissed rule (see DismissedRule).
 [Serializable]
 record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
     public string Reason { get; init; } = "";
+
+    // The rule's kind (RuleKind) and a layers rule's layers, top first. Defaulted (no FormatVersion bump).
+    public int Kind { get; init; }
+    public IReadOnlyList<string>? Layers { get; init; }
 }
 
-// A dependency that breaks the rule "From must not use To" and that the user allowed, with why:
+// A dependency that breaks the rule (its kind, From and To) and that the user allowed, with why:
 // the units at both ends (node names, see AllowedViolation).
 [Serializable]
 record AllowedViolationDto
@@ -76,6 +81,9 @@ record AllowedViolationDto
 
     // Marked to fix later, with the planned change as the Reason. Defaulted (no FormatVersion bump).
     public bool IsToFix { get; init; }
+
+    // The kind of the rule it breaks (RuleKind). Defaulted (no FormatVersion bump).
+    public int RuleKind { get; init; }
 }
 
 // A circular dependency the user accepted, with why, or marked to fix later, with the planned

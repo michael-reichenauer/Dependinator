@@ -1,17 +1,58 @@
 namespace Dependinator.UI.Modeling.Models;
 
-// An architecture rule the user declared: nothing at or inside the "from" node may depend on
-// anything at or inside the "to" node. Nodes are referred to by name, so a rule survives
-// re-parses and travels with the model (ModelDto.Rules); a rule whose node is gone is kept and
-// shown as unresolved. Reason says why the rule exists (an AI's why when it suggested the rule,
-// or the user's words); it is not part of the rule's identity, so two rules on the same nodes are
-// the same rule whatever their reasons.
-record ArchitectureRule(string FromName, string ToName, string Reason = "")
+// The kinds of architecture rule; each one comes down to which dependencies break it (RuleService).
+enum RuleKind
 {
-    public virtual bool Equals(ArchitectureRule? other) =>
-        other is not null && FromName == other.FromName && ToName == other.ToName;
+    // "From must not use To": nothing at or inside From may depend on anything at or inside To.
+    MustNotUse,
 
-    public override int GetHashCode() => HashCode.Combine(FromName, ToName);
+    // "Only From may use To": nothing outside both From and To may depend on anything inside To.
+    OnlyMayUse,
+
+    // "Layers": LayerNames, top first; code in a layer may use the layers below it, never one above.
+    Layers,
+}
+
+// An architecture rule the user declared (see RuleKind). Nodes are referred to by name, so a rule
+// survives re-parses and travels with the model (ModelDto.Rules); a rule whose node is gone is kept
+// and shown as unresolved. A layers rule names its top layer as From and its bottom one as To.
+// Reason says why the rule exists (an AI's why when it suggested the rule, or the user's words); it
+// is not part of the rule's identity, so two rules on the same nodes are the same rule whatever
+// their reasons.
+record ArchitectureRule(
+    string FromName,
+    string ToName,
+    string Reason = "",
+    RuleKind Kind = RuleKind.MustNotUse,
+    IReadOnlyList<string>? LayerNames = null
+)
+{
+    // A layers rule from its layers, top first.
+    public static ArchitectureRule ForLayers(IReadOnlyList<string> layerNames, string reason = "") =>
+        new(layerNames[0], layerNames[^1], reason, RuleKind.Layers, layerNames);
+
+    // The rule's nodes in the order the rule names them.
+    public IReadOnlyList<string> NodeNames =>
+        Kind == RuleKind.Layers && LayerNames is { Count: > 0 } layers ? layers : [FromName, ToName];
+
+    // The rule as text, with each node named by display (its name in backticks for a prompt, say).
+    public string Describe(Func<string, string> display) =>
+        Kind switch
+        {
+            RuleKind.OnlyMayUse => $"only {display(FromName)} may use {display(ToName)}",
+            RuleKind.Layers =>
+                $"layers {string.Join(" > ", NodeNames.Select(display))} (each may use only the layers below it)",
+            _ => $"{display(FromName)} must not use {display(ToName)}",
+        };
+
+    public virtual bool Equals(ArchitectureRule? other) =>
+        other is not null
+        && Kind == other.Kind
+        && FromName == other.FromName
+        && ToName == other.ToName
+        && NodeNames.SequenceEqual(other.NodeNames);
+
+    public override int GetHashCode() => HashCode.Combine(Kind, FromName, ToName, NodeNames.Count);
 }
 
 // A rule the user does not want suggested again: dismissed in Suggest rules, with an optional

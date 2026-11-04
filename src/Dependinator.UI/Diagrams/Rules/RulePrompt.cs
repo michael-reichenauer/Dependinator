@@ -143,15 +143,24 @@ static class RulePrompt
     static void AppendRule(StringBuilder text, IModel model, ArchitectureRule rule)
     {
         text.AppendLine().AppendLine("## The rule").AppendLine();
-        var from = model.Nodes.Values.FirstOrDefault(n => n.Name == rule.FromName);
-        var to = model.Nodes.Values.FirstOrDefault(n => n.Name == rule.ToName);
+        var nodes = rule.NodeNames.Select(name => model.Nodes.Values.FirstOrDefault(n => n.Name == name)).ToList();
+        string NodeSide(int i) => Side(nodes[i], rule.NodeNames[i]);
         text.AppendLine(
-            $"{Side(from, rule.FromName)} must not use {Side(to, rule.ToName)}: nothing at or inside the first "
-                + "may depend on anything at or inside the second."
+            rule.Kind switch
+            {
+                RuleKind.OnlyMayUse => $"Only {NodeSide(0)} may use {NodeSide(1)}: nothing outside the two may "
+                    + "depend on anything at or inside the second.",
+                RuleKind.Layers => "Layers, top first: "
+                    + string.Join(", ", rule.NodeNames.Select((_, i) => NodeSide(i)))
+                    + ". Each layer may use only the layers below it: nothing at or inside a layer may depend on "
+                    + "anything at or inside a layer above it.",
+                _ => $"{NodeSide(0)} must not use {NodeSide(1)}: nothing at or inside the first "
+                    + "may depend on anything at or inside the second.",
+            }
         );
         if (rule.Reason != "")
             text.AppendLine().AppendLine($"Why the rule exists: {rule.Reason}");
-        var described = new[] { from, to }.OfType<Node>().Where(n => n.Description is not null).ToList();
+        var described = nodes.OfType<Node>().Where(n => n.Description is not null).ToList();
         if (described.Count == 0)
             return;
         text.AppendLine();

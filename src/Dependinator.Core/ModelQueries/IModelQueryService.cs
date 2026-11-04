@@ -102,7 +102,8 @@ record CycleList(IReadOnlyList<CycleResult> Cycles, int Count);
 
 record AllowedDependency(string Source, string Target, string Reason, int LinkCount);
 
-// IsRule says whether the model has the rule already; IsResolved whether both nodes exist.
+// IsRule says whether the model has the rule already; IsResolved whether all its nodes exist.
+// Rule says it in words: "From must not use To", "only From may use To", or the layers top first.
 // ViolationCount and LinkCount cover every violation, Violations only the largest ones;
 // AllowedCount counts every allowed dependency, Allowed only the first ones.
 record RuleResult(
@@ -114,7 +115,8 @@ record RuleResult(
     int LinkCount,
     IReadOnlyList<UnitDependency> Violations,
     IReadOnlyList<AllowedDependency> Allowed,
-    int AllowedCount
+    int AllowedCount,
+    string Rule = ""
 );
 
 // The node's code as excerpts, each headed by its file (relative to the model's folder where it is

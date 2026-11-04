@@ -57,10 +57,18 @@ record RuleReport(
     // The rule's nodes, null for one that is not in the model.
     public NodeId? FromId { get; init; }
     public NodeId? ToId { get; init; }
+
+    // The rule in words, with the nodes' long names ("A must not use B", "only A may use B",
+    // "layers A > B > C ..."), and its nodes in order (two, or the layers top first).
+    public string Text { get; init; } = "";
+    public IReadOnlyList<RuleNode> Nodes { get; init; } = [];
 }
 
-// Evaluates the model's architecture rules ("X must not depend on Y"): every link from inside
-// X to inside Y is a violation, listed per type pair and drawn highlighted in the diagram while
+// One node of a rule: its name, the name the user sees, and its id while it is in the model.
+record RuleNode(string Name, string Display, NodeId? Id);
+
+// Evaluates the model's architecture rules ("X must not depend on Y", "only X may use Y", layers):
+// every link that breaks one (see IsBreaking) is a violation, listed per type pair and drawn highlighted in the diagram while
 // the rules panel is open, unless the user allowed that type pair, with why. Adding and removing
 // rules and allowed dependencies goes through the command stack (undoable, saved with the model).
 // Results are cached per structure and rules version.
@@ -74,6 +82,10 @@ interface IRuleService
 
     // Adds "from must not use to"; an error says why a pair is not a rule (same node, exists).
     Result AddRule(NodeId fromId, NodeId toId);
+
+    // Adds a rule of the kind over the nodes (from and to, or the layers top first); an error says
+    // why they make no rule (too few, the same node twice, one inside another, exists).
+    Result AddRule(RuleKind kind, IReadOnlyList<NodeId> nodeIds);
 
     // Adds the rules whose nodes are in the model, neither inside the other, and that are not
     // rules yet, as one undo step; the number added.
@@ -138,21 +150,53 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         return violatingLineIds;
     }
 
-    public Result AddRule(NodeId fromId, NodeId toId)
+    public Result AddRule(NodeId fromId, NodeId toId) => AddRule(RuleKind.MustNotUse, [fromId, toId]);
+
+    public Result AddRule(RuleKind kind, IReadOnlyList<NodeId> nodeIds)
     {
         ArchitectureRule? rule;
         using (var model = modelMgr.UseModel())
         {
-            if (fromId == toId)
-                return new Error("A rule needs two different nodes.");
-            if (!model.Nodes.TryGetValue(fromId, out var from) || !model.Nodes.TryGetValue(toId, out var to))
-                return new Error("One of the nodes is no longer in the model.");
-            rule = new ArchitectureRule(from.Name, to.Name);
+            if (nodeIds.Count < 2 || (kind != RuleKind.Layers && nodeIds.Count != 2))
+                return new Error(
+                    kind == RuleKind.Layers ? "Layers need at least two nodes." : "A rule needs two nodes."
+                );
+            if (nodeIds.Distinct().Count() != nodeIds.Count)
+                return new Error("A rule needs different nodes.");
+            List<Node> nodes = [];
+            foreach (var id in nodeIds)
+            {
+                if (!model.Nodes.TryGetValue(id, out var node))
+                    return new Error("One of the nodes is no longer in the model.");
+                nodes.Add(node);
+            }
+            // "Must not use" may name a node inside the other (a part that must not use the whole),
+            // as it always could; the other kinds would contradict themselves.
+            if (kind != RuleKind.MustNotUse && AnyNested(nodes) is var (inner, outer))
+                return new Error($"{inner.DisplayName} is inside {outer.DisplayName}: pick nodes beside each other.");
+            rule = kind switch
+            {
+                RuleKind.Layers => ArchitectureRule.ForLayers([.. nodes.Select(n => n.Name)]),
+                _ => new ArchitectureRule(nodes[0].Name, nodes[1].Name, Kind: kind),
+            };
             if (model.Rules.Contains(rule))
-                return new Error($"\"{from.DisplayName} must not use {to.DisplayName}\" is already a rule.");
+                return new Error(
+                    $"\"{rule.Describe(n => model.Nodes[NodeId.FromName(n)].DisplayName)}\" is already a rule."
+                );
         }
         commandService.Do(new AddRuleCommand(rule));
         return Result.Ok;
+    }
+
+    static (Node Inner, Node Outer)? AnyNested(IReadOnlyList<Node> nodes)
+    {
+        foreach (var a in nodes)
+        foreach (var b in nodes)
+        {
+            if (a != b && a.IsAtOrInside(b))
+                return (a, b);
+        }
+        return null;
     }
 
     public int AddRules(IReadOnlyList<ArchitectureRule> rules)
@@ -163,11 +207,11 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             var added = new HashSet<ArchitectureRule>(model.Rules);
             foreach (var rule in rules)
             {
+                var nodes = rule.NodeNames.Select(n => model.Nodes.GetValueOrDefault(NodeId.FromName(n))).ToList();
                 if (
-                    model.Nodes.TryGetValue(NodeId.FromName(rule.FromName), out var from)
-                    && model.Nodes.TryGetValue(NodeId.FromName(rule.ToName), out var to)
-                    && !from.IsAtOrInside(to)
-                    && !to.IsAtOrInside(from)
+                    nodes.All(n => n is not null)
+                    && nodes.Distinct().Count() == nodes.Count
+                    && AnyNested(nodes!) is null
                     && added.Add(rule)
                 )
                     commands.Add(new AddRuleCommand(rule));
@@ -212,7 +256,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             violation.SourceNodeName,
             violation.TargetNodeName,
             reason.Trim(),
-            isToFix
+            isToFix,
+            rule.Kind
         );
         var replaced = modelMgr.WithModel(m => m.AllowedViolations.Where(a => a.IsSameDependency(allowed)).ToList());
         commandService.Do(new AllowViolationCommand([allowed], replaced));
@@ -257,12 +302,13 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         foreach (var node in model.Nodes.Values)
             nodesByName.TryAdd(node.Name, node);
 
-        var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To)>();
+        var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To, Node?[] Nodes)>();
         foreach (var rule in rules)
         {
             nodesByName.TryGetValue(rule.FromName, out var from);
             nodesByName.TryGetValue(rule.ToName, out var to);
-            resolved.Add((rule, from, to));
+            var nodes = rule.NodeNames.Select(n => nodesByName.GetValueOrDefault(n)).ToArray();
+            resolved.Add((rule, from, to, nodes));
         }
 
         // The allowed dependencies per rule, by the names of the units at both ends.
@@ -285,10 +331,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         {
             for (var i = 0; i < resolved.Count; i++)
             {
-                var (_, from, to) = resolved[i];
-                if (from is null || to is null)
-                    continue;
-                if (!link.Source.IsAtOrInside(from) || !link.Target.IsAtOrInside(to))
+                var (rule, _, _, nodes) = resolved[i];
+                if (!IsBreaking(rule.Kind, nodes, link))
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
@@ -318,7 +362,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var reports = new List<RuleReport>();
         for (var i = 0; i < resolved.Count; i++)
         {
-            var (rule, from, to) = resolved[i];
+            var (rule, from, to, nodes) = resolved[i];
             var list = violations[i]
                 .OrderBy(kv => kv.Key.Item1.LongName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(kv => kv.Key.Item2.LongName, StringComparer.OrdinalIgnoreCase)
@@ -367,10 +411,15 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                     rule,
                     from?.LongName ?? rule.FromName,
                     to?.LongName ?? rule.ToName,
-                    from is not null && to is not null,
+                    nodes.All(n => n is not null),
                     list
                 )
                 {
+                    Text = rule.Describe(n => nodesByName.GetValueOrDefault(n)?.LongName ?? n),
+                    Nodes =
+                    [
+                        .. rule.NodeNames.Select((n, j) => new RuleNode(n, nodes[j]?.LongName ?? n, nodes[j]?.Id)),
+                    ],
                     Allowed = allowedList,
                     ToFix = toFixList,
                     FromId = from?.Id,
@@ -379,6 +428,28 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             );
         }
         return (reports, lineIds);
+    }
+
+    // Whether the link breaks the rule: "from must not use to" any link from inside from to inside
+    // to; "only from may use to" any link into to from outside both; layers any link from inside a
+    // layer to inside a layer above it (layers are listed top first). An unresolved rule breaks none.
+    static bool IsBreaking(RuleKind kind, Node?[] nodes, Link link)
+    {
+        if (nodes.Any(n => n is null))
+            return false;
+        switch (kind)
+        {
+            case RuleKind.OnlyMayUse:
+                return link.Target.IsAtOrInside(nodes[1]!)
+                    && !link.Source.IsAtOrInside(nodes[1]!)
+                    && !link.Source.IsAtOrInside(nodes[0]!);
+            case RuleKind.Layers:
+                var sourceLayer = Array.FindIndex(nodes, n => link.Source.IsAtOrInside(n!));
+                var targetLayer = Array.FindIndex(nodes, n => link.Target.IsAtOrInside(n!));
+                return sourceLayer >= 0 && targetLayer >= 0 && targetLayer < sourceLayer;
+            default:
+                return link.Source.IsAtOrInside(nodes[0]!) && link.Target.IsAtOrInside(nodes[1]!);
+        }
     }
 
     static RuleViolation ToViolation(Node source, Node target, int linkCount) =>
