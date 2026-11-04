@@ -19,7 +19,7 @@
   <DialogContent>
     <div class="dep-cycles__dialog-cycle" data-testid="rule-review-text">
       <span class="dep-cycles__container">@SourceName → @TargetName</span>
-      <span class="dep-cycles__members">breaks the rule "@FromName must not use @ToName"</span>
+      <span class="dep-cycles__members">breaks the rule "@RuleText"</span>
     </div>
     <AiOpinion TAnswer="RuleSuggestion" TestId="rule-review" GetPrompt="CopyPrompt" Ask="Suggest"
                ParsePasted="RuleSuggestion.ParseText" OnAnswerSelected="Select"
@@ -135,8 +135,8 @@
 @code {
   [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
-  [Parameter] public string FromName { get; set; } = "";
-  [Parameter] public string ToName { get; set; } = "";
+  // The rule in words, as RuleReport.Text has it.
+  [Parameter] public string RuleText { get; set; } = "";
   [Parameter] public string SourceName { get; set; } = "";
   [Parameter] public string TargetName { get; set; } = "";
   [Parameter] public string Reason { get; set; } = "";

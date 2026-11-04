@@ -328,7 +328,7 @@ static class SuggestRulesPrompt
             return;
         text.AppendLine().AppendLine("## The rules there are").AppendLine();
         foreach (var rule in model.Rules)
-            text.AppendLine($"- `{rule.FromName}` must not use `{rule.ToName}`{Because(rule.Reason)}");
+            text.AppendLine($"- {rule.Describe(n => $"`{n}`")}{Because(rule.Reason)}");
     }
 
     // The rules the user dismissed (with why, where they gave one) and those suggested before.

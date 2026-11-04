@@ -6,7 +6,7 @@
     <MudText Typo="Typo.h6">Why this rule</MudText>
   </TitleContent>
   <DialogContent>
-    <MudText Typo="Typo.body2" Class="mb-2">@FromName <span class="dep-rules__arrow">must not use</span> @ToName</MudText>
+    <MudText Typo="Typo.body2" Class="mb-2">@RuleText</MudText>
     <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Why" Lines="3" Immediate="true"
                   HelperText="What the rule protects, for whoever reads it later" data-testid="rule-reason-text" />
   </DialogContent>
@@ -19,8 +19,8 @@
 @code {
   [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
 
-  [Parameter] public string FromName { get; set; } = "";
-  [Parameter] public string ToName { get; set; } = "";
+  // The rule in words, as RuleReport.Text has it.
+  [Parameter] public string RuleText { get; set; } = "";
   [Parameter] public string Reason { get; set; } = "";
 
   MudTextField<string> reasonField = null!;

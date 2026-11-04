@@ -391,4 +391,181 @@ public class RuleServiceTests
 
         Assert.Equal([toFix], model.AllowedViolations);
     }
+
+    [Fact]
+    public void Compute_OnlyMayUse_ShouldReportUsesFromOutsideBothNodes()
+    {
+        using var model = modelMgr.UseModel();
+        var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+        var db = AddNode(model, "Db", model.Root, NodeType.Assembly);
+        var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+        var repo = AddNode(model, "Data.Repo", data);
+        var client = AddNode(model, "Db.Client", db);
+        var pool = AddNode(model, "Db.Pool", db);
+        var view = AddNode(model, "UI.View", ui);
+        AddLink(model, repo, client); // Data may use Db
+        AddLink(model, client, pool); // Inside Db is fine
+        AddLink(model, view, client); // UI may not
+        AddLink(model, view, repo); // Not about Db
+        model.AddRule(new ArchitectureRule(data.Name, db.Name, Kind: RuleKind.OnlyMayUse));
+
+        var (reports, lineIds) = RuleService.Compute(model);
+
+        var report = Assert.Single(reports);
+        var violation = Assert.Single(report.Violations);
+        Assert.Equal((view.Id, client.Id), (violation.SourceId, violation.TargetId));
+        Assert.Equal("only Data (dll) may use Db (dll)", report.Text);
+        Assert.Contains(LineId.From(ui.Name, db.Name), lineIds);
+        Assert.DoesNotContain(LineId.From(data.Name, db.Name), lineIds);
+    }
+
+    [Fact]
+    public void Compute_Layers_ShouldReportUsesOfALayerAbove_AndListTheLayers()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+        var domain = AddNode(model, "Domain", model.Root, NodeType.Assembly);
+        var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+        var tools = AddNode(model, "Tools", model.Root, NodeType.Assembly);
+        var view = AddNode(model, "UI.View", ui);
+        var order = AddNode(model, "Domain.Order", domain);
+        var repo = AddNode(model, "Data.Repo", data);
+        var log = AddNode(model, "Tools.Log", tools);
+        AddLink(model, view, repo); // Down two layers is fine
+        AddLink(model, order, repo); // Down one is fine
+        AddLink(model, repo, order); // Up is not
+        AddLink(model, repo, view); // Neither
+        AddLink(model, log, view); // Tools is no layer
+        model.AddRule(ArchitectureRule.ForLayers([ui.Name, domain.Name, data.Name]));
+
+        var (reports, _) = RuleService.Compute(model);
+
+        var report = Assert.Single(reports);
+        Assert.True(report.IsResolved);
+        Assert.Equal(
+            [(repo.Id, order.Id), (repo.Id, view.Id)],
+            report.Violations.Select(v => (v.SourceId, v.TargetId)).ToList()
+        );
+        Assert.Equal(["UI", "Domain", "Data"], report.Nodes.Select(n => n.Name));
+        Assert.Equal((ui.Id, data.Id), (report.FromId, report.ToId));
+    }
+
+    [Fact]
+    public void Compute_Layers_ShouldBeUnresolved_WhenAMiddleLayerIsGone()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+        var data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+        AddLink(model, AddNode(model, "Data.Repo", data), AddNode(model, "UI.View", ui));
+        model.AddRule(ArchitectureRule.ForLayers([ui.Name, "Gone", data.Name]));
+
+        var (reports, lineIds) = RuleService.Compute(model);
+
+        var report = Assert.Single(reports);
+        Assert.False(report.IsResolved);
+        Assert.Empty(report.Violations);
+        Assert.Empty(lineIds);
+    }
+
+    [Fact]
+    public void AddRule_ShouldAddLayersAndOnlyMayUse_AndRejectNestedOrTooFewNodes()
+    {
+        Node ui,
+            view,
+            domain,
+            data;
+        using (var model = modelMgr.UseModel())
+        {
+            ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+            view = AddNode(model, "UI.View", ui);
+            domain = AddNode(model, "Domain", model.Root, NodeType.Assembly);
+            data = AddNode(model, "Data", model.Root, NodeType.Assembly);
+        }
+        var commands = new Mock<ICommandService>();
+        commands
+            .Setup(c => c.Do(It.IsAny<Command>(), true, true))
+            .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
+        var service = new RuleService(modelMgr, commands.Object);
+
+        AssertOk(service.AddRule(RuleKind.Layers, [ui.Id, domain.Id, data.Id]));
+        AssertError(service.AddRule(RuleKind.Layers, [ui.Id, domain.Id, data.Id])); // Exists
+        AssertError(service.AddRule(RuleKind.Layers, [ui.Id])); // Too few
+        AssertError(service.AddRule(RuleKind.Layers, [ui.Id, view.Id, data.Id])); // View is inside UI
+        AssertError(service.AddRule(RuleKind.Layers, [ui.Id, data.Id, ui.Id])); // UI twice
+        AssertOk(service.AddRule(RuleKind.OnlyMayUse, [domain.Id, data.Id]));
+        AssertError(service.AddRule(RuleKind.OnlyMayUse, [ui.Id, view.Id]));
+        AssertOk(service.AddRule(ui.Id, data.Id)); // Must not use is a different rule on the same nodes
+
+        Assert.Equal(
+            [
+                ArchitectureRule.ForLayers([ui.Name, domain.Name, data.Name]),
+                new ArchitectureRule(domain.Name, data.Name, Kind: RuleKind.OnlyMayUse),
+                new ArchitectureRule(ui.Name, data.Name),
+            ],
+            modelMgr.WithModel(m => m.Rules)
+        );
+    }
+
+    [Fact]
+    public void ArchitectureRule_ShouldDifferByKindAndLayers()
+    {
+        Assert.NotEqual(new ArchitectureRule("A", "C"), new ArchitectureRule("A", "C", Kind: RuleKind.OnlyMayUse));
+        Assert.NotEqual(ArchitectureRule.ForLayers(["A", "B", "C"]), ArchitectureRule.ForLayers(["A", "C"]));
+        Assert.Equal(ArchitectureRule.ForLayers(["A", "B", "C"], "why"), ArchitectureRule.ForLayers(["A", "B", "C"]));
+    }
+
+    [Fact]
+    public void Model_ShouldRoundTripRuleKindsThroughTheDto_InListsOfTheirOwn_AndSkipAnUnknownKind()
+    {
+        using var model = modelMgr.UseModel();
+        var layers = ArchitectureRule.ForLayers(["A", "B", "C"], "Clean");
+        var only = new ArchitectureRule("A", "B", Kind: RuleKind.OnlyMayUse);
+        var allowed = new AllowedViolation(
+            "A",
+            "C",
+            "C.X",
+            "A.Y",
+            "Ok",
+            RuleKind: RuleKind.Layers,
+            LayersKey: layers.LayersKey
+        );
+        model.AddRule(layers);
+        model.AddRule(only);
+        model.AddAllowedViolation(allowed);
+        var dto = model.SerializeToDto();
+
+        // A version that knows only "must not use" sees none of them.
+        Assert.Empty(dto.Rules);
+        Assert.Empty(dto.AllowedViolations);
+        Assert.Equal(2, dto.KindRules.Count);
+
+        model.Clear();
+        model.SetFromDto("path", dto);
+        Assert.Equal([layers, only], model.Rules);
+        Assert.Equal(["A", "B", "C"], model.Rules[0].NodeNames);
+        Assert.Equal([allowed], model.AllowedViolations);
+        Assert.True(model.AllowedViolations[0].IsFor(layers));
+        Assert.False(model.AllowedViolations[0].IsFor(ArchitectureRule.ForLayers(["A", "D", "C"])));
+
+        model.Clear();
+        model.SetFromDto(
+            "path",
+            dto with
+            {
+                KindRules =
+                [
+                    dto.KindRules[0] with
+                    {
+                        Kind = 99,
+                    },
+                    dto.KindRules[1] with
+                    {
+                        Layers = null,
+                        Kind = (int)RuleKind.Layers,
+                    },
+                ],
+            }
+        );
+        Assert.Equal([ArchitectureRule.ForLayers(["A", "B"])], model.Rules);
+    }
 }

@@ -135,10 +135,11 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   ("how does cloud sync work"), "Play as tour" from an Ask answer, `ask-eval` cases.
 - **Rules and cycles, next** (design doc https://claude.ai/artifact/MmaLqut6aKQvpEoRJxvGYi,
   Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`),
-  phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`). Next, rule
-  kinds expanded to forbidden pairs (Layers and "only X may use Y" first, then "X is independent"
-  and "no cycles inside X"). Cycles stay their own always-on detector; only the decisions are
-  shared.
+  phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`), phase 3
+  rule kinds (`RuleKind`: `OnlyMayUse`, `Layers`; `RuleService.IsBreaking`). Still open: "X is
+  independent" and "no cycles inside X", Suggest rules offering the new kinds (it suggests only
+  "must not use"; dismissals are must-not-use only), the MCP `check_rule` for other kinds.
+  Cycles stay their own always-on detector; only the decisions are shared.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

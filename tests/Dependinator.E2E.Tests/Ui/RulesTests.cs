@@ -252,6 +252,52 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(1);
     }
 
+    // The other kinds of rule: "only X may use Y" and layers, each picked in the same panel.
+    [E2EFact]
+    public async Task RuleKinds_ShouldAddOnlyMayUseAndLayers_AndEvaluateEach()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        ILocator rules = Page.GetByTestId("rules-item");
+
+        // Other projects than UI use Core, so "only UI may use Core" is broken.
+        await Page.GetByTestId("rules-add-kind").SelectOptionAsync("OnlyMayUse");
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        await Expect(rules).ToHaveCountAsync(1);
+        await Expect(rules.Nth(0)).ToContainTextAsync("may use");
+        await Expect(rules.Nth(0).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+
+        // UI uses Core, so UI above Core is kept, and Core above UI is broken.
+        await Page.GetByTestId("rules-add-kind").SelectOptionAsync("Layers");
+        await Expect(Page.GetByTestId("rules-add")).ToBeDisabledAsync();
+        await AddLayersAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        await Expect(rules).ToHaveCountAsync(2);
+        await Expect(rules.Nth(1).GetByTestId("rules-item-layer")).ToHaveCountAsync(2);
+        await Expect(rules.Nth(1).GetByTestId("rules-item-count")).ToContainTextAsync("kept");
+        await Expect(Page.GetByTestId("rules-add-layer")).ToHaveCountAsync(0);
+
+        await AddLayersAsync("Demo.Core (dll)", "Demo.UI (dll)");
+        await Expect(rules).ToHaveCountAsync(3);
+        await Expect(rules.Nth(2).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+        await Expect(rules.Nth(2).GetByTestId("rules-violation").First).ToBeVisibleAsync();
+    }
+
+    // Picks the layers top first through the search dialog in picker mode and adds the rule.
+    async Task AddLayersAsync(params string[] layers)
+    {
+        var search = new Shared.Pages.SearchDialog(App, Page);
+        foreach (var layer in layers)
+        {
+            await Page.GetByTestId("rules-add-layer-pick").ClickAsync();
+            await Expect(Page.GetByTestId("search-pick-caption")).ToBeVisibleAsync();
+            await search.FillAsync(layer);
+            await search.Result(layer).First.ClickAsync();
+            await Expect(Page.GetByTestId("rules-add-layer").Last).ToContainTextAsync(layer);
+        }
+        await Page.GetByTestId("rules-add").ClickAsync();
+    }
+
     // Picks both nodes through the search dialog in picker mode and adds the rule.
     async Task AddRuleAsync(string from, string to)
     {

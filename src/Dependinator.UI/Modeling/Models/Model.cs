@@ -237,15 +237,8 @@ class Model : IModel
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
-            Rules =
-            [
-                .. rules.Select(r => new RuleDto
-                {
-                    From = r.FromName,
-                    To = r.ToName,
-                    Reason = r.Reason,
-                }),
-            ],
+            Rules = [.. rules.Where(r => r.Kind == RuleKind.MustNotUse).Select(ToDto)],
+            KindRules = [.. rules.Where(r => r.Kind != RuleKind.MustNotUse).Select(ToDto)],
             DismissedRules =
             [
                 .. dismissedRules.Select(r => new RuleDto
@@ -255,18 +248,8 @@ class Model : IModel
                     Reason = r.Reason,
                 }),
             ],
-            AllowedViolations =
-            [
-                .. allowedViolations.Select(a => new AllowedViolationDto
-                {
-                    From = a.FromName,
-                    To = a.ToName,
-                    Source = a.SourceName,
-                    Target = a.TargetName,
-                    Reason = a.Reason,
-                    IsToFix = a.IsToFix,
-                }),
-            ],
+            AllowedViolations = [.. allowedViolations.Where(a => a.RuleKind == RuleKind.MustNotUse).Select(ToDto)],
+            KindAllowedViolations = [.. allowedViolations.Where(a => a.RuleKind != RuleKind.MustNotUse).Select(ToDto)],
             AcceptedCycles =
             [
                 .. acceptedCycles.Select(a => new AcceptedCycleDto
@@ -336,7 +319,12 @@ class Model : IModel
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
         rules.Clear();
-        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To, r.Reason ?? "")).Distinct());
+        rules.AddRange(
+            modelDto
+                .Rules.Select(r => new ArchitectureRule(r.From, r.To, r.Reason ?? ""))
+                .Concat(modelDto.KindRules.Select(ToRule).OfType<ArchitectureRule>())
+                .Distinct()
+        );
         dismissedRules.Clear();
         dismissedRules.AddRange(
             modelDto.DismissedRules.Select(r => new DismissedRule(r.From, r.To, r.Reason ?? "")).Distinct()
@@ -352,7 +340,8 @@ class Model : IModel
                     a.Reason ?? "",
                     a.IsToFix
                 ))
-                .DistinctBy(a => (a.FromName, a.ToName, a.SourceName, a.TargetName))
+                .Concat(modelDto.KindAllowedViolations.Select(ToAllowed).OfType<AllowedViolation>())
+                .DistinctBy(a => (a.RuleKind, a.FromName, a.ToName, a.LayersKey, a.SourceName, a.TargetName))
         );
         RulesVersion++;
         acceptedCycles.Clear();
@@ -367,6 +356,57 @@ class Model : IModel
         ]);
         // Nodes and links will be set by model service in separate worker thread
     }
+
+    // A rule of another kind than "must not use" (ModelDto.KindRules); null for a kind this version
+    // does not know (skipped, like an older version skips them all). Layers without their list are
+    // the top and bottom layer.
+    static ArchitectureRule? ToRule(RuleDto r)
+    {
+        var kind = (RuleKind)r.Kind;
+        if (kind == RuleKind.MustNotUse || !Enum.IsDefined(kind))
+            return null;
+        if (kind == RuleKind.Layers)
+            return ArchitectureRule.ForLayers(
+                r.Layers is { Count: >= 2 } layers ? [.. layers] : [r.From, r.To],
+                r.Reason ?? ""
+            );
+        return new ArchitectureRule(r.From, r.To, r.Reason ?? "", kind);
+    }
+
+    static AllowedViolation? ToAllowed(AllowedViolationDto a)
+    {
+        var kind = (RuleKind)a.RuleKind;
+        if (kind == RuleKind.MustNotUse || !Enum.IsDefined(kind))
+            return null;
+        var layersKey =
+            kind != RuleKind.Layers ? ""
+            : a.Layers is { Count: >= 2 } layers ? string.Join('\n', layers)
+            : $"{a.From}\n{a.To}";
+        return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
+    }
+
+    static RuleDto ToDto(ArchitectureRule r) =>
+        new()
+        {
+            From = r.FromName,
+            To = r.ToName,
+            Reason = r.Reason,
+            Kind = (int)r.Kind,
+            Layers = r.Kind == RuleKind.Layers ? r.NodeNames : null,
+        };
+
+    static AllowedViolationDto ToDto(AllowedViolation a) =>
+        new()
+        {
+            From = a.FromName,
+            To = a.ToName,
+            Source = a.SourceName,
+            Target = a.TargetName,
+            Reason = a.Reason,
+            IsToFix = a.IsToFix,
+            RuleKind = (int)a.RuleKind,
+            Layers = a.LayersKey == "" ? null : a.LayersKey.Split('\n'),
+        };
 
     public void TryAddNode(Node node)
     {

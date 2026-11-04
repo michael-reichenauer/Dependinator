@@ -10,7 +10,10 @@ class AddRuleCommand(ArchitectureRule rule) : Command
 
     public override void Execute(IModel model)
     {
-        removedDismissal = model.DismissedRules.FirstOrDefault(d => d.IsFor(rule.FromName, rule.ToName));
+        removedDismissal =
+            rule.Kind == RuleKind.MustNotUse
+                ? model.DismissedRules.FirstOrDefault(d => d.IsFor(rule.FromName, rule.ToName))
+                : null;
         if (removedDismissal is not null)
             model.RemoveDismissedRule(removedDismissal);
         model.AddRule(rule);
@@ -45,13 +48,17 @@ class RemoveRuleCommand(ArchitectureRule rule) : Command
         foreach (var allowed in removedAllowed)
             model.RemoveAllowedViolation(allowed);
         model.RemoveRule(rule);
+        // Only a "must not use" rule is ever suggested, so only it is remembered as dismissed.
+        if (rule.Kind != RuleKind.MustNotUse)
+            return;
         replacedDismissal = model.DismissedRules.FirstOrDefault(d => d.IsFor(rule.FromName, rule.ToName));
         model.AddDismissedRule(new DismissedRule(rule.FromName, rule.ToName, DismissReasonFor(removed)));
     }
 
     public override void Revert(IModel model)
     {
-        model.RemoveDismissedRule(new DismissedRule(rule.FromName, rule.ToName));
+        if (rule.Kind == RuleKind.MustNotUse)
+            model.RemoveDismissedRule(new DismissedRule(rule.FromName, rule.ToName));
         if (replacedDismissal is not null)
             model.AddDismissedRule(replacedDismissal);
         model.AddRule(removed ?? rule);

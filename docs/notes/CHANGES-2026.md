@@ -33,8 +33,8 @@ project works.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
-  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule, and
-  Fix later for rule violations.
+  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
+  Fix later for rule violations, and two new kinds of rule: "only X may use Y" and layers.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -357,6 +357,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   saved with the model) with the AI's suggested change as the plan. It stays drawn as breaking the
   rule but is no longer counted as a problem; its row copies a fix prompt for the plan, reviews it
   again, edits the plan or reports it again.
+- **Rule kinds (Nov 4).** Besides "X must not use Y", the Rules panel adds "only X may use Y"
+  (nothing outside both may use Y) and layers, picked top first (each layer may use only the
+  layers below it). `ArchitectureRule.Kind` and `LayerNames`, saved with the model; an unknown kind
+  reads as "must not use". Reviews, prompts, Fix later and the MCP `list_rules` text know the
+  kinds. Suggest rules still suggests only "must not use".
 - **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
   and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
   and the labels on other lines, for a matching style), with up to three other labels to pick

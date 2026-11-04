@@ -10,7 +10,9 @@
 @inject ISuggestRulesService suggestRulesService
 @implements IDisposable
 
-@* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
+@* Architecture rules: "X must not depend on Y", "only X may use Y" (both declared by picking two
+   nodes), or layers (picked top first, each may use only the layers below it), the kind chosen above
+   the picks. Each rule lists
    the dependencies that break it (per class pair, with link counts); while the panel is open those
    lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
    frames both of its classes with the lines between them. Each dependency can be reviewed
@@ -37,7 +39,7 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="rules-close" />
     </div>
-    <div class="dep-panel__hint">Architecture rules: "this must not depend on that". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
+    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", or layers. Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
 
     <div class="dep-panel__list">
       @if (reports.Count == 0)
@@ -49,10 +51,33 @@
         <div class="dep-rules__rule" data-testid="rules-item" data-violations="@report.Violations.Count">
           <div class="dep-rules__head">
             <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
-            <span class="dep-rules__names" title="@($"{report.FromDisplay} must not depend on {report.ToDisplay}")">
-              <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
-              <span class="dep-rules__arrow">must not use</span>
-              <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
+            <span class="dep-rules__names" title="@report.Text" data-kind="@report.Rule.Kind">
+              @switch (report.Rule.Kind)
+              {
+                case Modeling.Models.RuleKind.Layers:
+                  <span class="dep-rules__arrow">layers</span>@(" ")
+                  @for (var i = 0; i < report.Nodes.Count; i++)
+                  {
+                    var node = report.Nodes[i];
+                    @if (i > 0)
+                    {
+                      <span class="dep-rules__arrow" title="may use the layers below it"> › </span>
+                    }
+                    <RuleNodeLink Id="node.Id" Display="@node.Display" TestId="rules-item-layer" />
+                  }
+                  break;
+                case Modeling.Models.RuleKind.OnlyMayUse:
+                  <span class="dep-rules__arrow">only</span>
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  <span class="dep-rules__arrow">may use</span>
+                  <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
+                  break;
+                default:
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  <span class="dep-rules__arrow">must not use</span>
+                  <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
+                  break;
+              }
             </span>
             <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
             @if (report.Rule.Reason == "")
@@ -210,21 +235,62 @@
       }
     </div>
 
-    <div class="dep-rules__add">
-      <button type="button" class="@PickClass(fromName)" title="Choose the node that must not depend on the other"
-              @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
-        @(fromName ?? "Choose a node …")
-      </button>
-      <span class="dep-rules__arrow">must not use</span>
-      <button type="button" class="@PickClass(toName)" title="Choose the node it must not depend on"
-              @onclick="() => PickAsync(isFrom: false)" data-testid="rules-add-to">
-        @(toName ?? "Choose a node …")
-      </button>
-      <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null || toId is null)"
-                 OnClick="Add" data-testid="rules-add">
-        Add
-      </MudButton>
+    <div class="dep-rules__add-kind">
+      <select class="dep-rules__kind" value="@addKind" @onchange="ChangeKind" title="@KindHint(addKind)"
+              data-testid="rules-add-kind">
+        <option value="@Modeling.Models.RuleKind.MustNotUse">X must not use Y</option>
+        <option value="@Modeling.Models.RuleKind.OnlyMayUse">Only X may use Y</option>
+        <option value="@Modeling.Models.RuleKind.Layers">Layers, top first</option>
+      </select>
+      <span class="dep-rules__kind-hint">@KindHint(addKind)</span>
     </div>
+    @if (addKind == Modeling.Models.RuleKind.Layers)
+    {
+      <div class="dep-rules__layers">
+        @for (var i = 0; i < layers.Count; i++)
+        {
+          var index = i;
+          <div class="dep-rules__layer" data-testid="rules-add-layer">
+            <span class="dep-rules__arrow">@(index + 1).</span>
+            <span class="dep-path__pick">@layers[index].Name</span>
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" title="Take this layer out"
+                           OnClick="() => layers.RemoveAt(index)" data-testid="rules-add-layer-remove" />
+          </div>
+        }
+        <div class="dep-rules__layer">
+          <button type="button" class="dep-path__pick dep-path__pick--empty"
+                  title="@(layers.Count == 0 ? "Choose the top layer, the one nothing else may use" : "Choose the next layer down")"
+                  @onclick="PickLayerAsync" data-testid="rules-add-layer-pick">
+            @(layers.Count == 0 ? "Choose the top layer …" : "Choose the next layer down …")
+          </button>
+          <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(layers.Count < 2)"
+                     OnClick="Add" data-testid="rules-add">
+            Add
+          </MudButton>
+        </div>
+      </div>
+    }
+    else
+    {
+      var isOnly = addKind == Modeling.Models.RuleKind.OnlyMayUse;
+      <div class="dep-rules__add">
+        <button type="button" class="@PickClass(fromName)"
+                title="@(isOnly ? "Choose the node that may use the other" : "Choose the node that must not depend on the other")"
+                @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
+          @(fromName ?? "Choose a node …")
+        </button>
+        <span class="dep-rules__arrow">@(isOnly ? "may use" : "must not use")</span>
+        <button type="button" class="@PickClass(toName)"
+                title="@(isOnly ? "Choose the node only it may use" : "Choose the node it must not depend on")"
+                @onclick="() => PickAsync(isFrom: false)" data-testid="rules-add-to">
+          @(toName ?? "Choose a node …")
+        </button>
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null || toId is null)"
+                   OnClick="Add" data-testid="rules-add">
+          Add
+        </MudButton>
+      </div>
+    }
     <div class="dep-rules__suggest">
       <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
                  title="Let an AI suggest rules from the model's structure and dependencies; you choose which to add"
@@ -246,6 +312,8 @@
   Modeling.Models.NodeId? toId;
   string? fromName;
   string? toName;
+  Modeling.Models.RuleKind addKind = Modeling.Models.RuleKind.MustNotUse;
+  readonly List<(Modeling.Models.NodeId Id, string Name)> layers = [];
 
   // The model the suggestions view was started for ("" until a model is loaded), null before.
   string? suggestModelPath;
@@ -321,8 +389,7 @@
   {
     var parameters = new DialogParameters<RuleReasonDialog>
     {
-      { d => d.FromName, report.FromDisplay },
-      { d => d.ToName, report.ToDisplay },
+      { d => d.RuleText, report.Text },
       { d => d.Reason, report.Rule.Reason },
     };
     var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
@@ -357,8 +424,7 @@
       : null;
     var parameters = new DialogParameters<RuleReviewDialog>
     {
-      { d => d.FromName, report.FromDisplay },
-      { d => d.ToName, report.ToDisplay },
+      { d => d.RuleText, report.Text },
       { d => d.SourceName, violation.SourceLongName },
       { d => d.TargetName, violation.TargetLongName },
       { d => d.Suggest, suggest },
@@ -381,8 +447,7 @@
   {
     var parameters = new DialogParameters<RuleReviewDialog>
     {
-      { d => d.FromName, report.FromDisplay },
-      { d => d.ToName, report.ToDisplay },
+      { d => d.RuleText, report.Text },
       { d => d.SourceName, toFix.Violation?.SourceLongName ?? toFix.SourceName },
       { d => d.TargetName, toFix.Violation?.TargetLongName ?? toFix.TargetName },
       { d => d.Reason, toFix.Planned.Reason },
@@ -422,8 +487,7 @@
   {
     var parameters = new DialogParameters<RuleReviewDialog>
     {
-      { d => d.FromName, report.FromDisplay },
-      { d => d.ToName, report.ToDisplay },
+      { d => d.RuleText, report.Text },
       { d => d.SourceName, allowed.SourceName },
       { d => d.TargetName, allowed.TargetName },
       { d => d.Reason, allowed.Allowed.Reason },
@@ -445,35 +509,74 @@
     return result is { Canceled: false, Data: RuleReviewDialogResult data } ? data : null;
   }
 
+  static string KindHint(Modeling.Models.RuleKind kind) => kind switch
+  {
+    Modeling.Models.RuleKind.OnlyMayUse => "Nothing else may depend on Y, say only Data may use the database client.",
+    Modeling.Models.RuleKind.Layers => "Each layer may use only the layers below it, say UI › Domain › Data.",
+    _ => "Nothing in X may depend on anything in Y, say UI must not use Data.",
+  };
+
+  // The picks stay when switching between the two-node kinds; layers are their own list.
+  void ChangeKind(ChangeEventArgs e)
+  {
+    if (Enum.TryParse<Modeling.Models.RuleKind>(e.Value?.ToString(), out var kind))
+      addKind = kind;
+  }
+
   async Task PickAsync(bool isFrom)
   {
-    var parameters = new DialogParameters<SearchDialog>
+    var caption = (addKind, isFrom) switch
     {
-      { d => d.PickCaption, isFrom ? "Rule: choose the node that must not depend on the other" : "Rule: choose the node it must not depend on" },
+      (Modeling.Models.RuleKind.OnlyMayUse, true) => "Rule: choose the node that may use the other",
+      (Modeling.Models.RuleKind.OnlyMayUse, false) => "Rule: choose the node only it may use",
+      (_, true) => "Rule: choose the node that must not depend on the other",
+      _ => "Rule: choose the node it must not depend on",
     };
+    if (await PickNodeAsync(caption) is not { } picked)
+      return;
+    if (isFrom)
+      (fromId, fromName) = picked;
+    else
+      (toId, toName) = picked;
+  }
+
+  async Task PickLayerAsync()
+  {
+    var caption = layers.Count == 0 ? "Layers: choose the top layer" : "Layers: choose the next layer down";
+    if (await PickNodeAsync(caption) is { } picked)
+      layers.Add(picked);
+  }
+
+  async Task<(Modeling.Models.NodeId Id, string Name)?> PickNodeAsync(string caption)
+  {
+    var parameters = new DialogParameters<SearchDialog> { { d => d.PickCaption, caption } };
     var dialog = await dialogService.ShowAsync<SearchDialog>((string?)null, parameters, SearchDialog.Options);
     var result = await dialog.Result;
     if (result is not { Canceled: false, Data: Modeling.Models.NodeId id })
-      return;
+      return null;
     var name = modelMgr.WithModel(m => m.Nodes.TryGetValue(id, out var node) ? node.LongName : null);
-    if (isFrom)
-      (fromId, fromName) = (id, name);
-    else
-      (toId, toName) = (id, name);
+    return name is null ? null : (id, name);
   }
 
   void Add()
   {
-    if (fromId is null || toId is null)
+    var isLayers = addKind == Modeling.Models.RuleKind.Layers;
+    IReadOnlyList<Modeling.Models.NodeId> ids = isLayers ? [.. layers.Select(l => l.Id)]
+      : fromId is not null && toId is not null ? [fromId, toId]
+      : [];
+    if (ids.Count < 2)
       return;
-    // A rejected pair (the same node twice, or a rule that exists) keeps the picks, so the user
-    // can change one of them instead of starting over.
-    if (ruleService.AddRule(fromId, toId) is Error e)
+    // A rejected rule (the same node twice, a node inside another, or a rule that exists) keeps
+    // the picks, so the user can change one of them instead of starting over.
+    if (ruleService.AddRule(addKind, ids) is Error e)
     {
       applicationEvents.TriggerInfoReported(e.Message);
       return;
     }
-    (fromId, toId, fromName, toName) = (null, null, null, null);
+    if (isLayers)
+      layers.Clear();
+    else
+      (fromId, toId, fromName, toName) = (null, null, null, null);
   }
 
   void Close()

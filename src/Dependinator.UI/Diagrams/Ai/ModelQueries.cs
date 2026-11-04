@@ -409,6 +409,7 @@ sealed class ModelQueries(
                     )
                     .Take(MaxAllowed),
             ],
-            report.Allowed.Count + report.ToFix.Count
+            report.Allowed.Count + report.ToFix.Count,
+            report.Rule.Describe(n => n)
         );
 }
