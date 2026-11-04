@@ -18,9 +18,14 @@ static partial class NodeSvg
     const double CardStrokeWidth = 0.6;
 
     // The card and its section headings, in the container's children canvas space.
-    public static string GetMemberCardSvg(Node node, Pos childrenOffset, double childrenZoom)
+    public static string GetMemberCardSvg(
+        Node node,
+        Pos childrenOffset,
+        double childrenZoom,
+        Func<Node, bool>? isRowShown = null
+    )
     {
-        var card = MemberCard.Bounds(node);
+        var card = MemberCard.Bounds(node, isRowShown);
         if (card == Rect.None)
             return "";
 
@@ -28,7 +33,7 @@ static partial class NodeSvg
         double Y(double y) => childrenOffset.Y + y * childrenZoom;
         var textZoom = TextZoom(childrenZoom);
         var fontSize = HeadingFontSize * textZoom;
-        var (_, textOpacity) = HiddenAttributes(node);
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
 
         var svg = new System.Text.StringBuilder();
         svg.Append(
@@ -36,11 +41,11 @@ static partial class NodeSvg
                 CultureInfo.InvariantCulture,
                 $"""<rect class="memberCard" x="{X(card.X):0.##}" y="{Y(card.Y):0.##}" width="{card.Width * childrenZoom:0.##}" height="{card.Height
                     * childrenZoom:0.##}" rx="{CardCornerRadius * childrenZoom:0.##}" fill="{DColors.CardBackground}" stroke="{DColors.CardBorder}" stroke-width="{CardStrokeWidth
-                    * textZoom:0.##}" pointer-events="none"/>"""
+                    * textZoom:0.##}" pointer-events="none" {nodeOpacity}/>"""
             )
         );
 
-        foreach (var heading in MemberCard.Headings(node))
+        foreach (var heading in MemberCard.Headings(node, isRowShown))
         {
             if (!heading.IsColumnTop)
             {
@@ -50,7 +55,7 @@ static partial class NodeSvg
                         $"""<line x1="{X(heading.X - MemberCard.Padding):0.##}" y1="{Y(heading.Y):0.##}" x2="{X(heading.X
                             + heading.Width
                             + MemberCard.Padding):0.##}" y2="{Y(heading.Y):0.##}" stroke="{DColors.CardDivider}" stroke-width="{CardStrokeWidth
-                            * textZoom:0.##}" pointer-events="none"/>"""
+                            * textZoom:0.##}" pointer-events="none" {nodeOpacity}/>"""
                     )
                 );
             }
@@ -79,7 +84,8 @@ static partial class NodeSvg
         double parentZoom,
         bool isEditing = false,
         NodeProblems? problems = null,
-        int hiddenChildCount = 0
+        int hiddenChildCount = 0,
+        Func<Node, bool>? isRowShown = null
     )
     {
         // Sizes for a 180 px card: it shows from about 200 px (NodeViewPolicy), and its text stops
@@ -138,7 +144,7 @@ static partial class NodeSvg
             )
         );
 
-        var members = node.Children.Where(c => c.Type.IsMember).ToList();
+        var members = node.Children.Where(c => c.Type.IsMember && (isRowShown?.Invoke(c) ?? true)).ToList();
         var sections = MemberCard.Sections(members, (a, b) => string.CompareOrdinal(a.Name, b.Name));
         // The counts, on up to two lines.
         var countLines = WrapParts(CountParts(node, sections), MaxChars(w - 2 * padding, smallSize), 2);

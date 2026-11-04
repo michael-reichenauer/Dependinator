@@ -59,7 +59,12 @@ static class NodeViewPolicy
             var parentSize = Math.Min(parent.Boundary.Width, parent.Boundary.Height) / parent.ContainerZoom;
             return Math.Min(1 / TileZoomMargin, parentSize / MinFramedParentSize);
         }
-        return Math.Max(1, Math.Max(node.Boundary.Width, node.Boundary.Height) / MaxFramedNodeSize);
+        var factor = Math.Max(1, Math.Max(node.Boundary.Width, node.Boundary.Height) / MaxFramedNodeSize);
+        // Inside a member card node the rows must be readable too, or the parent shows its summary
+        // card instead of its children.
+        if (node.Parent is { IsRoot: false } cardParent && IsMemberCardNode(cardParent))
+            factor = Math.Min(factor, 1 / TileZoomMargin);
+        return factor;
     }
 
     const double TileZoomMargin = 1.3;
@@ -101,19 +106,15 @@ static class NodeViewPolicy
     // C# type, or a node of only member rows (a Bicep resource with auxiliary rows); a Bicep
     // module, whose resources are the content, opens as a container right away.
     public static bool IsMemberSummary(Node node, double zoom) =>
-        !node.Type.IsMember
-        && !node.IsRoot
-        && EffectiveZoom(node, zoom) > MinContainerZoom
-        && zoom * node.ContainerZoom < MinMemberRowZoom
-        && IsMemberCardNode(node);
+        IsPastIcon(node, zoom) && zoom * node.ContainerZoom < MinMemberRowZoom && IsMemberCardNode(node);
+
+    // A non-member, non-root node large enough on screen to be more than an icon (a container
+    // or a summary card).
+    public static bool IsPastIcon(Node node, double zoom) =>
+        !node.Type.IsMember && !node.IsRoot && EffectiveZoom(node, zoom) > MinContainerZoom;
 
     public static bool IsMemberCardNode(Node node) =>
-        node.Children.Count > 0
-        && (
-            node.Type.IsType
-                ? MemberCard.HasMembers(node)
-                : node.Children.All(c => c.Type.IsMember || IsAnnotation(c)) && MemberCard.HasMembers(node)
-        );
+        node.Children.Count > 0 && (node.Type.IsType ? MemberCard.HasMembers(node) : NodeLayout.IsOnlyMembers(node));
 
     // The node is shown as an expanded box with visible children (not an icon and not zoomed
     // past visibility). Annotations (zones, notes) are leaves at every zoom: nothing is ever

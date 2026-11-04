@@ -140,12 +140,12 @@ static class MemberCard
 
     // The card's bounds around the parent's member rows and their headings, padding included, in
     // the parent's child coordinates; Rect.None when the parent has no laid-out members.
-    public static Rect Bounds(Node parent)
+    public static Rect Bounds(Node parent, Func<Node, bool>? isShown = null)
     {
-        var rows = parent.Children.Where(c => c.Type.IsMember && c.Boundary != Rect.None).ToList();
+        var rows = LaidOutRows(parent, isShown);
         if (rows.Count == 0)
             return Rect.None;
-        var headings = Headings(parent);
+        var headings = Headings(parent, isShown);
         var left = rows.Min(r => r.Boundary.X);
         var top = Math.Min(rows.Min(r => r.Boundary.Y), headings.Count > 0 ? headings.Min(h => h.Y) : double.MaxValue);
         var right = rows.Max(r => r.Boundary.X + r.Boundary.Width);
@@ -156,9 +156,9 @@ static class MemberCard
     // The section headings, each one step above its section's first row (the top-most row of the
     // left-most column the section occupies). IsColumnTop: no row above it in its column, so no
     // divider line is needed there.
-    public static IReadOnlyList<Heading> Headings(Node parent)
+    public static IReadOnlyList<Heading> Headings(Node parent, Func<Node, bool>? isShown = null)
     {
-        var rows = parent.Children.Where(c => c.Type.IsMember && c.Boundary != Rect.None).ToList();
+        var rows = LaidOutRows(parent, isShown);
         var headings = new List<Heading>();
         foreach (var group in rows.GroupBy(r => r.Type))
         {
@@ -169,6 +169,11 @@ static class MemberCard
         }
         return headings;
     }
+
+    // The laid-out rows, only those shown when given isShown (rows the user hid or View › Rows
+    // leaves out get no heading and no room on the card).
+    static List<Node> LaidOutRows(Node parent, Func<Node, bool>? isShown) =>
+        parent.Children.Where(c => c.Type.IsMember && c.Boundary != Rect.None && (isShown?.Invoke(c) ?? true)).ToList();
 
     // The width every column gets: the widest row name, on the snap grid.
     static double ColumnWidth(IReadOnlyList<Section> sections)

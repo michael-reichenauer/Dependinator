@@ -39,7 +39,10 @@ public class MemberCardTests
         // A tall target: one column
         var card = MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 40, 40, 0.2);
 
-        Assert.Equal(new Rect(40, 40 + MemberCard.RowPitch, field.Boundary.Width, MemberCard.RowHeight), field.Boundary);
+        Assert.Equal(
+            new Rect(40, 40 + MemberCard.RowPitch, field.Boundary.Width, MemberCard.RowHeight),
+            field.Boundary
+        );
         Assert.Equal(40 + 3 * MemberCard.RowPitch, method1.Boundary.Y); // Below the Methods heading
         Assert.Equal(40 + 4 * MemberCard.RowPitch, method2.Boundary.Y);
 
@@ -125,6 +128,20 @@ public class MemberCardTests
 
         Assert.True(shortName.Boundary.Width > 100, $"Expected a wide column but got {shortName.Boundary.Width}");
         Assert.Equal(0, shortName.Boundary.Width % 20);
+    }
+
+    [Fact]
+    public void Headings_ShouldLeaveOutSectionsWhoseRowsAreNotShown()
+    {
+        var type = Type();
+        var field = Member(type, "field", NodeType.FieldMember);
+        Member(type, "method", NodeType.MethodMember);
+        MemberCard.Arrange(MemberCard.Sections(type.Children, ByName), 0, 0, 0.2);
+
+        var headings = MemberCard.Headings(type, row => row.Type != NodeType.FieldMember);
+
+        Assert.Equal(["Methods"], headings.Select(h => h.Title));
+        Assert.True(MemberCard.Bounds(type, row => row.Type != NodeType.FieldMember).Y > field.Boundary.Y);
     }
 
     static int ByName(ModelNode a, ModelNode b) => string.CompareOrdinal(a.Name, b.Name);

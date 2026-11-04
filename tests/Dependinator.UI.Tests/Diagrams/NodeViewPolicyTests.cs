@@ -216,6 +216,24 @@ public class NodeViewPolicyTests
         }
     }
 
+    [Fact]
+    public void FramingZoomFactor_NestedTypeInATypeWithMembers_ShouldKeepTheParentsRowsReadable()
+    {
+        var type = NodeOfSize(1000);
+        type.ContainerZoom = 0.5;
+        type.AddChild(new ModelNode("Node.Method", type) { Type = NodeType.MethodMember });
+        var nested = new ModelNode("Node.Nested", type)
+        {
+            Type = NodeType.ClassType,
+            Boundary = new Rect(0, 0, 300, 300),
+        };
+        type.AddChild(nested);
+
+        // The parent's zoom with the nested type framed: not its summary card, which hides it
+        var zoom = 1 / (type.ContainerZoom * NodeViewPolicy.FramingZoomFactor(nested));
+        Assert.False(NodeViewPolicy.IsMemberSummary(type, zoom / 1.3));
+    }
+
     static ModelNode DefaultNode(NodeType type = NodeType.ClassType) => NodeOfSize(100, type);
 
     static ModelNode NodeOfSize(double size, NodeType type = NodeType.ClassType) =>

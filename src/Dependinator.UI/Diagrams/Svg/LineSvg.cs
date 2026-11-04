@@ -212,7 +212,14 @@ static class LineSvg
         // A call between two members of the same type is shown only with one of them selected
         // or hovered (line-inner in Canvas.razor and jsInterop.js): at rest a type's card would
         // be crossed by all of its internal calls. Lines that mean something stay.
-        var isInner = IsInnerMemberLine(line) && !isAccent && !isCyclic && !isPath && !isViolation && !line.IsSelected;
+        var isInner =
+            IsInnerMemberLine(line)
+            && !isAccent
+            && !isCyclic
+            && !isPath
+            && !isViolation
+            && !line.IsSelected
+            && !line.HasLabel;
         var hitPointerEvents = isInner && !isLit ? " pointer-events=\"none\"" : "";
         var visibleClass =
             (isDimmed ? "line-vis line-dim" : "line-vis")

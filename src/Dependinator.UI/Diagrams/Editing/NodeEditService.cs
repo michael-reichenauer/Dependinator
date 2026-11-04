@@ -104,8 +104,11 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         {
             isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
                 .Any(node =>
-                    !node.Type.IsMember && NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
-                    || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                    !node.Type.IsMember
+                    && (
+                        NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
+                        || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
+                    )
                 );
         }
         if (!isAnyOffGrid)
@@ -224,7 +227,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Pos newContainerOffset;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node))
+            // Member rows are placed by their card, off the grid on purpose
+            if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
 
             nodeId = node.Id;

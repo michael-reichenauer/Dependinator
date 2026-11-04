@@ -390,7 +390,7 @@ class NodeLayout
             .Select(c => c.Boundary)
             .ToList();
         var newNonMembers = parent.Children.Where(c => !c.Type.IsMember && c.Boundary == Rect.None).ToList();
-        var isOnlyMembers = placed.Count == 0 && newNonMembers.Count == 0;
+        var isOnlyMembers = IsOnlyMembers(parent); // Zones and notes don't count, as in Coverage
 
         var card = ArrangeMemberCard(parent, 0, 0, isOnlyMembers);
         var startX = CardStart;
