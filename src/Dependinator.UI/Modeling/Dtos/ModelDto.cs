@@ -40,6 +40,7 @@ record ModelDto
     // instead of reading "only X may use Y" or layers as "X must not use Y". Defaulted (no
     // FormatVersion bump).
     public IReadOnlyList<RuleDto> KindRules { get; init; } = [];
+    public IReadOnlyList<RuleDto> KindDismissedRules { get; init; } = [];
     public IReadOnlyList<AllowedViolationDto> KindAllowedViolations { get; init; } = [];
 
     // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).

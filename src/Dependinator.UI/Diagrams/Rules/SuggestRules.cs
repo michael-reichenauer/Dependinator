@@ -12,26 +12,34 @@ using static Dependinator.UI.Diagrams.Ai.PromptParts;
 namespace Dependinator.UI.Diagrams.Rules;
 
 // A rule an AI suggests, and what Dependinator itself found when it checked the rule on the model
-// (the AI's own counts are not trusted): the nodes it names, and what it would break today.
-public record SuggestedRule(string From, string To, string Why)
+// (the AI's own counts are not trusted): the nodes it names, and what it would break today. Nodes
+// are from and to, the layers top first, or the one node, by kind.
+record SuggestedRule(RuleKind Kind, IReadOnlyList<string> Nodes, string Why)
 {
+    public SuggestedRule(string from, string to, string why)
+        : this(RuleKind.MustNotUse, [from, to], why) { }
+
     public RuleCheck Check { get; init; } = RuleCheck.Unchecked;
+
+    public string From => Nodes.Count > 0 ? Nodes[0] : "";
+    public string To => Nodes.Count > 0 ? Nodes[^1] : "";
 
     public bool CanAdd => Check.Error is null && !Check.IsRule && !Check.IsDismissed;
 
-    // The rule's node names as checked (the AI's names where the check found none), the key that
-    // dismissals and the suggestions shown before are matched by.
-    public (string From, string To) Key => Check.Error is null ? (Check.FromName, Check.ToName) : (From, To);
+    // The rule as checked (the AI's names where the check found none), the key that dismissals
+    // and the suggestions shown before are matched by.
+    public ArchitectureRule Key =>
+        Check.Rule
+        ?? ArchitectureRule.Of(Kind, Nodes)
+        ?? new ArchitectureRule(Nodes.FirstOrDefault() ?? "", Nodes.LastOrDefault() ?? "", Kind: Kind);
 }
 
-// FromName and ToName are node names, the titles what the panel shows; Error says why the rule
-// cannot be added (a node not found, one inside the other). IsDismissed: the user said no to it.
-public record RuleCheck(
+// Rule is the checked rule (node names), Titles its nodes as the panel shows them; Error says why
+// the rule cannot be added (a node not found, one inside another). IsDismissed: the user said no to it.
+record RuleCheck(
     string? Error,
-    string FromName = "",
-    string ToName = "",
-    string FromTitle = "",
-    string ToTitle = "",
+    ArchitectureRule? Rule = null,
+    IReadOnlyList<string>? Titles = null,
     int ViolationCount = 0,
     int LinkCount = 0,
     bool IsRule = false,
@@ -42,7 +50,7 @@ public record RuleCheck(
 }
 
 // An AI's suggested rules, as the Suggest rules dialog shows them.
-public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
+record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
 {
     public AiSource Source { get; init; } = AiSource.Claude;
 
@@ -68,11 +76,11 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
               "items": {
                 "type": "object",
                 "properties": {
-                  "from": { "type": "string", "description": "The name of the node that must not depend on the other, as listed." },
-                  "to": { "type": "string", "description": "The name of the node it must not depend on, as listed." },
+                  "kind": { "type": "string", "enum": ["must_not_use", "only_may_use", "layers", "independent", "no_cycles", "siblings_independent"], "description": "The kind of rule." },
+                  "nodes": { "type": "array", "items": { "type": "string" }, "description": "The node names, as listed: from and to for must_not_use and only_may_use, the layers top first for layers, the one node for independent, no_cycles and siblings_independent." },
                   "why": { "type": "string", "description": "1–2 sentences: what the rule protects." }
                 },
-                "required": ["from", "to", "why"],
+                "required": ["kind", "nodes", "why"],
                 "additionalProperties": false
               }
             }
@@ -87,27 +95,75 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
         var parsed = Result.Catch(() => Json.Deserialize<Answer>(json) ?? throw new JsonException("No answer"));
         if (parsed is not Answer answer)
             return new Error($"{source.Name()}'s answer could not be read.", parsed.Error);
-        List<SuggestedRule> rules =
-        [
-            .. (answer.Rules ?? [])
-                .Where(r => !string.IsNullOrWhiteSpace(r.From) && !string.IsNullOrWhiteSpace(r.To))
-                .Select(r => new SuggestedRule(Name(r.From!), Name(r.To!), (r.Why ?? "").Trim())),
-        ];
+        List<SuggestedRule> rules = [];
+        foreach (var r in answer.Rules ?? [])
+        {
+            var nodes = (r.Nodes ?? [r.From ?? "", r.To ?? ""]).Select(n => Name(n ?? "")).ToList();
+            // A blank name, an unknown kind or nodes that do not fit the kind are left out; the rest
+            // are checked, which says what is wrong with them.
+            if (
+                nodes.All(n => n != "")
+                && ArchitectureRule.KindNames.TryGetValue(r.Kind ?? "must_not_use", out var kind)
+                && ArchitectureRule.Of(kind, nodes) is not null
+            )
+                rules.Add(new SuggestedRule(kind, nodes, (r.Why ?? "").Trim()));
+        }
         // No rules is a fine answer: the rules there are may cover the architecture already.
         return new RuleSuggestions(rules) { Source = source };
     }
 
     record Answer(List<AnswerRule>? Rules);
 
-    record AnswerRule(string? From, string? To, string? Why);
+    // From and To: the answer format before rule kinds (a must-not-use rule).
+    record AnswerRule(string? Kind, List<string>? Nodes, string? Why, string? From = null, string? To = null);
 
-    // "Rule: `A` must not use `B`", markdown emphasis, list marks and quotes aside.
+    // "Rule: <the rule>", markdown emphasis, list marks and quotes aside; the rule in one of the
+    // forms the prompt shows (SuggestRulesPrompt.TaskSection).
     static readonly Regex RuleLine = new(
-        @"^[\s>*_#\-\d.)]*Rule\s*\d*[*_]*\s*:[*_]*\s*(?<from>.+?)\s+must\s+not\s+(?:use|depend\s+on)\s+(?<to>.+?)\s*$",
+        @"^[\s>*_#\-\d.)]*Rule\s*\d*[*_]*\s*:[*_]*\s*(?<rule>.+?)\s*$",
         RegexOptions.IgnoreCase | RegexOptions.Multiline
     );
 
+    static readonly Regex MustNotUse = new(
+        @"^(?<a>.+?)\s+must\s+not\s+(?:use|depend\s+on)\s+(?<b>.+)$",
+        RegexOptions.IgnoreCase
+    );
+    static readonly Regex OnlyMayUse = new(@"^only\s+(?<a>.+?)\s+may\s+use\s+(?<b>.+)$", RegexOptions.IgnoreCase);
+    static readonly Regex Layers = new(@"^layers\s*:?\s+(?<list>.+)$", RegexOptions.IgnoreCase);
+    static readonly Regex SiblingsIndependent = new(
+        @"^the\s+parts\s+of\s+(?<a>.+?)\s+are\s+independent\b.*$",
+        RegexOptions.IgnoreCase
+    );
+    static readonly Regex Independent = new(@"^(?<a>.+?)\s+is\s+independent\b.*$", RegexOptions.IgnoreCase);
+    static readonly Regex NoCycles = new(@"^no\s+cycles\s+inside\s+(?<a>.+)$", RegexOptions.IgnoreCase);
+
+    static readonly Regex TrailingNote = new(@"\s*\([^()]*\)\s*$");
+
     static readonly Regex WhyLine = new(@"^[\s>*_\-]*Why[*_]*\s*:[*_]*\s*(?<why>.*)$", RegexOptions.IgnoreCase);
+
+    // The rule of a "Rule:" line, null when it has none of the forms.
+    static (RuleKind Kind, List<string> Nodes)? ParseRule(string text)
+    {
+        // A note after the rule, as the prompt lists layers ("(each may use only the layers below it)").
+        text = TrailingNote.Replace(text.Trim().Trim('*', '_').Trim(), "");
+        // The two-node forms first, so a why on the same line ("… so UI is independent") is no rule.
+        if (OnlyMayUse.Match(text) is { Success: true } only)
+            return (RuleKind.OnlyMayUse, [Name(only.Groups["a"].Value), Name(only.Groups["b"].Value)]);
+        if (Layers.Match(text) is { Success: true } layers)
+            return (
+                RuleKind.Layers,
+                [.. layers.Groups["list"].Value.Split(['>', '›'], StringSplitOptions.RemoveEmptyEntries).Select(Name)]
+            );
+        if (MustNotUse.Match(text) is { Success: true } mustNot)
+            return (RuleKind.MustNotUse, [Name(mustNot.Groups["a"].Value), Name(mustNot.Groups["b"].Value)]);
+        if (NoCycles.Match(text) is { Success: true } noCycles)
+            return (RuleKind.NoCycles, [Name(noCycles.Groups["a"].Value)]);
+        if (SiblingsIndependent.Match(text) is { Success: true } siblings)
+            return (RuleKind.SiblingsIndependent, [Name(siblings.Groups["a"].Value)]);
+        if (Independent.Match(text) is { Success: true } independent)
+            return (RuleKind.Independent, [Name(independent.Groups["a"].Value)]);
+        return null;
+    }
 
     // An AI chat's answer to the copied prompt, pasted back: each "Rule:" line, and the "Why:"
     // that follows it.
@@ -117,7 +173,12 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
         var lines = text.Replace("\r", "").Split('\n');
         for (var i = 0; i < lines.Length; i++)
         {
-            if (RuleLine.Match(lines[i]) is not { Success: true } rule)
+            if (
+                RuleLine.Match(lines[i]) is not { Success: true } line
+                || ParseRule(line.Groups["rule"].Value) is not var (kind, nodes)
+                || nodes.Any(n => n == "")
+                || ArchitectureRule.Of(kind, nodes) is null
+            )
                 continue;
             var why = "";
             for (var j = i + 1; j < lines.Length && !RuleLine.IsMatch(lines[j]); j++)
@@ -128,14 +189,20 @@ public record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
                     break;
                 }
             }
-            rules.Add(new SuggestedRule(Name(rule.Groups["from"].Value), Name(rule.Groups["to"].Value), why));
+            rules.Add(new SuggestedRule(kind, nodes, why));
         }
         return rules.Count == 0
-            ? new Error("The answer has no \"Rule: A must not use B\" lines, so it could not be read.")
+            ? new Error("The answer has no \"Rule: …\" lines, so it could not be read.")
             : new RuleSuggestions(rules) { Source = AiSource.Chat };
     }
 
-    static string Name(string text) => text.Trim().Trim('`', '*', '_', '"', '\'', '.', ',', ';').Trim();
+    // A name in backticks is the name, whatever follows it ("`Data`, so the UI stays thin").
+    static string Name(string text) =>
+        BacktickName.Match(text) is { Success: true } quoted
+            ? quoted.Groups["name"].Value.Trim()
+            : text.Trim().Trim('`', '*', '_', '"', '\'', '.', ',', ';').Trim();
+
+    static readonly Regex BacktickName = new(@"^\s*[*_]*`(?<name>[^`]+)`");
 }
 
 // The prompt that asks an AI to suggest architecture rules: the model's structure (containers
@@ -148,7 +215,7 @@ static class SuggestRulesPrompt
     internal const int MaxDependencies = 150;
 
     // suggestedBefore: the rules earlier answers suggested (node names), not to be repeated.
-    public static string Build(IModel model, IReadOnlyCollection<(string From, string To)>? suggestedBefore = null)
+    public static string Build(IModel model, IReadOnlyCollection<ArchitectureRule>? suggestedBefore = null)
     {
         var outline = Outline(model);
         if (outline == "")
@@ -158,11 +225,17 @@ static class SuggestRulesPrompt
         text.AppendLine("# Suggest architecture rules").AppendLine();
         text.AppendLine(
             "Dependinator shows a codebase as a dependency model: containers (projects, namespaces, modules), the "
-                + "types in them, and the links between them. An architecture rule says \"A must not use B\": nothing "
-                + "at or inside node A may depend on anything at or inside node B. Dependinator counts the "
-                + "dependencies that break each rule and draws them in the diagram, so a rule guards the "
-                + "architecture as the code changes."
+                + "types in them, and the links between them. An architecture rule guards the architecture as the "
+                + "code changes: Dependinator counts the dependencies that break each rule and draws them in the "
+                + "diagram. The kinds of rule (\"at or inside\" a node includes everything it contains):"
         );
+        text.AppendLine()
+            .AppendLine("- `A` must not use `B`: nothing in A may depend on anything in B.")
+            .AppendLine("- only `A` may use `B`: nothing outside A and B may depend on anything in B.")
+            .AppendLine("- layers `A` > `B` > `C`: each layer may use only the layers below it, never one above.")
+            .AppendLine("- `A` is independent: nothing in A may depend on the rest of the codebase, only on externals.")
+            .AppendLine("- the parts of `A` are independent: no child of A may depend on another child of A.")
+            .AppendLine("- no cycles inside `A`: nothing in A depends on itself in a circle.");
         text.AppendLine().Append(outline);
         AppendRules(text, model);
         AppendNotToSuggest(text, model, suggestedBefore);
@@ -204,9 +277,9 @@ static class SuggestRulesPrompt
     static readonly string TaskSection = $"""
         ## Your task
 
-        Suggest the rules clearly worth keeping for this codebase, at most {MaxSuggestions}: rules that state its intended layering or boundaries (which part may use which, or which part stays free of a technology), not rules that merely happen to hold. Fewer is better than padding: suggest only rules you would defend, and none when the rules there are already cover the architecture. Prefer rules the code keeps today, or breaks with only a few dependencies; suggest a rule the code breaks widely only when the structure clearly intends it, and say so. Leave out the rules there are already, the rules not to suggest, and pairs where one node contains the other. Name each node exactly as listed (the name in backticks). If you have Dependinator's tools, check each rule with check_rule before you suggest it.
+        Suggest the rules clearly worth keeping for this codebase, at most {MaxSuggestions}: rules that state its intended layering or boundaries (which part may use which, which part stays free of a technology, which parts stay apart), not rules that merely happen to hold. Pick the kind that says it best: one layers rule rather than several "must not use" rules that say the same, "is independent" for a shared or core part that should use nothing else, "the parts of" for features or modules meant to stay apart. Fewer is better than padding: suggest only rules you would defend, and none when the rules there are already cover the architecture. Prefer rules the code keeps today, or breaks with only a few dependencies; suggest a rule the code breaks widely only when the structure clearly intends it, and say so. Leave out the rules there are already, the rules not to suggest, and rules where one node contains another. Name each node exactly as listed (the name in backticks). If you have Dependinator's tools, check each rule with check_rule before you suggest it.
 
-        Answer in this format, for each rule:
+        Answer in this format, for each rule, with the rule in one of the forms above:
 
         Rule: <name> must not use <name>
         Why: 1–2 sentences on what the rule protects.
@@ -328,32 +401,32 @@ static class SuggestRulesPrompt
             return;
         text.AppendLine().AppendLine("## The rules there are").AppendLine();
         foreach (var rule in model.Rules)
-            text.AppendLine($"- {rule.Describe(n => $"`{n}`")}{Because(rule.Reason)}");
+            text.AppendLine($"- {rule.Describe(Quoted)}{Because(rule.Reason)}");
     }
 
     // The rules the user dismissed (with why, where they gave one) and those suggested before.
     static void AppendNotToSuggest(
         StringBuilder text,
         IModel model,
-        IReadOnlyCollection<(string From, string To)>? suggestedBefore
+        IReadOnlyCollection<ArchitectureRule>? suggestedBefore
     )
     {
         var dismissed = model.DismissedRules;
         var before = (suggestedBefore ?? [])
-            .Where(r => !dismissed.Any(d => d.IsFor(r.From, r.To)) && !model.Rules.Contains(new(r.From, r.To)))
+            .Where(r => !dismissed.Any(d => d.IsFor(r)) && !model.Rules.Contains(r))
             .ToList();
         if (dismissed.Count == 0 && before.Count == 0)
             return;
         text.AppendLine().AppendLine("## Rules not to suggest").AppendLine();
         text.AppendLine("The user said no to these, or saw them suggested already; do not suggest them again.")
             .AppendLine();
-        foreach (var rule in dismissed)
-            text.AppendLine(
-                $"- `{rule.FromName}` must not use `{rule.ToName}` (dismissed{Because(rule.Reason, ": ")})"
-            );
-        foreach (var (from, to) in before)
-            text.AppendLine($"- `{from}` must not use `{to}` (suggested before)");
+        foreach (var d in dismissed)
+            text.AppendLine($"- {d.Rule.Describe(Quoted)} (dismissed{Because(d.Reason, ": ")})");
+        foreach (var rule in before)
+            text.AppendLine($"- {rule.Describe(Quoted)} (suggested before)");
     }
+
+    static string Quoted(string name) => $"`{name}`";
 
     static string Because(string reason, string separator = " — ") => reason == "" ? "" : $"{separator}{reason}";
 }
@@ -393,7 +466,7 @@ interface ISuggestRulesService
 
     // Lets later answers suggest the rule again, though an earlier answer suggested it (its
     // dismissal was taken back in the Rules panel).
-    void AllowSuggestingAgain(string fromName, string toName);
+    void AllowSuggestingAgain(ArchitectureRule rule);
 }
 
 [Scoped]
@@ -415,7 +488,7 @@ class SuggestRulesService(
         // gone in a re-parse since the check leaves its rule out.
         List<ArchitectureRule> rules =
         [
-            .. chosen.Select(r => new ArchitectureRule(r.Check.FromName, r.Check.ToName, r.Why)),
+            .. chosen.Where(r => r.Check.Rule is not null).Select(r => r.Check.Rule! with { Reason = r.Why }),
         ];
         var added = ruleService.AddRules(rules);
         var left = rules.Distinct().Count() - added;
@@ -430,15 +503,15 @@ class SuggestRulesService(
         applicationEvents.TriggerInfoReported(message);
     }
 
-    public void Dismiss(SuggestedRule rule) => ruleService.Dismiss(rule.Key.From, rule.Key.To, "");
+    public void Dismiss(SuggestedRule rule) => ruleService.Dismiss(rule.Key, "");
 
     public void Undismiss(SuggestedRule rule)
     {
-        ruleService.Undismiss(new DismissedRule(rule.Key.From, rule.Key.To));
-        AllowSuggestingAgain(rule.Key.From, rule.Key.To);
+        ruleService.Undismiss(DismissedRule.Of(rule.Key));
+        AllowSuggestingAgain(rule.Key);
     }
 
-    public void AllowSuggestingAgain(string fromName, string toName) => suggestedBefore.Remove((fromName, toName));
+    public void AllowSuggestingAgain(ArchitectureRule rule) => suggestedBefore.Remove(rule with { Reason = "" });
 
     public Result<RuleSuggestions> ParsePasted(string text)
     {
@@ -454,10 +527,10 @@ class SuggestRulesService(
 
     // The rules earlier answers suggested for the open model (node names as checked), so a new
     // ask is told not to repeat them and its repeats are left out; forgotten for another model.
-    readonly HashSet<(string From, string To)> suggestedBefore = [];
+    readonly HashSet<ArchitectureRule> suggestedBefore = [];
     string suggestedFor = "";
 
-    IReadOnlyCollection<(string From, string To)> SuggestedBefore(IModel model)
+    IReadOnlyCollection<ArchitectureRule> SuggestedBefore(IModel model)
     {
         if (model.Path != suggestedFor)
         {
@@ -473,7 +546,7 @@ class SuggestRulesService(
     {
         using var model = modelMgr.UseModel();
         var before = SuggestedBefore(model);
-        HashSet<(string, string)> seen = [];
+        HashSet<ArchitectureRule> seen = [];
         List<SuggestedRule> kept = [];
         var leftOut = 0;
         foreach (var rule in answer.Rules)
@@ -519,20 +592,20 @@ class SuggestRulesService(
 
     RuleCheck CheckRule(SuggestedRule rule)
     {
-        var checkedRule = modelQueries.CheckRule(rule.From, rule.To);
+        var checkedRule = modelQueries.CheckRule(ArchitectureRule.KindName(rule.Kind), rule.Nodes);
         if (checkedRule is not RuleResult result)
             return new RuleCheck(checkedRule.Error.Message);
+        if (ArchitectureRule.Of(rule.Kind, result.Nodes ?? []) is not { } found)
+            return new RuleCheck("The rule could not be checked.");
         using var model = modelMgr.UseModel();
         return new RuleCheck(
             null,
-            result.From,
-            result.To,
-            Title(model, result.From),
-            Title(model, result.To),
+            found,
+            [.. found.NodeNames.Select(n => Title(model, n))],
             result.ViolationCount,
             result.LinkCount,
             result.IsRule,
-            model.DismissedRules.Any(d => d.IsFor(result.From, result.To))
+            model.DismissedRules.Any(d => d.IsFor(found))
         );
     }
 
@@ -554,6 +627,8 @@ class SuggestRulesService(
             }
         }
         rules.Add(new SuggestedRule("No.Such.Node", "Other", "Test mode: a node that is not in the model."));
+        if (rules.Count == 3)
+            rules.Add(new SuggestedRule(RuleKind.SiblingsIndependent, [rules[0].To], "Test mode: another kind."));
         return new RuleSuggestions(rules);
     }
 

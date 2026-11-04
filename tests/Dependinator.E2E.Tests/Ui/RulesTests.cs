@@ -188,10 +188,13 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
         ILocator items = Page.GetByTestId("suggest-rules-item");
-        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items).ToHaveCountAsync(4);
         await Expect(items.Nth(2)).ToHaveAttributeAsync("data-can-add", "no");
         await Expect(items.Nth(2).GetByTestId("suggest-rules-error")).ToContainTextAsync("No node is named");
-        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
+        // Any kind of rule: the last is about the parts of one node.
+        await Expect(items.Nth(3).Locator("[data-kind]")).ToHaveAttributeAsync("data-kind", "SiblingsIndependent");
+        await Expect(items.Nth(3)).ToContainTextAsync("the parts of");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 3");
 
         // The node names go to their node, with the view still open beside the diagram.
         // TextContent, since Firefox's InnerText breaks the name at a wrapped <wbr> ("Demo.\nsln").
@@ -203,13 +206,13 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
         await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
         await Expect(items.Nth(0).GetByTestId("suggest-rules-status")).ToHaveTextAsync("already a rule");
-        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
 
         // Back to the rules, which list the added one; the answer is still there on return.
         await Page.GetByTestId("suggest-rules-back").ClickAsync();
         await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
         await Page.GetByTestId("rules-suggest").ClickAsync();
-        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items).ToHaveCountAsync(4);
     }
 
     // A dismissed suggestion is not suggested again, nor is one an earlier answer suggested; an
@@ -223,7 +226,7 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("rules-suggest").ClickAsync();
         await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
         ILocator items = Page.GetByTestId("suggest-rules-item");
-        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items).ToHaveCountAsync(4);
 
         await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
         await Expect(items.Nth(1).GetByTestId("suggest-rules-status")).ToHaveTextAsync("dismissed");
@@ -233,10 +236,10 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
         await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
 
-        // Asked again, the same answer brings nothing new: one rule added, one dismissed, and
-        // the one that cannot be added.
+        // Asked again, the same answer brings nothing new: one rule added, one dismissed, one
+        // suggested before, and the one that cannot be added.
         await Page.GetByTestId("suggest-rules-ask").ClickAsync();
-        await Expect(Page.GetByTestId("suggest-rules-left-out")).ToContainTextAsync("2 more were left out");
+        await Expect(Page.GetByTestId("suggest-rules-left-out")).ToContainTextAsync("3 more were left out");
         await Expect(items).ToHaveCountAsync(1);
         await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
 

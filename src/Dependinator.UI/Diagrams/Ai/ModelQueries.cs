@@ -22,6 +22,7 @@ interface IModelQueries
     Result<PathsResult> FindPaths(string fromName, string toName);
     Result<CycleList> ListCycles();
     Result<IReadOnlyList<RuleResult>> ListRules();
+    Result<RuleResult> CheckRule(string kind, IReadOnlyList<string> nodeNames);
     Result<RuleResult> CheckRule(string fromName, string toName);
     Task<Result<NodeSource>> ReadSourceAsync(string nodeName);
 
@@ -211,24 +212,32 @@ sealed class ModelQueries(
         ]);
     }
 
-    public Result<RuleResult> CheckRule(string fromName, string toName)
+    // "From must not use to", the kind the tests check most.
+    public Result<RuleResult> CheckRule(string fromName, string toName) =>
+        CheckRule("must_not_use", [fromName, toName]);
+
+    public Result<RuleResult> CheckRule(string kind, IReadOnlyList<string> nodeNames)
     {
         using var model = modelMgr.UseModel();
         if (CheckHasModel(model) is Error e)
             return e;
-        var foundFrom = FindNode(model, fromName);
-        if (foundFrom is not Node from)
-            return foundFrom.Error;
-        var foundTo = FindNode(model, toName);
-        if (foundTo is not Node to)
-            return foundTo.Error;
-        if (from.IsAtOrInside(to) || to.IsAtOrInside(from))
-            return new Error("A rule needs two nodes where neither contains the other.");
-        // Members count for their type, so a rule between two of one type is the type against itself.
-        if (UnitGraph.UnitOf(from) == UnitGraph.UnitOf(to))
-            return new Error("Rules apply to types and their containers: these two are members of one type.");
+        if (!ArchitectureRule.KindNames.TryGetValue(kind, out var ruleKind))
+            return new Error(
+                $"Unknown kind of rule \"{kind}\": use one of {string.Join(", ", ArchitectureRule.KindNames.Keys)}."
+            );
+        List<Node> nodes = [];
+        foreach (var name in nodeNames)
+        {
+            var found = FindNode(model, name);
+            if (found is not Node node)
+                return found.Error;
+            nodes.Add(node);
+        }
+        if (RuleService.ShapeError(ruleKind, nodes) is { } shapeError)
+            return shapeError;
+        if (ArchitectureRule.Of(ruleKind, [.. nodes.Select(n => n.Name)]) is not { } rule)
+            return new Error("The rule could not be made.");
 
-        var rule = new ArchitectureRule(from.Name, to.Name);
         var report = RuleService.Compute(model, [rule]).Reports.Single();
         return ToRuleResult(report, model.Rules.Contains(rule));
     }
@@ -410,6 +419,8 @@ sealed class ModelQueries(
                     .Take(MaxAllowed),
             ],
             report.Allowed.Count + report.ToFix.Count,
-            report.Rule.Describe(n => n)
+            report.Rule.Describe(n => n),
+            ArchitectureRule.KindName(report.Rule.Kind),
+            report.Rule.NodeNames
         );
 }

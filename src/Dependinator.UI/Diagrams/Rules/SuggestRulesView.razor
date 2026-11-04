@@ -65,12 +65,51 @@
           {
             <div class="dep-suggest-rules__rule" data-testid="suggest-rules-item" data-can-add="@(rule.CanAdd ? "yes" : "no")">
               <div class="dep-suggest-rules__head">
-                <span class="dep-rules__names">
-                  <RuleNodeLink Id="NodeIdOf(rule, rule.Check.FromName)" Display="@Title(rule.Check.FromTitle, rule.From)"
-                                TestId="suggest-rules-from" />
-                  <span class="dep-rules__arrow">must not use</span>
-                  <RuleNodeLink Id="NodeIdOf(rule, rule.Check.ToName)" Display="@Title(rule.Check.ToTitle, rule.To)"
-                                TestId="suggest-rules-to" />
+                <span class="dep-rules__names" data-kind="@rule.Kind">
+                  @{
+                    var names = rule.Key.NodeNames;
+                    var titles = rule.Check.Titles is { } t && t.Count == names.Count ? t : names;
+                    RenderFragment Node(int i, string testId) =>
+                      @<RuleNodeLink Id="NodeIdOf(rule, names[i])" Display="@titles[i]" TestId="@testId" />;
+                  }
+                  @switch (rule.Kind)
+                  {
+                    case Modeling.Models.RuleKind.Layers:
+                      <span class="dep-rules__arrow">layers</span>@(" ")
+                      @for (var i = 0; i < names.Count; i++)
+                      {
+                        @if (i > 0)
+                        {
+                          <span class="dep-rules__arrow"> › </span>
+                        }
+                        @Node(i, i == 0 ? "suggest-rules-from" : i == names.Count - 1 ? "suggest-rules-to" : "suggest-rules-layer")
+                      }
+                      break;
+                    case Modeling.Models.RuleKind.OnlyMayUse:
+                      <span class="dep-rules__arrow">only</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      <span class="dep-rules__arrow">may use</span>
+                      @Node(1, "suggest-rules-to")
+                      break;
+                    case Modeling.Models.RuleKind.Independent:
+                      @Node(0, "suggest-rules-from")
+                      @(" ")<span class="dep-rules__arrow">is independent</span>
+                      break;
+                    case Modeling.Models.RuleKind.SiblingsIndependent:
+                      <span class="dep-rules__arrow">the parts of</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      @(" ")<span class="dep-rules__arrow">are independent</span>
+                      break;
+                    case Modeling.Models.RuleKind.NoCycles:
+                      <span class="dep-rules__arrow">no cycles inside</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      break;
+                    default:
+                      @Node(0, "suggest-rules-from")
+                      <span class="dep-rules__arrow">must not use</span>
+                      @Node(1, "suggest-rules-to")
+                      break;
+                  }
                 </span>
                 <span class="dep-panel__count" data-testid="suggest-rules-status">@Status(rule)</span>
                 @if (rule.CanAdd)
@@ -151,8 +190,6 @@
 
   // An added rule shows as "already a rule" once the model's rules change.
   void Add(IReadOnlyList<SuggestedRule> rules) => suggestRulesService.Add(rules);
-
-  static string Title(string title, string name) => title != "" ? title : name;
 
   static string Status(SuggestedRule rule) =>
     rule.Check switch

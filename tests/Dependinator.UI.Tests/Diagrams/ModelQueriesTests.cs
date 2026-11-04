@@ -139,14 +139,27 @@ public class ModelQueriesTests
         Assert.True(result.IsRule);
         Assert.Equal(0, result.ViolationCount);
         Assert.Equal([new AllowedDependency(view.Name, repo.Name, "Legacy", 2)], result.Allowed);
-        Assert.Equal(result, listed with { Violations = result.Violations, Allowed = result.Allowed });
+        Assert.Equal(result.Nodes, listed.Nodes);
+        Assert.Equal(
+            result,
+            listed with
+            {
+                Violations = result.Violations,
+                Allowed = result.Allowed,
+                Nodes = result.Nodes,
+            }
+        );
     }
 
     [Fact]
     public void CheckRule_ShouldRefuseNestedNodes()
     {
-        AssertError(queries.CheckRule(ui.Name, view.Name));
+        AssertOk(queries.CheckRule(ui.Name, view.Name)); // "Must not use" may nest, as in the Rules panel
+        AssertError(queries.CheckRule("only_may_use", [ui.Name, view.Name]));
         AssertError(queries.CheckRule(view.Name, view.Name));
+        AssertError(queries.CheckRule("layers", [view.Name + ".Load()", view.Name, data.Name])); // One type
+        AssertError(queries.CheckRule("siblings_independent", [view.Name])); // Its parts are members
+        AssertError(queries.CheckRule("independent", [view.Name + ".Load()"])); // A member
         AssertError(queries.CheckRule(view.Name + ".Load()", view.Name + ".Save()")); // One type
     }
 
