@@ -99,12 +99,12 @@ record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
         foreach (var r in answer.Rules ?? [])
         {
             var nodes = (r.Nodes ?? [r.From ?? "", r.To ?? ""]).Select(n => Name(n ?? "")).ToList();
-            // A blank name or an unknown kind is left out; the rest are checked, which says what
-            // is wrong with them.
+            // A blank name, an unknown kind or nodes that do not fit the kind are left out; the rest
+            // are checked, which says what is wrong with them.
             if (
-                nodes.Count > 0
-                && nodes.All(n => n != "")
+                nodes.All(n => n != "")
                 && ArchitectureRule.KindNames.TryGetValue(r.Kind ?? "must_not_use", out var kind)
+                && ArchitectureRule.Of(kind, nodes) is not null
             )
                 rules.Add(new SuggestedRule(kind, nodes, (r.Why ?? "").Trim()));
         }
@@ -137,12 +137,16 @@ record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
     static readonly Regex Independent = new(@"^(?<a>.+?)\s+is\s+independent\b.*$", RegexOptions.IgnoreCase);
     static readonly Regex NoCycles = new(@"^no\s+cycles\s+inside\s+(?<a>.+)$", RegexOptions.IgnoreCase);
 
+    static readonly Regex TrailingNote = new(@"\s*\([^()]*\)\s*$");
+
     static readonly Regex WhyLine = new(@"^[\s>*_\-]*Why[*_]*\s*:[*_]*\s*(?<why>.*)$", RegexOptions.IgnoreCase);
 
     // The rule of a "Rule:" line, null when it has none of the forms.
     static (RuleKind Kind, List<string> Nodes)? ParseRule(string text)
     {
-        text = text.Trim().Trim('*', '_').Trim();
+        // A note after the rule, as the prompt lists layers ("(each may use only the layers below it)").
+        text = TrailingNote.Replace(text.Trim().Trim('*', '_').Trim(), "");
+        // The two-node forms first, so a why on the same line ("… so UI is independent") is no rule.
         if (OnlyMayUse.Match(text) is { Success: true } only)
             return (RuleKind.OnlyMayUse, [Name(only.Groups["a"].Value), Name(only.Groups["b"].Value)]);
         if (Layers.Match(text) is { Success: true } layers)
@@ -150,14 +154,14 @@ record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
                 RuleKind.Layers,
                 [.. layers.Groups["list"].Value.Split(['>', '›'], StringSplitOptions.RemoveEmptyEntries).Select(Name)]
             );
+        if (MustNotUse.Match(text) is { Success: true } mustNot)
+            return (RuleKind.MustNotUse, [Name(mustNot.Groups["a"].Value), Name(mustNot.Groups["b"].Value)]);
         if (NoCycles.Match(text) is { Success: true } noCycles)
             return (RuleKind.NoCycles, [Name(noCycles.Groups["a"].Value)]);
         if (SiblingsIndependent.Match(text) is { Success: true } siblings)
             return (RuleKind.SiblingsIndependent, [Name(siblings.Groups["a"].Value)]);
         if (Independent.Match(text) is { Success: true } independent)
             return (RuleKind.Independent, [Name(independent.Groups["a"].Value)]);
-        if (MustNotUse.Match(text) is { Success: true } mustNot)
-            return (RuleKind.MustNotUse, [Name(mustNot.Groups["a"].Value), Name(mustNot.Groups["b"].Value)]);
         return null;
     }
 
@@ -172,6 +176,8 @@ record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
             if (
                 RuleLine.Match(lines[i]) is not { Success: true } line
                 || ParseRule(line.Groups["rule"].Value) is not var (kind, nodes)
+                || nodes.Any(n => n == "")
+                || ArchitectureRule.Of(kind, nodes) is null
             )
                 continue;
             var why = "";
@@ -190,7 +196,13 @@ record RuleSuggestions(IReadOnlyList<SuggestedRule> Rules) : IAiAnswer
             : new RuleSuggestions(rules) { Source = AiSource.Chat };
     }
 
-    static string Name(string text) => text.Trim().Trim('`', '*', '_', '"', '\'', '.', ',', ';').Trim();
+    // A name in backticks is the name, whatever follows it ("`Data`, so the UI stays thin").
+    static string Name(string text) =>
+        BacktickName.Match(text) is { Success: true } quoted
+            ? quoted.Groups["name"].Value.Trim()
+            : text.Trim().Trim('`', '*', '_', '"', '\'', '.', ',', ';').Trim();
+
+    static readonly Regex BacktickName = new(@"^\s*[*_]*`(?<name>[^`]+)`");
 }
 
 // The prompt that asks an AI to suggest architecture rules: the model's structure (containers

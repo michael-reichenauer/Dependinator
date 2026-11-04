@@ -92,7 +92,7 @@ public class SuggestRulesTests
         var suggestions = new RuleSuggestions([
             new SuggestedRule("UI", "Data", "Layering."),
             new SuggestedRule("Data", "UI", "Layering."),
-            new SuggestedRule("UI", "UI.Views", "Nested."),
+            new SuggestedRule(RuleKind.OnlyMayUse, ["UI", "UI.Views"], "Nested."),
             new SuggestedRule("Nowhere", "Data", "Missing."),
         ]);
 
@@ -104,7 +104,7 @@ public class SuggestRulesTests
         Assert.Equal(0, rules[1].Check.ViolationCount);
         Assert.Equal("Data", rules[1].Check.Rule!.FromName);
         Assert.False(rules[2].CanAdd);
-        Assert.Contains("neither contains the other", rules[2].Check.Error);
+        Assert.Contains("is inside", rules[2].Check.Error);
         Assert.Contains("No node is named \"Nowhere\"", rules[3].Check.Error);
     }
 
@@ -239,8 +239,9 @@ public class SuggestRulesTests
     {
         var text = """
             Rule: Only `Api` may use `Data`
-            Rule: Layers: `UI` > `Core` > `Data`
+            Rule: Layers: `UI` > `Core` > `Data` (each may use only the layers below it)
             Rule: `Utils` is independent
+            Rule: `UI` must not use `Data`, so UI is independent of storage
             Rule: No cycles inside `Core`
             Rule: The parts of `Features` are independent
             Why: Features stay apart.
@@ -253,6 +254,7 @@ public class SuggestRulesTests
                 (RuleKind.OnlyMayUse, "Api | Data", ""),
                 (RuleKind.Layers, "UI | Core | Data", ""),
                 (RuleKind.Independent, "Utils", ""),
+                (RuleKind.MustNotUse, "UI | Data", ""),
                 (RuleKind.NoCycles, "Core", ""),
                 (RuleKind.SiblingsIndependent, "Features", "Features stay apart."),
             ],

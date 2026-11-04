@@ -212,7 +212,7 @@ sealed class ModelQueries(
         ]);
     }
 
-    // "From must not use to", the check Suggest rules and the tests use most.
+    // "From must not use to", the kind the tests check most.
     public Result<RuleResult> CheckRule(string fromName, string toName) =>
         CheckRule("must_not_use", [fromName, toName]);
 
@@ -233,25 +233,10 @@ sealed class ModelQueries(
                 return found.Error;
             nodes.Add(node);
         }
+        if (RuleService.ShapeError(ruleKind, nodes) is { } shapeError)
+            return shapeError;
         if (ArchitectureRule.Of(ruleKind, [.. nodes.Select(n => n.Name)]) is not { } rule)
-            return new Error(
-                ruleKind == RuleKind.Layers ? "Layers need at least two nodes."
-                : ArchitectureRule.IsOneNodeKind(ruleKind) ? "This kind of rule takes one node."
-                : "This kind of rule takes two nodes."
-            );
-        if (nodes.Distinct().Count() != nodes.Count)
-            return new Error("A rule needs different nodes.");
-        foreach (var a in nodes)
-        foreach (var b in nodes)
-        {
-            if (a != b && a.IsAtOrInside(b))
-                return new Error("A rule needs nodes where neither contains the other.");
-        }
-        if (ArchitectureRule.IsOneNodeKind(ruleKind) && (nodes[0].IsRoot || nodes[0].IsExternal()))
-            return new Error("A rule about one node needs a part of the solution, not the root or an external.");
-        // Members count for their type, so a rule between two of one type is the type against itself.
-        if (nodes.Count == 2 && UnitGraph.UnitOf(nodes[0]) == UnitGraph.UnitOf(nodes[1]))
-            return new Error("Rules apply to types and their containers: these two are members of one type.");
+            return new Error("The rule could not be made.");
 
         var report = RuleService.Compute(model, [rule]).Reports.Single();
         return ToRuleResult(report, model.Rules.Contains(rule));

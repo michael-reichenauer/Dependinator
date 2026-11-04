@@ -166,15 +166,6 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         ArchitectureRule? rule;
         using (var model = modelMgr.UseModel())
         {
-            var isOneNode = ArchitectureRule.IsOneNodeKind(kind);
-            if (isOneNode ? nodeIds.Count != 1 : nodeIds.Count < 2 || (kind != RuleKind.Layers && nodeIds.Count != 2))
-                return new Error(
-                    isOneNode ? "This rule needs one node."
-                    : kind == RuleKind.Layers ? "Layers need at least two nodes."
-                    : "A rule needs two nodes."
-                );
-            if (nodeIds.Distinct().Count() != nodeIds.Count)
-                return new Error("A rule needs different nodes.");
             List<Node> nodes = [];
             foreach (var id in nodeIds)
             {
@@ -182,18 +173,12 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                     return new Error("One of the nodes is no longer in the model.");
                 nodes.Add(node);
             }
-            // "Must not use" may name a node inside the other (a part that must not use the whole),
-            // as it always could; the other kinds would contradict themselves.
-            if (isOneNode && (nodes[0].IsRoot || nodes[0].IsExternal()))
-                return new Error(
-                    $"A rule about {nodes[0].DisplayName} would say nothing: pick a part of the solution."
-                );
-            if (kind != RuleKind.MustNotUse && AnyNested(nodes) is var (inner, outer))
-                return new Error($"{inner.DisplayName} is inside {outer.DisplayName}: pick nodes beside each other.");
+            if (ShapeError(kind, nodes) is { } shapeError)
+                return shapeError;
             rule = kind switch
             {
                 RuleKind.Layers => ArchitectureRule.ForLayers([.. nodes.Select(n => n.Name)]),
-                _ when isOneNode => ArchitectureRule.ForNode(kind, nodes[0].Name),
+                _ when ArchitectureRule.IsOneNodeKind(kind) => ArchitectureRule.ForNode(kind, nodes[0].Name),
                 _ => new ArchitectureRule(nodes[0].Name, nodes[1].Name, Kind: kind),
             };
             if (model.Rules.Contains(rule))
@@ -205,13 +190,43 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         return Result.Ok;
     }
 
-    static (Node Inner, Node Outer)? AnyNested(IReadOnlyList<Node> nodes)
+    // Why the nodes cannot make a rule of the kind, null when they can: the one check the Rules
+    // panel, Suggest rules and the MCP check_rule share. "Must not use" may name a node inside the
+    // other (a part that must not use the whole), as it always could; the other kinds would
+    // contradict themselves. Members count for their type, so none may share one.
+    public static Error? ShapeError(RuleKind kind, IReadOnlyList<Node> nodes)
     {
+        var isOneNode = ArchitectureRule.IsOneNodeKind(kind);
+        if (isOneNode ? nodes.Count != 1 : nodes.Count < 2 || (kind != RuleKind.Layers && nodes.Count != 2))
+            return new Error(
+                isOneNode ? "This kind of rule takes one node."
+                : kind == RuleKind.Layers ? "Layers need at least two nodes."
+                : "This kind of rule takes two nodes."
+            );
+        if (nodes.Distinct().Count() != nodes.Count)
+            return new Error("A rule needs different nodes.");
+        if (isOneNode)
+        {
+            var node = nodes[0];
+            if (node.IsRoot || node.IsExternal())
+                return new Error($"A rule about {node.DisplayName} would say nothing: pick a part of the solution.");
+            if (node.Type.IsMember)
+                return new Error($"{node.DisplayName} is a member: pick a type or one of its containers.");
+            if (kind == RuleKind.SiblingsIndependent && node.Type.IsType)
+                return new Error($"The parts of {node.DisplayName} are its members: pick a container of types.");
+            return null;
+        }
         foreach (var a in nodes)
         foreach (var b in nodes)
         {
-            if (a != b && a.IsAtOrInside(b))
-                return (a, b);
+            if (a == b)
+                continue;
+            if (kind != RuleKind.MustNotUse && a.IsAtOrInside(b))
+                return new Error($"{a.DisplayName} is inside {b.DisplayName}: pick nodes beside each other.");
+            if (UnitGraph.UnitOf(a) == UnitGraph.UnitOf(b))
+                return new Error(
+                    $"Rules apply to types and their containers: {a.DisplayName} and {b.DisplayName} are in one type."
+                );
         }
         return null;
     }
@@ -225,12 +240,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             foreach (var rule in rules)
             {
                 var nodes = rule.NodeNames.Select(n => model.Nodes.GetValueOrDefault(NodeId.FromName(n))).ToList();
-                if (
-                    nodes.All(n => n is not null)
-                    && nodes.Distinct().Count() == nodes.Count
-                    && AnyNested(nodes!) is null
-                    && added.Add(rule)
-                )
+                if (nodes.All(n => n is not null) && ShapeError(rule.Kind, nodes!) is null && added.Add(rule))
                     commands.Add(new AddRuleCommand(rule));
             }
         }
@@ -491,9 +501,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
                     && !link.Target.IsAtOrInside(nodes[0]!)
                     && !link.Target.IsExternal();
             case RuleKind.SiblingsIndependent:
-                return link.Source.IsAtOrInside(nodes[0]!)
-                    && link.Target.IsAtOrInside(nodes[0]!)
-                    && ChildOn(link.Source, nodes[0]!) is { } sourceChild
+                return ChildOn(link.Source, nodes[0]!) is { } sourceChild
                     && ChildOn(link.Target, nodes[0]!) is { } targetChild
                     && sourceChild != targetChild;
             case RuleKind.NoCycles:

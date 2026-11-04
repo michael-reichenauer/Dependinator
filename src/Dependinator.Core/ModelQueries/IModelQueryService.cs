@@ -40,8 +40,8 @@ interface IModelQueryService
     Task<Result<IReadOnlyList<RuleResult>>> ListRulesAsync();
 
     // Evaluates a rule without adding it: the violations it would report today. Kind is one of
-    // must_not_use, only_may_use (nodes: from and to), layers (the layers top first), independent
-    // and no_cycles (one node).
+    // must_not_use, only_may_use (nodes: from and to), layers (the layers top first), independent,
+    // no_cycles and siblings_independent (one node).
     Task<Result<RuleResult>> CheckRuleAsync(string kind, IReadOnlyList<string> nodeNames);
 
     // The node's code (a type, a member, a Bicep resource), read from the workspace: a short file

@@ -102,16 +102,21 @@ sealed class ModelTools(IModelQueryService queries)
             "must_not_use (the default), only_may_use, layers, independent, no_cycles or siblings_independent."
         )]
             string kind = "must_not_use",
-        [Description("For layers: the layers' node names, top first, at least two.")] string[]? layers = null
-    ) =>
-        Answer(
-            await queries.CheckRuleAsync(
-                kind,
-                kind.Equals("layers", StringComparison.OrdinalIgnoreCase) ? layers ?? []
-                    : to == "" ? [from]
-                    : [from, to]
-            )
-        );
+        [Description(
+            "For layers: the layers' node names, top first, at least two (from and to will do for two). "
+                + "Any kind also takes its nodes here, in list_rules' order."
+        )]
+            string[]? layers = null
+    ) => Answer(await queries.CheckRuleAsync(kind, NodesOf(kind, from, to, layers)));
+
+    static readonly string[] OneNodeKinds = ["independent", "no_cycles", "siblings_independent"];
+
+    // The rule's nodes as list_rules gives them: the layers (or from and to, for a layers rule of
+    // two), the one node of a one-node kind (a to naming it again is ignored), else from and to.
+    static string[] NodesOf(string kind, string from, string to, string[]? layers) =>
+        layers is { Length: > 0 } ? layers
+        : OneNodeKinds.Contains(kind, StringComparer.OrdinalIgnoreCase) || to == "" ? [from]
+        : [from, to];
 
     [McpServerTool(Name = "read_source", ReadOnly = true, Idempotent = true)]
     [Description(
