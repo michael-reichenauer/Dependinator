@@ -183,6 +183,10 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             }
             // "Must not use" may name a node inside the other (a part that must not use the whole),
             // as it always could; the other kinds would contradict themselves.
+            if (isOneNode && (nodes[0].IsRoot || nodes[0].IsExternal()))
+                return new Error(
+                    $"A rule about {nodes[0].DisplayName} would say nothing: pick a part of the solution."
+                );
             if (kind != RuleKind.MustNotUse && AnyNested(nodes) is var (inner, outer))
                 return new Error($"{inner.DisplayName} is inside {outer.DisplayName}: pick nodes beside each other.");
             rule = kind switch
@@ -301,7 +305,8 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         );
         if (key == cachedFor)
             return;
-        (reports, violatingLineIds) = Compute(model);
+        var cycles = model.Rules.Any(r => r.Kind == RuleKind.NoCycles) ? CachedCycleIndexes(model) : null;
+        (reports, violatingLineIds) = Compute(model, model.Rules, cycles);
         cachedFor = key;
     }
 
@@ -310,9 +315,23 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
 
     // Evaluates the given rules, whether the model has them or not (checking a rule before adding
     // it); allowed dependencies apply to the rules they were allowed under.
+    // The cycle indexes change with the structure and the accepted cycles, not with the lines that
+    // zooming creates (part of the rules' key), so they are cached apart.
+    (int Structure, int Nodes, int Links, int AcceptedCycles) cyclesCachedFor = (-1, -1, -1, -1);
+    IReadOnlyDictionary<NodeId, int> cycleIndexes = new Dictionary<NodeId, int>();
+
+    IReadOnlyDictionary<NodeId, int> CachedCycleIndexes(IModel model)
+    {
+        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.AcceptedCyclesVersion);
+        if (key != cyclesCachedFor)
+            (cycleIndexes, cyclesCachedFor) = (CycleIndexes(model), key);
+        return cycleIndexes;
+    }
+
     internal static (IReadOnlyList<RuleReport> Reports, IReadOnlySet<LineId> LineIds) Compute(
         IModel model,
-        IReadOnlyList<ArchitectureRule> rules
+        IReadOnlyList<ArchitectureRule> rules,
+        IReadOnlyDictionary<NodeId, int>? cycleIndexes = null
     )
     {
         if (rules.Count == 0)
@@ -321,7 +340,9 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var nodesByName = new Dictionary<string, Node>(StringComparer.Ordinal);
         foreach (var node in model.Nodes.Values)
             nodesByName.TryAdd(node.Name, node);
-        var cycleOf = rules.Any(r => r.Kind == RuleKind.NoCycles) ? CycleIndexes(model) : [];
+        var cycleOf =
+            cycleIndexes
+            ?? (rules.Any(r => r.Kind == RuleKind.NoCycles) ? CycleIndexes(model) : new Dictionary<NodeId, int>());
 
         var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To, Node?[] Nodes)>();
         foreach (var rule in rules)
@@ -466,7 +487,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             case RuleKind.Independent:
                 return link.Source.IsAtOrInside(nodes[0]!)
                     && !link.Target.IsAtOrInside(nodes[0]!)
-                    && !IsExternal(link.Target);
+                    && !link.Target.IsExternal();
             case RuleKind.NoCycles:
                 return Cycles.CycleService.TryGetSiblingsUnderCommonAncestor(
                         link.Source,
@@ -491,17 +512,14 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         }
     }
 
-    static bool IsExternal(Node node) =>
-        node.AncestorsAndSelf().Any(n => n.Type == Dependinator.Core.Parsing.NodeType.Externals);
-
-    // The cycle each cycle member is in, by an index per cycle: the cycles the Cycles panel lists,
-    // open or to fix later, but not those the user accepted there (a decision both share).
+    // The cycle each cycle member is in, by an index per cycle: the open cycles the Cycles panel
+    // lists, not those the user accepted or marked to fix there (decisions both share).
     static Dictionary<NodeId, int> CycleIndexes(IModel model)
     {
-        var (open, _, toFix, _, _) = Cycles.CycleService.Compute(model);
+        var (open, _, _, _, _) = Cycles.CycleService.Compute(model);
         var cycleOf = new Dictionary<NodeId, int>();
         var index = 0;
-        foreach (var cycle in open.Concat(toFix.Select(t => t.Cycle).OfType<Cycles.Cycle>()))
+        foreach (var cycle in open)
         {
             foreach (var member in cycle.Members)
                 cycleOf[member.Id] = index;

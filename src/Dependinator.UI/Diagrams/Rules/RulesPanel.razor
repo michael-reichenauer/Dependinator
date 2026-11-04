@@ -547,7 +547,7 @@
     Modeling.Models.RuleKind.OnlyMayUse => "Nothing else may depend on Y, say only Data may use the database client.",
     Modeling.Models.RuleKind.Layers => "Each layer may use only the layers below it, say UI › Domain › Data.",
     Modeling.Models.RuleKind.Independent => "X may use nothing else in the solution, only packages and the framework, say Shared is independent.",
-    Modeling.Models.RuleKind.NoCycles => "No circular dependencies at any level inside X, say no cycles inside Core. Cycles accepted in the Cycles panel are left out.",
+    Modeling.Models.RuleKind.NoCycles => "No circular dependencies at any level inside X, say no cycles inside Core. Cycles accepted or marked to fix in the Cycles panel are left out.",
     _ => "Nothing in X may depend on anything in Y, say UI must not use Data.",
   };
 

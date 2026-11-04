@@ -365,8 +365,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   kinds. Suggest rules still suggests only "must not use".
 - **One-node rules (Nov 4).** "X is independent" (nothing in X may use the rest of the solution,
   only externals) and "no cycles inside X" (the cycles the Cycles panel finds at or inside X,
-  each of their links a violation with the usual review, Allow and Fix later; cycles accepted in
-  the Cycles panel are left out, a decision both share).
+  each of their links a violation with the usual review, Allow and Fix later; cycles accepted or
+  marked to fix in the Cycles panel are left out, decisions both share).
 - **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
   and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
   and the labels on other lines, for a matching style), with up to three other labels to pick

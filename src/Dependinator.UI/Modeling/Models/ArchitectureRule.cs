@@ -17,7 +17,7 @@ enum RuleKind
     Independent,
 
     // "No cycles inside From": no cycle at or inside From (the cycles the Cycles panel finds there,
-    // but those accepted in it). One node: To is From.
+    // but those accepted or marked to fix there). One node: To is From.
     NoCycles,
 }
 
