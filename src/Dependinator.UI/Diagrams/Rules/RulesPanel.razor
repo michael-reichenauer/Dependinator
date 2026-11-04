@@ -13,7 +13,10 @@
    lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
    frames both of its classes with the lines between them. Each dependency can be reviewed
    (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
-   allowed with why, which moves it to the rule's collapsed Allowed list. "Suggest rules" switches
+   allowed with why, which moves it to the rule's collapsed Allowed list. Each rule shows why it
+   exists (its reason, from Suggest rules or typed by the user; click to edit). A removed rule is
+   remembered as dismissed, like one dismissed in Suggest rules, so it is not suggested again; the
+   collapsed Dismissed list at the end takes a dismissal back. "Suggest rules" switches
    the panel to SuggestRulesView (IViewOptions.IsRuleSuggestionsShown), where an AI suggests rules
    to add; that view stays alive once started (hidden while the rules show or the panel is closed,
    and reopening the panel shows the rules) until another model is opened.
@@ -48,9 +51,20 @@
               <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
             </span>
             <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small" title="Remove this rule"
+            @if (report.Rule.Reason == "")
+            {
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EditNote" Size="Size.Small" title="Add why this rule exists"
+                             OnClick="() => EditReasonAsync(report)" data-testid="rules-add-reason" />
+            }
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                           title="Remove this rule (Suggest rules will not suggest it again)"
                            OnClick="() => ruleService.RemoveRule(report.Rule)" data-testid="rules-remove" />
           </div>
+          @if (report.Rule.Reason != "")
+          {
+            <button type="button" class="dep-rules__rule-reason" title="Click to edit why this rule exists"
+                    @onclick="() => EditReasonAsync(report)" data-testid="rules-item-reason">@report.Rule.Reason</button>
+          }
           @if (report.Violations.Count > 0)
           {
             <div class="dep-rules__violations">
@@ -112,6 +126,41 @@
           }
         </div>
       }
+      @{
+        var dismissed = ruleService.GetDismissed();
+      }
+      @if (dismissed.Count > 0)
+      {
+        <div class="dep-rules__violations dep-rules__dismissed">
+          <button type="button" class="dep-rules__allowed-toggle" @onclick="() => isDismissedOpen = !isDismissedOpen"
+                  title="Rules you dismissed or removed: Suggest rules does not suggest them again"
+                  data-testid="rules-dismissed-toggle">
+            <MudIcon Icon="@(isDismissedOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                     Size="Size.Small" />
+            Not suggested again (@dismissed.Count)
+          </button>
+          @if (isDismissedOpen)
+          {
+            @foreach (var item in dismissed)
+            {
+              <div class="dep-rules__item" data-testid="rules-dismissed-item">
+                <span class="dep-panel__row dep-rules__violation" title="@($"{item.FromDisplay} must not use {item.ToDisplay}")">
+                  <span>@item.FromDisplay</span>
+                  <span class="dep-rules__arrow">must not use</span>
+                  <span>@item.ToDisplay</span>
+                  @if (item.Dismissed.Reason != "")
+                  {
+                    <span class="dep-cycles__reason dep-rules__reason">@item.Dismissed.Reason</span>
+                  }
+                </span>
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Undo" Size="Size.Small"
+                               title="Take the dismissal back: Suggest rules may suggest it again"
+                               OnClick="() => ruleService.Undismiss(item.Dismissed)" data-testid="rules-dismissed-remove" />
+              </div>
+            }
+          }
+        </div>
+      }
     </div>
 
     <div class="dep-rules__add">
@@ -145,6 +194,7 @@
 
 @code {
   readonly HashSet<Modeling.Models.ArchitectureRule> openAllowed = [];
+  bool isDismissedOpen;
   Modeling.Models.NodeId? fromId;
   Modeling.Models.NodeId? toId;
   string? fromName;
@@ -199,6 +249,20 @@
 
   static string StatusText(RuleReport report) =>
     !report.IsResolved ? "node not in model" : report.Violations.Count == 0 ? "kept" : $"{report.Violations.Count} broken";
+
+  async Task EditReasonAsync(RuleReport report)
+  {
+    var parameters = new DialogParameters<RuleReasonDialog>
+    {
+      { d => d.FromName, report.FromDisplay },
+      { d => d.ToName, report.ToDisplay },
+      { d => d.Reason, report.Rule.Reason },
+    };
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<RuleReasonDialog>(null, parameters, options);
+    if (await dialog.Result is { Canceled: false, Data: string reason })
+      ruleService.SetRuleReason(report.Rule, reason);
+  }
 
   static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
 

@@ -160,6 +160,62 @@ public class SuggestRulesTests
     }
 
     [Fact]
+    public void Parse_ShouldAcceptAnAnswerWithNoRules()
+    {
+        var suggestions = AssertOk(RuleSuggestions.Parse("""{"rules":[]}"""));
+
+        Assert.Empty(suggestions.Rules);
+        Assert.Equal("no new rules", suggestions.Verdict);
+    }
+
+    [Fact]
+    public void ParsePasted_ShouldLeaveOutDismissedRules_AndListThemInThePrompt()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddDismissedRule(new DismissedRule("Data", "UI", "Not intended."));
+
+        var suggestions = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: Data must not use UI\n"));
+
+        Assert.Equal(["UI"], suggestions.Rules.Select(r => r.From));
+        Assert.Equal(1, suggestions.LeftOutCount);
+        Assert.Contains("## Rules not to suggest", service.GetPrompt());
+        Assert.Contains("- `Data` must not use `UI` (dismissed: Not intended.)", service.GetPrompt());
+    }
+
+    [Fact]
+    public void ParsePasted_ShouldLeaveOutRulesAnEarlierAnswerSuggested_AndListThemInThePrompt()
+    {
+        AssertOk(service.ParsePasted("Rule: UI must not use Data"));
+
+        var second = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: Data must not use UI"));
+
+        Assert.Equal(["Data"], second.Rules.Select(r => r.From));
+        Assert.Equal(1, second.LeftOutCount);
+        Assert.Contains("- `UI` must not use `Data` (suggested before)", service.GetPrompt());
+    }
+
+    [Fact]
+    public void Check_ShouldMarkADismissedRule_SoItCannotBeAdded()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddDismissedRule(new DismissedRule("UI", "Data"));
+
+        var rule = Assert.Single(service.Check(new RuleSuggestions([new SuggestedRule("UI", "Data", "")])).Rules);
+
+        Assert.True(rule.Check.IsDismissed);
+        Assert.False(rule.CanAdd);
+    }
+
+    [Fact]
+    public void GetPrompt_ShouldListTheRulesWithTheirReasons()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddRule(new ArchitectureRule("UI", "Data", "The UI goes through services."));
+
+        Assert.Contains("- `UI` must not use `Data` — The UI goes through services.", service.GetPrompt());
+    }
+
+    [Fact]
     public void ParseText_ShouldFail_WithoutRuleLines()
     {
         AssertError(RuleSuggestions.ParseText("I would keep the UI apart from the data."));

@@ -178,6 +178,46 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(items).ToHaveCountAsync(3);
     }
 
+    // A dismissed suggestion is not suggested again, nor is one an earlier answer suggested; an
+    // added rule keeps the AI's why as its reason, and removing it remembers it as dismissed too.
+    [E2EFact]
+    public async Task SuggestRules_ShouldRememberDismissedRules_AndKeepTheWhyOfAddedOnes()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
+        ILocator items = Page.GetByTestId("suggest-rules-item");
+        await Expect(items).ToHaveCountAsync(3);
+
+        await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
+        await Expect(items.Nth(1).GetByTestId("suggest-rules-status")).ToHaveTextAsync("dismissed");
+        await Expect(items.Nth(1)).ToHaveAttributeAsync("data-can-add", "no");
+        await items.Nth(1).GetByTestId("suggest-rules-undismiss").ClickAsync();
+        await Expect(items.Nth(1)).ToHaveAttributeAsync("data-can-add", "yes");
+        await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
+        await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
+
+        // Asked again, the same answer brings nothing new: one rule added, one dismissed, and
+        // the one that cannot be added.
+        await Page.GetByTestId("suggest-rules-ask").ClickAsync();
+        await Expect(Page.GetByTestId("suggest-rules-left-out")).ToContainTextAsync("2 more were left out");
+        await Expect(items).ToHaveCountAsync(1);
+        await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
+
+        // The added rule shows the why, and removing it lists it with the dismissed one.
+        await Page.GetByTestId("suggest-rules-back").ClickAsync();
+        await Expect(Page.GetByTestId("rules-item-reason")).ToHaveTextAsync("Test mode: Claude was not asked.");
+        await Page.GetByTestId("rules-dismissed-toggle").ClickAsync();
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(1);
+        await Page.GetByTestId("rules-remove").ClickAsync();
+        await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(2);
+        await Page.GetByTestId("rules-dismissed-remove").First.ClickAsync();
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(1);
+    }
+
     // Picks both nodes through the search dialog in picker mode and adds the rule.
     async Task AddRuleAsync(string from, string to)
     {

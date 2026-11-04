@@ -1101,6 +1101,36 @@ button.dep-rules__node:hover {
     font-size: 0.8125rem;
 }
 
+/* Why a rule exists, under its names; click to edit. */
+.dep-rules__rule-reason {
+    display: block;
+    margin: 0 0 2px 22px;
+    padding: 0 6px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    white-space: pre-line;
+    word-break: break-word;
+    cursor: pointer;
+}
+
+.dep-rules__rule-reason:hover {
+    color: var(--mud-palette-primary);
+}
+
+/* The rules not to suggest again, after the rules. */
+.dep-rules__dismissed {
+    margin: 6px 0 2px 0;
+}
+
+.dep-rules__dismissed > .dep-rules__allowed-toggle {
+    justify-content: flex-start;
+}
+
 /* A rule's collapsed list of allowed dependencies. */
 .dep-rules__allowed-toggle {
     display: flex;
