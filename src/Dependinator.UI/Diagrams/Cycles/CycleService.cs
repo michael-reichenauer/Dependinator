@@ -315,7 +315,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
 
     // The two children of the closest common ancestor that contain the endpoints, or false
     // when one endpoint contains the other (no sibling pair, so no cycle at any level).
-    static bool TryGetSiblingsUnderCommonAncestor(Node source, Node target, out Node from, out Node to)
+    internal static bool TryGetSiblingsUnderCommonAncestor(Node source, Node target, out Node from, out Node to)
     {
         from = to = null!;
         var sourceChain = source.AncestorsAndSelf().Reverse().ToList();

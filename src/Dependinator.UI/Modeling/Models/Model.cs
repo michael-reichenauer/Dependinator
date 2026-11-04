@@ -370,6 +370,8 @@ class Model : IModel
                 r.Layers is { Count: >= 2 } layers ? [.. layers] : [r.From, r.To],
                 r.Reason ?? ""
             );
+        if (ArchitectureRule.IsOneNodeKind(kind))
+            return ArchitectureRule.ForNode(kind, r.From, r.Reason ?? "");
         return new ArchitectureRule(r.From, r.To, r.Reason ?? "", kind);
     }
 

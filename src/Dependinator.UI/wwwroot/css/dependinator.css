@@ -1193,6 +1193,14 @@ button.dep-rules__node:hover {
     color: var(--mud-palette-text-secondary);
 }
 
+.dep-rules__add--one {
+    display: flex;
+}
+
+.dep-rules__add--one > .dep-path__pick {
+    flex: 1;
+}
+
 .dep-rules__add-kind + .dep-rules__add {
     margin-top: 4px;
     padding-top: 0;

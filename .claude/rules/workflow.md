@@ -136,8 +136,8 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
 - **Rules and cycles, next** (design doc https://claude.ai/artifact/MmaLqut6aKQvpEoRJxvGYi,
   Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`),
   phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`), phase 3
-  rule kinds (`RuleKind`: `OnlyMayUse`, `Layers`; `RuleService.IsBreaking`). Still open: "X is
-  independent" and "no cycles inside X", Suggest rules offering the new kinds (it suggests only
+  rule kinds (`RuleKind`: `OnlyMayUse`, `Layers`, then `Independent` and `NoCycles`, which reuses
+  `CycleService.Compute`; `RuleService.IsBreaking`). Still open: Suggest rules offering the new kinds (it suggests only
   "must not use"; dismissals are must-not-use only), the MCP `check_rule` for other kinds.
   Cycles stay their own always-on detector; only the decisions are shared.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.

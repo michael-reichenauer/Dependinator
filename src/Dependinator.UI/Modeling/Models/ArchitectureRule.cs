@@ -11,6 +11,14 @@ enum RuleKind
 
     // "Layers": LayerNames, top first; code in a layer may use the layers below it, never one above.
     Layers,
+
+    // "From is independent": nothing at or inside From may depend on anything else in the solution,
+    // only on externals (packages and framework). One node: To is From.
+    Independent,
+
+    // "No cycles inside From": no cycle at or inside From (the cycles the Cycles panel finds there,
+    // but those accepted in it). One node: To is From.
+    NoCycles,
 }
 
 // An architecture rule the user declared (see RuleKind). Nodes are referred to by name, so a rule
@@ -31,19 +39,29 @@ record ArchitectureRule(
     public static ArchitectureRule ForLayers(IReadOnlyList<string> layerNames, string reason = "") =>
         new(layerNames[0], layerNames[^1], reason, RuleKind.Layers, layerNames);
 
-    // The rule's nodes in the order the rule names them.
+    // A rule about one node ("is independent", "no cycles inside").
+    public static ArchitectureRule ForNode(RuleKind kind, string nodeName, string reason = "") =>
+        new(nodeName, nodeName, reason, kind);
+
+    public static bool IsOneNodeKind(RuleKind kind) => kind is RuleKind.Independent or RuleKind.NoCycles;
+
     // A layers rule's layers as one string, "" for the other kinds: tells layers rules with the same
     // top and bottom layers apart (AllowedViolation.LayersKey).
     public string LayersKey => Kind == RuleKind.Layers ? string.Join('\n', NodeNames) : "";
 
+    // The rule's nodes in the order the rule names them.
     public IReadOnlyList<string> NodeNames =>
-        Kind == RuleKind.Layers && LayerNames is { Count: > 0 } layers ? layers : [FromName, ToName];
+        Kind == RuleKind.Layers && LayerNames is { Count: > 0 } layers ? layers
+        : IsOneNodeKind(Kind) ? [FromName]
+        : [FromName, ToName];
 
     // The rule as text, with each node named by display (its name in backticks for a prompt, say).
     public string Describe(Func<string, string> display) =>
         Kind switch
         {
             RuleKind.OnlyMayUse => $"only {display(FromName)} may use {display(ToName)}",
+            RuleKind.Independent => $"{display(FromName)} is independent (uses only externals)",
+            RuleKind.NoCycles => $"no cycles inside {display(FromName)}",
             RuleKind.Layers =>
                 $"layers {string.Join(" > ", NodeNames.Select(display))} (each may use only the layers below it)",
             _ => $"{display(FromName)} must not use {display(ToName)}",
