@@ -6,8 +6,9 @@ using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
-// The selection dimming rule: with a node selected only lines touching the node (or its inside)
-// stay at full strength; with a line selected only that line; explorer focus lines never dim.
+// The selection dimming rule: with a node selected only the node's own lines (ending at it or
+// crossing its boundary, not those between its children) stay at full strength; with a line
+// selected only that line; explorer focus lines never dim.
 // The same lines, plus focus lines, are the only ones drawn at their link-count width.
 public class SvgServiceLineDimTests
 {
@@ -37,6 +38,33 @@ public class SvgServiceLineDimTests
         Assert.False(SvgService.IsLineDimmed(ab, selection));
         Assert.True(SvgService.IsLineDimmed(bc, selection));
         Assert.False(SvgService.IsLineDimmed(childC, selection)); // From inside A
+    }
+
+    [Fact]
+    public void IsLineDimmed_ShouldDimLinesBetweenTheSelectedNodesChildren()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var child1 = AddNode(a, "A.Child1");
+        var child2 = AddNode(a, "A.Child2");
+        var grandChild = AddNode(child2, "A.Child2.GrandChild");
+        var between = new Line(child1, child2);
+        var deep = new Line(child1, grandChild);
+        var toEdge = new Line(child1, a); // A child's segment out to A's edge
+        var intoA = new Line(b, grandChild); // From outside into A
+
+        var selection = new SvgService.RenderSelection(a, null);
+
+        Assert.True(SvgService.IsLineDimmed(between, selection));
+        Assert.True(SvgService.IsLineDimmed(deep, selection));
+        Assert.False(SvgService.IsLineDimmed(toEdge, selection));
+        Assert.False(SvgService.IsLineDimmed(intoA, selection));
+
+        // Selecting a child lights the child's lines again.
+        var childSelection = new SvgService.RenderSelection(child1, null);
+        Assert.False(SvgService.IsLineDimmed(between, childSelection));
+        Assert.False(SvgService.IsLineDimmed(deep, childSelection));
     }
 
     [Fact]

@@ -184,7 +184,7 @@ class SvgService : ISvgService
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
-    // does not touch the node or its inside; for a selected line, every other line. Explorer
+    // is not the node's own (see IsNodeLine); for a selected line, every other line. Explorer
     // focus lines are what the user asked to see and are never dimmed.
     internal static bool IsLineDimmed(Line line, RenderSelection selection)
     {
@@ -194,11 +194,21 @@ class SvgService : ISvgService
             return line != selectedLine;
         if (selection.Node is not { } node)
             return false;
-        if (line.Source.IsAtOrInside(node) || line.Target.IsAtOrInside(node))
+        if (IsNodeLine(line, node))
             return false;
-        // With several nodes selected, a line touching any of them stays bright.
-        return selection.OtherNodes is not { } others
-            || !others.Any(other => line.Source.IsAtOrInside(other) || line.Target.IsAtOrInside(other));
+        // With several nodes selected, a line of any of them stays bright.
+        return selection.OtherNodes is not { } others || !others.Any(other => IsNodeLine(line, other));
+    }
+
+    // A node's own lines: those that end at the node, and those that cross its boundary (a
+    // child's dependency out of the node, or into it from outside). The lines between its
+    // children stay dimmed, so selecting an open container lights what it depends on and what
+    // depends on it, not its inner wiring; selecting or hovering a child shows that.
+    static bool IsNodeLine(Line line, Node node)
+    {
+        if (line.Source == node || line.Target == node)
+            return true;
+        return line.Source.IsAtOrInside(node) != line.Target.IsAtOrInside(node);
     }
 
     // A line shows its link-count width only when the user asked for the widths (View › Line

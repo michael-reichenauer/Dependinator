@@ -139,6 +139,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
   turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
   ones) and fading only lines that leave their container.
+  Since Nov 4 a selected container lights only its own lines (those ending at it or crossing its
+  edge); the lines between its children stay dimmed until a child is selected or hovered.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
