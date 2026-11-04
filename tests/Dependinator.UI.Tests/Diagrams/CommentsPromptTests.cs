@@ -96,6 +96,33 @@ public class CommentsPromptTests
     }
 
     [Fact]
+    public void Build_ShouldAskForAProjectsDescription_WhenTheProjectHasAPlaceForIt()
+    {
+        using var model = modelMgr.UseModel();
+        var (app, _) = Setup(model);
+        app.Update(new ParsedNode("App", new() { FileSpan = new FileSpan("/repo/src/Usings.cs", 0, 0) }));
+        app.SetDescription("Runs the app.");
+
+        var targets = CommentsPrompt.Targets([app], isBelow: false);
+        Assert.Equal(["App"], targets.Select(n => n.Name));
+        Assert.Equal(6, CommentsPrompt.Targets([app], isBelow: true).Count);
+
+        var prompt = CommentsPrompt.Build(model, targets).ReplaceLineEndings("\n");
+        Assert.StartsWith("Please add or improve the code comments of the projects listed below.", prompt);
+        Assert.Contains(
+            "### project App (dll)\nIts description goes in /repo/src/Usings.cs, line 1\nDescription now: \"Runs the app.\"\n",
+            prompt
+        );
+        Assert.Contains("`[assembly: AssemblyDescription(\"...\")]` attribute", prompt);
+        Assert.Contains("`<Description>`", prompt);
+        Assert.DoesNotContain("A namespace's comment goes", prompt);
+
+        var all = CommentsPrompt.Build(model, CommentsPrompt.Targets([app], isBelow: true));
+        Assert.StartsWith("Please add or improve the code comments of the projects, namespaces and types listed", all);
+        Assert.Contains("A namespace's comment goes", all);
+    }
+
+    [Fact]
     public void Build_ShouldBeEmpty_WithNothingToComment()
     {
         using var model = modelMgr.UseModel();

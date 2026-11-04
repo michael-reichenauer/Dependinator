@@ -6,11 +6,12 @@ using static Dependinator.UI.Diagrams.Ai.PromptParts;
 
 namespace Dependinator.UI.Diagrams.NodeHelp;
 
-// How many namespaces and types a run would comment, and in how many files.
-public record CommentsScope(int Targets, int Files);
+// How many projects, namespaces and types a run would comment (Projects of them projects), and in
+// how many files.
+public record CommentsScope(int Targets, int Files, int Projects = 0);
 
 // "Improve Comments": Claude Code adds or rewrites the comments of the chosen nodes' namespaces and
-// types (or of everything inside them), which the diagram shows as their descriptions
+// types and the descriptions of their projects (or of everything inside them), which the diagram shows as their descriptions
 // (ImproveCommentsDialog, CommentsPrompt). It runs on the code as it is, on the current branch,
 // like a fix. Where the experimental Claude Code route is off, the prompt can be copied into any
 // AI that can change the code. Reached from the node menu (one or several selected nodes) and the
@@ -76,7 +77,11 @@ class ImproveCommentsService(IModelMgr modelMgr, IAiService aiService, IDialogSe
     {
         using var model = modelMgr.UseModel();
         var targets = CommentsPrompt.Targets(Nodes(model, nodeIds), isBelow);
-        return new(targets.Count, targets.Select(t => t.FileSpan!.Path).Distinct().Count());
+        return new(
+            targets.Count,
+            targets.Select(t => t.FileSpan!.Path).Distinct().Count(),
+            targets.Count(CommentsPrompt.IsProject)
+        );
     }
 
     public string GetPrompt(IReadOnlyList<NodeId> nodeIds, bool isBelow)
