@@ -39,7 +39,7 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
                      data-testid="rules-close" />
     </div>
-    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", or layers. Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
+    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", layers, "this is independent" or "no cycles inside this". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
 
     <div class="dep-panel__list">
       @if (reports.Count == 0)
@@ -65,6 +65,14 @@
                     }
                     <RuleNodeLink Id="node.Id" Display="@node.Display" TestId="rules-item-layer" />
                   }
+                  break;
+                case Modeling.Models.RuleKind.Independent:
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  @(" ")<span class="dep-rules__arrow" title="uses nothing else in the solution, only externals">is independent</span>
+                  break;
+                case Modeling.Models.RuleKind.NoCycles:
+                  <span class="dep-rules__arrow">no cycles inside</span>@(" ")
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
                   break;
                 case Modeling.Models.RuleKind.OnlyMayUse:
                   <span class="dep-rules__arrow">only</span>
@@ -241,6 +249,8 @@
         <option value="@Modeling.Models.RuleKind.MustNotUse">X must not use Y</option>
         <option value="@Modeling.Models.RuleKind.OnlyMayUse">Only X may use Y</option>
         <option value="@Modeling.Models.RuleKind.Layers">Layers, top first</option>
+        <option value="@Modeling.Models.RuleKind.Independent">X is independent</option>
+        <option value="@Modeling.Models.RuleKind.NoCycles">No cycles inside X</option>
       </select>
       <span class="dep-rules__kind-hint">@KindHint(addKind)</span>
     </div>
@@ -268,6 +278,29 @@
             Add
           </MudButton>
         </div>
+      </div>
+    }
+    else if (Modeling.Models.ArchitectureRule.IsOneNodeKind(addKind))
+    {
+      var isNoCycles = addKind == Modeling.Models.RuleKind.NoCycles;
+      <div class="dep-rules__add dep-rules__add--one">
+        @if (isNoCycles)
+        {
+          <span class="dep-rules__arrow">no cycles inside</span>
+        }
+        <button type="button" class="@PickClass(fromName)"
+                title="@(isNoCycles ? "Choose the node that must have no cycles inside" : "Choose the node that must use only externals")"
+                @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
+          @(fromName ?? "Choose a node …")
+        </button>
+        @if (!isNoCycles)
+        {
+          <span class="dep-rules__arrow">is independent</span>
+        }
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null)"
+                   OnClick="Add" data-testid="rules-add">
+          Add
+        </MudButton>
       </div>
     }
     else
@@ -513,10 +546,12 @@
   {
     Modeling.Models.RuleKind.OnlyMayUse => "Nothing else may depend on Y, say only Data may use the database client.",
     Modeling.Models.RuleKind.Layers => "Each layer may use only the layers below it, say UI › Domain › Data.",
+    Modeling.Models.RuleKind.Independent => "X may use nothing else in the solution, only packages and the framework, say Shared is independent.",
+    Modeling.Models.RuleKind.NoCycles => "No circular dependencies at any level inside X, say no cycles inside Core. Cycles accepted or marked to fix in the Cycles panel are left out.",
     _ => "Nothing in X may depend on anything in Y, say UI must not use Data.",
   };
 
-  // The picks stay when switching between the two-node kinds; layers are their own list.
+  // The picks stay when switching between the node kinds; layers are their own list.
   void ChangeKind(ChangeEventArgs e)
   {
     if (Enum.TryParse<Modeling.Models.RuleKind>(e.Value?.ToString(), out var kind))
@@ -529,6 +564,8 @@
     {
       (Modeling.Models.RuleKind.OnlyMayUse, true) => "Rule: choose the node that may use the other",
       (Modeling.Models.RuleKind.OnlyMayUse, false) => "Rule: choose the node only it may use",
+      (Modeling.Models.RuleKind.Independent, _) => "Rule: choose the node that must use only externals",
+      (Modeling.Models.RuleKind.NoCycles, _) => "Rule: choose the node that must have no cycles inside",
       (_, true) => "Rule: choose the node that must not depend on the other",
       _ => "Rule: choose the node it must not depend on",
     };
@@ -561,10 +598,12 @@
   void Add()
   {
     var isLayers = addKind == Modeling.Models.RuleKind.Layers;
+    var isOneNode = Modeling.Models.ArchitectureRule.IsOneNodeKind(addKind);
     IReadOnlyList<Modeling.Models.NodeId> ids = isLayers ? [.. layers.Select(l => l.Id)]
+      : isOneNode && fromId is not null ? [fromId]
       : fromId is not null && toId is not null ? [fromId, toId]
       : [];
-    if (ids.Count < 2)
+    if (ids.Count < (isOneNode ? 1 : 2))
       return;
     // A rejected rule (the same node twice, a node inside another, or a rule that exists) keeps
     // the picks, so the user can change one of them instead of starting over.
@@ -575,6 +614,8 @@
     }
     if (isLayers)
       layers.Clear();
+    else if (isOneNode)
+      (fromId, fromName) = (null, null);
     else
       (fromId, toId, fromName, toName) = (null, null, null, null);
   }

@@ -75,8 +75,9 @@ sealed class ModelTools(IModelQueryService queries)
 
     [McpServerTool(Name = "list_rules", ReadOnly = true, Idempotent = true)]
     [Description(
-        "Lists the model's architecture rules (\"from must not use to\", \"only from may use to\", or layers where each "
-            + "may use only the layers below it; each rule's text says which) with their current violations per type "
+        "Lists the model's architecture rules (\"from must not use to\", \"only from may use to\", layers where each "
+            + "may use only the layers below it, \"from is independent\" or \"no cycles inside from\"; each rule's "
+            + "text says which) with their current violations per type "
             + "pair, and the dependencies the user allowed with a reason."
     )]
     public async Task<CallToolResult> ListRules() => Answer(await queries.ListRulesAsync());

@@ -283,6 +283,35 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(rules.Nth(2).GetByTestId("rules-violation").First).ToBeVisibleAsync();
     }
 
+    // The rules about one node: "X is independent" and "no cycles inside X".
+    [E2EFact]
+    public async Task OneNodeRules_ShouldReportUsesOutsideTheNode_AndCyclesInsideIt()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        ILocator rules = Page.GetByTestId("rules-item");
+        var search = new Shared.Pages.SearchDialog(App, Page);
+
+        // Core uses the shared cloud sync types, so it is not independent; it has cycles inside.
+        foreach (var kind in new[] { "Independent", "NoCycles" })
+        {
+            await Page.GetByTestId("rules-add-kind").SelectOptionAsync(kind);
+            await Expect(Page.GetByTestId("rules-add-to")).ToHaveCountAsync(0);
+            await Page.GetByTestId("rules-add-from").ClickAsync();
+            await Expect(Page.GetByTestId("search-pick-caption")).ToBeVisibleAsync();
+            await search.FillAsync("Demo.Core (dll)");
+            await search.Result("Demo.Core (dll)").First.ClickAsync();
+            await Page.GetByTestId("rules-add").ClickAsync();
+        }
+
+        await Expect(rules).ToHaveCountAsync(2);
+        await Expect(rules.Nth(0)).ToContainTextAsync("is independent");
+        await Expect(rules.Nth(0).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+        await Expect(rules.Nth(1)).ToContainTextAsync("no cycles inside");
+        await Expect(rules.Nth(1).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+    }
+
     // Picks the layers top first through the search dialog in picker mode and adds the rule.
     async Task AddLayersAsync(params string[] layers)
     {

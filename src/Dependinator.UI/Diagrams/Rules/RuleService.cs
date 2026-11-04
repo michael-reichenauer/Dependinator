@@ -83,7 +83,7 @@ interface IRuleService
     // Adds "from must not use to"; an error says why a pair is not a rule (same node, exists).
     Result AddRule(NodeId fromId, NodeId toId);
 
-    // Adds a rule of the kind over the nodes (from and to, or the layers top first); an error says
+    // Adds a rule of the kind over the nodes (from and to, the layers top first, or the one node); an error says
     // why they make no rule (too few, the same node twice, one inside another, exists).
     Result AddRule(RuleKind kind, IReadOnlyList<NodeId> nodeIds);
 
@@ -125,7 +125,15 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
 {
     // Lines are part of the key: cousin lines are created lazily while zooming (no structure
     // version bump), and the highlighted line set has to include them.
-    (int Structure, int Nodes, int Links, int Lines, int Rules) cachedFor = (-1, -1, -1, -1, -1);
+    // Accepted cycles are part of the key for "no cycles inside" rules, which skip them.
+    (int Structure, int Nodes, int Links, int Lines, int Rules, int AcceptedCycles) cachedFor = (
+        -1,
+        -1,
+        -1,
+        -1,
+        -1,
+        -1
+    );
     IReadOnlyList<RuleReport> reports = [];
     IReadOnlySet<LineId> violatingLineIds = new HashSet<LineId>();
 
@@ -157,9 +165,12 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         ArchitectureRule? rule;
         using (var model = modelMgr.UseModel())
         {
-            if (nodeIds.Count < 2 || (kind != RuleKind.Layers && nodeIds.Count != 2))
+            var isOneNode = ArchitectureRule.IsOneNodeKind(kind);
+            if (isOneNode ? nodeIds.Count != 1 : nodeIds.Count < 2 || (kind != RuleKind.Layers && nodeIds.Count != 2))
                 return new Error(
-                    kind == RuleKind.Layers ? "Layers need at least two nodes." : "A rule needs two nodes."
+                    isOneNode ? "This rule needs one node."
+                    : kind == RuleKind.Layers ? "Layers need at least two nodes."
+                    : "A rule needs two nodes."
                 );
             if (nodeIds.Distinct().Count() != nodeIds.Count)
                 return new Error("A rule needs different nodes.");
@@ -172,11 +183,16 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             }
             // "Must not use" may name a node inside the other (a part that must not use the whole),
             // as it always could; the other kinds would contradict themselves.
+            if (isOneNode && (nodes[0].IsRoot || nodes[0].IsExternal()))
+                return new Error(
+                    $"A rule about {nodes[0].DisplayName} would say nothing: pick a part of the solution."
+                );
             if (kind != RuleKind.MustNotUse && AnyNested(nodes) is var (inner, outer))
                 return new Error($"{inner.DisplayName} is inside {outer.DisplayName}: pick nodes beside each other.");
             rule = kind switch
             {
                 RuleKind.Layers => ArchitectureRule.ForLayers([.. nodes.Select(n => n.Name)]),
+                _ when isOneNode => ArchitectureRule.ForNode(kind, nodes[0].Name),
                 _ => new ArchitectureRule(nodes[0].Name, nodes[1].Name, Kind: kind),
             };
             if (model.Rules.Contains(rule))
@@ -279,10 +295,18 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
     void EnsureUpToDate()
     {
         using var model = modelMgr.UseModel();
-        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.Lines.Count, model.RulesVersion);
+        var key = (
+            model.StructureVersion,
+            model.Nodes.Count,
+            model.Links.Count,
+            model.Lines.Count,
+            model.RulesVersion,
+            model.AcceptedCyclesVersion
+        );
         if (key == cachedFor)
             return;
-        (reports, violatingLineIds) = Compute(model);
+        var cycles = model.Rules.Any(r => r.Kind == RuleKind.NoCycles) ? CachedCycleIndexes(model) : null;
+        (reports, violatingLineIds) = Compute(model, model.Rules, cycles);
         cachedFor = key;
     }
 
@@ -291,9 +315,23 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
 
     // Evaluates the given rules, whether the model has them or not (checking a rule before adding
     // it); allowed dependencies apply to the rules they were allowed under.
+    // The cycle indexes change with the structure and the accepted cycles, not with the lines that
+    // zooming creates (part of the rules' key), so they are cached apart.
+    (int Structure, int Nodes, int Links, int AcceptedCycles) cyclesCachedFor = (-1, -1, -1, -1);
+    IReadOnlyDictionary<NodeId, int> cycleIndexes = new Dictionary<NodeId, int>();
+
+    IReadOnlyDictionary<NodeId, int> CachedCycleIndexes(IModel model)
+    {
+        var key = (model.StructureVersion, model.Nodes.Count, model.Links.Count, model.AcceptedCyclesVersion);
+        if (key != cyclesCachedFor)
+            (cycleIndexes, cyclesCachedFor) = (CycleIndexes(model), key);
+        return cycleIndexes;
+    }
+
     internal static (IReadOnlyList<RuleReport> Reports, IReadOnlySet<LineId> LineIds) Compute(
         IModel model,
-        IReadOnlyList<ArchitectureRule> rules
+        IReadOnlyList<ArchitectureRule> rules,
+        IReadOnlyDictionary<NodeId, int>? cycleIndexes = null
     )
     {
         if (rules.Count == 0)
@@ -302,6 +340,9 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var nodesByName = new Dictionary<string, Node>(StringComparer.Ordinal);
         foreach (var node in model.Nodes.Values)
             nodesByName.TryAdd(node.Name, node);
+        var cycleOf =
+            cycleIndexes
+            ?? (rules.Any(r => r.Kind == RuleKind.NoCycles) ? CycleIndexes(model) : new Dictionary<NodeId, int>());
 
         var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To, Node?[] Nodes)>();
         foreach (var rule in rules)
@@ -335,7 +376,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             for (var i = 0; i < resolved.Count; i++)
             {
                 var (rule, from, to, nodes) = resolved[i];
-                if (from is null || to is null || !IsBreaking(rule.Kind, nodes, link))
+                if (from is null || to is null || !IsBreaking(rule.Kind, nodes, link, cycleOf))
                     continue;
                 var pair = (UnitGraph.UnitOf(link.Source), UnitGraph.UnitOf(link.Target));
                 var names = (pair.Item1.Name, pair.Item2.Name);
@@ -436,11 +477,28 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
     // Whether the link breaks the rule: "from must not use to" any link from inside from to inside
     // to; "only from may use to" any link into to from outside both; layers any link from inside a
     // layer to inside a layer above it (layers are listed top first). The rule's nodes are all in
-    // the model (Compute skips an unresolved rule).
-    static bool IsBreaking(RuleKind kind, Node?[] nodes, Link link)
+    // the model (Compute skips an unresolved rule). "Is independent" any link from inside it to
+    // anything outside it but externals; "no cycles inside" any link between two members of one
+    // cycle (cycleOf, see CycleIndexes) whose container is at or inside the node.
+    static bool IsBreaking(RuleKind kind, Node?[] nodes, Link link, IReadOnlyDictionary<NodeId, int> cycleOf)
     {
         switch (kind)
         {
+            case RuleKind.Independent:
+                return link.Source.IsAtOrInside(nodes[0]!)
+                    && !link.Target.IsAtOrInside(nodes[0]!)
+                    && !link.Target.IsExternal();
+            case RuleKind.NoCycles:
+                return Cycles.CycleService.TryGetSiblingsUnderCommonAncestor(
+                        link.Source,
+                        link.Target,
+                        out var from,
+                        out var to
+                    )
+                    && from.Parent.IsAtOrInside(nodes[0]!)
+                    && cycleOf.TryGetValue(from.Id, out var fromCycle)
+                    && cycleOf.TryGetValue(to.Id, out var toCycle)
+                    && fromCycle == toCycle;
             case RuleKind.OnlyMayUse:
                 return link.Target.IsAtOrInside(nodes[1]!)
                     && !link.Source.IsAtOrInside(nodes[1]!)
@@ -452,6 +510,22 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
             default:
                 return link.Source.IsAtOrInside(nodes[0]!) && link.Target.IsAtOrInside(nodes[1]!);
         }
+    }
+
+    // The cycle each cycle member is in, by an index per cycle: the open cycles the Cycles panel
+    // lists, not those the user accepted or marked to fix there (decisions both share).
+    static Dictionary<NodeId, int> CycleIndexes(IModel model)
+    {
+        var (open, _, _, _, _) = Cycles.CycleService.Compute(model);
+        var cycleOf = new Dictionary<NodeId, int>();
+        var index = 0;
+        foreach (var cycle in open)
+        {
+            foreach (var member in cycle.Members)
+                cycleOf[member.Id] = index;
+            index++;
+        }
+        return cycleOf;
     }
 
     static RuleViolation ToViolation(Node source, Node target, int linkCount) =>

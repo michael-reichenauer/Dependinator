@@ -568,4 +568,96 @@ public class RuleServiceTests
         );
         Assert.Equal([ArchitectureRule.ForLayers(["A", "B"])], model.Rules);
     }
+
+    [Fact]
+    public void Compute_Independent_ShouldReportUsesOfTheSolutionOutsideIt_ButNotOfExternals()
+    {
+        using var model = modelMgr.UseModel();
+        var shared = AddNode(model, "Shared", model.Root, NodeType.Assembly);
+        var core = AddNode(model, "Core", model.Root, NodeType.Assembly);
+        var externals = AddNode(model, "$Externals", model.Root, NodeType.Externals);
+        var dto = AddNode(model, "Shared.Dto", shared);
+        var util = AddNode(model, "Shared.Util", shared);
+        var service = AddNode(model, "Core.Service", core);
+        var json = AddNode(model, "$Externals.Json", externals);
+        AddLink(model, dto, util); // Inside is fine
+        AddLink(model, dto, json); // Externals are fine
+        AddLink(model, dto, service); // The rest of the solution is not
+        AddLink(model, service, dto); // Others may use it
+        model.AddRule(ArchitectureRule.ForNode(RuleKind.Independent, shared.Name));
+
+        var (reports, _) = RuleService.Compute(model);
+
+        var report = Assert.Single(reports);
+        Assert.True(report.IsResolved);
+        var violation = Assert.Single(report.Violations);
+        Assert.Equal((dto.Id, service.Id), (violation.SourceId, violation.TargetId));
+        Assert.Equal(["Shared"], report.Nodes.Select(n => n.Name));
+    }
+
+    [Fact]
+    public void Compute_NoCycles_ShouldReportTheLinksOfCyclesInsideTheNode_ButNotAcceptedOnes()
+    {
+        using var model = modelMgr.UseModel();
+        var core = AddNode(model, "Core", model.Root, NodeType.Assembly);
+        var ui = AddNode(model, "UI", model.Root, NodeType.Assembly);
+        var a = AddNode(model, "Core.A", core);
+        var b = AddNode(model, "Core.B", core);
+        var c = AddNode(model, "Core.C", core);
+        var x = AddNode(model, "UI.X", ui);
+        var y = AddNode(model, "UI.Y", ui);
+        AddLink(model, a, b);
+        AddLink(model, b, a); // A cycle inside Core
+        AddLink(model, a, c); // Not part of it
+        AddLink(model, x, y);
+        AddLink(model, y, x); // A cycle outside Core
+        AddLink(model, c, x);
+        AddLink(model, x, c); // Core and UI in a cycle: around Core, not inside it
+        var rule = ArchitectureRule.ForNode(RuleKind.NoCycles, core.Name);
+        model.AddRule(rule);
+
+        var (reports, _) = RuleService.Compute(model);
+
+        Assert.Equal(
+            [(a.Id, b.Id), (b.Id, a.Id)],
+            Assert.Single(reports).Violations.Select(v => (v.SourceId, v.TargetId)).ToList()
+        );
+        Assert.Equal("no cycles inside Core (dll)", reports[0].Text);
+
+        // A cycle accepted in the Cycles panel is a decision both share.
+        model.AddAcceptedCycle(new AcceptedCycle(core.Name, [a.Name, b.Name], "Intended"));
+        Assert.Empty(Assert.Single(RuleService.Compute(model).Reports).Violations);
+    }
+
+    [Fact]
+    public void AddRule_ShouldAddOneNodeKinds_AndRoundTripThemThroughTheDto()
+    {
+        Node core;
+        using (var model = modelMgr.UseModel())
+            core = AddNode(model, "Core", model.Root, NodeType.Assembly);
+        var commands = new Mock<ICommandService>();
+        commands
+            .Setup(c => c.Do(It.IsAny<Command>(), true, true))
+            .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
+        var service = new RuleService(modelMgr, commands.Object);
+
+        AssertOk(service.AddRule(RuleKind.Independent, [core.Id]));
+        AssertOk(service.AddRule(RuleKind.NoCycles, [core.Id]));
+        AssertError(service.AddRule(RuleKind.NoCycles, [core.Id])); // Exists
+        AssertError(service.AddRule(RuleKind.Independent, [core.Id, core.Id])); // One node only
+
+        using var m = modelMgr.UseModel();
+        var rules = m.Rules.ToList();
+        var dto = m.SerializeToDto();
+        m.Clear();
+        m.SetFromDto("path", dto);
+        Assert.Equal(
+            [
+                ArchitectureRule.ForNode(RuleKind.Independent, core.Name),
+                ArchitectureRule.ForNode(RuleKind.NoCycles, core.Name),
+            ],
+            m.Rules
+        );
+        Assert.Equal(rules, m.Rules);
+    }
 }
