@@ -76,7 +76,20 @@ public sealed class ModelToolsTests : IAsyncLifetime
     {
         queries
             .Setup(q => q.CheckRuleAsync("Core", "UI"))
-            .ReturnsAsync(new RuleResult("Core", "UI", false, true, 1, 3, [new("Core.A", "UI.B", 3)], [], 0));
+            .ReturnsAsync(
+                new RuleResult(
+                    "Core",
+                    "UI",
+                    false,
+                    true,
+                    1,
+                    3,
+                    [new("Core.A", "UI.B", 3)],
+                    [],
+                    0,
+                    "Core must not use UI"
+                )
+            );
 
         var result = await Client.CallToolAsync(
             "check_rule",
@@ -85,7 +98,7 @@ public sealed class ModelToolsTests : IAsyncLifetime
 
         Assert.NotEqual(true, result.IsError);
         Assert.Equal(
-            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0}""",
+            """{"from":"Core","to":"UI","isRule":false,"isResolved":true,"violationCount":1,"linkCount":3,"violations":[{"source":"Core.A","target":"UI.B","linkCount":3}],"allowed":[],"allowedCount":0,"rule":"Core must not use UI"}""",
             Text(result)
         );
     }
