@@ -6,9 +6,9 @@ using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
-// The selection dimming rule: with a node selected only the node's own lines (ending at it or
-// crossing its boundary, not those between its children) stay at full strength; with a line
-// selected only that line; explorer focus lines never dim.
+// The selection dimming rule: with a node selected only the node's own lines (those leading out of
+// it, not those inside it) stay at full strength; with a line selected only that line; explorer
+// focus lines never dim.
 // The same lines, plus focus lines, are the only ones drawn at their link-count width.
 public class SvgServiceLineDimTests
 {
@@ -58,7 +58,7 @@ public class SvgServiceLineDimTests
 
         Assert.True(SvgService.IsLineDimmed(between, selection));
         Assert.True(SvgService.IsLineDimmed(deep, selection));
-        Assert.False(SvgService.IsLineDimmed(toEdge, selection));
+        Assert.True(SvgService.IsLineDimmed(toEdge, selection));
         Assert.False(SvgService.IsLineDimmed(intoA, selection));
 
         // Selecting a child lights the child's lines again.

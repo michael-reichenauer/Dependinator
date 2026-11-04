@@ -200,16 +200,12 @@ class SvgService : ISvgService
         return selection.OtherNodes is not { } others || !others.Any(other => IsNodeLine(line, other));
     }
 
-    // A node's own lines: those that end at the node, and those that cross its boundary (a
-    // child's dependency out of the node, or into it from outside). The lines between its
-    // children stay dimmed, so selecting an open container lights what it depends on and what
-    // depends on it, not its inner wiring; selecting or hovering a child shows that.
-    static bool IsNodeLine(Line line, Node node)
-    {
-        if (line.Source == node || line.Target == node)
-            return true;
-        return line.Source.IsAtOrInside(node) != line.Target.IsAtOrInside(node);
-    }
+    // A node's own lines: those with one end at or inside the node and the other end outside it,
+    // i.e. the lines drawn out of the node. Every line inside it stays dimmed, the lines between
+    // its children and their segments to its edge alike, so selecting an open container lights
+    // what it depends on and what depends on it, not its inner wiring; selecting or hovering a
+    // child shows that.
+    static bool IsNodeLine(Line line, Node node) => line.Source.IsAtOrInside(node) != line.Target.IsAtOrInside(node);
 
     // A line shows its link-count width only when the user asked for the widths (View › Line
     // Widths by Link Count, off by default) and only while it is what the user is looking at: the
