@@ -30,6 +30,10 @@ class RemoveRuleCommand(ArchitectureRule rule) : Command
 {
     public const string DismissReason = "Removed from the rules.";
 
+    // The removed rule's own why stays with its dismissal, for the user and the next prompt.
+    public static string DismissReasonFor(ArchitectureRule rule) =>
+        rule.Reason == "" ? DismissReason : $"{DismissReason} {rule.Reason}";
+
     IReadOnlyList<AllowedViolation> removedAllowed = [];
     ArchitectureRule? removed;
     DismissedRule? replacedDismissal;
@@ -42,7 +46,7 @@ class RemoveRuleCommand(ArchitectureRule rule) : Command
             model.RemoveAllowedViolation(allowed);
         model.RemoveRule(rule);
         replacedDismissal = model.DismissedRules.FirstOrDefault(d => d.IsFor(rule.FromName, rule.ToName));
-        model.AddDismissedRule(new DismissedRule(rule.FromName, rule.ToName, DismissReason));
+        model.AddDismissedRule(new DismissedRule(rule.FromName, rule.ToName, DismissReasonFor(removed)));
     }
 
     public override void Revert(IModel model)
@@ -68,11 +72,18 @@ class SetRuleReasonCommand(ArchitectureRule before, ArchitectureRule after) : Co
 class DismissRuleCommand(IReadOnlyList<DismissedRule> added, IReadOnlyList<DismissedRule> removed) : Command
 {
     IReadOnlyList<DismissedRule> replaced = [];
+    IReadOnlyList<DismissedRule> actuallyRemoved = [];
 
     public override void Execute(IModel model)
     {
         replaced = [.. added.Select(a => model.DismissedRules.FirstOrDefault(d => d == a)).OfType<DismissedRule>()];
-        foreach (var dismissed in removed)
+        // The stored dismissals (with their reasons), and only those that are there, so undo
+        // brings back what was removed and nothing else.
+        actuallyRemoved =
+        [
+            .. removed.Select(r => model.DismissedRules.FirstOrDefault(d => d == r)).OfType<DismissedRule>(),
+        ];
+        foreach (var dismissed in actuallyRemoved)
             model.RemoveDismissedRule(dismissed);
         foreach (var dismissed in added)
             model.AddDismissedRule(dismissed);
@@ -84,7 +95,7 @@ class DismissRuleCommand(IReadOnlyList<DismissedRule> added, IReadOnlyList<Dismi
             model.RemoveDismissedRule(dismissed);
         foreach (var dismissed in replaced)
             model.AddDismissedRule(dismissed);
-        foreach (var dismissed in removed)
+        foreach (var dismissed in actuallyRemoved)
             model.AddDismissedRule(dismissed);
     }
 }

@@ -287,7 +287,7 @@ public class RuleServiceTests
 
         command.Execute(model);
         Assert.Empty(model.Rules);
-        Assert.Equal(RemoveRuleCommand.DismissReason, Assert.Single(model.DismissedRules).Reason);
+        Assert.Equal("Removed from the rules. Why.", Assert.Single(model.DismissedRules).Reason);
 
         command.Revert(model);
         Assert.Equal("Why.", Assert.Single(model.Rules).Reason);
@@ -323,5 +323,20 @@ public class RuleServiceTests
 
         command.Revert(model);
         Assert.Equal(["", ""], model.Rules.Select(r => r.Reason));
+    }
+
+    [Fact]
+    public void DismissRuleCommand_ShouldBringBackOnlyTheStoredDismissal_OnUndo()
+    {
+        using var model = modelMgr.UseModel();
+        model.AddDismissedRule(new DismissedRule("A", "B", "Kept reason."));
+        var command = new DismissRuleCommand([], [new DismissedRule("A", "B"), new DismissedRule("C", "D")]);
+
+        command.Execute(model);
+        Assert.Empty(model.DismissedRules);
+
+        command.Revert(model);
+        var restored = Assert.Single(model.DismissedRules);
+        Assert.Equal("Kept reason.", restored.Reason);
     }
 }

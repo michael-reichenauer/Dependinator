@@ -195,6 +195,18 @@ public class SuggestRulesTests
     }
 
     [Fact]
+    public void AllowSuggestingAgain_ShouldLetALaterAnswerSuggestTheRuleAgain()
+    {
+        AssertOk(service.ParsePasted("Rule: UI must not use Data"));
+
+        service.AllowSuggestingAgain("UI", "Data");
+
+        var second = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: UI must not use Data"));
+        Assert.Single(second.Rules);
+        Assert.Equal(0, second.LeftOutCount);
+    }
+
+    [Fact]
     public void Check_ShouldMarkADismissedRule_SoItCannotBeAdded()
     {
         using (var model = modelMgr.UseModel())

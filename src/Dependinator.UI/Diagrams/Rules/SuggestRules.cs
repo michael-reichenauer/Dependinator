@@ -388,8 +388,12 @@ interface ISuggestRulesService
     // Remembers the suggested rule as not wanted: later answers leave it out.
     void Dismiss(SuggestedRule rule);
 
-    // Takes a dismissal back.
+    // Takes a dismissal back: the rule can be suggested again.
     void Undismiss(SuggestedRule rule);
+
+    // Lets later answers suggest the rule again, though an earlier answer suggested it (its
+    // dismissal was taken back in the Rules panel).
+    void AllowSuggestingAgain(string fromName, string toName);
 }
 
 [Scoped]
@@ -428,7 +432,13 @@ class SuggestRulesService(
 
     public void Dismiss(SuggestedRule rule) => ruleService.Dismiss(rule.Key.From, rule.Key.To, "");
 
-    public void Undismiss(SuggestedRule rule) => ruleService.Undismiss(new DismissedRule(rule.Key.From, rule.Key.To));
+    public void Undismiss(SuggestedRule rule)
+    {
+        ruleService.Undismiss(new DismissedRule(rule.Key.From, rule.Key.To));
+        AllowSuggestingAgain(rule.Key.From, rule.Key.To);
+    }
+
+    public void AllowSuggestingAgain(string fromName, string toName) => suggestedBefore.Remove((fromName, toName));
 
     public Result<RuleSuggestions> ParsePasted(string text)
     {
@@ -465,15 +475,17 @@ class SuggestRulesService(
         var before = SuggestedBefore(model);
         HashSet<(string, string)> seen = [];
         List<SuggestedRule> kept = [];
+        var leftOut = 0;
         foreach (var rule in answer.Rules)
         {
-            if (rule.Check.IsDismissed || before.Contains(rule.Key) || !seen.Add(rule.Key))
-                continue;
-            kept.Add(rule);
+            if (rule.Check.IsDismissed || before.Contains(rule.Key))
+                leftOut++;
+            else if (seen.Add(rule.Key))
+                kept.Add(rule); // A rule named twice in one answer is shown once, not counted as left out.
         }
         foreach (var rule in kept.Where(r => r.Check.Error is null))
             suggestedBefore.Add(rule.Key);
-        return answer with { Rules = kept, LeftOutCount = answer.Rules.Count - kept.Count };
+        return answer with { Rules = kept, LeftOutCount = leftOut };
     }
 
     public async Task<Result<RuleSuggestions>> AskAsync(AiSource route, Action<SuggestStep> onStep)

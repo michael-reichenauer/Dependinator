@@ -149,6 +149,8 @@ static class RulePrompt
             $"{Side(from, rule.FromName)} must not use {Side(to, rule.ToName)}: nothing at or inside the first "
                 + "may depend on anything at or inside the second."
         );
+        if (rule.Reason != "")
+            text.AppendLine().AppendLine($"Why the rule exists: {rule.Reason}");
         var described = new[] { from, to }.OfType<Node>().Where(n => n.Description is not null).ToList();
         if (described.Count == 0)
             return;

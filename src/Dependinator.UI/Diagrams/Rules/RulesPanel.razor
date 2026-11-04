@@ -6,6 +6,7 @@
 @inject Modeling.IModelService modelService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IRuleReviewService ruleReviewService
+@inject ISuggestRulesService suggestRulesService
 @implements IDisposable
 
 @* Architecture rules: "X must not depend on Y", declared by picking two nodes. Each rule lists
@@ -155,7 +156,7 @@
                 </span>
                 <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Undo" Size="Size.Small"
                                title="Take the dismissal back: Suggest rules may suggest it again"
-                               OnClick="() => ruleService.Undismiss(item.Dismissed)" data-testid="rules-dismissed-remove" />
+                               OnClick="() => Undismiss(item.Dismissed)" data-testid="rules-dismissed-remove" />
               </div>
             }
           }
@@ -249,6 +250,12 @@
 
   static string StatusText(RuleReport report) =>
     !report.IsResolved ? "node not in model" : report.Violations.Count == 0 ? "kept" : $"{report.Violations.Count} broken";
+
+  void Undismiss(Modeling.Models.DismissedRule dismissed)
+  {
+    ruleService.Undismiss(dismissed);
+    suggestRulesService.AllowSuggestingAgain(dismissed.FromName, dismissed.ToName);
+  }
 
   async Task EditReasonAsync(RuleReport report)
   {
