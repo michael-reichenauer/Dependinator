@@ -15,14 +15,14 @@ public class ProblemBadgeSvgTests
     [Fact]
     public void ProblemBadgeSvg_ShouldBeEmpty_WithoutProblems()
     {
-        Assert.Equal("", NodeSvg.ProblemBadgeSvg(null, NodeRect, 1));
-        Assert.Equal("", NodeSvg.ProblemBadgeSvg(new NodeProblems(0, 0), NodeRect, 1));
+        Assert.Equal("", BadgeSvg.Problem(null, NodeRect, 1));
+        Assert.Equal("", BadgeSvg.Problem(new NodeProblems(0, 0), NodeRect, 1));
     }
 
     [Fact]
     public void ProblemBadgeSvg_ShouldBeRed_WhenErrorsAreAmongTheProblems()
     {
-        var svg = NodeSvg.ProblemBadgeSvg(new NodeProblems(2, 3), NodeRect, 1);
+        var svg = BadgeSvg.Problem(new NodeProblems(2, 3), NodeRect, 1);
 
         Assert.Contains($"fill=\"{DColors.ProblemError}\"", svg);
         Assert.Contains(">5</text>", svg);
@@ -33,7 +33,7 @@ public class ProblemBadgeSvgTests
     [Fact]
     public void ProblemBadgeSvg_ShouldBeOrange_WithOnlyWarnings_AndCapTheCount()
     {
-        var svg = NodeSvg.ProblemBadgeSvg(new NodeProblems(0, 120), NodeRect, 1);
+        var svg = BadgeSvg.Problem(new NodeProblems(0, 120), NodeRect, 1);
 
         Assert.Contains($"fill=\"{DColors.ProblemWarning}\"", svg);
         Assert.Contains(">99+</text>", svg);
@@ -42,6 +42,6 @@ public class ProblemBadgeSvgTests
     [Fact]
     public void ProblemBadgeSvg_ShouldBeLeftOut_WhenTheNodeIsTooSmallToReadIt()
     {
-        Assert.Equal("", NodeSvg.ProblemBadgeSvg(new NodeProblems(1, 0), new Rect(0, 0, 10, 10), 1));
+        Assert.Equal("", BadgeSvg.Problem(new NodeProblems(1, 0), new Rect(0, 0, 10, 10), 1));
     }
 }

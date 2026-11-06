@@ -9,7 +9,7 @@ namespace Dependinator.UI.Diagrams.Svg;
 // ("Edge", "Data", a subnet). A zone is a Node with IsZone set, so selection, dragging, resizing
 // and deletion flow through the normal node pipeline, but it is drawn as a translucent rounded
 // rectangle with its label in the top-left corner and no node chrome: no icon, no link handle,
-// no pencil marker (a zone is always user-drawn). SvgService emits zones before their siblings
+// no pencil marker (a zone is always user-drawn). NodeTreeSvg emits zones before their siblings
 // and the sibling lines, and a selected zone's outline and handles after them, so the zone
 // reads as a background and its selection chrome stays visible.
 static class ZoneSvg
@@ -24,8 +24,8 @@ static class ZoneSvg
     public static string GetZoneSvg(Node node, Rect canvasRect, double zoom)
     {
         var (border, background) = NodeSvg.NodeColors(node);
-        var textZoom = NodeSvg.TextZoom(zoom);
-        var fontSize = NodeSvg.FontSize * textZoom;
+        var textZoom = SvgText.TextZoom(zoom);
+        var fontSize = SvgText.FontSize * textZoom;
         var subtitleFontSize = fontSize * SubtitleFontFactor;
         var strokeWidth = Math.Max(0.5, textZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;

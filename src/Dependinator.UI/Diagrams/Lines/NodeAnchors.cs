@@ -78,7 +78,7 @@ static class NodeAnchors
     static MemberAnchorMetrics GetMemberAnchorMetrics(Node node)
     {
         // The member icon is drawn at the row's left edge, its name vertically centered in the
-        // row (see NodeSvg.CalculateMemberNodeLayout); the row is as wide as its card column.
+        // row (see MemberRowSvg.CalculateMemberNodeLayout); the row is as wide as its card column.
         var boundary = node.Boundary;
         return new MemberAnchorMetrics(boundary.X, boundary.X + boundary.Width, boundary.Y + boundary.Height / 2.0);
     }

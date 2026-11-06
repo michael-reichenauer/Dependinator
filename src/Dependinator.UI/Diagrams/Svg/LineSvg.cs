@@ -36,7 +36,7 @@ static class LineSvg
 
     // Every aggregated line is drawn at this one width; a line only shows its link-count width
     // (Line.WeightedStrokeWidth) while it is emphasized and Settings › Line widths by link count is on
-    // (see SvgService.IsLineWeighted), since the counts are only readable when comparing the few
+    // (see LineEmphasis.IsLineWeighted), since the counts are only readable when comparing the few
     // lines of a selection.
     const double PlainStrokeWidth = 1;
 
@@ -76,7 +76,7 @@ static class LineSvg
         );
     }
 
-    // A line's label on its own, for the label layer SvgService draws above the child nodes
+    // A line's label on its own, for the label layer NodeTreeSvg draws above the child nodes
     // (the sibling lines themselves lie under the nodes, which would cover a label drawn with
     // them). Dimmed, softened and hover-previewed like its line (the same classes and data-n);
     // hovering the line does not restore it, which is fine.
@@ -263,9 +263,9 @@ static class LineSvg
             return "";
 
         var middle = LinePathGeometry.MidPoint(polylinePoints);
-        var textZoom = NodeSvg.TextZoom(childrenZoom);
-        var fontSize = NodeSvg.FontSize * textZoom;
-        var descriptionFontSize = NodeSvg.DescriptionFontSize * textZoom;
+        var textZoom = SvgText.TextZoom(childrenZoom);
+        var fontSize = SvgText.FontSize * textZoom;
+        var descriptionFontSize = SvgText.DescriptionFontSize * textZoom;
         var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
         // With both texts the pair is centered on the line: the label just above, the

@@ -51,7 +51,7 @@ static class NoteSvg
     {
         var len = Math.Max(1, shortName.Length);
         var maxTextWidth = radius * 1.6; // leave a little padding inside the diameter
-        var byWidth = maxTextWidth / (len * NodeSvg.AverageCharWidthFactor);
+        var byWidth = maxTextWidth / (len * SvgText.AverageCharWidthFactor);
         return Math.Min(radius * 1.1, byWidth);
     }
 

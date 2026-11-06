@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises selection dimming (SvgService.IsLineDimmed + the line-dim CSS): with a node
+// Exercises selection dimming (LineEmphasis.IsLineDimmed + the line-dim CSS): with a node
 // selected, lines that do not touch it get the line-dim class; Settings › Dim unrelated lines turns
 // it off, and the setting is stored in the config.
 public class LineDimTests(ITestOutputHelper output) : E2ETestBase(output)

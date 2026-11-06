@@ -52,11 +52,11 @@ public class LineSvgSoftLinesTests
         var ab = new Line(a, b);
         var bc = new Line(b, c);
 
-        var selection = new SvgService.RenderSelection(a, null);
+        var selection = new RenderSelection(a, null);
 
-        Assert.True(SvgService.IsLineLit(ab, selection));
-        Assert.False(SvgService.IsLineLit(bc, selection));
-        Assert.False(SvgService.IsLineLit(ab, new SvgService.RenderSelection(null, null)));
+        Assert.True(LineEmphasis.IsLineLit(ab, selection));
+        Assert.False(LineEmphasis.IsLineLit(bc, selection));
+        Assert.False(LineEmphasis.IsLineLit(ab, new RenderSelection(null, null)));
     }
 
     // A call between two members of one type is hidden until one end is selected or hovered

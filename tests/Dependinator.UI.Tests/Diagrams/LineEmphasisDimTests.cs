@@ -10,7 +10,7 @@ namespace Dependinator.UI.Tests.Diagrams;
 // it, not those inside it) stay at full strength; with a line selected only that line; explorer
 // focus lines never dim.
 // The same lines, plus focus lines, are the only ones drawn at their link-count width.
-public class SvgServiceLineDimTests
+public class LineEmphasisDimTests
 {
     static Node CreateRoot() => new("", null!) { Type = NodeType.Root };
 
@@ -33,11 +33,11 @@ public class SvgServiceLineDimTests
         var bc = new Line(b, c);
         var childC = new Line(aChild, c);
 
-        var selection = new SvgService.RenderSelection(a, null);
+        var selection = new RenderSelection(a, null);
 
-        Assert.False(SvgService.IsLineDimmed(ab, selection));
-        Assert.True(SvgService.IsLineDimmed(bc, selection));
-        Assert.False(SvgService.IsLineDimmed(childC, selection)); // From inside A
+        Assert.False(LineEmphasis.IsLineDimmed(ab, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(bc, selection));
+        Assert.False(LineEmphasis.IsLineDimmed(childC, selection)); // From inside A
     }
 
     [Fact]
@@ -54,17 +54,17 @@ public class SvgServiceLineDimTests
         var toEdge = new Line(child1, a); // A child's segment out to A's edge
         var intoA = new Line(b, grandChild); // From outside into A
 
-        var selection = new SvgService.RenderSelection(a, null);
+        var selection = new RenderSelection(a, null);
 
-        Assert.True(SvgService.IsLineDimmed(between, selection));
-        Assert.True(SvgService.IsLineDimmed(deep, selection));
-        Assert.True(SvgService.IsLineDimmed(toEdge, selection));
-        Assert.False(SvgService.IsLineDimmed(intoA, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(between, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(deep, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(toEdge, selection));
+        Assert.False(LineEmphasis.IsLineDimmed(intoA, selection));
 
         // Selecting a child lights the child's lines again.
-        var childSelection = new SvgService.RenderSelection(child1, null);
-        Assert.False(SvgService.IsLineDimmed(between, childSelection));
-        Assert.False(SvgService.IsLineDimmed(deep, childSelection));
+        var childSelection = new RenderSelection(child1, null);
+        Assert.False(LineEmphasis.IsLineDimmed(between, childSelection));
+        Assert.False(LineEmphasis.IsLineDimmed(deep, childSelection));
     }
 
     [Fact]
@@ -78,10 +78,10 @@ public class SvgServiceLineDimTests
         var bc = new Line(b, c);
         var cd = new Line(c, d);
 
-        var selection = new SvgService.RenderSelection(a, null, [b]);
+        var selection = new RenderSelection(a, null, [b]);
 
-        Assert.False(SvgService.IsLineDimmed(bc, selection)); // Touches B, part of the group
-        Assert.True(SvgService.IsLineDimmed(cd, selection));
+        Assert.False(LineEmphasis.IsLineDimmed(bc, selection)); // Touches B, part of the group
+        Assert.True(LineEmphasis.IsLineDimmed(cd, selection));
     }
 
     [Fact]
@@ -94,10 +94,10 @@ public class SvgServiceLineDimTests
         var ab = new Line(a, b);
         var bc = new Line(b, c);
 
-        var selection = new SvgService.RenderSelection(null, ab);
+        var selection = new RenderSelection(null, ab);
 
-        Assert.False(SvgService.IsLineDimmed(ab, selection));
-        Assert.True(SvgService.IsLineDimmed(bc, selection));
+        Assert.False(LineEmphasis.IsLineDimmed(ab, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(bc, selection));
     }
 
     [Fact]
@@ -109,8 +109,8 @@ public class SvgServiceLineDimTests
         var c = AddNode(root, "C");
         var bc = new Line(b, c) { IsFocused = true };
 
-        Assert.False(SvgService.IsLineDimmed(bc, new SvgService.RenderSelection(a, null)));
-        Assert.False(SvgService.IsLineDimmed(new Line(b, c), new SvgService.RenderSelection(null, null)));
+        Assert.False(LineEmphasis.IsLineDimmed(bc, new RenderSelection(a, null)));
+        Assert.False(LineEmphasis.IsLineDimmed(new Line(b, c), new RenderSelection(null, null)));
     }
 
     [Fact]
@@ -125,21 +125,21 @@ public class SvgServiceLineDimTests
         var focused = new Line(b, c) { IsFocused = true };
 
         // Nothing selected: every line is plain, except an explorer focus line.
-        var none = new SvgService.RenderSelection(null, null);
-        Assert.False(SvgService.IsLineWeighted(ab, none, true));
-        Assert.False(SvgService.IsLineWeighted(bc, none, true));
-        Assert.True(SvgService.IsLineWeighted(focused, none, true));
+        var none = new RenderSelection(null, null);
+        Assert.False(LineEmphasis.IsLineWeighted(ab, none, true));
+        Assert.False(LineEmphasis.IsLineWeighted(bc, none, true));
+        Assert.True(LineEmphasis.IsLineWeighted(focused, none, true));
 
         // A selected node weights the lines touching it, i.e. the ones dimming keeps bright.
-        var nodeSelection = new SvgService.RenderSelection(a, null);
-        Assert.True(SvgService.IsLineWeighted(ab, nodeSelection, true));
-        Assert.False(SvgService.IsLineWeighted(bc, nodeSelection, true));
-        Assert.True(SvgService.IsLineWeighted(focused, nodeSelection, true));
+        var nodeSelection = new RenderSelection(a, null);
+        Assert.True(LineEmphasis.IsLineWeighted(ab, nodeSelection, true));
+        Assert.False(LineEmphasis.IsLineWeighted(bc, nodeSelection, true));
+        Assert.True(LineEmphasis.IsLineWeighted(focused, nodeSelection, true));
 
         // A selected line weights only itself.
-        var lineSelection = new SvgService.RenderSelection(null, bc);
-        Assert.True(SvgService.IsLineWeighted(bc, lineSelection, true));
-        Assert.False(SvgService.IsLineWeighted(ab, lineSelection, true));
+        var lineSelection = new RenderSelection(null, bc);
+        Assert.True(LineEmphasis.IsLineWeighted(bc, lineSelection, true));
+        Assert.False(LineEmphasis.IsLineWeighted(ab, lineSelection, true));
     }
 
     [Fact]
@@ -151,9 +151,9 @@ public class SvgServiceLineDimTests
         var ab = new Line(a, b);
         var focused = new Line(a, b) { IsFocused = true };
 
-        var nodeSelection = new SvgService.RenderSelection(a, null);
-        Assert.False(SvgService.IsLineWeighted(ab, nodeSelection, false));
-        Assert.False(SvgService.IsLineWeighted(focused, nodeSelection, false));
-        Assert.False(SvgService.IsLineWeighted(ab, new SvgService.RenderSelection(null, ab), false));
+        var nodeSelection = new RenderSelection(a, null);
+        Assert.False(LineEmphasis.IsLineWeighted(ab, nodeSelection, false));
+        Assert.False(LineEmphasis.IsLineWeighted(focused, nodeSelection, false));
+        Assert.False(LineEmphasis.IsLineWeighted(ab, new RenderSelection(null, ab), false));
     }
 }

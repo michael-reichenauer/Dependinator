@@ -48,7 +48,7 @@ public class NodeSvgAliasTests
         Assert.Contains("data-name=\"frontend (Storefront)\"", container);
 
         node.Type = NodeType.MethodMember;
-        var member = NodeSvg.GetMemberNodeSvg(node, new Rect(0, 0, 80, 18), 2.0, isEditing: false);
+        var member = MemberRowSvg.GetMemberNodeSvg(node, new Rect(0, 0, 80, 18), 2.0, isEditing: false);
         Assert.Contains(">Storefront</text>", member);
     }
 

@@ -14,13 +14,13 @@ public class HiddenBadgeSvgTests
     [Fact]
     public void HiddenBadgeSvg_ShouldBeEmpty_WhenNoChildIsHidden()
     {
-        Assert.Equal("", NodeSvg.HiddenBadgeSvg(0, NodeRect, 1));
+        Assert.Equal("", BadgeSvg.Hidden(0, NodeRect, 1));
     }
 
     [Fact]
     public void HiddenBadgeSvg_ShouldShowTheCount_OnTheTopLeftCorner()
     {
-        var svg = NodeSvg.HiddenBadgeSvg(3, NodeRect, 1);
+        var svg = BadgeSvg.Hidden(3, NodeRect, 1);
 
         Assert.Contains($"fill=\"{DColors.HiddenBadge}\"", svg);
         Assert.Contains(">3</text>", svg);
@@ -31,6 +31,6 @@ public class HiddenBadgeSvgTests
     [Fact]
     public void HiddenBadgeSvg_ShouldBeLeftOut_WhenTooSmallToRead()
     {
-        Assert.Equal("", NodeSvg.HiddenBadgeSvg(3, new Rect(0, 0, 10, 10), 1));
+        Assert.Equal("", BadgeSvg.Hidden(3, new Rect(0, 0, 10, 10), 1));
     }
 }
