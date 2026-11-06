@@ -145,59 +145,88 @@ static partial class NodeSvg
         svg.Append(CardFrameSvg(node, rect, u, u));
         var members = node.Children.Where(c => c.Type.IsMember && (isRowShown?.Invoke(c) ?? true)).ToList();
         var sections = MemberCard.Sections(members, (a, b) => string.CompareOrdinal(a.Name, b.Name));
-        // The counts, on up to two lines.
-        var countLines = WrapParts(CountParts(node, sections), MaxChars(w - 2 * padding, smallSize), 2);
-        var countsY = y + headerHeight + 13 * u;
-        for (var index = 0; index < countLines.Count; index++)
+        // The rows: public members first (in section order), then private ones, then the nested
+        // types under a heading of their own. As many as fit, with "+ N more".
+        var rows = sections.SelectMany(s => s.Rows).OrderBy(m => m.IsPrivate ?? false).Cast<Node?>().ToList();
+        var nested = node
+            .Children.Where(c => !c.Type.IsMember && !NodeViewPolicy.IsAnnotation(c) && (isRowShown?.Invoke(c) ?? true))
+            .OrderBy(c => c.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        if (nested.Count > 0)
+            rows = [.. rows, null, .. nested]; // null: the nested types' heading
+        var bottom = y + h - padding / 2;
+        int Slots(double top) => Math.Max(0, (int)((bottom - top) / rowPitch));
+
+        // The counts only when some rows are left out: then they tell what the card holds.
+        var dividerY = y + headerHeight;
+        var firstRowY = dividerY + 4 * u;
+        if (rows.Count > Slots(firstRowY))
         {
+            var countLines = WrapParts(CountParts(node, sections), MaxChars(w - 2 * padding, smallSize), 2);
+            var countsY = y + headerHeight + 13 * u;
+            for (var index = 0; index < countLines.Count; index++)
+            {
+                svg.Append(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"""<text x="{x + padding:0.##}" y="{countsY + index * 11 * u:0.##}" class="summaryMuted" font-size="{smallSize:0.##}px" {textOpacity}>{Encode(countLines[index])}</text>"""
+                    )
+                );
+            }
+            dividerY = countsY + (countLines.Count - 1) * 11 * u + 7 * u;
+            firstRowY = dividerY + 4 * u;
             svg.Append(
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"""<text x="{x + padding:0.##}" y="{countsY + index * 11 * u:0.##}" class="summaryMuted" font-size="{smallSize:0.##}px" {textOpacity}>{Encode(countLines[index])}</text>"""
+                    $"""<line x1="{x:0.##}" y1="{dividerY:0.##}" x2="{x + w:0.##}" y2="{dividerY:0.##}" stroke="{DColors.CardDivider}" stroke-width="{u:0.##}"/>"""
                 )
             );
         }
-        countsY += (countLines.Count - 1) * 11 * u;
 
-        var dividerY = countsY + 7 * u;
-        svg.Append(
-            string.Create(
-                CultureInfo.InvariantCulture,
-                $"""<line x1="{x:0.##}" y1="{dividerY:0.##}" x2="{x + w:0.##}" y2="{dividerY:0.##}" stroke="{DColors.CardDivider}" stroke-width="{u:0.##}"/>"""
-            )
-        );
-
-        // Public members first (in section order), then private ones, as many as fit.
-        var ordered = sections.SelectMany(s => s.Rows).OrderBy(m => m.IsPrivate ?? false).ToList();
-        var firstRowY = dividerY + 4 * u;
-        var slots = Math.Max(0, (int)((y + h - padding / 2 - firstRowY) / rowPitch));
-        var shown = ordered.Count <= slots ? ordered.Count : Math.Max(0, slots - 1);
+        var slots = Slots(firstRowY);
+        var shown = rows.Count <= slots ? rows.Count : Math.Max(0, slots - 1);
+        if (shown > 0 && rows[shown - 1] is null)
+            shown--; // No heading without a row under it
         var rowChars = MaxChars(w - 2 * padding - 13 * u, rowSize);
+        var tagChars = (int)Math.Ceiling(PrivateTag.Length * smallSize / rowSize) + 1;
         for (var index = 0; index < shown; index++)
         {
-            var member = ordered[index];
             var rowY = firstRowY + index * rowPitch;
-            var cssClass = member.IsPrivate ?? false ? "summaryMember summaryPrivate" : "summaryMember";
+            if (rows[index] is not { } member)
+            {
+                svg.Append(
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"""<text x="{x + padding:0.##}" y="{rowY + rowPitch / 2:0.##}" class="summaryMuted" dominant-baseline="middle" font-size="{smallSize
+                            * 0.85:0.##}px" letter-spacing="{smallSize * 0.07:0.##}px" {textOpacity}>{(node.Type.IsType ? "NESTED TYPES" : "CHILDREN")}</text>"""
+                    )
+                );
+                continue;
+            }
+            var isPrivate = member.IsPrivate ?? false;
+            var cssClass = isPrivate ? "summaryMember summaryPrivate" : "summaryMember";
             svg.Append(
                 string.Create(
                     CultureInfo.InvariantCulture,
                     $"""
                     <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
-                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars, u)}</text>
+                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, isPrivate ? rowChars - tagChars : rowChars)}</text>
                     """
                 )
             );
+            if (isPrivate)
+                svg.Append(PrivateTagSvg(x + w - padding, rowY + rowPitch / 2, smallSize, textOpacity));
         }
 
-        if (shown < ordered.Count && slots > 0)
+        if (shown < rows.Count && slots > 0)
         {
             var rowY = firstRowY + shown * rowPitch;
+            var more = rows.Skip(shown).Count(r => r is not null);
             svg.Append(
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"""<text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="summaryMuted" dominant-baseline="middle" font-size="{smallSize:0.##}px" {textOpacity}>+ {ordered.Count
-                        - shown} more</text>"""
+                    $"""<text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="summaryMuted" dominant-baseline="middle" font-size="{smallSize:0.##}px" {textOpacity}>+ {more} more</text>"""
                 )
             );
         }
@@ -219,17 +248,26 @@ static partial class NodeSvg
         return svg.ToString();
     }
 
+    const string PrivateTag = "private";
+
+    // The "private" tag at the right end of a private row, ending at x.
+    internal static string PrivateTagSvg(double x, double y, double fontSize, string textOpacity) =>
+        string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<text x="{x:0.##}" y="{y:0.##}" class="privateTag" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{PrivateTag}</text>"""
+        );
+
     // A summary row: the name, then its signature (muted) in what room is left, like a full row
     // (MemberDetailsSvg).
-    static string SummaryRowText(Node member, int maxChars, double u)
+    static string SummaryRowText(Node member, int maxChars)
     {
         var name = Clip(member.DisplayName, maxChars);
-        var signature = ClipRow(member.Signature ?? "", maxChars - name.Length - 1); // A character for the gap
+        var signature = ClipRow(member.Signature ?? "", maxChars - name.Length);
         if (signature.Length == 0)
             return Encode(name);
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"""{Encode(name)}<tspan class="memberSignature" dx="{MemberSignatureGap * u:0.##}">{Encode(signature)}</tspan>"""
+            $"""{Encode(name)}<tspan class="memberSignature">{Encode(signature)}</tspan>"""
         );
     }
 
@@ -239,7 +277,7 @@ static partial class NodeSvg
     static string CardFrameSvg(Node node, Rect rect, double u, double textU)
     {
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
-        var (border, background) = NodeColors(node);
+        var (border, background) = CardColors(node);
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var headerHeight = MemberCard.CardHeaderHeight * u;
         var radius = Math.Min(6 * u, Math.Min(w, h) / 4);
@@ -277,6 +315,13 @@ static partial class NodeSvg
             """
         );
     }
+
+    // A card's border and header tint: the same lavender on every type (DColors.CardFrame,
+    // CardHeader), unless the user set the node's color, or it is being edited.
+    static (string Border, string Background) CardColors(Node node) =>
+        node.IsEditMode || node.CustomColor is { } customColor && DColors.IsCustomNodeColor(customColor)
+            ? NodeColors(node)
+            : (DColors.CardFrame, DColors.CardHeader);
 
     // An open card node (NodeViewPolicy.IsMemberCardNode): its box is the card, with the header at
     // the top and the children (member rows, nested types) under it, in its child coordinates

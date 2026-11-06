@@ -35,7 +35,6 @@ static class MemberCard
     const double NameFontSize = 8; // NodeSvg.FontSize
     const double CharWidthFactor = 0.6; // NodeSvg.AverageCharWidthFactor
     const double RowEndPadding = 6;
-    const double SignatureGap = 3; // NodeSvg.MemberSignatureGap
 
     // A section of the card: the members of one kind, public before private.
     public sealed record Section(string Title, IReadOnlyList<Node> Rows);
@@ -329,14 +328,19 @@ static class MemberCard
     }
 
     // The width every column gets: the widest row name, on the snap grid (folded rows not counted).
+    const int PrivateTagChars = 9; // "private" a little smaller, and a gap
+
     static double ColumnWidth(IReadOnlyList<Section> sections, PrivateToggle toggle)
     {
         // The name and its signature (NodeSvg.MemberDetailsSvg); a comment gets what is left.
         var rows = sections.SelectMany(s => s.Rows).ToList();
         if (toggle == PrivateToggle.Folded)
             rows = [.. rows.Where(r => !(r.IsPrivate ?? false))];
-        var widest = rows.Max(row => row.DisplayName.Length + (row.Signature?.Length ?? 0));
-        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + SignatureGap + RowEndPadding;
+        // A private row also has its "private" tag at the end (NodeSvg.GetMemberNodeSvg).
+        var widest = rows.Max(row =>
+            row.DisplayName.Length + (row.Signature?.Length ?? 0) + (row.IsPrivate ?? false ? PrivateTagChars : 0)
+        );
+        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + RowEndPadding;
         return Math.Clamp(Math.Ceiling(width / NodeGrid.SnapSize) * NodeGrid.SnapSize, MinColumnWidth, MaxColumnWidth);
     }
 
