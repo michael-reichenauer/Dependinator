@@ -159,6 +159,69 @@ public class TooltipServiceTests
     }
 
     [Fact]
+    public void GetHtml_ShouldShowAZonesLabel_WithoutItsGeneratedName()
+    {
+        Node zone;
+        using (var model = modelMgr.UseModel())
+        {
+            zone = new Node("Zone 2", model.Root) { Boundary = new Rect(0, 0, 100, 100), IsZone = true };
+            model.Root.AddChild(zone);
+            model.TryAddNode(zone);
+            zone.SetAlias("Edge");
+            zone.SetDescription("Front Door\nand API Management");
+        }
+
+        var html = Html(NewService(), NodeElement(zone));
+
+        Assert.Contains(">Edge</div>", html);
+        Assert.Contains(">Zone</div>", html);
+        Assert.DoesNotContain("Zone 2", html);
+        Assert.Contains("Front Door\nand API Management", html);
+    }
+
+    [Fact]
+    public void GetHtml_ShouldCallAManualLine_DrawnByHand()
+    {
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var link = new Link(a, b) { IsManual = true };
+            model.TryAddLink(link);
+            a.AddSourceLink(link);
+            b.AddTargetLink(link);
+            new LineService().AddLinesFromSourceToTarget(model, link);
+            line = model.Lines.Values.Single();
+        }
+
+        var html = Html(NewService(), PointerId.FromLine(line.Id).ElementId);
+
+        Assert.Contains("drawn by hand", html);
+        Assert.DoesNotContain("1 link", html);
+    }
+
+    [Fact]
+    public void GetHtml_ShouldRecount_WhenTheModelChanges()
+    {
+        Node a,
+            b;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            b = AddNode(model, "B", model.Root);
+            AddLink(model, a, b);
+        }
+        var service = NewService();
+        Assert.Contains("uses <b>1</b>", Html(service, NodeElement(a)));
+
+        using (var model = modelMgr.UseModel())
+            AddLink(model, a, AddNode(model, "C", model.Root));
+
+        Assert.Contains("uses <b>2</b>", Html(service, NodeElement(a)));
+    }
+
+    [Fact]
     public void GetHtml_ShouldBeNull_ForAnUnknownOrOtherElement()
     {
         var service = NewService();

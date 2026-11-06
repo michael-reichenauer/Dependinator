@@ -532,12 +532,14 @@ const tooltipDelayMs = 600;
 const tooltipOffset = 14;
 
 let tooltipCleanup = null;
+let tooltipOwner = null;
 
-export function initTooltips(elementId, dotNetRef) {
+export function initTooltips(elementId, dotNetRef, token) {
   const svg = document.getElementById(elementId);
   if (!svg) return;
   // A canvas made again (a re-mounted component) replaces the listeners of the one before.
   tooltipCleanup?.();
+  tooltipOwner = token;
 
   let card = document.getElementById("dep-tooltip");
   if (!card) {
@@ -630,11 +632,12 @@ export function initTooltips(elementId, dotNetRef) {
     svg.removeEventListener("wheel", hide, options);
     document.removeEventListener("keydown", hide);
     tooltipCleanup = null;
+    tooltipOwner = null;
   };
 }
 
-export function disposeTooltips() {
-  tooltipCleanup?.();
+export function disposeTooltips(token) {
+  if (tooltipOwner === token) tooltipCleanup?.();
 }
 
 const openDatabases = new Map();

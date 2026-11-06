@@ -37,6 +37,11 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     Tooltips.ITooltipService tooltipService { get; init; } = null!;
 
     DotNetObjectReference<Canvas>? selfReference;
+    bool isDisposed;
+
+    // Names this canvas's hover card listeners in JS, so a late dispose leaves a newer canvas's alone.
+    static int lastTooltipToken;
+    readonly int tooltipToken = Interlocked.Increment(ref lastTooltipToken);
 
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
@@ -97,8 +102,11 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
             await jSInterop.Call("initLinePreview", "svgcanvas");
+            // Disposed while initializing: a newer canvas owns the hover card's listeners.
+            if (isDisposed)
+                return;
             selfReference = jSInterop.Reference(this);
-            await jSInterop.Call("initTooltips", "svgcanvas", selfReference);
+            await jSInterop.Call("initTooltips", "svgcanvas", selfReference, tooltipToken);
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShowAsync);
@@ -131,11 +139,13 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     public void Dispose()
     {
+        isDisposed = true;
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         if (selfReference is not null)
         {
-            // Drops the hover card's listeners; fire and forget, a gone circuit has none left.
-            _ = jSInterop.Call("disposeTooltips").AsTask();
+            // Drops the hover card's listeners if they are still this canvas's (a newer canvas
+            // may have replaced them); fire and forget, a gone circuit has none left.
+            _ = jSInterop.Call("disposeTooltips", tooltipToken).AsTask();
             selfReference.Dispose();
         }
     }

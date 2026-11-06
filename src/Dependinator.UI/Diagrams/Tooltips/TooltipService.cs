@@ -28,7 +28,7 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     // The dependency counts per node, for the structure version they were counted at: resting on
     // a large container walks all links inside it once, not on every pause.
     readonly Dictionary<NodeId, (int Uses, int UsedBy)> dependencyCounts = [];
-    int countsVersion = -1;
+    (int Structure, int Nodes, int Links) countsVersion = (-1, -1, -1);
 
     public string? GetHtml(string elementId)
     {
@@ -70,10 +70,12 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         List<string> chips = [];
         if (!node.IsNote && !node.IsZone)
         {
-            if (countsVersion != model.StructureVersion)
+            // Keyed like ProblemService: the counts too, not only the structure version.
+            var version = (model.StructureVersion, model.Nodes.Count, model.Links.Count);
+            if (countsVersion != version)
             {
                 dependencyCounts.Clear();
-                countsVersion = model.StructureVersion;
+                countsVersion = version;
             }
             if (!dependencyCounts.TryGetValue(node.Id, out var counts))
                 dependencyCounts[node.Id] = counts = CountDependencies(node);
@@ -121,10 +123,10 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
 
         if (line.HtmlLabel is not null)
             html.Append($"<div class=\"dep-tt-desc\"><b>{line.HtmlLabel}</b></div>");
-        if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
-            html.Append($"<div class=\"dep-tt-desc\">{line.HtmlDescription}</div>");
+        if (!string.IsNullOrWhiteSpace(line.Description))
+            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.Description))}</div>");
 
-        if (count > 0 && !isManual)
+        if (count > 0)
         {
             var links = line
                 .Links.Select(l => (Source: LinkEndName(l.Source), Target: LinkEndName(l.Target)))
@@ -202,23 +204,26 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     // member's calls to the other members of its own type are no uses at all.
     internal static (int Uses, int UsedBy) CountDependencies(Node node)
     {
-        var self = UnitGraph.UnitOf(node);
+        var self = Unit(node);
         HashSet<Node> uses = [];
         HashSet<Node> usedBy = [];
         Stack<Node> pending = new([node]);
         while (pending.TryPop(out var current))
         {
             foreach (var link in current.SourceLinks)
-                if (!IsInside(link.Target, node) && UnitGraph.UnitOf(link.Target) is var unit && unit != self)
+                if (!IsInside(link.Target, node) && Unit(link.Target) is var unit && unit != self)
                     uses.Add(unit);
             foreach (var link in current.TargetLinks)
-                if (!IsInside(link.Source, node) && UnitGraph.UnitOf(link.Source) is var unit && unit != self)
+                if (!IsInside(link.Source, node) && Unit(link.Source) is var unit && unit != self)
                     usedBy.Add(unit);
             foreach (var child in current.Children)
                 pending.Push(child);
         }
         return (uses.Count, usedBy.Count);
     }
+
+    // UnitGraph.UnitOf, but a member at the top stands for itself, not for the root.
+    static Node Unit(Node node) => UnitGraph.UnitOf(node) is { IsRoot: true } ? node : UnitGraph.UnitOf(node);
 
     static bool IsInside(Node node, Node ancestor)
     {
@@ -271,9 +276,11 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     }
 
     // A problem counts where it is, like on the node's badge (ProblemService): not in a hidden
-    // node, since there is nothing visible to lead to.
+    // node, since there is nothing visible to lead to, unless the hovered node is hidden itself
+    // (revealed with View › Reveal Hidden Nodes) and so shows all of its own problems.
     static bool IsCounted(Node problemNode, Node node) =>
-        problemNode.Visibility != NodeVisibility.Hidden && IsInside(problemNode, node);
+        IsInside(problemNode, node)
+        && (node.Visibility == NodeVisibility.Hidden || problemNode.Visibility != NodeVisibility.Hidden);
 
     // A link end as "Type.Member" for a member, else its short name.
     static string LinkEndName(Node node) =>
