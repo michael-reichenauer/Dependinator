@@ -192,9 +192,9 @@ static class LineSvg
         var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
         var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
 
-        var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
-        if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
-            title = $"{title}\n\n{line.HtmlDescription}";
+        // The hover group's data-name, "Source→Target (n)" with the long names, is what the e2e
+        // locators match; the tooltip itself is the hover card (TooltipService, initTooltips in jsInterop.js).
+        var name = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
@@ -238,11 +238,10 @@ static class LineSvg
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
             {labelSvg}
             </g>
-            <g class="hoverable" id="{elementId}">
+            <g class="hoverable" id="{elementId}" data-name="{name}">
               <polyline id="{elementId}" class="{HitClass}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round"{hitPointerEvents} />
               <polyline class="{HoverClass}" points="{points}" fill="none" pointer-events="none" />
-              <title>{title}</title>
             </g>
             {selectedSvg}
             </g>

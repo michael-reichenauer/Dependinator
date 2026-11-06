@@ -6,7 +6,7 @@ using Dependinator.UI.Shared.Types;
 namespace Dependinator.UI.Diagrams.Svg;
 
 // Renders a note annotation: a small filled circle showing the note's short id (e.g. "1", "A")
-// with the description exposed as a native SVG <title> tooltip on hover. A note is a Node with
+// with the description shown in the hover card (TooltipService) on hover. A note is a Node with
 // IsNote set, placed on the root canvas; it reuses the normal node id scheme so selection,
 // dragging and deletion flow through the existing interaction pipeline.
 static class NoteSvg
@@ -30,18 +30,13 @@ static class NoteSvg
         var strokeWidth = Math.Max(0.5, r * 0.06);
         var elementId = PointerId.FromNode(node.Id).ElementId;
 
-        // Show the description on hover; fall back to the id so hovering an unlabelled note still
-        // gives feedback. HtmlDescription is kept in sync by Node.SetDescription.
-        var title = string.IsNullOrWhiteSpace(node.HtmlDescription) ? id : node.HtmlDescription;
-
         // The visible circle is the hover/hit target (id resolves to the node); the id text is drawn
         // on top with pointer-events="none" so it is not stroked by the .hoverable:hover rule.
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="hoverable" id="{elementId}">
+                <g class="hoverable" id="{elementId}" data-name="{id}">
                   <circle id="{elementId}" cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.NoteFill}" stroke="{DColors.NoteBorder}" stroke-width="{strokeWidth:0.##}" />
-                  <title>{title}</title>
                 </g>
                 <text x="{cx:0.##}" y="{cy:0.##}" text-anchor="middle" dominant-baseline="central" font-family="Verdana, Helvetica, Arial, sans-serif" font-weight="bold" font-size="{fontSize:0.##}px" fill="{DColors.NoteText}" pointer-events="none">{id}</text>
                 {SelectedNoteSvg(node, cx, cy, r)}

@@ -241,7 +241,6 @@ static partial class NodeSvg
             "hoverable",
             rect,
             TitleName(node),
-            node.HtmlDescription,
             LinkHandleSvg(node, new Pos(x + w + LinkHandleGap, y + h / 2), isEditing),
             isLinePreview: true
         );
@@ -347,7 +346,7 @@ static partial class NodeSvg
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
         var (w, h) = (nodeCanvasRect.Width, nodeCanvasRect.Height);
         var innerRect = new Rect(0, 0, w, h);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerRect, TitleName(node), node.HtmlDescription);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerRect, TitleName(node));
         var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
         var textZoom = TextZoom(parentZoom);
         return string.Create(

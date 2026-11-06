@@ -101,7 +101,7 @@ static partial class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), node.HtmlDescription);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node));
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -336,11 +336,7 @@ static partial class NodeSvg
             elementId,
             "hoverable",
             layout.Bounds,
-            // A member's signature on a line of its own (the name stays the title's prefix)
-            string.IsNullOrEmpty(node.Signature)
-                ? TitleName(node)
-                : $"{TitleName(node)}\n{HttpUtility.HtmlEncode(node.Signature)}",
-            node.HtmlDescription,
+            TitleName(node),
             LinkHandleSvg(node, layout.LinkHandlePos, isEditing),
             isLinePreview: true
         );
@@ -604,8 +600,9 @@ static partial class NodeSvg
         return lines;
     }
 
-    // The tooltip's first line: the real long name (the identity, also what the e2e locators
-    // match), followed by the user's display name when one is set.
+    // The hover group's data-name: the real long name (the identity, also what the e2e locators
+    // match), followed by the user's display name when one is set. The tooltip itself is not in
+    // the SVG: the hover card (TooltipService, initTooltips in jsInterop.js) is built only when the pointer rests.
     static string TitleName(Node node) =>
         node.HtmlAlias is null ? node.HtmlLongName : $"{node.HtmlLongName} ({node.HtmlAlias})";
 
@@ -613,8 +610,7 @@ static partial class NodeSvg
         string elementId,
         string cssClass,
         Rect geometry,
-        string htmlLongName,
-        string? htmlDescription,
+        string htmlName,
         string extraContent = "",
         bool isLinePreview = false
     )
@@ -623,13 +619,11 @@ static partial class NodeSvg
         // jsInterop.js): icons and member rows. Not open containers, which the pointer is
         // always over when zoomed in, so they would keep the preview on.
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
-        var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}"{previewAttribute}>
+                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-                  <title>{title}</title>
                   {extraContent}
                 </g>
                 """

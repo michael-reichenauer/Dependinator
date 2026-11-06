@@ -39,10 +39,6 @@ static class ZoneSvg
 
         // The label is the zone's display name (its alias; the identity name for zones made
         // before labels became aliases).
-        var title = string.IsNullOrWhiteSpace(node.HtmlDescription)
-            ? node.HtmlDisplayName
-            : $"{node.HtmlDisplayName}\n\n{node.HtmlDescription}";
-
         // The visible rect is the hover/hit target (its id resolves to the node); the texts sit
         // outside the group with pointer-events="none" so hovering does not stroke them.
         var subtitleSvg = string.IsNullOrWhiteSpace(node.HtmlDescription)
@@ -55,11 +51,10 @@ static class ZoneSvg
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="hoverable" id="{elementId}" {nodeOpacity}>
+                <g class="hoverable" id="{elementId}" data-name="{node.HtmlDisplayName}" {nodeOpacity}>
                   <rect id="{elementId}" x="{x:0.##}" y="{y:0.##}" width="{canvasRect.Width:0.##}" height="{canvasRect.Height:0.##}" rx="{CornerRadius
                     * textZoom:0.##}" fill="{background}" fill-opacity="{FillOpacity}" stroke="{border}" stroke-width="{strokeWidth:0.##}" stroke-dasharray="{6
                     * textZoom:0.##},{4 * textZoom:0.##}"/>
-                  <title>{title}</title>
                 </g>
                 <text class="zoneName" x="{labelX:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" font-weight="bold" {textOpacity}>{node.HtmlDisplayName}</text>
                 {subtitleSvg}

@@ -38,7 +38,8 @@ public class ZoneSvgTests
         Assert.Contains(">Edge</text>", svg);
         Assert.Contains("class=\"zoneDescription\"", svg);
         Assert.Contains(">Front Door and API Management</text>", svg);
-        Assert.Contains("<title>Edge\n\nFront Door and API Management</title>", svg);
+        Assert.Contains("data-name=\"Edge\"", svg);
+        Assert.DoesNotContain("<title>", svg);
         Assert.DoesNotContain("linkhandle", svg);
         Assert.DoesNotContain("<use ", svg);
         Assert.DoesNotContain("&#x270E;", svg);
@@ -55,7 +56,7 @@ public class ZoneSvgTests
         var svg = ZoneSvg.GetZoneSvg(zone, new Rect(0, 0, 320, 200), 1);
 
         Assert.Contains(">10.0.1.0/24</text>", svg);
-        Assert.Contains("<title>10.0.1.0/24\n\napps subnet</title>", svg);
+        Assert.Contains("data-name=\"10.0.1.0/24\"", svg);
         Assert.DoesNotContain(">Edge</text>", svg);
     }
 
@@ -68,7 +69,7 @@ public class ZoneSvgTests
         var svg = ZoneSvg.GetZoneSvg(zone, new Rect(0, 0, 320, 200), 2);
 
         Assert.DoesNotContain("zoneDescription", svg);
-        Assert.Contains("<title>Edge</title>", svg);
+        Assert.Contains("data-name=\"Edge\"", svg);
         Assert.Contains("opacity=\"0.1\"", svg);
     }
 }
