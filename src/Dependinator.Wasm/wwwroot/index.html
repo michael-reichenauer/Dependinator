@@ -157,11 +157,14 @@
         #fog-bar, #fog-header, #fog-overlay { display: none; position: fixed; left: 0; right: 0; top: 0; pointer-events: none; }
         html.fog-bar #fog-bar { display: block; height: 8px; background: #b39ddb; z-index: 2500; }
         html.fog-header #fog-header { display: block; height: 64px; background: #fafafa; border-bottom: 1px solid #ddd; }
+        #fog-hitbar, #fog-hitoverlay { display: none; position: fixed; left: 0; right: 0; top: 0; }
+        html.fog-hitbar #fog-hitbar { display: block; height: 8px; background: #b39ddb; z-index: 2500; }
+        html.fog-hitoverlay #fog-hitoverlay { display: block; bottom: 0; background: transparent; z-index: 1500; }
         html.fog-overlay #fog-overlay { display: block; bottom: 0; background: transparent; z-index: 1500; }
     </style>
     <script>
         (function () {
-            var variants = ["off", "short", "bar", "header", "overlay"];
+            var variants = ["off", "short", "bar", "header", "overlay", "hitbar", "hitoverlay"];
             var current = "off";
             try { current = localStorage.getItem("fog-test") || "off"; } catch (e) { }
             function apply(v) {
@@ -172,12 +175,12 @@
                 document.querySelectorAll("#fog-test button").forEach(function (b) { b.classList.toggle("on", b.textContent === v); });
             }
             window.addEventListener("DOMContentLoaded", function () {
-                ["fog-header", "fog-bar", "fog-overlay"].forEach(function (id) {
+                ["fog-header", "fog-bar", "fog-overlay", "fog-hitbar", "fog-hitoverlay"].forEach(function (id) {
                     var d = document.createElement("div"); d.id = id;
                     if (id === "fog-header") document.body.insertBefore(d, document.body.firstChild); else document.body.appendChild(d);
                 });
                 var panel = document.createElement("div"); panel.id = "fog-test";
-                panel.innerHTML = "<b>Fog test 3</b>";
+                panel.innerHTML = "<b>Fog test 4</b>";
                 variants.forEach(function (v) {
                     var b = document.createElement("button"); b.textContent = v;
                     b.onclick = function () { apply(v); }; panel.appendChild(b);
