@@ -76,17 +76,23 @@ class NodeLayout
     // parent's layout sizes a child before the child lays out its own children.
     public static void ResetChildrenLayout(Node node, bool recursively)
     {
+        ForgetCustomLayout(node);
+        AdjustChildren(node, forceAllChildren: true);
+
+        if (recursively)
+            node.Children.ForEach(child => ResetChildrenLayout(child, recursively));
+    }
+
+    // Forgets the user's arrangement of the node's children and their lines' waypoints, so the
+    // next layout arranges every child.
+    public static void ForgetCustomLayout(Node node)
+    {
         node.IsChildrenLayoutCustomized = false;
         foreach (var line in LinesDrawnInside(node).Where(line => line.IsSegmentsUserSet))
         {
             line.IsSegmentsUserSet = false;
             line.SetSegmentPoints([]);
         }
-
-        AdjustChildren(node, forceAllChildren: true);
-
-        if (recursively)
-            node.Children.ForEach(child => ResetChildrenLayout(child, recursively));
     }
 
     // The lines rendered in the container's coordinate space: the fan-out from the container
@@ -118,7 +124,9 @@ class NodeLayout
 
         if (NodeViewPolicy.IsMemberCardNode(parent))
         {
+            var cardSizesBefore = CaptureSizes(parent.Children);
             ArrangeCardNode(parent, isCustomized: !forceAllChildren && parent.IsChildrenLayoutCustomized);
+            RescaleResizedContent(cardSizesBefore);
             return;
         }
 
@@ -440,27 +448,33 @@ class NodeLayout
         var regularMetrics = RegularMetrics(density);
         var nonMembers = parent.Children.Where(c => !c.Type.IsMember && IsArranged(c)).ToList();
 
-        var card = MemberCard.Arrange(
-            MemberCard.Sections(parent.Children.Where(c => c.Type.IsMember), CompareMemberChildren),
-            MemberCard.Padding,
-            MemberCard.CardRowsTop,
-            parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height,
-            MemberCard.ToggleOf(parent)
-        );
+        var card = ArrangeMemberCard(parent, MemberCard.Padding, MemberCard.CardRowsTop, isOnlyMembers: true);
         var belowCard = card == Rect.None ? MemberCard.CardRowsTop : card.Y + card.Height + NodeGrid.SnapSize;
 
         if (isCustomized)
         {
+            // The rows may have grown (a re-parse, unfolded private rows): the children the user
+            // placed (zones and notes too) move down together, out of the rows' way.
+            var placed = parent.Children.Where(c => !c.Type.IsMember && c.Boundary != Rect.None).ToList();
+            if (placed.Count > 0 && placed.Min(c => c.Boundary.Y) is var top && top < belowCard)
+            {
+                var shift = SnapToGrid(belowCard - top + NodeGrid.SnapSize / 2);
+                placed.ForEach(c => c.Boundary = c.Boundary with { Y = c.Boundary.Y + shift });
+            }
+
             var newNonMembers = nonMembers.Where(c => c.Boundary == Rect.None).ToList();
             if (newNonMembers.Count > 0)
             {
                 SortChildren(newNonMembers);
-                var placed = nonMembers.Where(c => c.Boundary != Rect.None).Select(c => c.Boundary).ToList();
+                // The header and the rows take the whole width above belowCard: new children go below.
                 PlaceNodesInFreeSlots(
                     parent,
                     newNonMembers,
                     ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
-                    [new Rect(0, 0, Math.Max(card.X + card.Width, 1), belowCard), .. placed],
+                    [
+                        new Rect(-HeaderBandWidth, -HeaderBandWidth, 2 * HeaderBandWidth, belowCard + HeaderBandWidth),
+                        .. placed.Select(c => c.Boundary),
+                    ],
                     regularMetrics,
                     CardStart
                 );
@@ -480,6 +494,25 @@ class NodeLayout
         }
 
         ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
+    }
+
+    // Wide enough to cover any card's header band and rows as an occupied area.
+    const double HeaderBandWidth = 1_000_000;
+
+    // A card node's children start at its box's top left (ApplyCardTransform), where its header is
+    // drawn. Other code writes the container transform too (rescaling after a resize, resizing
+    // from the top or left edge): re-fit the card's transform when it drifted. True when it changed.
+    public static bool EnsureCardTransform(Node node)
+    {
+        var zoom = node.ContainerZoom;
+        var offset = node.ContainerOffset;
+        if (node.Children.All(child => child.Boundary == Rect.None))
+            return false;
+        ApplyCardTransform(node, ContentBounds(node));
+        if (Math.Abs(node.ContainerZoom - zoom) < 1e-9 && offset == node.ContainerOffset)
+            return false;
+        BumpGeneration();
+        return true;
     }
 
     // Where the card's first heading goes in a freshly laid out container.

@@ -124,6 +124,56 @@ public class NodeLayoutTests
     }
 
     [Fact]
+    public void EnsureCardTransform_ShouldPutTheRowsBackUnderTheHeader()
+    {
+        var (parent, _, _) = CardType();
+        NodeLayout.AdjustChildren(parent);
+        var (zoom, offset) = (parent.ContainerZoom, parent.ContainerOffset);
+
+        // As a resize from the top edge or a rescale would leave it
+        parent.ContainerOffset = new Pos(5, 12);
+        parent.ContainerZoom = zoom * 1.5;
+
+        Assert.True(NodeLayout.EnsureCardTransform(parent));
+        Assert.Equal(offset, parent.ContainerOffset);
+        Assert.Equal(zoom, parent.ContainerZoom, 9);
+        Assert.False(NodeLayout.EnsureCardTransform(parent));
+    }
+
+    [Fact]
+    public void AdjustChildren_CustomizedCard_ShouldMovePlacedChildrenBelowTheRows()
+    {
+        var (parent, members, nested) = CardType();
+        NodeLayout.AdjustChildren(parent);
+        parent.IsChildrenLayoutCustomized = true;
+        nested.Boundary = nested.Boundary with { Y = 0 }; // Placed where the rows have grown to
+
+        NodeLayout.AdjustChildren(parent);
+
+        var card = MemberCard.Bounds(parent);
+        Assert.True(nested.Boundary.Y >= card.Y + card.Height, $"Expected below {card} but got {nested.Boundary}");
+        Assert.Equal(MemberCard.CardRowsTop, members.Min(m => m.Boundary.Y) - MemberCard.HeadingHeight);
+    }
+
+    static (ModelNode Parent, List<ModelNode> Members, ModelNode Nested) CardType()
+    {
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var parent = new ModelNode("CardType", root) { Type = NodeType.Type, Boundary = new Rect(0, 0, 400, 300) };
+        root.AddChild(parent);
+        var members = new List<ModelNode>();
+        for (var i = 0; i < 6; i++)
+        {
+            var member = new ModelNode($"CardType.Member{i}", parent) { Type = NodeType.MethodMember };
+            parent.AddChild(member);
+            members.Add(member);
+        }
+        var nested = new ModelNode("CardType.Nested", parent) { Type = NodeType.Type };
+        parent.AddChild(nested);
+        return (parent, members, nested);
+    }
+
+    [Fact]
     public void AdjustChildren_Density_ShouldChangeSpacing()
     {
         var root = new ModelNode("", null!) { Type = NodeType.Root };

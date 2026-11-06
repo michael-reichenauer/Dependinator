@@ -132,7 +132,6 @@ static partial class NodeSvg
         // growing it reveals more rows instead.
         var u = Math.Min(rect.Width / 180, 1.3);
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
-        var (border, background) = NodeColors(node);
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
 
@@ -185,7 +184,7 @@ static partial class NodeSvg
                     $"""
                     <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
-                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars)}</text>
+                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars, u)}</text>
                     """
                 )
             );
@@ -220,16 +219,18 @@ static partial class NodeSvg
         return svg.ToString();
     }
 
-    // A summary row: the name, then its signature (muted) in what room is left, like a full row.
-    static string SummaryRowText(Node member, int maxChars)
+    // A summary row: the name, then its signature (muted) in what room is left, like a full row
+    // (MemberDetailsSvg).
+    static string SummaryRowText(Node member, int maxChars, double u)
     {
         var name = Clip(member.DisplayName, maxChars);
-        var room = maxChars - name.Length - 1;
-        if (string.IsNullOrEmpty(member.Signature) || room < 3)
+        var signature = ClipRow(member.Signature ?? "", maxChars - name.Length - 1);
+        if (signature.Length == 0)
             return Encode(name);
-        return $"""{Encode(name)}<tspan class="memberSignature" dx="{MemberSignatureGap}"> {Encode(
-            Clip(member.Signature, room)
-        )}</tspan>""";
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""{Encode(name)}<tspan class="memberSignature" dx="{MemberSignatureGap * u:0.##}">{Encode(signature)}</tspan>"""
+        );
     }
 
     // A card's box and header: the border in the node's color, the header tinted with its
