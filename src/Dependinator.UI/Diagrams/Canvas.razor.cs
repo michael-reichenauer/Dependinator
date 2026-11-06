@@ -107,6 +107,8 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
                 return;
             selfReference = jSInterop.Reference(this);
             await jSInterop.Call("initTooltips", "svgcanvas", selfReference, tooltipToken);
+            if (isDisposed)
+                return;
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShowAsync);

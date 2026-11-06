@@ -123,10 +123,13 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
 
         if (line.HtmlLabel is not null)
             html.Append($"<div class=\"dep-tt-desc\"><b>{line.HtmlLabel}</b></div>");
+        if (!string.IsNullOrWhiteSpace(line.LabelDescription))
+            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.LabelDescription))}</div>");
         if (!string.IsNullOrWhiteSpace(line.Description))
             html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.Description))}</div>");
 
-        if (count > 0)
+        // A hand-drawn line's one link would only repeat its two ends.
+        if (count > 0 && !isManual)
         {
             var links = line
                 .Links.Select(l => (Source: LinkEndName(l.Source), Target: LinkEndName(l.Target)))
@@ -223,7 +226,7 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     }
 
     // UnitGraph.UnitOf, but a member at the top stands for itself, not for the root.
-    static Node Unit(Node node) => UnitGraph.UnitOf(node) is { IsRoot: true } ? node : UnitGraph.UnitOf(node);
+    static Node Unit(Node node) => UnitGraph.UnitOf(node) is { IsRoot: false } unit ? unit : node;
 
     static bool IsInside(Node node, Node ancestor)
     {
@@ -276,11 +279,9 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     }
 
     // A problem counts where it is, like on the node's badge (ProblemService): not in a hidden
-    // node, since there is nothing visible to lead to, unless the hovered node is hidden itself
-    // (revealed with View › Reveal Hidden Nodes) and so shows all of its own problems.
+    // node, since there is nothing visible to lead to (the card agrees with the badge).
     static bool IsCounted(Node problemNode, Node node) =>
-        IsInside(problemNode, node)
-        && (node.Visibility == NodeVisibility.Hidden || problemNode.Visibility != NodeVisibility.Hidden);
+        problemNode.Visibility != NodeVisibility.Hidden && IsInside(problemNode, node);
 
     // A link end as "Type.Member" for a member, else its short name.
     static string LinkEndName(Node node) =>
