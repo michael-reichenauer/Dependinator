@@ -50,6 +50,42 @@ public class MemberSummarySvgTests
         Assert.Contains("Run<tspan class=\"memberSignature\">(int count)</tspan>", svg);
     }
 
+    [Fact]
+    public void GetMemberSummarySvg_ShouldListPublicNestedTypesFirst_AndLeaveOutHiddenOnes()
+    {
+        var type = TypeWithRows();
+        Add(type, "Alpha", NodeType.ClassType, isPrivate: true);
+        Add(type, "Hidden", NodeType.ClassType);
+
+        var svg = NodeSvg.GetMemberSummarySvg(
+            type,
+            new Rect(0, 0, 180, 300),
+            1,
+            isRowShown: n => n.ShortName != "Hidden"
+        );
+
+        Assert.True(
+            svg.IndexOf(">Inner<", StringComparison.Ordinal) < svg.IndexOf(">Alpha<", StringComparison.Ordinal)
+        );
+        Assert.DoesNotContain(">Hidden<", svg);
+    }
+
+    [Fact]
+    public void GetMemberSummarySvg_ShouldCountOnlyShownNestedTypes()
+    {
+        var type = TypeWithRows();
+        Add(type, "Hidden", NodeType.ClassType);
+
+        var svg = NodeSvg.GetMemberSummarySvg(
+            type,
+            new Rect(0, 0, 180, 106),
+            1,
+            isRowShown: n => n.ShortName != "Hidden"
+        );
+
+        Assert.Contains("1 nested type<", svg);
+    }
+
     // Public Run and Stop, private secret, and a nested type Inner.
     static ModelNode TypeWithRows()
     {

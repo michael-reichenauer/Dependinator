@@ -1,4 +1,5 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
+@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Diagrams.Icons
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Modeling.Models
@@ -652,7 +653,7 @@ else if (HasSelectedLine)
     {
       var (customColor, autoColor, isCard) = GetCurrentNodeColors();
       // A type card's own color is the shared lavender, not its random one (NodeSvg.CardColors).
-      var (autoBorder, autoBackground) = isCard ? (DColors.CardFrame, DColors.CardHeader) : DColors.NodeColorByName(autoColor);
+      var (autoBorder, autoBackground) = isCard ? NodeSvg.DefaultCardColors : DColors.NodeColorByName(autoColor);
       return ColorMenuRows(
           "color-item",
           [
@@ -678,7 +679,8 @@ else if (HasSelectedLine)
     return model.Nodes.TryGetValue(nodeId, out var node) ? node.CustomIconColor : null;
   }
 
-  // The selected node's user-set container color (null = auto) and its auto-assigned color name.
+  // The selected node's user-set container color (null = auto), its auto-assigned color name,
+  // and whether it is a type card (whose auto color is the card lavender).
   (string? Custom, string Auto, bool IsCard) GetCurrentNodeColors()
   {
     if (!TryGetSelectedNodeId(out var nodeId))

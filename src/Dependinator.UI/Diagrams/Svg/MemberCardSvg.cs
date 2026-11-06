@@ -163,7 +163,11 @@ static partial class NodeSvg
         var firstRowY = dividerY + 4 * u;
         if (rows.Count > Slots(firstRowY))
         {
-            var countLines = WrapParts(CountParts(node, sections, isRowShown), MaxChars(w - 2 * padding, smallSize), 2);
+            var countLines = WrapParts(
+                CountParts(node, sections, nested.Count),
+                MaxChars(w - 2 * padding, smallSize),
+                2
+            );
             var countsY = y + headerHeight + 13 * u;
             for (var index = 0; index < countLines.Count; index++)
             {
@@ -320,7 +324,9 @@ static partial class NodeSvg
     // A card's border and header tint: the same lavender on every type (DColors.CardFrame,
     // CardHeader), unless the user set the node's color, or it is being edited.
     internal static (string Border, string Background) CardColors(Node node) =>
-        HasOwnColors(node) ? NodeColors(node) : (DColors.CardFrame, DColors.CardHeader);
+        HasOwnColors(node) ? NodeColors(node) : DefaultCardColors;
+
+    internal static (string Border, string Background) DefaultCardColors => (DColors.CardFrame, DColors.CardHeader);
 
     // An open card node (NodeViewPolicy.IsMemberCardNode): its box is the card, with the header at
     // the top and the children (member rows, nested types) under it, in its child coordinates
@@ -374,14 +380,11 @@ static partial class NodeSvg
         };
 
     // ["3 fields", "1 constructor", "9 methods", "2 nested types"]
-    static List<string> CountParts(Node node, IReadOnlyList<MemberCard.Section> sections, Func<Node, bool>? isRowShown)
+    static List<string> CountParts(Node node, IReadOnlyList<MemberCard.Section> sections, int nested)
     {
         var parts = sections
             .Select(s => Count(s.Rows.Count, MemberCard.SectionTitle(s.Rows[0].Type).ToLowerInvariant()))
             .ToList();
-        var nested = node.Children.Count(c =>
-            !c.Type.IsMember && !NodeViewPolicy.IsAnnotation(c) && (isRowShown?.Invoke(c) ?? true)
-        );
         if (nested > 0)
             parts.Add(Count(nested, node.Type.IsType ? "nested types" : "children"));
         return parts;

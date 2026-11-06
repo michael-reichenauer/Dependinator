@@ -217,9 +217,10 @@ static partial class NodeSvg
         // A private row is muted, with a "private" tag at its end (MemberCard.ColumnWidth has room).
         var isPrivate = node.IsPrivate ?? false;
         var tagSize = fontSize * PrivateTagScale;
-        var detailsEnd = isPrivate
-            ? rowEnd - EstimateTextWidth(PrivateTag, tagSize) - 4 * MemberSignatureGap * textZoom
-            : rowEnd;
+        var tagStart = rowEnd - EstimateTextWidth(PrivateTag, tagSize) - 4 * MemberSignatureGap * textZoom;
+        // No tag over a name too long for the row (the column width is capped).
+        var hasTag = isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= tagStart;
+        var detailsEnd = hasTag ? tagStart : rowEnd;
 
         var layout = new LeafNodeLayout(
             IconRect: member.Icon,
@@ -240,16 +241,14 @@ static partial class NodeSvg
             TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
         );
 
-        // No tag over a name too long for the row (the column width is capped).
-        var tag =
-            isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= detailsEnd
-                ? PrivateTagSvg(
-                    rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
-                    member.Text.Y,
-                    tagSize,
-                    HiddenAttributes(node).TextOpacity
-                )
-                : "";
+        var tag = hasTag
+            ? PrivateTagSvg(
+                rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
+                member.Text.Y,
+                tagSize,
+                HiddenAttributes(node).TextOpacity
+            )
+            : "";
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
             + tag
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
