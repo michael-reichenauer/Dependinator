@@ -505,7 +505,7 @@
     modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    string CssPosition => $"position:fixed;left:{15}px; top:{3}px;";
+    string CssPosition => $"position:fixed;left:{15}px; top:{6}px;";
     string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
     protected override void OnInitialized()

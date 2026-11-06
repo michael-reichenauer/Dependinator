@@ -83,12 +83,14 @@ class ScreenService : IScreenService, IDisposable
         var windowWidth = Math.Floor(browserSizeDetails.InnerWidth);
         var windowHeight = Math.Floor(browserSizeDetails.InnerHeight);
 
-        // Calculate the SVG size to fit the window (with some margin and x,y position).
-        // The extra 10px of height lets the canvas reach the bottom edge of the window.
+        // Calculate the SVG size to fit the window exactly (x,y is inside the drop zone's
+        // border, SvgPageMargin is the border below). Never taller than the window: a page that
+        // can scroll even a few pixels makes Safari on iPadOS 26 draw its foggy scroll-edge
+        // blur under the status bar of a home-screen web app.
         var svgX = Math.Floor(svg.X);
         var svgY = Math.Floor(svg.Y);
         var svgWidth = windowWidth - svgX - SvgPageMargin * 2;
-        var svgHeight = windowHeight - svgY - SvgPageMargin * 2 + 10;
+        var svgHeight = windowHeight - svgY - SvgPageMargin;
         var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
 
         var isChanged = false;
