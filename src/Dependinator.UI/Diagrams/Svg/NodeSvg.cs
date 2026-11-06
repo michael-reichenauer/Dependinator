@@ -182,6 +182,22 @@ static partial class NodeSvg
         );
     }
 
+    // A private member's mark: a small padlock on the lower right corner of its icon, on a disc of
+    // the card's background so it reads over the icon (like private members in an IDE). Drawn
+    // right after the icon, under the row's hover and selection.
+    internal static string PrivateBadgeSvg(Rect icon, string nodeOpacity)
+    {
+        var s = icon.Width;
+        // Inside the row (the summary card's rows are only a little taller than the icon).
+        var (cx, cy, r) = (icon.X + s * 0.88, icon.Y + s * 0.78, s * 0.42);
+        var (w, h) = (r, r * 0.8);
+        var lockColor = DColors.PrivateLock;
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<g class="privateBadge" pointer-events="none" {nodeOpacity}><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.CardBackground}"/><path d="M{cx - w * 0.32:0.##},{cy - h * 0.15:0.##} v{-h * 0.35:0.##} a{w * 0.32:0.##},{w * 0.32:0.##} 0 0 1 {w * 0.64:0.##},0 v{h * 0.35:0.##}" fill="none" stroke="{lockColor}" stroke-width="{s * 0.08:0.##}"/><rect x="{cx - w / 2:0.##}" y="{cy - h * 0.15:0.##}" width="{w:0.##}" height="{h * 0.75:0.##}" rx="{s * 0.04:0.##}" fill="{lockColor}"/></g>"""
+        );
+    }
+
     // How many children the user hid, on the node's top-left corner (the problem badge has the
     // top-right): a grey circle with the count, so the hidden nodes are not forgotten. Like the
     // problem badge it lets pointer events through to the node.
@@ -214,13 +230,8 @@ static partial class NodeSvg
         var fontSize = FontSize * textZoom;
         var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
         var rowEnd = nodeCanvasRect.X + nodeCanvasRect.Width;
-        // A private row is muted, with a "private" tag at its end (MemberCard.ColumnWidth has room).
+        // A private row is muted, with a lock on its icon.
         var isPrivate = node.IsPrivate ?? false;
-        var tagSize = fontSize * PrivateTagScale;
-        var tagStart = rowEnd - EstimateTextWidth(PrivateTag, tagSize) - 4 * MemberSignatureGap * textZoom;
-        // No tag over a name too long for the row (the column width is capped).
-        var hasTag = isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= tagStart;
-        var detailsEnd = hasTag ? tagStart : rowEnd;
 
         var layout = new LeafNodeLayout(
             IconRect: member.Icon,
@@ -237,20 +248,12 @@ static partial class NodeSvg
                 Width = Math.Max(member.Bounds.Width, rowEnd - member.Bounds.X),
             },
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y),
-            TextSuffix: MemberDetailsSvg(node, member.Text, detailsEnd, fontSize, textZoom),
-            TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
+            TextSuffix: MemberDetailsSvg(node, member.Text, rowEnd, fontSize, textZoom),
+            TextAttributes: $"data-name=\"{node.HtmlDisplayName}\"",
+            IsPrivateBadge: isPrivate
         );
 
-        var tag = hasTag
-            ? PrivateTagSvg(
-                rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
-                member.Text.Y,
-                tagSize,
-                HiddenAttributes(node).TextOpacity
-            )
-            : "";
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
-            + tag
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
 
@@ -306,7 +309,6 @@ static partial class NodeSvg
 
     const double MemberSignatureGap = 3; // Before the comment
     const double MemberDescriptionScale = 0.85;
-    const double PrivateTagScale = 0.8;
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
     // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
@@ -324,7 +326,8 @@ static partial class NodeSvg
         Pos MarkerPos,
         Pos? LinkHandlePos = null,
         string TextSuffix = "",
-        string TextAttributes = ""
+        string TextAttributes = "",
+        bool IsPrivateBadge = false
     );
 
     static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize, bool isEditing)
@@ -355,7 +358,9 @@ static partial class NodeSvg
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""
-            <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
+            <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />{(
+                layout.IsPrivateBadge ? PrivateBadgeSvg(layout.IconRect, nodeOpacity) : ""
+            )}
             <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity} {layout.TextAttributes}>{node.HtmlDisplayName}{layout.TextSuffix}</text>
             {descriptionSvg}
             {hoverGroup}

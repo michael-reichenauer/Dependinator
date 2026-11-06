@@ -49,7 +49,8 @@ class NodeLayout
     // 3: signatures widen the card's columns, large cards fold their private rows.
     // 4: an open type is a UML card: rows under its header from the top left, nested types below.
     // 5: room for a private row's "private" tag.
-    public const int CurrentLayoutVersion = 5;
+    // 6: no more "private" tag (a lock on the row's icon), so narrower columns again.
+    public const int CurrentLayoutVersion = 6;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 

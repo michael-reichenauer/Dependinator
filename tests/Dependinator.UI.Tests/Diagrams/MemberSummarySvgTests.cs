@@ -6,7 +6,7 @@ using Rect = Dependinator.UI.Shared.Types.Rect;
 namespace Dependinator.UI.Tests.Diagrams;
 
 // The summary card (NodeSvg.GetMemberSummarySvg): public rows, then private ones with a
-// "private" tag, then the nested types under their own heading; the counts line only when some
+// lock on their icon, then the nested types under their own heading; the counts line only when some
 // rows are left out.
 public class MemberSummarySvgTests
 {
@@ -21,7 +21,7 @@ public class MemberSummarySvgTests
         Assert.DoesNotContain("more</text>", svg);
         Assert.Contains("NESTED TYPES", svg);
         Assert.Contains(">Inner<", svg);
-        Assert.Single(Occurrences(svg, "class=\"privateTag\""));
+        Assert.Single(Occurrences(svg, "class=\"privateBadge\""));
         Assert.True(svg.IndexOf(">Run<", StringComparison.Ordinal) < svg.IndexOf(">secret<", StringComparison.Ordinal));
         Assert.True(
             svg.IndexOf(">secret<", StringComparison.Ordinal) < svg.IndexOf("NESTED TYPES", StringComparison.Ordinal)

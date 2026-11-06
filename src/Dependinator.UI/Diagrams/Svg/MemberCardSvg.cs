@@ -193,7 +193,6 @@ static partial class NodeSvg
         if (shown > 0 && rows[shown - 1] is null)
             shown--; // No heading without a row under it
         var rowChars = MaxChars(w - 2 * padding - 13 * u, rowSize);
-        var tagChars = (int)Math.Ceiling(PrivateTag.Length * smallSize / rowSize) + 1;
         for (var index = 0; index < shown; index++)
         {
             var rowY = firstRowY + index * rowPitch;
@@ -216,12 +215,12 @@ static partial class NodeSvg
                     $"""
                     <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
-                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, isPrivate ? rowChars - tagChars : rowChars)}</text>
+                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars)}</text>
                     """
                 )
             );
             if (isPrivate)
-                svg.Append(PrivateTagSvg(x + w - padding, rowY + rowPitch / 2, smallSize, textOpacity));
+                svg.Append(PrivateBadgeSvg(new Rect(x + padding, rowY + 2 * u, 9 * u, 9 * u), nodeOpacity));
         }
 
         if (shown < rows.Count && slots > 0)
@@ -251,15 +250,6 @@ static partial class NodeSvg
         svg.Append(HiddenBadgeSvg(hiddenChildCount, rect, textZoom));
         return svg.ToString();
     }
-
-    const string PrivateTag = "private";
-
-    // The "private" tag at the right end of a private row, ending at x.
-    internal static string PrivateTagSvg(double x, double y, double fontSize, string textOpacity) =>
-        string.Create(
-            CultureInfo.InvariantCulture,
-            $"""<text x="{x:0.##}" y="{y:0.##}" class="privateTag" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{PrivateTag}</text>"""
-        );
 
     // A summary row: the name, then its signature (muted) in what room is left, like a full row
     // (MemberDetailsSvg).
