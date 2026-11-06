@@ -25,6 +25,11 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     const int MaxDescriptionLength = 400;
     const int ShownLinks = 3;
 
+    // The dependency counts per node, for the structure version they were counted at: resting on
+    // a large container walks all links inside it once, not on every pause.
+    readonly Dictionary<NodeId, (int Uses, int UsedBy)> dependencyCounts = [];
+    int countsVersion = -1;
+
     public string? GetHtml(string elementId)
     {
         var pointerId = PointerId.Parse(elementId);
@@ -54,7 +59,8 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         html.Append($"<div><div class=\"dep-tt-name\">{node.HtmlDisplayName}</div>");
         html.Append($"<div class=\"dep-tt-kind\">{HttpUtility.HtmlEncode(KindLine(node))}</div></div></div>");
 
-        if (node.HtmlAlias is not null)
+        // A zone's label is its alias over a generated name the user never chose.
+        if (node.HtmlAlias is not null && !node.IsZone && !node.IsNote)
             html.Append($"<div class=\"dep-tt-kind dep-tt-real\">{node.HtmlLongName}</div>");
         if (!string.IsNullOrEmpty(node.Signature))
             html.Append($"<div class=\"dep-tt-code\">{HttpUtility.HtmlEncode(node.Signature)}</div>");
@@ -64,7 +70,14 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         List<string> chips = [];
         if (!node.IsNote && !node.IsZone)
         {
-            var (uses, usedBy) = CountDependencies(node);
+            if (countsVersion != model.StructureVersion)
+            {
+                dependencyCounts.Clear();
+                countsVersion = model.StructureVersion;
+            }
+            if (!dependencyCounts.TryGetValue(node.Id, out var counts))
+                dependencyCounts[node.Id] = counts = CountDependencies(node);
+            var (uses, usedBy) = counts;
             if (uses > 0)
                 chips.Add(Chip($"uses <b>{uses}</b>"));
             if (usedBy > 0)
@@ -96,13 +109,14 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
 
         var html = new StringBuilder();
         var count = line.Links.Count;
+        var isManual = count > 0 && line.Links.All(l => l.IsManual);
         html.Append(
             $"<div class=\"dep-tt-name\">{line.Source.HtmlDisplayName}<span class=\"dep-tt-arrow\">→</span>{line.Target.HtmlDisplayName}</div>"
         );
         var parent = line.Source.Parent == line.Target.Parent && !line.Source.Parent.IsRoot ? line.Source.Parent : null;
         var kind =
             (parent is null ? "" : $"{parent.LongName} · ")
-            + (count == 0 ? "drawn by hand" : $"{count} {Plural(count, "link")}");
+            + (isManual || count == 0 ? "drawn by hand" : $"{count} {Plural(count, "link")}");
         html.Append($"<div class=\"dep-tt-kind\">{HttpUtility.HtmlEncode(kind)}</div>");
 
         if (line.HtmlLabel is not null)
@@ -110,7 +124,7 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
             html.Append($"<div class=\"dep-tt-desc\">{line.HtmlDescription}</div>");
 
-        if (count > 0)
+        if (count > 0 && !isManual)
         {
             var links = line
                 .Links.Select(l => (Source: LinkEndName(l.Source), Target: LinkEndName(l.Target)))
@@ -153,7 +167,10 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
             return "Zone";
         return node.Type switch
         {
-            Parsing.NodeType.Solution => "Solution",
+            // The Bicep parser makes the entry .bicep file the solution node ("main*bicep")
+            Parsing.NodeType.Solution => node.Name.EndsWith("*bicep", StringComparison.OrdinalIgnoreCase)
+                ? "Bicep deployment"
+                : "Solution",
             Parsing.NodeType.SolutionFolder => "Solution folder",
             Parsing.NodeType.Assembly or Parsing.NodeType.Dll => "Project",
             Parsing.NodeType.Exe => "Executable project",
@@ -181,27 +198,27 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
     }
 
     // How many other nodes the node (or anything inside it) uses and is used by, outside itself.
-    // A member counts as its type, so calls into five methods of one class count as one use.
+    // A member counts as its type, so calls into five methods of one class count as one use, and a
+    // member's calls to the other members of its own type are no uses at all.
     internal static (int Uses, int UsedBy) CountDependencies(Node node)
     {
+        var self = UnitGraph.UnitOf(node);
         HashSet<Node> uses = [];
         HashSet<Node> usedBy = [];
         Stack<Node> pending = new([node]);
         while (pending.TryPop(out var current))
         {
             foreach (var link in current.SourceLinks)
-                if (!IsInside(link.Target, node))
-                    uses.Add(Owner(link.Target));
+                if (!IsInside(link.Target, node) && UnitGraph.UnitOf(link.Target) is var unit && unit != self)
+                    uses.Add(unit);
             foreach (var link in current.TargetLinks)
-                if (!IsInside(link.Source, node))
-                    usedBy.Add(Owner(link.Source));
+                if (!IsInside(link.Source, node) && UnitGraph.UnitOf(link.Source) is var unit && unit != self)
+                    usedBy.Add(unit);
             foreach (var child in current.Children)
                 pending.Push(child);
         }
         return (uses.Count, usedBy.Count);
     }
-
-    static Node Owner(Node node) => node.Type.IsMember && !node.Parent.IsRoot ? node.Parent : node;
 
     static bool IsInside(Node node, Node ancestor)
     {
@@ -229,7 +246,7 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
             .ParseProblems.Where(p =>
                 p.NodeName is not null
                 && model.Nodes.TryGetValue(NodeId.FromName(p.NodeName), out var problemNode)
-                && IsInside(problemNode, node)
+                && IsCounted(problemNode, node)
             )
             .Sum(p => p.ErrorCount);
         if (errors > 0)
@@ -239,19 +256,24 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         if (inCycles > 0)
             chips.Add(Chip($"⚠ in {inCycles} {Plural(inCycles, "cycle")}", "dep-tt-warn"));
         var cyclesInside = cycles.Count(c =>
-            model.Nodes.TryGetValue(c.ContainerId, out var container) && IsInside(container, node)
+            model.Nodes.TryGetValue(c.ContainerId, out var container) && IsCounted(container, node)
         );
         if (cyclesInside > 0)
             chips.Add(Chip($"⚠ {cyclesInside} {Plural(cyclesInside, "cycle")} inside", "dep-tt-warn"));
 
         var rules = brokenRules.Count(r =>
-            r.Violations.Any(v => model.Nodes.TryGetValue(v.SourceId, out var source) && IsInside(source, node))
+            r.Violations.Any(v => model.Nodes.TryGetValue(v.SourceId, out var source) && IsCounted(source, node))
         );
         if (rules > 0)
             chips.Add(Chip($"✕ breaks {rules} {Plural(rules, "rule")}", "dep-tt-err"));
 
         return chips;
     }
+
+    // A problem counts where it is, like on the node's badge (ProblemService): not in a hidden
+    // node, since there is nothing visible to lead to.
+    static bool IsCounted(Node problemNode, Node node) =>
+        problemNode.Visibility != NodeVisibility.Hidden && IsInside(problemNode, node);
 
     // A link end as "Type.Member" for a member, else its short name.
     static string LinkEndName(Node node) =>

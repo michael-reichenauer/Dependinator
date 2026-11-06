@@ -1685,6 +1685,7 @@ button.dep-rules__node:hover {
 
 .dep-tt-desc {
     margin-top: 6px;
+    white-space: pre-line;
     display: -webkit-box;
     -webkit-line-clamp: 8;
     -webkit-box-orient: vertical;

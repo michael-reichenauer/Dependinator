@@ -531,10 +531,13 @@ export function initLinePreview(elementId) {
 const tooltipDelayMs = 600;
 const tooltipOffset = 14;
 
+let tooltipCleanup = null;
+
 export function initTooltips(elementId, dotNetRef) {
   const svg = document.getElementById(elementId);
   if (!svg) return;
-  if (svg.tooltipCleanup) svg.tooltipCleanup();
+  // A canvas made again (a re-mounted component) replaces the listeners of the one before.
+  tooltipCleanup?.();
 
   let card = document.getElementById("dep-tooltip");
   if (!card) {
@@ -589,7 +592,7 @@ export function initTooltips(elementId, dotNetRef) {
 
   function onOver(event) {
     if (event.pointerType !== "mouse" || event.buttons !== 0) return hide();
-    const group = event.target.closest?.("g.hoverable[id]");
+    const group = event.target.closest?.("g.hoverable[id], g.hoverableedit[id]");
     const id = group?.id;
     if (!id || !(id.endsWith(".n") || id.endsWith(".l"))) return hide();
     if (id === hoverId) return;
@@ -618,7 +621,7 @@ export function initTooltips(elementId, dotNetRef) {
   svg.addEventListener("wheel", hide, options);
   document.addEventListener("keydown", hide);
 
-  svg.tooltipCleanup = () => {
+  tooltipCleanup = () => {
     hide();
     svg.removeEventListener("pointerover", onOver);
     svg.removeEventListener("pointermove", onMove, options);
@@ -626,12 +629,12 @@ export function initTooltips(elementId, dotNetRef) {
     svg.removeEventListener("pointerleave", hide);
     svg.removeEventListener("wheel", hide, options);
     document.removeEventListener("keydown", hide);
-    svg.tooltipCleanup = null;
+    tooltipCleanup = null;
   };
 }
 
-export function disposeTooltips(elementId) {
-  document.getElementById(elementId)?.tooltipCleanup?.();
+export function disposeTooltips() {
+  tooltipCleanup?.();
 }
 
 const openDatabases = new Map();

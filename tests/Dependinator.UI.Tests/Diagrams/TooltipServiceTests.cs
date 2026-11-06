@@ -88,6 +88,29 @@ public class TooltipServiceTests
     }
 
     [Fact]
+    public void GetHtml_ShouldNotCountAMembersOwnType_AsAUse()
+    {
+        Node run;
+        using (var model = modelMgr.UseModel())
+        {
+            var ns = AddNode(model, "App", model.Root, NodeType.Namespace);
+            var service = AddNode(model, "App.Service", ns);
+            run = AddNode(model, "App.Service.Run", service, NodeType.MethodMember);
+            var stop = AddNode(model, "App.Service.Stop", service, NodeType.MethodMember);
+            var repo = AddNode(model, "App.Repo", ns);
+            AddLink(model, run, stop);
+            AddLink(model, stop, run);
+            AddLink(model, run, AddNode(model, "App.Repo.Save", repo, NodeType.MethodMember));
+        }
+
+        var html = Html(NewService(), NodeElement(run));
+
+        Assert.Contains("Method · Service", html);
+        Assert.Contains("uses <b>1</b>", html); // Repo, not Service
+        Assert.DoesNotContain("used by", html);
+    }
+
+    [Fact]
     public void GetHtml_ShouldShowCycles_OnTheMembersAndTheirContainer()
     {
         Node container,

@@ -132,7 +132,12 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
-        selfReference?.Dispose();
+        if (selfReference is not null)
+        {
+            // Drops the hover card's listeners; fire and forget, a gone circuit has none left.
+            _ = jSInterop.Call("disposeTooltips").AsTask();
+            selfReference.Dispose();
+        }
     }
 
     protected async Task LoadFiles(InputFileChangeEventArgs e)
