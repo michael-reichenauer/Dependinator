@@ -1,6 +1,7 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;

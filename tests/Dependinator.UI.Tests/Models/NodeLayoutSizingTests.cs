@@ -43,9 +43,37 @@ public class NodeLayoutSizingTests
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
         NodeLayout.AdjustChildren(type);
 
-        Assert.Equal(18, method.Boundary.Height);
+        Assert.Equal(MemberCard.RowHeight, method.Boundary.Height);
         Assert.True(SizeOf(large).Width > SizeOf(small).Width);
         AssertNoOverlaps(type.Children);
+    }
+
+    // A type of only members is shaped like its member card (with the area of its size step), so
+    // the card fills it when it opens; it nearly fills it (the card coverage).
+    [Fact]
+    public void AdjustChildren_TypeOfOnlyMembers_ShouldBeShapedLikeItsCard()
+    {
+        using var model = NewModel();
+        var parent = AddNode(model, model.Root, "Parent", NodeType.Namespace, new Rect(0, 0, 1200, 800));
+        var type = AddNode(model, parent, "Parent.Type", lines: 50);
+        AddNode(model, parent, "Parent.Other", lines: 50);
+        for (var i = 0; i < 2; i++)
+            AddNode(model, type, $"Parent.Type.LongMethodName{i}", type: NodeType.MethodMember);
+
+        NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
+        NodeLayout.AdjustChildren(parent);
+        NodeLayout.AdjustChildren(type);
+
+        // A heading and two rows make a wide card: wider than tall
+        Assert.True(type.Boundary.Width > type.Boundary.Height, $"Expected a wide type but got {SizeOf(type)}");
+        // The card (with its header) fills the type's width or height, unless a small card
+        // would be magnified (at most zoom 1)
+        var card = MemberCard.Bounds(type);
+        var coverage = Math.Max(
+            (card.X + card.Width) * type.ContainerZoom / type.Boundary.Width,
+            (card.Y + card.Height) * type.ContainerZoom / type.Boundary.Height
+        );
+        Assert.True(type.ContainerZoom == 1 || coverage > 0.9, $"Expected a filled card but got {coverage:0.###}");
     }
 
     [Fact]

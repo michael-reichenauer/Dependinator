@@ -2,6 +2,7 @@ using System.Globalization;
 using Dependinator.UI.Diagrams.Icons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 
 namespace Dependinator.UI.Diagrams;
 
@@ -21,7 +22,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     IInitService initService { get; init; } = null!;
 
     [Inject]
-    Interaction.IManualEditService manualEditService { get; init; } = null!;
+    Editing.IManualEditService manualEditService { get; init; } = null!;
 
     [Inject]
     Interaction.IAreaSelectionService areaSelectionService { get; init; } = null!;
@@ -31,6 +32,16 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     [Inject]
     IViewOptions viewOptions { get; init; } = null!;
+
+    [Inject]
+    Tooltips.ITooltipService tooltipService { get; init; } = null!;
+
+    DotNetObjectReference<Canvas>? selfReference;
+    bool isDisposed;
+
+    // Names this canvas's hover card listeners in JS, so a late dispose leaves a newer canvas's alone.
+    static int lastTooltipToken;
+    readonly int tooltipToken = Interlocked.Increment(ref lastTooltipToken);
 
     public ElementReference dropZoneElement { get; private set; }
     public InputFile inputFile { get; private set; } = null!;
@@ -70,7 +81,10 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
                 ? $".line-vis {{ opacity: {Px(SoftOpacity)}; }} "
                     + ".line-lit, .line-accent, .line-cycle, .line-path, .line-rule { opacity: 1; } "
                 : "";
-            return css + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }}";
+            // Calls inside a type (LineSvg.IsInnerMemberLine) show only when lit or hover-previewed.
+            return css
+                + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }} "
+                + ".line-inner:not(.line-lit) { opacity: 0; }";
         }
     }
 
@@ -88,6 +102,13 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
             await jSInterop.Call("initializeFileDropZone", dropZoneElement, inputFile.Element);
             await jSInterop.Call("initLinePreview", "svgcanvas");
+            // Disposed while initializing: a newer canvas owns the hover card's listeners.
+            if (isDisposed)
+                return;
+            selfReference = jSInterop.Reference(this);
+            await jSInterop.Call("initTooltips", "svgcanvas", selfReference, tooltipToken);
+            if (isDisposed)
+                return;
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
             await InvokeAsync(srv.InitialShowAsync);
@@ -102,7 +123,34 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
 
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
-    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+    // The hover card's content (initTooltips in jsInterop.js asks when the mouse rests on an item).
+    [JSInvokable]
+    public string? GetTooltipHtml(string elementId)
+    {
+        try
+        {
+            return tooltipService.GetHtml(elementId);
+        }
+        catch (Exception e)
+        {
+            // A tooltip is never worth an error in the UI; the card just does not show.
+            Log.Warn($"No tooltip for {elementId}: {e.Message}");
+            return null;
+        }
+    }
+
+    public void Dispose()
+    {
+        isDisposed = true;
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        if (selfReference is not null)
+        {
+            // Drops the hover card's listeners if they are still this canvas's (a newer canvas
+            // may have replaced them); fire and forget, a gone circuit has none left.
+            _ = jSInterop.Call("disposeTooltips", tooltipToken).AsTask();
+            selfReference.Dispose();
+        }
+    }
 
     protected async Task LoadFiles(InputFileChangeEventArgs e)
     {

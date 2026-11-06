@@ -1,4 +1,5 @@
 ﻿@using Dependinator.UI.Diagrams.Dependencies
+@using Dependinator.UI.Diagrams.Svg
 @using Dependinator.UI.Diagrams.Icons
 @using Dependinator.UI.Modeling.Commands
 @using Dependinator.UI.Modeling.Models
@@ -276,16 +277,19 @@ else if (HasSelectedLine)
           <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenWith" OnClick="() => IsEditNodeMode = false"
                          Color="@Color.Warning" data-testid="node-edit" />
         </MudTooltip>
-        <MudTooltip Text="Fit contents inside the node">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
-                         data-testid="node-fit-contents" />
-        </MudTooltip>
+        @if (!interactionService.IsCard)
+        {
+          <MudTooltip Text="Fit contents inside the node">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
+                           data-testid="node-fit-contents" />
+          </MudTooltip>
+        }
       }
       else
       {
         @if (viewOptions.IsEditingEnabled)
         {
-          <MudTooltip Text="Arrange inside: pan and zoom the node's contents">
+          <MudTooltip Text="@(interactionService.IsCard ? "Arrange inside: move the nested types" : "Arrange inside: pan and zoom the node's contents")">
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.OpenWith" OnClick="() => IsEditNodeMode = true"
                            data-testid="node-edit" />
           </MudTooltip>
@@ -647,8 +651,9 @@ else if (HasSelectedLine)
   {
     get
     {
-      var (customColor, autoColor) = GetCurrentNodeColors();
-      var (autoBorder, autoBackground) = DColors.NodeColorByName(autoColor);
+      var (customColor, autoColor, isCard) = GetCurrentNodeColors();
+      // A type card's own color is the shared lavender, not its random one (MemberCardSvg.CardColors).
+      var (autoBorder, autoBackground) = isCard ? MemberCardSvg.DefaultCardColors : DColors.NodeColorByName(autoColor);
       return ColorMenuRows(
           "color-item",
           [
@@ -674,13 +679,16 @@ else if (HasSelectedLine)
     return model.Nodes.TryGetValue(nodeId, out var node) ? node.CustomIconColor : null;
   }
 
-  // The selected node's user-set container color (null = auto) and its auto-assigned color name.
-  (string? Custom, string Auto) GetCurrentNodeColors()
+  // The selected node's user-set container color (null = auto), its auto-assigned color name,
+  // and whether it is a type card (whose auto color is the card lavender).
+  (string? Custom, string Auto, bool IsCard) GetCurrentNodeColors()
   {
     if (!TryGetSelectedNodeId(out var nodeId))
-      return (null, "");
+      return (null, "", false);
     using var model = modelMgr.UseModel();
-    return model.Nodes.TryGetValue(nodeId, out var node) ? (node.CustomColor, node.Color) : (null, "");
+    return model.Nodes.TryGetValue(nodeId, out var node)
+      ? (node.CustomColor, node.Color, NodeViewPolicy.IsMemberCardNode(node))
+      : (null, "", false);
   }
 
   void SetIconColor(string? colorName)

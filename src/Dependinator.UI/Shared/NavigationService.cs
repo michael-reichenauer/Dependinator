@@ -195,8 +195,11 @@ class NavigationService(
             if (!model.Nodes.TryGetValue(nodeId, out var node))
                 return false;
 
-            if (EnsureLayoutForPath(node))
+            if (EnsureLayoutForPath(node, isUnfold: true))
+            {
+                model.BumpStructureVersion();
                 applicationEvents.TriggerModelChanged();
+            }
 
             (pos, zoom) = node.GetCenterPosAndZoom();
             // Frame a large node smaller, so it shows as an icon (see NodeViewPolicy)
@@ -274,14 +277,28 @@ class NavigationService(
         return (filePath, 0);
     }
 
-    static bool EnsureLayoutForPath(Modeling.Models.Node node)
+    // Lays out the node's ancestors that need it. With isUnfold, a private member that its card
+    // folds into "+ N private" (not drawn) gets its card's private rows shown, like going to a
+    // hidden node reveals it; framing several nodes leaves the cards as they are.
+    static bool EnsureLayoutForPath(Modeling.Models.Node node, bool isUnfold = false)
     {
-        var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
-        if (needsLayout.Count == 0)
-            return false;
+        var isUnfolded = false;
+        if (
+            isUnfold
+            && node.Type.IsMember
+            && (node.IsPrivate ?? false)
+            && node.Parent is { } card
+            && MemberCard.ToggleOf(card) == MemberCard.PrivateToggle.Folded
+        )
+        {
+            card.IsPrivateMembersShown = true;
+            card.IsChildrenLayoutRequired = true;
+            isUnfolded = true;
+        }
 
+        var needsLayout = node.Ancestors().Reverse().Where(ancestor => ancestor.IsChildrenLayoutRequired).ToList();
         needsLayout.ForEach(ancestor => NodeLayout.AdjustChildren(ancestor));
-        return true;
+        return isUnfolded || needsLayout.Count > 0;
     }
 
     static FileLocation ParseFileLocation(string fileLocation)

@@ -1,5 +1,6 @@
 using Dependinator.Core;
 using Dependinator.UI.Diagrams.Dependencies;
+using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -10,6 +11,9 @@ interface IInteractionService
 {
     string Cursor { get; }
     bool IsContainer { get; }
+
+    // The selected node is an open UML card: its rows are not panned or zoomed inside it.
+    bool IsCard { get; }
     bool CanShowSource { get; }
     bool CanShowLineSource { get; }
     bool IsEditNodeMode { get; set; }
@@ -112,6 +116,18 @@ class InteractionService(
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             return NodeViewPolicy.IsContainerView(node, Zoom);
+        }
+    }
+
+    public bool IsCard
+    {
+        get
+        {
+            if (!selectionService.IsSelected)
+                return false;
+            using var model = modelMgr.UseModel();
+            return model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node)
+                && NodeViewPolicy.IsMemberCardNode(node);
         }
     }
 
@@ -349,7 +365,7 @@ class InteractionService(
             // In edit mode, a wheel gesture on the selected node (or anything inside it) zooms
             // the node's content instead of the canvas.
             var targetId = PointerId.Parse(e.TargetId);
-            if (targetId.Id == selectionService.SelectedId.Id || IsInsideSelectedNode(targetId))
+            if (!IsCard && (targetId.Id == selectionService.SelectedId.Id || IsInsideSelectedNode(targetId)))
             {
                 nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
                 return;
@@ -417,6 +433,21 @@ class InteractionService(
         if (manualEditService.IsPlacingNode)
         {
             _ = manualEditService.AddNodeAtAsync(e);
+            return;
+        }
+
+        if (pointerId.IsPrivateToggle)
+        {
+            if (nodeEditService.TogglePrivateMembers(pointerId.NodeId) is { } move)
+            {
+                // The card's rows get a new scale (more or fewer rows in the same box): keep the
+                // toggle under the pointer at the same size, so the rows stay readable and a second
+                // click folds them back.
+                panZoomService.FollowPoint(move.From, move.To, move.Scale);
+                applicationEvents.TriggerModelChanged();
+                applicationEvents.TriggerUIStateChanged();
+                applicationEvents.TriggerSaveNeeded();
+            }
             return;
         }
 

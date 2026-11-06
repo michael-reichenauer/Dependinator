@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the line width rule (SvgService.IsLineWeighted + LineSvg): every aggregated line is
+// Exercises the line width rule (LineEmphasis.IsLineWeighted + LineSvg): every aggregated line is
 // drawn at the same thin width, also while a node is selected, until View › Line Widths by Link
 // Count is on; then selecting a node draws the lines that touch it at their link-count width
 // while the dimmed, unrelated lines stay thin.
@@ -64,10 +64,10 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
     // Click the Settings checkbox and verify it really flipped (the dialog is closed again).
     Task ToggleWidthsAsync(bool expectOn) => App.ToggleSettingAsync("settings-link-count-widths", expectOn);
 
-    // The visible polyline of the line with the given hover title ("Source→Target (n)", see
-    // AppPage.LineTitle). The Has filter is resolved relative to each line group, so the title
-    // locator must be relative too.
+    // The visible polyline of the line whose data-name ("Source→Target (n)", see
+    // AppPage.LineTitle) contains the text. The Has filter is resolved relative to each line
+    // group, so the inner locator must be relative too.
     ILocator LinePolyline(string title) =>
-        Page.Locator("#svgcanvas g.line", new() { Has = Page.Locator("title", new() { HasTextString = title }) })
+        Page.Locator("#svgcanvas g.line", new() { Has = Page.Locator($"g.hoverable[data-name*=\"{title}\"]") })
             .Locator("g.line-vis > polyline");
 }

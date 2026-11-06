@@ -3,7 +3,7 @@
   "Name": "",
   "Offset": {},
   "ViewRect": {},
-  "LayoutVersion": 1,
+  "LayoutVersion": 6,
   "Nodes": [
     {
       "Name": "",
@@ -124,7 +124,11 @@
   ],
   "Lines": [],
   "Rules": [],
+  "DismissedRules": [],
   "AllowedViolations": [],
+  "KindRules": [],
+  "KindDismissedRules": [],
+  "KindAllowedViolations": [],
   "AcceptedCycles": [],
   "ParseProblems": []
 }

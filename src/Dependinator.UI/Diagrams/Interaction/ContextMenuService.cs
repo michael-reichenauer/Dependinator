@@ -1,5 +1,7 @@
 using Dependinator.Core;
 using Dependinator.UI.Diagrams.Dependencies;
+using Dependinator.UI.Diagrams.Editing;
+using Dependinator.UI.Diagrams.NodeHelp;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 

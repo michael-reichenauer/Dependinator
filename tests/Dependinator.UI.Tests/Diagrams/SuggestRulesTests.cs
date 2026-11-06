@@ -1,6 +1,9 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
@@ -22,7 +25,11 @@ public class SuggestRulesTests
     // UI (assembly) with UI.Views.View, Data (assembly) with Data.Repo; View uses Repo twice.
     public SuggestRulesTests()
     {
-        var ruleService = new RuleService(modelMgr, Mock.Of<ICommandService>());
+        var commands = new Mock<ICommandService>();
+        commands
+            .Setup(c => c.Do(It.IsAny<Command>(), true, true))
+            .Callback<Command, bool, bool>((command, _, _) => modelMgr.WithModel(m => command.Execute(m)));
+        var ruleService = new RuleService(modelMgr, commands.Object);
         var queries = new ModelQueries(
             modelMgr,
             new NodeSearchService(modelMgr),
@@ -85,7 +92,7 @@ public class SuggestRulesTests
         var suggestions = new RuleSuggestions([
             new SuggestedRule("UI", "Data", "Layering."),
             new SuggestedRule("Data", "UI", "Layering."),
-            new SuggestedRule("UI", "UI.Views", "Nested."),
+            new SuggestedRule(RuleKind.OnlyMayUse, ["UI", "UI.Views"], "Nested."),
             new SuggestedRule("Nowhere", "Data", "Missing."),
         ]);
 
@@ -95,10 +102,52 @@ public class SuggestRulesTests
         Assert.Equal((1, 2), (rules[0].Check.ViolationCount, rules[0].Check.LinkCount));
         Assert.True(rules[0].CanAdd);
         Assert.Equal(0, rules[1].Check.ViolationCount);
-        Assert.Equal("Data", rules[1].Check.FromName);
+        Assert.Equal("Data", rules[1].Check.Rule!.FromName);
         Assert.False(rules[2].CanAdd);
-        Assert.Contains("neither contains the other", rules[2].Check.Error);
+        Assert.Contains("is inside", rules[2].Check.Error);
         Assert.Contains("No node is named \"Nowhere\"", rules[3].Check.Error);
+    }
+
+    [Fact]
+    public void Check_ShouldCheckEveryKind()
+    {
+        var suggestions = new RuleSuggestions([
+            new SuggestedRule(RuleKind.Layers, ["Data", "UI"], "Upside down."),
+            new SuggestedRule(RuleKind.Layers, ["UI", "Data"], "Layering."),
+            new SuggestedRule(RuleKind.Independent, ["UI"], "Breaks."),
+            new SuggestedRule(RuleKind.SiblingsIndependent, ["UI"], "One child."),
+            new SuggestedRule(RuleKind.NoCycles, ["Nowhere"], "Missing."),
+            new SuggestedRule(RuleKind.Layers, ["UI"], "One layer."),
+        ]);
+
+        var rules = service.Check(suggestions).Rules;
+
+        Assert.Equal(
+            [(1, null), (0, null), (1, null), (0, null)],
+            rules.Take(4).Select(r => (r.Check.ViolationCount, r.Check.Error))
+        );
+        Assert.Equal(RuleKind.Independent, rules[2].Check.Rule!.Kind);
+        Assert.Equal(["UI (dll)"], rules[2].Check.Titles);
+        Assert.Contains("No node is named \"Nowhere\"", rules[4].Check.Error);
+        Assert.NotNull(rules[5].Check.Error);
+        Assert.Equal(ArchitectureRule.ForNode(RuleKind.SiblingsIndependent, "UI"), rules[3].Key);
+    }
+
+    [Fact]
+    public void Add_ShouldAddTheCheckedRulesOfAnyKind_WithTheirWhy()
+    {
+        var suggestions = service.Check(
+            new RuleSuggestions([
+                new SuggestedRule(RuleKind.NoCycles, ["Nowhere"], "Missing."),
+                new SuggestedRule(RuleKind.Layers, ["UI", "Data"], "Layering."),
+            ])
+        );
+
+        service.Add(suggestions.Rules);
+
+        using var model = modelMgr.UseModel();
+        Assert.Equal([new ArchitectureRule("UI", "Data", "Layering.", RuleKind.Layers, ["UI", "Data"])], model.Rules);
+        Assert.Equal("Layering.", model.Rules.Single().Reason);
     }
 
     [Fact]
@@ -125,7 +174,7 @@ public class SuggestRulesTests
 
         var suggestions = AssertOk(RuleSuggestions.Parse(json, AiSource.ClaudeCode));
 
-        Assert.Equal([new SuggestedRule("UI", "Data", "Layering.")], suggestions.Rules);
+        Assert.Equal([(RuleKind.MustNotUse, "UI | Data", "Layering.")], Shown(suggestions.Rules));
         Assert.Equal(AiSource.ClaudeCode, suggestions.Source);
         Assert.Equal("1 rule", suggestions.Verdict);
     }
@@ -147,13 +196,141 @@ public class SuggestRulesTests
 
         Assert.Equal(
             [
-                new SuggestedRule("UI", "Data", "The UI goes through the services."),
-                new SuggestedRule("Data", "UI", ""),
-                new SuggestedRule("Core", "MudBlazor", "Core stays free of UI frameworks."),
+                (RuleKind.MustNotUse, "UI | Data", "The UI goes through the services."),
+                (RuleKind.MustNotUse, "Data | UI", ""),
+                (RuleKind.MustNotUse, "Core | MudBlazor", "Core stays free of UI frameworks."),
             ],
-            suggestions.Rules
+            Shown(suggestions.Rules)
         );
         Assert.Equal(AiSource.Chat, suggestions.Source);
+    }
+
+    [Fact]
+    public void Parse_ShouldReadEveryKind_AndLeaveOutUnknownKinds()
+    {
+        var json = """
+            {"rules":[
+              {"kind":"only_may_use","nodes":["Api","Data"],"why":"a"},
+              {"kind":"layers","nodes":["UI","Core","Data"],"why":"b"},
+              {"kind":"independent","nodes":["Utils"],"why":"c"},
+              {"kind":"no_cycles","nodes":["Core"],"why":"d"},
+              {"kind":"siblings_independent","nodes":["Features"],"why":"e"},
+              {"kind":"name_pattern","nodes":["X"],"why":"f"},
+              {"kind":"layers","nodes":["UI",""],"why":"g"}
+            ]}
+            """;
+
+        var suggestions = AssertOk(RuleSuggestions.Parse(json));
+
+        Assert.Equal(
+            [
+                (RuleKind.OnlyMayUse, "Api | Data", "a"),
+                (RuleKind.Layers, "UI | Core | Data", "b"),
+                (RuleKind.Independent, "Utils", "c"),
+                (RuleKind.NoCycles, "Core", "d"),
+                (RuleKind.SiblingsIndependent, "Features", "e"),
+            ],
+            Shown(suggestions.Rules)
+        );
+    }
+
+    [Fact]
+    public void ParseText_ShouldReadEveryKind()
+    {
+        var text = """
+            Rule: Only `Api` may use `Data`
+            Rule: Layers: `UI` > `Core` > `Data` (each may use only the layers below it)
+            Rule: `Utils` is independent
+            Rule: `UI` must not use `Data`, so UI is independent of storage
+            Rule: No cycles inside `Core`
+            Rule: The parts of `Features` are independent
+            Why: Features stay apart.
+            """;
+
+        var suggestions = AssertOk(RuleSuggestions.ParseText(text));
+
+        Assert.Equal(
+            [
+                (RuleKind.OnlyMayUse, "Api | Data", ""),
+                (RuleKind.Layers, "UI | Core | Data", ""),
+                (RuleKind.Independent, "Utils", ""),
+                (RuleKind.MustNotUse, "UI | Data", ""),
+                (RuleKind.NoCycles, "Core", ""),
+                (RuleKind.SiblingsIndependent, "Features", "Features stay apart."),
+            ],
+            Shown(suggestions.Rules)
+        );
+    }
+
+    static IEnumerable<(RuleKind, string, string)> Shown(IEnumerable<SuggestedRule> rules) =>
+        rules.Select(r => (r.Kind, string.Join(" | ", r.Nodes), r.Why));
+
+    [Fact]
+    public void Parse_ShouldAcceptAnAnswerWithNoRules()
+    {
+        var suggestions = AssertOk(RuleSuggestions.Parse("""{"rules":[]}"""));
+
+        Assert.Empty(suggestions.Rules);
+        Assert.Equal("no new rules", suggestions.Verdict);
+    }
+
+    [Fact]
+    public void ParsePasted_ShouldLeaveOutDismissedRules_AndListThemInThePrompt()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddDismissedRule(DismissedRule.Of(new ArchitectureRule("Data", "UI"), "Not intended."));
+
+        var suggestions = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: Data must not use UI\n"));
+
+        Assert.Equal(["UI"], suggestions.Rules.Select(r => r.From));
+        Assert.Equal(1, suggestions.LeftOutCount);
+        Assert.Contains("## Rules not to suggest", service.GetPrompt());
+        Assert.Contains("- `Data` must not use `UI` (dismissed: Not intended.)", service.GetPrompt());
+    }
+
+    [Fact]
+    public void ParsePasted_ShouldLeaveOutRulesAnEarlierAnswerSuggested_AndListThemInThePrompt()
+    {
+        AssertOk(service.ParsePasted("Rule: UI must not use Data"));
+
+        var second = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: Data must not use UI"));
+
+        Assert.Equal(["Data"], second.Rules.Select(r => r.From));
+        Assert.Equal(1, second.LeftOutCount);
+        Assert.Contains("- `UI` must not use `Data` (suggested before)", service.GetPrompt());
+    }
+
+    [Fact]
+    public void AllowSuggestingAgain_ShouldLetALaterAnswerSuggestTheRuleAgain()
+    {
+        AssertOk(service.ParsePasted("Rule: UI must not use Data"));
+
+        service.AllowSuggestingAgain(new ArchitectureRule("UI", "Data"));
+
+        var second = AssertOk(service.ParsePasted("Rule: UI must not use Data\nRule: UI must not use Data"));
+        Assert.Single(second.Rules);
+        Assert.Equal(0, second.LeftOutCount);
+    }
+
+    [Fact]
+    public void Check_ShouldMarkADismissedRule_SoItCannotBeAdded()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddDismissedRule(DismissedRule.Of(new ArchitectureRule("UI", "Data")));
+
+        var rule = Assert.Single(service.Check(new RuleSuggestions([new SuggestedRule("UI", "Data", "")])).Rules);
+
+        Assert.True(rule.Check.IsDismissed);
+        Assert.False(rule.CanAdd);
+    }
+
+    [Fact]
+    public void GetPrompt_ShouldListTheRulesWithTheirReasons()
+    {
+        using (var model = modelMgr.UseModel())
+            model.AddRule(new ArchitectureRule("UI", "Data", "The UI goes through services."));
+
+        Assert.Contains("- `UI` must not use `Data` — The UI goes through services.", service.GetPrompt());
     }
 
     [Fact]

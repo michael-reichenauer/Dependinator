@@ -1,0 +1,211 @@
+@using Dependinator.UI.Diagrams.Ai
+@inject ISuggestRulesService suggestRulesService
+
+@* Suggest rules (SuggestRulesService), the view the Rules panel switches to, on the right like the
+   other panels so the diagram stays in view: an AI suggests architecture rules from the model's
+   structure and dependencies (AiOpinion, open at once since asking is what the view is for).
+   Dependinator checks each suggested rule itself and shows what it would break today, or why it
+   cannot be added, again whenever the model or its rules change; the node names go to their node,
+   and each rule is added on its own (with the AI's why as its reason) or with the others, or
+   dismissed: saved with the model, so later answers leave it out (as they leave out the rules
+   earlier answers suggested), until the dismissal is undone here or in the Rules panel. The Rules panel keeps this view alive
+   while it is hidden (back to the rules, or the panel closed), so an answer that takes a while
+   still arrives, and the answers are there to come back to. *@
+<div class="dep-panel dep-rules dep-suggest-rules dep-toolbar-card" style="@(IsShown ? "" : "display: none")"
+     data-testid="suggest-rules-panel">
+  <div class="dep-panel__header">
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.ArrowBack" Size="Size.Small" title="Back to the rules"
+                   OnClick="OnBack" data-testid="suggest-rules-back" />
+    <span class="dep-panel__title">Suggest Rules</span>
+    <MudSpacer />
+    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="OnClose"
+                   data-testid="suggest-rules-close" />
+  </div>
+  <div class="dep-panel__list">
+    <div class="dep-panel__hint" data-testid="suggest-rules-intro">
+      An AI reads the model's structure and dependencies and suggests rules that guard its architecture.
+      Dependinator checks each rule on the model before you add it.
+    </div>
+    <AiOpinion TAnswer="RuleSuggestions" TestId="suggest-rules" GetPrompt="GetPrompt" Ask="Ask"
+               ParsePasted="suggestRulesService.ParsePasted" IsExpandedAtStart="true"
+               ExpandText="Ask AI for rules" AnswerTitle="Suggested rules" AnswersTitle="Suggested rules" IsVerdictCompared="false"
+               RouteText="Claude reads the model's structure and dependencies and suggests rules here."
+               AskTitle="Ask Claude to suggest rules for this model"
+               CopyTitle="Copy a prompt with the model's structure and dependencies"
+               PromptCopiedText="The prompt is copied, with the model's structure and dependencies.">
+      <AnswerContent Context="answer">
+        @{
+          var shown = Checked(answer);
+          var addable = shown.Rules.Where(r => r.CanAdd).ToList();
+        }
+        <div class="dep-ai__suggestion" data-testid="suggest-rules-answer">
+          <div class="dep-suggest-rules__verdict">
+            <span class="dep-ai__suggestion-verdict">@($"{shown.Source.Name()} suggests {shown.Verdict}")</span>
+            <MudSpacer />
+            @if (addable.Count > 1)
+            {
+              <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary"
+                         title="Add every suggested rule that can be added" OnClick="() => Add(addable)"
+                         data-testid="suggest-rules-add-all">@($"Add all {addable.Count}")</MudButton>
+            }
+          </div>
+          @if (shown.Rules.Count == 0)
+          {
+            <div class="dep-ai__suggestion-note" data-testid="suggest-rules-none">
+              No new rules worth suggesting. The rules there are, and the ones dismissed or suggested before, seem to cover it.
+            </div>
+          }
+          else if (shown.LeftOutCount > 0)
+          {
+            <div class="dep-ai__suggestion-note" data-testid="suggest-rules-left-out">
+              @LeftOutText(shown.LeftOutCount)
+            </div>
+          }
+          @foreach (var rule in shown.Rules)
+          {
+            <div class="dep-suggest-rules__rule" data-testid="suggest-rules-item" data-can-add="@(rule.CanAdd ? "yes" : "no")">
+              <div class="dep-suggest-rules__head">
+                <span class="dep-rules__names" data-kind="@rule.Kind">
+                  @{
+                    var names = rule.Key.NodeNames;
+                    var titles = rule.Check.Titles is { } t && t.Count == names.Count ? t : names;
+                    RenderFragment Node(int i, string testId) =>
+                      @<RuleNodeLink Id="NodeIdOf(rule, names[i])" Display="@titles[i]" TestId="@testId" />;
+                  }
+                  @switch (rule.Kind)
+                  {
+                    case Modeling.Models.RuleKind.Layers:
+                      <span class="dep-rules__arrow">layers</span>@(" ")
+                      @for (var i = 0; i < names.Count; i++)
+                      {
+                        @if (i > 0)
+                        {
+                          <span class="dep-rules__arrow"> › </span>
+                        }
+                        @Node(i, i == 0 ? "suggest-rules-from" : i == names.Count - 1 ? "suggest-rules-to" : "suggest-rules-layer")
+                      }
+                      break;
+                    case Modeling.Models.RuleKind.OnlyMayUse:
+                      <span class="dep-rules__arrow">only</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      <span class="dep-rules__arrow">may use</span>
+                      @Node(1, "suggest-rules-to")
+                      break;
+                    case Modeling.Models.RuleKind.Independent:
+                      @Node(0, "suggest-rules-from")
+                      @(" ")<span class="dep-rules__arrow">is independent</span>
+                      break;
+                    case Modeling.Models.RuleKind.SiblingsIndependent:
+                      <span class="dep-rules__arrow">the parts of</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      @(" ")<span class="dep-rules__arrow">are independent</span>
+                      break;
+                    case Modeling.Models.RuleKind.NoCycles:
+                      <span class="dep-rules__arrow">no cycles inside</span>@(" ")
+                      @Node(0, "suggest-rules-from")
+                      break;
+                    default:
+                      @Node(0, "suggest-rules-from")
+                      <span class="dep-rules__arrow">must not use</span>
+                      @Node(1, "suggest-rules-to")
+                      break;
+                  }
+                </span>
+                <span class="dep-panel__count" data-testid="suggest-rules-status">@Status(rule)</span>
+                @if (rule.CanAdd)
+                {
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ThumbDown" Size="Size.Small"
+                                 title="Dismiss: not a rule for this codebase, so it is not suggested again"
+                                 OnClick="() => suggestRulesService.Dismiss(rule)" data-testid="suggest-rules-dismiss" />
+                  <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="dep-suggest-rules__add"
+                             title="Add this rule, with the why below as its reason" OnClick="() => Add([rule])" data-testid="suggest-rules-add">Add</MudButton>
+                }
+                else if (rule.Check.IsDismissed)
+                {
+                  <MudButton Size="Size.Small" Variant="Variant.Text" Class="dep-suggest-rules__add"
+                             title="Undo the dismissal: the rule can be added, and suggested again"
+                             OnClick="() => suggestRulesService.Undismiss(rule)" data-testid="suggest-rules-undismiss">Undo</MudButton>
+                }
+                else if (rule.Check.IsRule)
+                {
+                  <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                }
+                else
+                {
+                  <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.Block" Size="Size.Small" Color="Color.Default" />
+                }
+              </div>
+              @if (rule.Check.Error is { } error)
+              {
+                <div class="dep-ai__suggestion-note dep-suggest-rules__error" data-testid="suggest-rules-error">@error</div>
+              }
+              @if (rule.Why != "")
+              {
+                <div class="dep-ai__suggestion-note">@rule.Why</div>
+              }
+            </div>
+          }
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+  </div>
+</div>
+
+@code {
+  // Hidden rather than removed, so a pending answer and the earlier ones are kept.
+  [Parameter] public bool IsShown { get; set; }
+
+  [Parameter] public EventCallback OnBack { get; set; }
+
+  [Parameter] public EventCallback OnClose { get; set; }
+
+  // Each answer checked on the model as it is now, cached until a check could change; not
+  // re-checked while hidden (a re-parse would check it again and again).
+  readonly Dictionary<RuleSuggestions, RuleSuggestions> checkedAnswers = [];
+  object? checkedFor;
+
+  Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestions>>>? Ask =>
+    suggestRulesService.IsAvailable ? suggestRulesService.AskAsync : null;
+
+  Task<string> GetPrompt() => Task.FromResult(suggestRulesService.GetPrompt());
+
+  RuleSuggestions Checked(RuleSuggestions answer)
+  {
+    if (!IsShown)
+      return checkedAnswers.GetValueOrDefault(answer, answer);
+    var version = suggestRulesService.CheckVersion;
+    if (!version.Equals(checkedFor))
+    {
+      checkedAnswers.Clear();
+      checkedFor = version;
+    }
+    if (!checkedAnswers.TryGetValue(answer, out var shown))
+      checkedAnswers[answer] = shown = suggestRulesService.Check(answer);
+    return shown;
+  }
+
+  // The node of a checked name; none where the check found no rule (a node not in the model).
+  static Modeling.Models.NodeId? NodeIdOf(SuggestedRule rule, string name) =>
+    rule.Check.Error is null && name != "" ? Modeling.Models.NodeId.FromName(name) : null;
+
+  // An added rule shows as "already a rule" once the model's rules change.
+  void Add(IReadOnlyList<SuggestedRule> rules) => suggestRulesService.Add(rules);
+
+  static string Status(SuggestedRule rule) =>
+    rule.Check switch
+    {
+      { Error: not null } => "cannot be added",
+      { IsRule: true } => "already a rule",
+      { IsDismissed: true } => "dismissed",
+      { ViolationCount: 0 } => "kept today",
+      { ViolationCount: 1, LinkCount: var links } => $"1 broken ({Links(links)})",
+      { ViolationCount: var count, LinkCount: var links } => $"{count} broken ({Links(links)})",
+    };
+
+  static string LeftOutText(int count) =>
+    count == 1
+      ? "1 more was left out: you dismissed it, or an earlier answer suggested it."
+      : $"{count} more were left out: you dismissed them, or an earlier answer suggested them.";
+
+  static string Links(int count) => count == 1 ? "1 link" : $"{count} links";
+}

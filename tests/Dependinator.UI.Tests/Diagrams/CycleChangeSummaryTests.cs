@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;

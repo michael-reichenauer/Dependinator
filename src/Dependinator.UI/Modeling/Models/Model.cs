@@ -49,6 +49,14 @@ interface IModel : IDisposable
     void AddRule(ArchitectureRule rule);
     void RemoveRule(ArchitectureRule rule);
 
+    // Replaces the rule (the same nodes) with one that has another reason, in its place.
+    void ReplaceRule(ArchitectureRule rule);
+
+    // The rules the user does not want suggested again; a change bumps RulesVersion.
+    IReadOnlyList<DismissedRule> DismissedRules { get; }
+    void AddDismissedRule(DismissedRule dismissed);
+    void RemoveDismissedRule(DismissedRule dismissed);
+
     // Dependencies that break a rule but are allowed, with why; a change bumps RulesVersion.
     IReadOnlyList<AllowedViolation> AllowedViolations { get; }
     void AddAllowedViolation(AllowedViolation allowed);
@@ -147,6 +155,32 @@ class Model : IModel
             RulesVersion++;
     }
 
+    public void ReplaceRule(ArchitectureRule rule)
+    {
+        var index = rules.IndexOf(rule);
+        if (index < 0 || rules[index].Reason == rule.Reason)
+            return;
+        rules[index] = rule;
+        RulesVersion++;
+    }
+
+    readonly List<DismissedRule> dismissedRules = [];
+    public IReadOnlyList<DismissedRule> DismissedRules => dismissedRules;
+
+    // One entry per rule: a new reason replaces the old one.
+    public void AddDismissedRule(DismissedRule dismissed)
+    {
+        dismissedRules.Remove(dismissed);
+        dismissedRules.Add(dismissed);
+        RulesVersion++;
+    }
+
+    public void RemoveDismissedRule(DismissedRule dismissed)
+    {
+        if (dismissedRules.Remove(dismissed))
+            RulesVersion++;
+    }
+
     readonly List<AllowedViolation> allowedViolations = [];
     public IReadOnlyList<AllowedViolation> AllowedViolations => allowedViolations;
 
@@ -203,18 +237,22 @@ class Model : IModel
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
-            Rules = [.. rules.Select(r => new RuleDto { From = r.FromName, To = r.ToName })],
-            AllowedViolations =
+            Rules = [.. rules.Where(r => r.Kind == RuleKind.MustNotUse).Select(ToDto)],
+            KindRules = [.. rules.Where(r => r.Kind != RuleKind.MustNotUse).Select(ToDto)],
+            DismissedRules =
             [
-                .. allowedViolations.Select(a => new AllowedViolationDto
-                {
-                    From = a.FromName,
-                    To = a.ToName,
-                    Source = a.SourceName,
-                    Target = a.TargetName,
-                    Reason = a.Reason,
-                }),
+                .. dismissedRules
+                    .Where(d => d.Rule.Kind == RuleKind.MustNotUse)
+                    .Select(d => ToDto(d.Rule) with { Reason = d.Reason }),
             ],
+            KindDismissedRules =
+            [
+                .. dismissedRules
+                    .Where(d => d.Rule.Kind != RuleKind.MustNotUse)
+                    .Select(d => ToDto(d.Rule) with { Reason = d.Reason }),
+            ],
+            AllowedViolations = [.. allowedViolations.Where(a => a.RuleKind == RuleKind.MustNotUse).Select(ToDto)],
+            KindAllowedViolations = [.. allowedViolations.Where(a => a.RuleKind != RuleKind.MustNotUse).Select(ToDto)],
             AcceptedCycles =
             [
                 .. acceptedCycles.Select(a => new AcceptedCycleDto
@@ -284,12 +322,38 @@ class Model : IModel
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
         rules.Clear();
-        rules.AddRange(modelDto.Rules.Select(r => new ArchitectureRule(r.From, r.To)).Distinct());
+        rules.AddRange(
+            modelDto
+                .Rules.Select(r => new ArchitectureRule(r.From, r.To, r.Reason ?? ""))
+                .Concat(modelDto.KindRules.Select(ToRule).OfType<ArchitectureRule>())
+                .Distinct()
+        );
+        dismissedRules.Clear();
+        dismissedRules.AddRange(
+            modelDto
+                .DismissedRules.Select(r => DismissedRule.Of(new ArchitectureRule(r.From, r.To), r.Reason ?? ""))
+                .Concat(
+                    modelDto
+                        .KindDismissedRules.Select(r =>
+                            ToRule(r) is { } rule ? DismissedRule.Of(rule, r.Reason ?? "") : null
+                        )
+                        .OfType<DismissedRule>()
+                )
+                .Distinct()
+        );
         allowedViolations.Clear();
         allowedViolations.AddRange(
             modelDto
-                .AllowedViolations.Select(a => new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? ""))
-                .DistinctBy(a => (a.FromName, a.ToName, a.SourceName, a.TargetName))
+                .AllowedViolations.Select(a => new AllowedViolation(
+                    a.From,
+                    a.To,
+                    a.Source,
+                    a.Target,
+                    a.Reason ?? "",
+                    a.IsToFix
+                ))
+                .Concat(modelDto.KindAllowedViolations.Select(ToAllowed).OfType<AllowedViolation>())
+                .DistinctBy(a => (a.RuleKind, a.FromName, a.ToName, a.LayersKey, a.SourceName, a.TargetName))
         );
         RulesVersion++;
         acceptedCycles.Clear();
@@ -304,6 +368,59 @@ class Model : IModel
         ]);
         // Nodes and links will be set by model service in separate worker thread
     }
+
+    // A rule of another kind than "must not use" (ModelDto.KindRules); null for a kind this version
+    // does not know (skipped, like an older version skips them all). Layers without their list are
+    // the top and bottom layer.
+    static ArchitectureRule? ToRule(RuleDto r)
+    {
+        var kind = (RuleKind)r.Kind;
+        if (kind == RuleKind.MustNotUse || !Enum.IsDefined(kind))
+            return null;
+        if (kind == RuleKind.Layers)
+            return ArchitectureRule.ForLayers(
+                r.Layers is { Count: >= 2 } layers ? [.. layers] : [r.From, r.To],
+                r.Reason ?? ""
+            );
+        if (ArchitectureRule.IsOneNodeKind(kind))
+            return ArchitectureRule.ForNode(kind, r.From, r.Reason ?? "");
+        return new ArchitectureRule(r.From, r.To, r.Reason ?? "", kind);
+    }
+
+    static AllowedViolation? ToAllowed(AllowedViolationDto a)
+    {
+        var kind = (RuleKind)a.RuleKind;
+        if (kind == RuleKind.MustNotUse || !Enum.IsDefined(kind))
+            return null;
+        var layersKey =
+            kind != RuleKind.Layers ? ""
+            : a.Layers is { Count: >= 2 } layers ? string.Join('\n', layers)
+            : $"{a.From}\n{a.To}";
+        return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
+    }
+
+    static RuleDto ToDto(ArchitectureRule r) =>
+        new()
+        {
+            From = r.FromName,
+            To = r.ToName,
+            Reason = r.Reason,
+            Kind = (int)r.Kind,
+            Layers = r.Kind == RuleKind.Layers ? r.NodeNames : null,
+        };
+
+    static AllowedViolationDto ToDto(AllowedViolation a) =>
+        new()
+        {
+            From = a.FromName,
+            To = a.ToName,
+            Source = a.SourceName,
+            Target = a.TargetName,
+            Reason = a.Reason,
+            IsToFix = a.IsToFix,
+            RuleKind = (int)a.RuleKind,
+            Layers = a.LayersKey == "" ? null : a.LayersKey.Split('\n'),
+        };
 
     public void TryAddNode(Node node)
     {
@@ -346,6 +463,7 @@ class Model : IModel
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
         rules.Clear();
+        dismissedRules.Clear();
         allowedViolations.Clear();
         RulesVersion++;
         acceptedCycles.Clear();

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -35,7 +36,7 @@ static class LineSvg
 
     // Every aggregated line is drawn at this one width; a line only shows its link-count width
     // (Line.WeightedStrokeWidth) while it is emphasized and Settings › Line widths by link count is on
-    // (see SvgService.IsLineWeighted), since the counts are only readable when comparing the few
+    // (see LineEmphasis.IsLineWeighted), since the counts are only readable when comparing the few
     // lines of a selection.
     const double PlainStrokeWidth = 1;
 
@@ -75,7 +76,7 @@ static class LineSvg
         );
     }
 
-    // A line's label on its own, for the label layer SvgService draws above the child nodes
+    // A line's label on its own, for the label layer NodeTreeSvg draws above the child nodes
     // (the sibling lines themselves lie under the nodes, which would cover a label drawn with
     // them). Dimmed, softened and hover-previewed like its line (the same classes and data-n);
     // hovering the line does not restore it, which is fine.
@@ -191,9 +192,9 @@ static class LineSvg
         var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
         var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
 
-        var title = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
-        if (!string.IsNullOrWhiteSpace(line.HtmlDescription))
-            title = $"{title}\n\n{line.HtmlDescription}";
+        // The hover group's data-name, "Source→Target (n)" with the long names, is what the e2e
+        // locators match; the tooltip itself is the hover card (TooltipService, initTooltips in jsInterop.js).
+        var name = $"{line.Source.HtmlLongName}→{line.Target.HtmlLongName} ({line.Links.Count})";
 
         // The second, fully transparent polyline is the hover/hit target: it traces the same
         // path but much wider, so hovering/clicking near the thin visible line still hits it.
@@ -208,8 +209,21 @@ static class LineSvg
         // strength: line-lit for the selection's own lines, line-accent for explorer and direct
         // lines. data-n names the line's two end nodes, for the hover preview (linePreview.js),
         // which lights a hovered node's lines without a rerender.
+        // A call between two members of the same type is shown only with one of them selected
+        // or hovered (line-inner in Canvas.razor and jsInterop.js): at rest a type's card would
+        // be crossed by all of its internal calls. Lines that mean something stay.
+        var isInner =
+            IsInnerMemberLine(line)
+            && !isAccent
+            && !isCyclic
+            && !isPath
+            && !isViolation
+            && !line.IsSelected
+            && !line.HasLabel;
+        var hitPointerEvents = isInner && !isLit ? " pointer-events=\"none\"" : "";
         var visibleClass =
             (isDimmed ? "line-vis line-dim" : "line-vis")
+            + (isInner ? " line-inner" : "")
             + (isLit ? " line-lit" : "")
             + (isAccent ? " line-accent" : "")
             + (isCyclic ? " line-cycle" : "")
@@ -224,17 +238,20 @@ static class LineSvg
             <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
             {labelSvg}
             </g>
-            <g class="hoverable" id="{elementId}">
+            <g class="hoverable" id="{elementId}" data-name="{name}">
               <polyline id="{elementId}" class="{HitClass}" points="{hitPoints}" fill="none" stroke-width="{strokeWidth
-                + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round" />
+                + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round"{hitPointerEvents} />
               <polyline class="{HoverClass}" points="{points}" fill="none" pointer-events="none" />
-              <title>{title}</title>
             </g>
             {selectedSvg}
             </g>
             """
         );
     }
+
+    // Between two member rows of the same container (a call or use inside one type).
+    internal static bool IsInnerMemberLine(Line line) =>
+        line.Source.Type.IsMember && line.Target.Type.IsMember && line.Source.Parent == line.Target.Parent;
 
     // The user's label at the line's middle, with its description under it in the smaller italic
     // used for node descriptions. The lineLabel/lineDescription classes draw a background-colored
@@ -246,9 +263,9 @@ static class LineSvg
             return "";
 
         var middle = LinePathGeometry.MidPoint(polylinePoints);
-        var textZoom = NodeSvg.TextZoom(childrenZoom);
-        var fontSize = NodeSvg.FontSize * textZoom;
-        var descriptionFontSize = NodeSvg.DescriptionFontSize * textZoom;
+        var textZoom = SvgText.TextZoom(childrenZoom);
+        var fontSize = SvgText.FontSize * textZoom;
+        var descriptionFontSize = SvgText.DescriptionFontSize * textZoom;
         var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
         // With both texts the pair is centered on the line: the label just above, the

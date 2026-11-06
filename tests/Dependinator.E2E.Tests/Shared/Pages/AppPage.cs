@@ -39,16 +39,15 @@ public sealed class AppPage
     public const string InsideMain = "Demo.UI.Main.OnInitialized()";
 
     // A diagram node's group element, matched by its label. (Node SVG ids are generated, so
-    // match on the label text, which comes from the group's <title>.) The title is the node's
-    // long name optionally followed by its description ("longName\n\ndescription", see
-    // NodeSvg.BuildHoverGroup), so anchor at the start and require a whitespace/end boundary
-    // after the label rather than matching to end-of-text. This still gives an exact name match
-    // — "Demo.Core" won't match the "Demo.Core.RootClass" group (a '.' follows, not whitespace),
-    // and "Demo.sln" won't match the "Demo.sln→Externals (…)" dependency line — while tolerating
-    // the description that a node's title may now carry.
+    // match on the group's data-name, NodeSvg.BuildHoverGroup: the node's long name, followed by
+    // " (alias)" when the user set a display name.) An exact name, or the name and a space:
+    // "Demo.Core" won't match the "Demo.Core.RootClass" group, and node groups only (".n" ids),
+    // so "Demo.sln" won't match the "Demo.sln→Externals (…)" dependency line.
     public ILocator Node(string label) =>
-        page.Locator("#svgcanvas g.hoverable")
-            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(label)}(\s|$)") });
+        page.Locator($"#svgcanvas g.hoverable[id$='.n']:is([data-name={Css(label)}], [data-name^={Css(label + " ")}])");
+
+    // A CSS attribute value: quoted, with quotes and backslashes escaped.
+    static string Css(string value) => "\"" + value.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
 
     // The selected-node context toolbar (NodeToolbar.razor) — its menu activator is
     // present whenever a node is selected.
@@ -75,15 +74,14 @@ public sealed class AppPage
     public ILocator FocusLines =>
         page.Locator("#svgcanvas polyline[marker-end='url(#arrow-direct)'][stroke-dasharray='2,4']");
 
-    // A line's hover title, "Source→Target (n)" with the nodes' long names (LineSvg).
-    public ILocator LineTitle(string text) => page.Locator("#svgcanvas title", new() { HasTextString = text });
+    // A line's hover group by its data-name, "Source→Target (n)" with the nodes' long names
+    // (LineSvg), containing the text.
+    public ILocator LineTitle(string text) => page.Locator($"#svgcanvas g.hoverable[data-name*={Css(text)}]");
 
-    // The SVG group of the dependency line between two nodes, matched by its "source→target (n)"
-    // title. Anchored at the start so an ancestor group whose text merely contains the line's
-    // title does not match too (same approach as Node).
+    // The SVG group of the dependency line between two nodes, matched by the start of its
+    // data-name, "source→target (n)".
     public ILocator Line(string sourceName, string targetName) =>
-        page.Locator("#svgcanvas g.hoverable")
-            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(sourceName)}→{Regex.Escape(targetName)}") });
+        page.Locator($"#svgcanvas g.hoverable[data-name^={Css($"{sourceName}→{targetName} (")}]");
 
     // The selected-line toolbar (LineToolbar.razor) and its jumps to the line's ends, offered on
     // direct lines and on the lines the dependency explorer draws for its subject.
@@ -989,14 +987,13 @@ public sealed class AppPage
             @"(name) => {
             const selector = '#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName';
             const labels = [...document.querySelectorAll(selector)]
-                .filter(t => t.textContent.trim() === name);
+                .filter(t => (t.dataset.name ?? t.textContent).trim() === name); // A member row's name is data-name
             if (labels.length === 0) return null;
             const lr = labels[0].getBoundingClientRect();
             const lx = lr.x + lr.width / 2, ly = lr.y + lr.height / 2;
-            const arrow = String.fromCharCode(8594); // dependency lines contain '→'
             let best = null, bestDist = Infinity;
             for (const g of document.querySelectorAll('#svgcanvas g.hoverable')) {
-                if (g.textContent.includes(arrow)) continue;
+                if (!g.id.endsWith('.n')) continue; // Dependency lines end in '.l'
                 const r = g.getBoundingClientRect();
                 const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
                 const d = (cx - lx) ** 2 + (cy - ly) ** 2;

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;

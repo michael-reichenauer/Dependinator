@@ -1,48 +1,23 @@
 using System.Globalization;
-using System.Text.RegularExpressions;
-using System.Web;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static Dependinator.UI.Diagrams.Svg.SvgText;
 
+// A node drawn as an icon or as an open container, and the parts every node shares: the hover
+// group, the selection outline and handles, the link handle and the node's colors. Member rows
+// are MemberRowSvg's, type cards MemberCardSvg's.
 namespace Dependinator.UI.Diagrams.Svg;
 
-static partial class NodeSvg
+static class NodeSvg
 {
     const int NameIconSize = 9;
-    internal const int FontSize = 8; // Also the member icon size, see NodeAnchors
-    internal const int DescriptionFontSize = 6;
-
-    // Name/description text stops scaling with zoom beyond this factor, so zooming in reveals
-    // more description text instead of just growing the letters. A default-size node opens as a
-    // container at NodeViewPolicy.MinContainerZoom (2.0), so text still grows a bit "into" the
-    // node before plateauing at 24px names and 18px descriptions. Text follows the zoom, not the
-    // node's size, so labels of small and large nodes stay equally readable.
-    const double MaxTextZoom = 3.0;
-    const int DescriptionMinWidth = 25;
-    const int DescriptionMaxWidth = 100;
-    const int DescriptionMaxLines = 7;
-    const int IconDescriptionMaxLines = 5;
-    const int MemberDescriptionMaxLines = 1;
-    const double DescriptionCharWidthFactor = 0.45;
-    const double DescriptionLineHeightFactor = 1.2;
-    const double DescriptionLineGap = 1;
-
-    // Offset (in em) from the text's y down to the first line's alphabetic baseline. This lets us
-    // top-align the description using the universally-supported alphabetic baseline instead of
-    // `dominant-baseline: hanging`, which WebKit (iPad Safari) does not apply to <tspan> children.
-    const double DescriptionFirstLineOffsetFactor = 0.8;
-    const double MemberTextGap = 4;
-    const double MemberHorizontalPadding = 4;
-
-    // Fraction of the average glyph advance relative to the font size (shared with NoteSvg).
-    internal const double AverageCharWidthFactor = 0.6;
 
     // Drag-to-link handle at an icon node's right edge (revealed on hover, editing mode only).
     // The gap clears the selection resize handles (HandleMargin 7 + HandleRadius 4) so the
     // handle is not drawn on top of the middle-right resize handle.
-    const double LinkHandleGap = 14; // Distance from the icon's right edge to the handle center
+    internal const double LinkHandleGap = 14; // Distance from the icon's right edge to the handle center
     const double LinkHandleRadius = 7; // Visible handle dot
     const double LinkHandleTouchRx = 17; // Invisible touch ellipse, bridges back to the icon edge
     const double LinkHandleTouchRy = 11;
@@ -77,8 +52,8 @@ static partial class NodeSvg
         );
 
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
-            + ProblemBadgeSvg(problems, VisibleIconRect(geometry), textZoom)
-            + HiddenBadgeSvg(hiddenChildCount, VisibleIconRect(geometry), textZoom);
+            + BadgeSvg.Problem(problems, BadgeSvg.VisibleIconRect(geometry), textZoom)
+            + BadgeSvg.Hidden(hiddenChildCount, BadgeSvg.VisibleIconRect(geometry), textZoom);
     }
 
     public static string GetNodeContainerSvg(
@@ -102,7 +77,7 @@ static partial class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), node.HtmlDescription);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node));
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -139,103 +114,16 @@ static partial class NodeSvg
                 header.TextPos.Y + header.FontSize / 2,
                 header.FontSize
             )}
-            {ProblemBadgeSvg(problems, nodeCanvasRect, textZoom)}
-            {HiddenBadgeSvg(hiddenChildCount, nodeCanvasRect, textZoom)}
+            {BadgeSvg.Problem(problems, nodeCanvasRect, textZoom)}
+            {BadgeSvg.Hidden(hiddenChildCount, nodeCanvasRect, textZoom)}
             """
         );
     }
 
-    // The icon symbols leave a margin inside their box, so a badge on the box's corner would
-    // float beside the icon; this is about that margin, as a part of the box.
-    const double IconSymbolMargin = 0.12;
-
-    static Rect VisibleIconRect(Rect iconRect) =>
-        new(
-            iconRect.X + iconRect.Width * IconSymbolMargin,
-            iconRect.Y + iconRect.Height * IconSymbolMargin,
-            iconRect.Width * (1 - 2 * IconSymbolMargin),
-            iconRect.Height * (1 - 2 * IconSymbolMargin)
-        );
-
-    const double BadgeMaxRadius = 7; // At text zoom 1; follows the text size like the names
-    const double BadgeMinRadius = 2.5; // Smaller than this it cannot be read, so it is left out
-    const double BadgeWidthFactor = 0.15; // Of the node's width, so it never covers a small node
-
-    // The number of problems in or inside a node, on its top-right corner: red when compile
-    // errors are among them, orange otherwise. It lets pointer events through to the node, so it
-    // never gets in the way of selecting, dragging or hovering it.
-    internal static string ProblemBadgeSvg(NodeProblems? problems, Rect nodeRect, double textZoom)
-    {
-        if (problems is not { } p || p.Errors + p.Warnings == 0)
-            return "";
-        var radius = Math.Min(nodeRect.Width * BadgeWidthFactor, BadgeMaxRadius * textZoom);
-        if (radius < BadgeMinRadius)
-            return "";
-
-        var count = p.Errors + p.Warnings;
-        var text = count > 99 ? "99+" : count.ToString(CultureInfo.InvariantCulture);
-        var fontSize = radius * (text.Length > 2 ? 0.85 : 1.15);
-        var fill = p.Errors > 0 ? DColors.ProblemError : DColors.ProblemWarning;
-        var (cx, cy) = (nodeRect.X + nodeRect.Width, nodeRect.Y);
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"""<g class="problemBadge" data-errors="{p.Errors}" data-warnings="{p.Warnings}" pointer-events="none"><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{radius:0.##}" fill="{fill}" stroke="{DColors.CanvasBackground}" stroke-width="{radius * 0.15:0.##}"/><text x="{cx:0.##}" y="{cy:0.##}" font-size="{fontSize:0.##}px" fill="#FFFFFF" font-weight="bold" text-anchor="middle" dominant-baseline="central">{text}</text></g>"""
-        );
-    }
-
-    // How many children the user hid, on the node's top-left corner (the problem badge has the
-    // top-right): a grey circle with the count, so the hidden nodes are not forgotten. Like the
-    // problem badge it lets pointer events through to the node.
-    internal static string HiddenBadgeSvg(int count, Rect nodeRect, double textZoom)
-    {
-        if (count == 0)
-            return "";
-        var radius = Math.Min(nodeRect.Width * BadgeWidthFactor, BadgeMaxRadius * textZoom);
-        if (radius < BadgeMinRadius)
-            return "";
-
-        var text = count > 99 ? "99+" : count.ToString(CultureInfo.InvariantCulture);
-        var fontSize = radius * (text.Length > 2 ? 0.85 : 1.15);
-        var (cx, cy) = (nodeRect.X, nodeRect.Y);
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"""<g class="hiddenBadge" data-count="{count}" pointer-events="none"><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{radius:0.##}" fill="{DColors.HiddenBadge}" stroke="{DColors.CanvasBackground}" stroke-width="{radius * 0.15:0.##}"/><text x="{cx:0.##}" y="{cy:0.##}" font-size="{fontSize:0.##}px" fill="#FFFFFF" font-weight="bold" text-anchor="middle" dominant-baseline="central">{text}</text></g>"""
-        );
-    }
-
-    public static string GetMemberNodeSvg(
-        Node node,
-        Rect nodeCanvasRect,
-        double parentZoom,
-        bool isEditing = false,
-        NodeProblems? problems = null
-    )
-    {
-        var textZoom = TextZoom(parentZoom);
-        var fontSize = FontSize * textZoom;
-        var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
-
-        var layout = new LeafNodeLayout(
-            IconRect: member.Icon,
-            TextPos: member.Text,
-            TextClass: "memberName",
-            TextBaseline: "middle",
-            FontSize: fontSize,
-            DescriptionClass: "memberDescription",
-            DescriptionY: member.Text.Y + fontSize / 2 + DescriptionLineGap * textZoom,
-            DescriptionMaxLines: ScaledMaxLines(MemberDescriptionMaxLines, parentZoom, textZoom),
-            Bounds: member.Bounds,
-            MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y)
-        );
-
-        return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
-            + ProblemBadgeSvg(problems, member.Bounds, textZoom);
-    }
-
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
-    // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
+    // (an icon node or a member row); GetNodeIconSvg and MemberRowSvg.GetMemberNodeSvg differ only in these
     // values, not in structure.
-    readonly record struct LeafNodeLayout(
+    internal readonly record struct LeafNodeLayout(
         Rect IconRect,
         Pos TextPos,
         string TextClass,
@@ -246,10 +134,18 @@ static partial class NodeSvg
         int DescriptionMaxLines,
         Rect Bounds,
         Pos MarkerPos,
-        Pos? LinkHandlePos = null
+        Pos? LinkHandlePos = null,
+        string TextSuffix = "",
+        string TextAttributes = "",
+        bool IsPrivateBadge = false
     );
 
-    static string BuildLeafNodeSvg(Node node, LeafNodeLayout layout, double descriptionFontSize, bool isEditing)
+    internal static string BuildLeafNodeSvg(
+        Node node,
+        LeafNodeLayout layout,
+        double descriptionFontSize,
+        bool isEditing
+    )
     {
         var iconId = IconName(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
@@ -259,7 +155,6 @@ static partial class NodeSvg
             "hoverable",
             layout.Bounds,
             TitleName(node),
-            node.HtmlDescription,
             LinkHandleSvg(node, layout.LinkHandlePos, isEditing),
             isLinePreview: true
         );
@@ -278,8 +173,10 @@ static partial class NodeSvg
         return string.Create(
             CultureInfo.InvariantCulture,
             $"""
-            <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />
-            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
+            <use href="#{iconId}" x="{layout.IconRect.X:0.##}" y="{layout.IconRect.Y:0.##}" width="{layout.IconRect.Width:0.##}" height="{layout.IconRect.Height:0.##}" {nodeOpacity} />{(
+                layout.IsPrivateBadge ? BadgeSvg.Private(layout.IconRect, nodeOpacity) : ""
+            )}
+            <text x="{layout.TextPos.X:0.##}" y="{layout.TextPos.Y:0.##}" class="{layout.TextClass}" dominant-baseline="{layout.TextBaseline}" font-size="{layout.FontSize:0.##}px" {textOpacity} {layout.TextAttributes}>{node.HtmlDisplayName}{layout.TextSuffix}</text>
             {descriptionSvg}
             {hoverGroup}
             {selectedOverlay}
@@ -308,35 +205,6 @@ static partial class NodeSvg
         return new Rect(nodeCanvasRect.X, nodeCanvasRect.Y, width, height);
     }
 
-    static MemberNodeLayout CalculateMemberNodeLayout(Node node, Rect nodeCanvasRect, double textZoom, double fontSize)
-    {
-        var iconSize = fontSize;
-        var centerY = nodeCanvasRect.Y + nodeCanvasRect.Height / 2;
-
-        var iconX = nodeCanvasRect.X;
-        var iconY = centerY - iconSize / 2;
-
-        var gap = MemberTextGap * textZoom;
-        var padding = MemberHorizontalPadding * textZoom;
-        var textWidth = Math.Max(fontSize, EstimateTextWidth(node.DisplayName, fontSize));
-
-        var layoutWidth = iconSize + gap + textWidth + padding;
-        var layoutHeight = Math.Max(iconSize, fontSize);
-        var layoutX = iconX;
-        var layoutY = centerY - layoutHeight / 2;
-
-        var textX = iconX + iconSize + gap;
-        var textY = centerY;
-
-        var layoutRect = new Rect(layoutX, layoutY, layoutWidth, layoutHeight);
-        var iconRect = new Rect(iconX, iconY, iconSize, iconSize);
-        var textPos = new Pos(textX, textY);
-
-        return new MemberNodeLayout(layoutRect, iconRect, textPos);
-    }
-
-    readonly record struct MemberNodeLayout(Rect Bounds, Rect Icon, Pos Text);
-
     static ContainerHeader CalculateContainerHeader(Rect nodeCanvasRect, double parentZoom)
     {
         var textZoom = TextZoom(parentZoom);
@@ -349,16 +217,6 @@ static partial class NodeSvg
         var fontSize = FontSize * textZoom;
         return new ContainerHeader(iconPosition, iconSize, textPosition, fontSize);
     }
-
-    // Effective zoom for text and header icons: follows the diagram zoom until MaxTextZoom,
-    // then stays capped so text keeps a readable size instead of growing with the node.
-    internal static double TextZoom(double parentZoom) => Math.Min(parentZoom, MaxTextZoom);
-
-    // Once the font size is capped, further zooming leaves unused space below the node (layout
-    // distances keep scaling while text does not). Convert that surplus into extra description
-    // lines, keeping the same pixel footprint as the uncapped layout would have used.
-    static int ScaledMaxLines(int maxLines, double parentZoom, double textZoom) =>
-        textZoom <= 0 ? maxLines : (int)(maxLines * parentZoom / textZoom);
 
     internal static (string NodeOpacity, string TextOpacity) HiddenAttributes(Node node) =>
         !node.IsVisible ? ("opacity=\"0.1\"", "opacity=\"0.3\"") : ("", "");
@@ -380,10 +238,10 @@ static partial class NodeSvg
         );
     }
 
-    // Rough width of rendered text in the diagram font (average glyph advance), used e.g. to
-    // place the manual marker after a name.
-    static double EstimateTextWidth(string text, double fontSize) =>
-        string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * AverageCharWidthFactor;
+    // Whether the node is drawn in its own colors (edit mode or a user-set color) rather than its
+    // kind's default (the random color, or a card's lavender: CardColors).
+    internal static bool HasOwnColors(Node node) =>
+        node.IsEditMode || node.CustomColor is { } customColor && DColors.IsCustomNodeColor(customColor);
 
     internal static (string Border, string Background) NodeColors(Node node)
     {
@@ -398,135 +256,17 @@ static partial class NodeSvg
         return DColors.NodeColorByName(node.Color);
     }
 
-    static string BuildDescriptionSvg(
-        Node node,
-        double x,
-        double y,
-        double fontSize,
-        string cssClass,
-        string textOpacity,
-        int maxWidth,
-        int maxLines
-    )
-    {
-        var lines = GetDescriptionLines(node.Description, maxWidth, maxLines);
-        if (lines.Count == 0)
-            return "";
-
-        var lineHeight = fontSize * DescriptionLineHeightFactor;
-        var firstLineOffset = fontSize * DescriptionFirstLineOffsetFactor;
-        var tspans = string.Join(
-            "\n",
-            lines.Select(
-                (line, i) =>
-                    string.Create(
-                        CultureInfo.InvariantCulture,
-                        $"""<tspan x="{x:0.##}" dy="{(i == 0 ? firstLineOffset : lineHeight):0.##}">{HttpUtility.HtmlEncode(line)}</tspan>"""
-                    )
-            )
-        );
-
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"""<text x="{x:0.##}" y="{y:0.##}" class="{cssClass}" font-size="{fontSize:0.##}px" {textOpacity}>{tspans}</text>"""
-        );
-    }
-
-    // Estimate how many characters fit across a node of the given pixel width, so wider
-    // (zoomed-in) containers wrap at a wider line than small icon nodes. Clamped to a
-    // readable floor and a sane cap.
-    internal static int DescriptionWidthForNode(double availableWidth, double fontSize)
-    {
-        var charWidth = fontSize * DescriptionCharWidthFactor;
-        if (charWidth <= 0)
-            return DescriptionMinWidth;
-
-        var chars = (int)(availableWidth / charWidth);
-        return Math.Clamp(chars, DescriptionMinWidth, DescriptionMaxWidth);
-    }
-
-    internal static IReadOnlyList<string> GetDescriptionLines(string? description, int maxWidth, int maxLines)
-    {
-        if (string.IsNullOrWhiteSpace(description))
-            return [];
-
-        // Collapse to a single line and strip XML-doc tags like <summary>.
-        var text = XmlTagRegex().Replace(description, " ");
-        text = WhitespaceRegex().Replace(text, " ").Trim();
-        if (text.Length == 0)
-            return [];
-
-        var lines = WrapText(text, maxWidth);
-        if (lines.Count <= maxLines)
-            return lines;
-
-        // Truncate to maxLines and mark the last kept line with an ellipsis.
-        lines = lines.Take(maxLines).ToList();
-        var last = lines[^1];
-        if (last.Length + 1 > maxWidth)
-            last = last[..(maxWidth - 1)].TrimEnd();
-        lines[^1] = last + "…";
-        return lines;
-    }
-
-    [GeneratedRegex("<[^>]*>")]
-    private static partial Regex XmlTagRegex();
-
-    [GeneratedRegex(@"\s+")]
-    private static partial Regex WhitespaceRegex();
-
-    static List<string> WrapText(string text, int maxWidth)
-    {
-        var lines = new List<string>();
-        var current = "";
-
-        foreach (var word in text.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var remaining = word;
-
-            // Hard-break words that are longer than a full line.
-            while (remaining.Length > maxWidth)
-            {
-                if (current.Length > 0)
-                {
-                    lines.Add(current);
-                    current = "";
-                }
-                lines.Add(remaining[..maxWidth]);
-                remaining = remaining[maxWidth..];
-            }
-
-            if (remaining.Length == 0)
-                continue;
-
-            if (current.Length == 0)
-                current = remaining;
-            else if (current.Length + 1 + remaining.Length <= maxWidth)
-                current += " " + remaining;
-            else
-            {
-                lines.Add(current);
-                current = remaining;
-            }
-        }
-
-        if (current.Length > 0)
-            lines.Add(current);
-
-        return lines;
-    }
-
-    // The tooltip's first line: the real long name (the identity, also what the e2e locators
-    // match), followed by the user's display name when one is set.
-    static string TitleName(Node node) =>
+    // The hover group's data-name: the real long name (the identity, also what the e2e locators
+    // match), followed by the user's display name when one is set. The tooltip itself is not in
+    // the SVG: the hover card (TooltipService, initTooltips in jsInterop.js) is built only when the pointer rests.
+    internal static string TitleName(Node node) =>
         node.HtmlAlias is null ? node.HtmlLongName : $"{node.HtmlLongName} ({node.HtmlAlias})";
 
-    static string BuildHoverGroup(
+    internal static string BuildHoverGroup(
         string elementId,
         string cssClass,
         Rect geometry,
-        string htmlLongName,
-        string? htmlDescription,
+        string htmlName,
         string extraContent = "",
         bool isLinePreview = false
     )
@@ -535,13 +275,11 @@ static partial class NodeSvg
         // jsInterop.js): icons and member rows. Not open containers, which the pointer is
         // always over when zoomed in, so they would keep the preview on.
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
-        var title = string.IsNullOrWhiteSpace(htmlDescription) ? htmlLongName : $"{htmlLongName}\n\n{htmlDescription}";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}"{previewAttribute}>
+                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
-                  <title>{title}</title>
                   {extraContent}
                 </g>
                 """
@@ -554,7 +292,7 @@ static partial class NodeSvg
     // visible. Dragging it to another node creates a manual link (see InteractionService).
     // Not shown while the node is selected: the selection's resize handles own the node edge
     // (their large touch circles would swallow the handle's presses).
-    static string LinkHandleSvg(Node node, Pos? pos, bool isEditing)
+    internal static string LinkHandleSvg(Node node, Pos? pos, bool isEditing)
     {
         if (pos is null || !isEditing || node.IsSelected)
             return "";

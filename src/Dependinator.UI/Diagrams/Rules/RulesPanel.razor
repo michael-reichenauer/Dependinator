@@ -1,0 +1,641 @@
+@inject IApplicationEvents applicationEvents
+@inject IViewOptions viewOptions
+@inject IRuleService ruleService
+@inject INavigationService navigationService
+@inject IDialogService dialogService
+@inject Modeling.IModelService modelService
+@inject Modeling.Models.IModelMgr modelMgr
+@inject IRuleReviewService ruleReviewService
+@inject IClipboardService clipboardService
+@inject ISuggestRulesService suggestRulesService
+@implements IDisposable
+
+@* Architecture rules: "X must not depend on Y", "only X may use Y" (both declared by picking two
+   nodes), or layers (picked top first, each may use only the layers below it), the kind chosen above
+   the picks. Each rule lists
+   the dependencies that break it (per class pair, with link counts); while the panel is open those
+   lines are drawn in the rule color. A rule's node names go to their node, and a dependency row
+   frames both of its classes with the lines between them. Each dependency can be reviewed
+   (RuleReviewDialog, with an AI opinion): fixed with a prompt for an AI that changes the code, or
+   allowed with why, which moves it to the rule's collapsed Allowed list, or marked to fix later,
+   which moves it to the rule's To fix list (still drawn, not counted as a problem), with the
+   planned change and a fix prompt to copy. Each rule shows why it
+   exists (its reason, from Suggest rules or typed by the user; click to edit). A removed rule is
+   remembered as dismissed, like one dismissed in Suggest rules, so it is not suggested again; the
+   collapsed Dismissed list at the end takes a dismissal back. "Suggest rules" switches
+   the panel to SuggestRulesView (IViewOptions.IsRuleSuggestionsShown), where an AI suggests rules
+   to add; that view stays alive once started (hidden while the rules show or the panel is closed,
+   and reopening the panel shows the rules) until another model is opened.
+   Rules and allowed dependencies are saved with the model and undoable. *@
+@if (viewOptions.IsRulesShown && !viewOptions.IsRuleSuggestionsShown)
+{
+  var reports = ruleService.GetReports();
+  var violationCount = reports.Sum(r => r.Violations.Count);
+  <div class="dep-panel dep-rules dep-toolbar-card" data-testid="rules-panel">
+    <div class="dep-panel__header">
+      <span class="dep-panel__title">Rules</span>
+      <span class="dep-panel__count" data-testid="rules-summary">@Summary(reports.Count, violationCount, reports.Sum(r => r.ToFix.Count(t => !t.IsGone)))</span>
+      <MudSpacer />
+      <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" OnClick="Close"
+                     data-testid="rules-close" />
+    </div>
+    <div class="dep-panel__hint">Architecture rules: "this must not depend on that", "only this may use that", layers, "this is independent", "the parts of this are independent" or "no cycles inside this". Dependencies that break a rule are listed here and drawn orange in the diagram. Rules are saved with the model.</div>
+
+    <div class="dep-panel__list">
+      @if (reports.Count == 0)
+      {
+        <div class="dep-panel__empty" data-testid="rules-empty">No rules yet. Add one below, for example "UI must not depend on Data", or let an AI suggest some.</div>
+      }
+      @foreach (var report in reports)
+      {
+        <div class="dep-rules__rule" data-testid="rules-item" data-violations="@report.Violations.Count">
+          <div class="dep-rules__head">
+            <MudIcon Icon="@StatusIcon(report)" Size="Size.Small" Color="@StatusColor(report)" />
+            <span class="dep-rules__names" title="@report.Text" data-kind="@report.Rule.Kind">
+              @switch (report.Rule.Kind)
+              {
+                case Modeling.Models.RuleKind.Layers:
+                  <span class="dep-rules__arrow">layers</span>@(" ")
+                  @for (var i = 0; i < report.Nodes.Count; i++)
+                  {
+                    var node = report.Nodes[i];
+                    @if (i > 0)
+                    {
+                      <span class="dep-rules__arrow" title="may use the layers below it"> › </span>
+                    }
+                    <RuleNodeLink Id="node.Id" Display="@node.Display" TestId="rules-item-layer" />
+                  }
+                  break;
+                case Modeling.Models.RuleKind.Independent:
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  @(" ")<span class="dep-rules__arrow" title="uses nothing else in the solution, only externals">is independent</span>
+                  break;
+                case Modeling.Models.RuleKind.SiblingsIndependent:
+                  <span class="dep-rules__arrow">the parts of</span>@(" ")
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  @(" ")<span class="dep-rules__arrow">are independent</span>
+                  break;
+                case Modeling.Models.RuleKind.NoCycles:
+                  <span class="dep-rules__arrow">no cycles inside</span>@(" ")
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  break;
+                case Modeling.Models.RuleKind.OnlyMayUse:
+                  <span class="dep-rules__arrow">only</span>
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  <span class="dep-rules__arrow">may use</span>
+                  <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
+                  break;
+                default:
+                  <RuleNodeLink Id="report.FromId" Display="@report.FromDisplay" TestId="rules-item-from" />
+                  <span class="dep-rules__arrow">must not use</span>
+                  <RuleNodeLink Id="report.ToId" Display="@report.ToDisplay" TestId="rules-item-to" />
+                  break;
+              }
+            </span>
+            <span class="dep-panel__count" data-testid="rules-item-count">@StatusText(report)</span>
+            @if (report.Rule.Reason == "")
+            {
+              <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EditNote" Size="Size.Small" title="Add why this rule exists"
+                             OnClick="() => EditReasonAsync(report)" data-testid="rules-add-reason" />
+            }
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                           title="Remove this rule (Suggest rules will not suggest it again)"
+                           OnClick="() => ruleService.RemoveRule(report.Rule)" data-testid="rules-remove" />
+          </div>
+          @if (report.Rule.Reason != "")
+          {
+            <button type="button" class="dep-rules__rule-reason" title="Click to edit why this rule exists"
+                    @onclick="() => EditReasonAsync(report)" data-testid="rules-item-reason">@report.Rule.Reason</button>
+          }
+          @if (report.Violations.Count > 0)
+          {
+            <div class="dep-rules__violations">
+              @foreach (var violation in report.Violations)
+              {
+                <div class="dep-rules__item" data-testid="rules-violation-item">
+                  <button type="button" class="dep-panel__row dep-rules__violation"
+                          title="@($"{violation.SourceLongName} → {violation.TargetLongName}: click to show both")"
+                          @onclick="() => ShowViolationAsync(violation)" data-testid="rules-violation">
+                    <span>@violation.SourceName</span>
+                    <span class="dep-rules__arrow">→</span>
+                    <span>@violation.TargetName</span>
+                    <span class="dep-panel__count">(@violation.LinkCount)</span>
+                  </button>
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small"
+                                 title="@ReviewTitle" OnClick="() => ReviewAsync(report, violation)"
+                                 data-testid="rules-review" />
+                </div>
+              }
+            </div>
+          }
+          @if (report.ToFix.Count > 0)
+          {
+            <div class="dep-rules__violations" data-testid="rules-tofix">
+              <div class="dep-rules__tofix-title">To fix (@report.ToFix.Count)</div>
+              @foreach (var toFix in report.ToFix)
+              {
+                <div class="dep-rules__item" data-testid="rules-tofix-item" data-gone="@(toFix.IsGone ? "true" : "false")">
+                  <button type="button" class="dep-panel__row dep-rules__violation"
+                          title="Click to edit the planned change, or to report it again"
+                          @onclick="() => EditToFixAsync(report, toFix)" data-testid="rules-tofix-edit">
+                    <span>@toFix.SourceName</span>
+                    <span class="dep-rules__arrow">→</span>
+                    <span>@toFix.TargetName</span>
+                    @if (toFix.Violation is { } v)
+                    {
+                      <span class="dep-panel__count">(@v.LinkCount)</span>
+                    }
+                    else
+                    {
+                      <span class="dep-cycles__gone">no longer used; remove it if it is fixed</span>
+                    }
+                    <span class="dep-cycles__reason dep-rules__reason" data-testid="rules-tofix-change">@(toFix.Planned.Reason == "" ? "No change planned" : toFix.Planned.Reason)</span>
+                  </button>
+                  @* With no change planned there is nothing for a fix prompt to ask for. *@
+                  @if (toFix.Violation is { } planned && toFix.Planned.Reason != "")
+                  {
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" Size="Size.Small"
+                                   title="Copy a prompt that asks an AI that can change the code to make the planned change"
+                                   OnClick="() => CopyFixPromptAsync(report.Rule, planned, toFix)" data-testid="rules-tofix-copy-fix" />
+                  }
+                  @if (toFix.Violation is { } violation)
+                  {
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.RateReview" Size="Size.Small"
+                                   title="Review it again: fix it now, with an AI, or allow it"
+                                   OnClick="() => ReviewAsync(report, violation, toFix.Planned.Reason)" data-testid="rules-tofix-review" />
+                  }
+                  <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                                 title="@(toFix.IsGone ? "Remove: it is fixed" : "Remove: report it as a violation again")"
+                                 OnClick="() => ruleService.Disallow(toFix.Planned)" data-testid="rules-tofix-remove" />
+                </div>
+              }
+            </div>
+          }
+          @if (report.Allowed.Count > 0)
+          {
+            var isOpen = openAllowed.Contains(report.Rule);
+            <div class="dep-rules__violations">
+              <button type="button" class="dep-rules__allowed-toggle" @onclick="() => ToggleAllowed(report.Rule)"
+                      data-testid="rules-allowed-toggle">
+                <MudIcon Icon="@(isOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                         Size="Size.Small" />
+                Allowed (@report.Allowed.Count)
+              </button>
+              @if (isOpen)
+              {
+                @foreach (var allowed in report.Allowed)
+                {
+                  <div class="dep-rules__item" data-testid="rules-allowed-item">
+                    <button type="button" class="dep-panel__row dep-rules__violation"
+                            title="Click to edit why it is allowed, or to stop allowing it"
+                            @onclick="() => EditAllowedAsync(report, allowed)" data-testid="rules-allowed">
+                      <span>@allowed.SourceName</span>
+                      <span class="dep-rules__arrow">→</span>
+                      <span>@allowed.TargetName</span>
+                      @if (allowed.IsGone)
+                      {
+                        <span class="dep-cycles__gone">no longer used</span>
+                      }
+                      @if (allowed.Allowed.Reason != "")
+                      {
+                        <span class="dep-cycles__reason dep-rules__reason" data-testid="rules-allowed-reason">@allowed.Allowed.Reason</span>
+                      }
+                    </button>
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Size="Size.Small"
+                                   title="Stop allowing it: it is reported again while it is used"
+                                   OnClick="() => ruleService.Disallow(allowed.Allowed)" data-testid="rules-allowed-remove" />
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+      }
+      @{
+        var dismissed = ruleService.GetDismissed();
+      }
+      @if (dismissed.Count > 0)
+      {
+        <div class="dep-rules__violations dep-rules__dismissed">
+          <button type="button" class="dep-rules__allowed-toggle" @onclick="() => isDismissedOpen = !isDismissedOpen"
+                  title="Rules you dismissed or removed: Suggest rules does not suggest them again"
+                  data-testid="rules-dismissed-toggle">
+            <MudIcon Icon="@(isDismissedOpen ? MudBlazor.Icons.Material.Filled.ExpandMore : MudBlazor.Icons.Material.Filled.ChevronRight)"
+                     Size="Size.Small" />
+            Not suggested again (@dismissed.Count)
+          </button>
+          @if (isDismissedOpen)
+          {
+            @foreach (var item in dismissed)
+            {
+              <div class="dep-rules__item" data-testid="rules-dismissed-item">
+                <span class="dep-panel__row dep-rules__violation" title="@item.Text">
+                  <span>@item.Text</span>
+                  @if (item.Dismissed.Reason != "")
+                  {
+                    <span class="dep-cycles__reason dep-rules__reason">@item.Dismissed.Reason</span>
+                  }
+                </span>
+                <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Undo" Size="Size.Small"
+                               title="Take the dismissal back: Suggest rules may suggest it again"
+                               OnClick="() => Undismiss(item.Dismissed)" data-testid="rules-dismissed-remove" />
+              </div>
+            }
+          }
+        </div>
+      }
+    </div>
+
+    <div class="dep-rules__add-kind">
+      <select class="dep-rules__kind" value="@addKind" @onchange="ChangeKind" title="@KindHint(addKind)"
+              data-testid="rules-add-kind">
+        <option value="@Modeling.Models.RuleKind.MustNotUse">X must not use Y</option>
+        <option value="@Modeling.Models.RuleKind.OnlyMayUse">Only X may use Y</option>
+        <option value="@Modeling.Models.RuleKind.Layers">Layers, top first</option>
+        <option value="@Modeling.Models.RuleKind.Independent">X is independent</option>
+        <option value="@Modeling.Models.RuleKind.NoCycles">No cycles inside X</option>
+        <option value="@Modeling.Models.RuleKind.SiblingsIndependent">The parts of X are independent</option>
+      </select>
+      <span class="dep-rules__kind-hint">@KindHint(addKind)</span>
+    </div>
+    @if (addKind == Modeling.Models.RuleKind.Layers)
+    {
+      <div class="dep-rules__layers">
+        @for (var i = 0; i < layers.Count; i++)
+        {
+          var index = i;
+          <div class="dep-rules__layer" data-testid="rules-add-layer">
+            <span class="dep-rules__arrow">@(index + 1).</span>
+            <span class="dep-path__pick">@layers[index].Name</span>
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Close" Size="Size.Small" title="Take this layer out"
+                           OnClick="() => layers.RemoveAt(index)" data-testid="rules-add-layer-remove" />
+          </div>
+        }
+        <div class="dep-rules__layer">
+          <button type="button" class="dep-path__pick dep-path__pick--empty"
+                  title="@(layers.Count == 0 ? "Choose the top layer, the one nothing else may use" : "Choose the next layer down")"
+                  @onclick="PickLayerAsync" data-testid="rules-add-layer-pick">
+            @(layers.Count == 0 ? "Choose the top layer …" : "Choose the next layer down …")
+          </button>
+          <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(layers.Count < 2)"
+                     OnClick="Add" data-testid="rules-add">
+            Add
+          </MudButton>
+        </div>
+      </div>
+    }
+    else if (Modeling.Models.ArchitectureRule.IsOneNodeKind(addKind))
+    {
+      var (before, after, pickTitle) = addKind switch
+      {
+        Modeling.Models.RuleKind.NoCycles => ("no cycles inside", "", "Choose the node that must have no cycles inside"),
+        Modeling.Models.RuleKind.SiblingsIndependent => ("the parts of", "are independent", "Choose the node whose children must not use each other"),
+        _ => ("", "is independent", "Choose the node that must use only externals"),
+      };
+      <div class="dep-rules__add dep-rules__add--one">
+        @if (before != "")
+        {
+          <span class="dep-rules__arrow">@before</span>
+        }
+        <button type="button" class="@PickClass(fromName)" title="@pickTitle"
+                @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
+          @(fromName ?? "Choose a node …")
+        </button>
+        @if (after != "")
+        {
+          <span class="dep-rules__arrow">@after</span>
+        }
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null)"
+                   OnClick="Add" data-testid="rules-add">
+          Add
+        </MudButton>
+      </div>
+    }
+    else
+    {
+      var isOnly = addKind == Modeling.Models.RuleKind.OnlyMayUse;
+      <div class="dep-rules__add">
+        <button type="button" class="@PickClass(fromName)"
+                title="@(isOnly ? "Choose the node that may use the other" : "Choose the node that must not depend on the other")"
+                @onclick="() => PickAsync(isFrom: true)" data-testid="rules-add-from">
+          @(fromName ?? "Choose a node …")
+        </button>
+        <span class="dep-rules__arrow">@(isOnly ? "may use" : "must not use")</span>
+        <button type="button" class="@PickClass(toName)"
+                title="@(isOnly ? "Choose the node only it may use" : "Choose the node it must not depend on")"
+                @onclick="() => PickAsync(isFrom: false)" data-testid="rules-add-to">
+          @(toName ?? "Choose a node …")
+        </button>
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(fromId is null || toId is null)"
+                   OnClick="Add" data-testid="rules-add">
+          Add
+        </MudButton>
+      </div>
+    }
+    <div class="dep-rules__suggest">
+      <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoAwesome"
+                 title="Let an AI suggest rules from the model's structure and dependencies; you choose which to add"
+                 OnClick="ShowSuggestions" data-testid="rules-suggest">
+        Suggest rules …
+      </MudButton>
+    </div>
+  </div>
+}
+@if (suggestModelPath is not null)
+{
+  <SuggestRulesView IsShown="viewOptions.IsRuleSuggestionsShown" OnBack="ShowRuleList" OnClose="Close" />
+}
+
+@code {
+  readonly HashSet<Modeling.Models.ArchitectureRule> openAllowed = [];
+  bool isDismissedOpen;
+  Modeling.Models.NodeId? fromId;
+  Modeling.Models.NodeId? toId;
+  string? fromName;
+  string? toName;
+  Modeling.Models.RuleKind addKind = Modeling.Models.RuleKind.MustNotUse;
+  readonly List<(Modeling.Models.NodeId Id, string Name)> layers = [];
+
+  // The model the suggestions view was started for ("" until a model is loaded), null before.
+  string? suggestModelPath;
+
+  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+  void OnUiStateChanged() => InvokeAsync(() =>
+  {
+    if (suggestModelPath is not null)
+      ForgetSuggestionsForAnotherModel();
+    StateHasChanged();
+  });
+
+  // Suggestions for another model would name its nodes, so a newly opened model starts over. The
+  // path is "" while a model loads, which is not another model (the same one may be reloading).
+  void ForgetSuggestionsForAnotherModel()
+  {
+    var path = modelMgr.WithModel(m => m.Path);
+    if (path == "" || path == suggestModelPath)
+      return;
+    if (suggestModelPath == "")
+      suggestModelPath = path;
+    else
+    {
+      suggestModelPath = null;
+      viewOptions.SetRuleSuggestionsShown(false);
+    }
+  }
+
+  void ShowSuggestions()
+  {
+    suggestModelPath ??= modelMgr.WithModel(m => m.Path);
+    viewOptions.SetRuleSuggestionsShown(true);
+  }
+
+  void ShowRuleList() => viewOptions.SetRuleSuggestionsShown(false);
+
+  static string Summary(int rules, int violations, int toFix) =>
+    rules == 0 ? ""
+    : violations == 0 && toFix > 0 ? $"{toFix} to fix"
+    : violations == 0 ? "all kept"
+    : (violations == 1 ? "1 violation" : $"{violations} violations") + (toFix > 0 ? $", {toFix} to fix" : "");
+
+  // A rule broken only by dependencies marked to fix is known work, not a new problem.
+  static bool IsOnlyToFix(RuleReport report) =>
+    report.Violations.Count == 0 && report.ToFix.Any(t => !t.IsGone);
+
+  static string StatusIcon(RuleReport report) =>
+    !report.IsResolved ? MudBlazor.Icons.Material.Outlined.HelpOutline
+    : IsOnlyToFix(report) ? MudBlazor.Icons.Material.Outlined.Schedule
+    : report.Violations.Count == 0 ? MudBlazor.Icons.Material.Outlined.CheckCircle
+    : MudBlazor.Icons.Material.Outlined.Error;
+
+  static Color StatusColor(RuleReport report) =>
+    !report.IsResolved ? Color.Default
+    : IsOnlyToFix(report) ? Color.Info
+    : report.Violations.Count == 0 ? Color.Success
+    : Color.Warning;
+
+  static string StatusText(RuleReport report) =>
+    !report.IsResolved ? "node not in model"
+    : IsOnlyToFix(report) ? $"{report.ToFix.Count(t => !t.IsGone)} to fix"
+    : report.Violations.Count == 0 ? "kept"
+    : $"{report.Violations.Count} broken";
+
+  void Undismiss(Modeling.Models.DismissedRule dismissed)
+  {
+    ruleService.Undismiss(dismissed);
+    suggestRulesService.AllowSuggestingAgain(dismissed.Rule);
+  }
+
+  async Task EditReasonAsync(RuleReport report)
+  {
+    var parameters = new DialogParameters<RuleReasonDialog>
+    {
+      { d => d.RuleText, report.Text },
+      { d => d.Reason, report.Rule.Reason },
+    };
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<RuleReasonDialog>(null, parameters, options);
+    if (await dialog.Result is { Canceled: false, Data: string reason })
+      ruleService.SetRuleReason(report.Rule, reason);
+  }
+
+  static string PickClass(string? name) => name is null ? "dep-path__pick dep-path__pick--empty" : "dep-path__pick";
+
+  // Frames both classes, so the line between them is in view. Nothing is selected: classes in
+  // different projects are too small at that zoom to show a selection or its toolbar.
+  Task ShowViolationAsync(RuleViolation violation) =>
+    navigationService.ShowNodesAsync([violation.SourceId, violation.TargetId]);
+
+  string ReviewTitle => ruleReviewService.IsAvailable
+    ? "Review this dependency: allow it with why, or let Claude suggest whether and how to fix it"
+    : "Review this dependency: allow it with why, or copy a prompt for an AI chat";
+
+  void ToggleAllowed(Modeling.Models.ArchitectureRule rule)
+  {
+    if (!openAllowed.Remove(rule))
+      openAllowed.Add(rule);
+  }
+
+  // A dependency to fix starts from its planned change, kept if the user marks it to fix again.
+  async Task ReviewAsync(RuleReport report, RuleViolation violation, string plannedChange = "")
+  {
+    var rule = report.Rule;
+    Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestion>>>? suggest = ruleReviewService.IsAvailable
+      ? (route, onStep) => ruleReviewService.SuggestAsync(rule, violation, route, onStep)
+      : null;
+    var parameters = new DialogParameters<RuleReviewDialog>
+    {
+      { d => d.RuleText, report.Text },
+      { d => d.SourceName, violation.SourceLongName },
+      { d => d.TargetName, violation.TargetLongName },
+      { d => d.Suggest, suggest },
+      { d => d.FixPrompt, s => ruleReviewService.GetFixPrompt(rule, violation, s) },
+      { d => d.CopyPrompt, () => ruleReviewService.GetPromptAsync(rule, violation) },
+      { d => d.IsViolationGone, () => !IsViolated(rule, violation) },
+    };
+    if (await ShowReviewAsync(parameters, MaxWidth.Small) is not { } result)
+      return;
+    if (result.IsFixLater)
+    {
+      ruleService.FixLater(rule, violation, result.Reason != "" ? result.Reason : plannedChange);
+      return;
+    }
+    ruleService.Allow(rule, violation, result.Reason);
+    openAllowed.Add(rule);
+  }
+
+  async Task EditToFixAsync(RuleReport report, ToFixReport toFix)
+  {
+    var parameters = new DialogParameters<RuleReviewDialog>
+    {
+      { d => d.RuleText, report.Text },
+      { d => d.SourceName, toFix.Violation?.SourceLongName ?? toFix.SourceName },
+      { d => d.TargetName, toFix.Violation?.TargetLongName ?? toFix.TargetName },
+      { d => d.Reason, toFix.Planned.Reason },
+      { d => d.IsEdit, true },
+      { d => d.IsToFix, true },
+    };
+    if (await ShowReviewAsync(parameters, MaxWidth.ExtraSmall) is not { } result)
+      return;
+    if (result.IsDisallow)
+      ruleService.Disallow(toFix.Planned);
+    else if (result.Reason != toFix.Planned.Reason)
+      ruleService.SetAllowedReason(toFix.Planned, result.Reason);
+  }
+
+  async Task CopyFixPromptAsync(Modeling.Models.ArchitectureRule rule, RuleViolation violation, ToFixReport toFix)
+  {
+    if (!await clipboardService.CopyAsync(ruleReviewService.GetFixPrompt(rule, violation, PlannedFix(toFix))))
+    {
+      applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
+      return;
+    }
+    applicationEvents.TriggerInfoReported(RuleReviewDialog.FixPromptCopiedNote);
+  }
+
+  // The planned change as a fixing answer, for the fix prompt.
+  static RuleSuggestion PlannedFix(ToFixReport toFix) => new(true, "", "", "", toFix.Planned.Reason);
+
+  // Whether the rule still has this dependency, reported or to fix, say after Claude Code's fix
+  // and a re-parse.
+  bool IsViolated(Modeling.Models.ArchitectureRule rule, RuleViolation violation) =>
+    ruleService.GetReports()
+      .Any(r => r.Rule == rule
+        && r.Violations.Concat(r.ToFix.Select(t => t.Violation).OfType<RuleViolation>())
+          .Any(v => v.SourceId == violation.SourceId && v.TargetId == violation.TargetId));
+
+  async Task EditAllowedAsync(RuleReport report, AllowedReport allowed)
+  {
+    var parameters = new DialogParameters<RuleReviewDialog>
+    {
+      { d => d.RuleText, report.Text },
+      { d => d.SourceName, allowed.SourceName },
+      { d => d.TargetName, allowed.TargetName },
+      { d => d.Reason, allowed.Allowed.Reason },
+      { d => d.IsEdit, true },
+    };
+    if (await ShowReviewAsync(parameters, MaxWidth.ExtraSmall) is not { } result)
+      return;
+    if (result.IsDisallow)
+      ruleService.Disallow(allowed.Allowed);
+    else
+      ruleService.SetAllowedReason(allowed.Allowed, result.Reason);
+  }
+
+  async Task<RuleReviewDialogResult?> ShowReviewAsync(DialogParameters<RuleReviewDialog> parameters, MaxWidth maxWidth)
+  {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = maxWidth, FullWidth = true };
+    var dialog = await dialogService.ShowAsync<RuleReviewDialog>(null, parameters, options);
+    var result = await dialog.Result;
+    return result is { Canceled: false, Data: RuleReviewDialogResult data } ? data : null;
+  }
+
+  static string KindHint(Modeling.Models.RuleKind kind) => kind switch
+  {
+    Modeling.Models.RuleKind.OnlyMayUse => "Nothing else may depend on Y, say only Data may use the database client.",
+    Modeling.Models.RuleKind.Layers => "Each layer may use only the layers below it, say UI › Domain › Data.",
+    Modeling.Models.RuleKind.Independent => "X may use nothing else in the solution, only packages and the framework, say Shared is independent.",
+    Modeling.Models.RuleKind.SiblingsIndependent => "No part of X may use another part of X, say the feature folders of UI.",
+    Modeling.Models.RuleKind.NoCycles => "No circular dependencies at any level inside X, say no cycles inside Core. Cycles accepted or marked to fix in the Cycles panel are left out.",
+    _ => "Nothing in X may depend on anything in Y, say UI must not use Data.",
+  };
+
+  // The picks stay when switching between the node kinds; layers are their own list.
+  void ChangeKind(ChangeEventArgs e)
+  {
+    if (Enum.TryParse<Modeling.Models.RuleKind>(e.Value?.ToString(), out var kind))
+      addKind = kind;
+  }
+
+  async Task PickAsync(bool isFrom)
+  {
+    var caption = (addKind, isFrom) switch
+    {
+      (Modeling.Models.RuleKind.OnlyMayUse, true) => "Rule: choose the node that may use the other",
+      (Modeling.Models.RuleKind.OnlyMayUse, false) => "Rule: choose the node only it may use",
+      (Modeling.Models.RuleKind.Independent, _) => "Rule: choose the node that must use only externals",
+      (Modeling.Models.RuleKind.NoCycles, _) => "Rule: choose the node that must have no cycles inside",
+      (Modeling.Models.RuleKind.SiblingsIndependent, _) => "Rule: choose the node whose parts must not use each other",
+      (_, true) => "Rule: choose the node that must not depend on the other",
+      _ => "Rule: choose the node it must not depend on",
+    };
+    if (await PickNodeAsync(caption) is not { } picked)
+      return;
+    if (isFrom)
+      (fromId, fromName) = picked;
+    else
+      (toId, toName) = picked;
+  }
+
+  async Task PickLayerAsync()
+  {
+    var caption = layers.Count == 0 ? "Layers: choose the top layer" : "Layers: choose the next layer down";
+    if (await PickNodeAsync(caption) is { } picked)
+      layers.Add(picked);
+  }
+
+  async Task<(Modeling.Models.NodeId Id, string Name)?> PickNodeAsync(string caption)
+  {
+    var parameters = new DialogParameters<SearchDialog> { { d => d.PickCaption, caption } };
+    var dialog = await dialogService.ShowAsync<SearchDialog>((string?)null, parameters, SearchDialog.Options);
+    var result = await dialog.Result;
+    if (result is not { Canceled: false, Data: Modeling.Models.NodeId id })
+      return null;
+    var name = modelMgr.WithModel(m => m.Nodes.TryGetValue(id, out var node) ? node.LongName : null);
+    return name is null ? null : (id, name);
+  }
+
+  void Add()
+  {
+    var isLayers = addKind == Modeling.Models.RuleKind.Layers;
+    var isOneNode = Modeling.Models.ArchitectureRule.IsOneNodeKind(addKind);
+    IReadOnlyList<Modeling.Models.NodeId> ids = isLayers ? [.. layers.Select(l => l.Id)]
+      : isOneNode && fromId is not null ? [fromId]
+      : fromId is not null && toId is not null ? [fromId, toId]
+      : [];
+    if (ids.Count < (isOneNode ? 1 : 2))
+      return;
+    // A rejected rule (the same node twice, a node inside another, or a rule that exists) keeps
+    // the picks, so the user can change one of them instead of starting over.
+    if (ruleService.AddRule(addKind, ids) is Error e)
+    {
+      applicationEvents.TriggerInfoReported(e.Message);
+      return;
+    }
+    if (isLayers)
+      layers.Clear();
+    else if (isOneNode)
+      (fromId, fromName) = (null, null);
+    else
+      (fromId, toId, fromName, toName) = (null, null, null, null);
+  }
+
+  void Close()
+  {
+    viewOptions.SetRulesShown(false);
+    modelService.ClearCache(); // The highlighted lines are baked into the tiles
+    applicationEvents.TriggerUIStateChanged();
+  }
+
+  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

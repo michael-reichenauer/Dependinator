@@ -60,6 +60,10 @@ record NodeDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsChildrenLayoutCustomized { get; set; }
 
+    // The user opened the member card's "+ N private" row (MemberCard.FoldMinRows).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool IsPrivateMembersShown { get; set; }
+
     // True while the children still need an automatic layout (laid out lazily when first shown),
     // so a save before that does not keep a stale layout; omitted once they are laid out.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]

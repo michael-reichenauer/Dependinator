@@ -134,6 +134,40 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("rules-allowed-toggle")).ToHaveCountAsync(0);
     }
 
+    // Fix later moves a violation to the rule's To fix list with the AI's suggested change as the
+    // plan: no longer a violation, but listed; editing it can report it again.
+    [E2EFact]
+    public async Task FixLater_ShouldListTheDependencyUnderToFix_WithThePlannedChange()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        ILocator violations = Page.GetByTestId("rules-violation-item");
+        await Expect(violations.First).ToBeVisibleAsync();
+        int count = await violations.CountAsync();
+
+        await violations.First.GetByTestId("rules-review").ClickAsync();
+        await Page.GetByTestId("rule-review-expand").ClickAsync();
+        await Page.GetByTestId("rule-review-suggest").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-suggestion")).ToHaveAttributeAsync("data-verdict", "fix");
+        await Page.GetByTestId("rule-review-fix-later").ClickAsync();
+
+        await Expect(violations).ToHaveCountAsync(count - 1);
+        ILocator toFix = Page.GetByTestId("rules-tofix-item");
+        await Expect(toFix).ToHaveCountAsync(1);
+        await Expect(toFix.GetByTestId("rules-tofix-change"))
+            .ToHaveTextAsync("Test mode: depend on an interface instead.");
+
+        // Editing it can change the plan, or report it again.
+        await toFix.GetByTestId("rules-tofix-edit").ClickAsync();
+        await Expect(Page.GetByTestId("rule-review-reason"))
+            .ToHaveValueAsync("Test mode: depend on an interface instead.");
+        await Page.GetByTestId("rule-review-disallow").ClickAsync();
+        await Expect(toFix).ToHaveCountAsync(0);
+        await Expect(violations).ToHaveCountAsync(count);
+    }
+
     // An AI suggests rules (in test mode the app answers for Claude) in a view the Rules panel
     // switches to: the prompt holds the model's structure and dependencies, Dependinator checks
     // each rule, one on a node that is not in the model cannot be added, a rule's node name goes to
@@ -154,10 +188,13 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
         ILocator items = Page.GetByTestId("suggest-rules-item");
-        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items).ToHaveCountAsync(4);
         await Expect(items.Nth(2)).ToHaveAttributeAsync("data-can-add", "no");
         await Expect(items.Nth(2).GetByTestId("suggest-rules-error")).ToContainTextAsync("No node is named");
-        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
+        // Any kind of rule: the last is about the parts of one node.
+        await Expect(items.Nth(3).Locator("[data-kind]")).ToHaveAttributeAsync("data-kind", "SiblingsIndependent");
+        await Expect(items.Nth(3)).ToContainTextAsync("the parts of");
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 3");
 
         // The node names go to their node, with the view still open beside the diagram.
         // TextContent, since Firefox's InnerText breaks the name at a wrapped <wbr> ("Demo.\nsln").
@@ -169,13 +206,128 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
         await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
         await Expect(items.Nth(0).GetByTestId("suggest-rules-status")).ToHaveTextAsync("already a rule");
-        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("suggest-rules-add-all")).ToHaveTextAsync("Add all 2");
 
         // Back to the rules, which list the added one; the answer is still there on return.
         await Page.GetByTestId("suggest-rules-back").ClickAsync();
         await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(1);
         await Page.GetByTestId("rules-suggest").ClickAsync();
-        await Expect(items).ToHaveCountAsync(3);
+        await Expect(items).ToHaveCountAsync(4);
+    }
+
+    // A dismissed suggestion is not suggested again, nor is one an earlier answer suggested; an
+    // added rule keeps the AI's why as its reason, and removing it remembers it as dismissed too.
+    [E2EFact]
+    public async Task SuggestRules_ShouldRememberDismissedRules_AndKeepTheWhyOfAddedOnes()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        await Page.GetByTestId("rules-suggest").ClickAsync();
+        await Page.GetByTestId("suggest-rules-suggest").ClickAsync();
+        ILocator items = Page.GetByTestId("suggest-rules-item");
+        await Expect(items).ToHaveCountAsync(4);
+
+        await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
+        await Expect(items.Nth(1).GetByTestId("suggest-rules-status")).ToHaveTextAsync("dismissed");
+        await Expect(items.Nth(1)).ToHaveAttributeAsync("data-can-add", "no");
+        await items.Nth(1).GetByTestId("suggest-rules-undismiss").ClickAsync();
+        await Expect(items.Nth(1)).ToHaveAttributeAsync("data-can-add", "yes");
+        await items.Nth(1).GetByTestId("suggest-rules-dismiss").ClickAsync();
+        await items.Nth(0).GetByTestId("suggest-rules-add").ClickAsync();
+
+        // Asked again, the same answer brings nothing new: one rule added, one dismissed, one
+        // suggested before, and the one that cannot be added.
+        await Page.GetByTestId("suggest-rules-ask").ClickAsync();
+        await Expect(Page.GetByTestId("suggest-rules-left-out")).ToContainTextAsync("3 more were left out");
+        await Expect(items).ToHaveCountAsync(1);
+        await Expect(items.Nth(0)).ToHaveAttributeAsync("data-can-add", "no");
+
+        // The added rule shows the why, and removing it lists it with the dismissed one.
+        await Page.GetByTestId("suggest-rules-back").ClickAsync();
+        await Expect(Page.GetByTestId("rules-item-reason")).ToHaveTextAsync("Test mode: Claude was not asked.");
+        await Page.GetByTestId("rules-dismissed-toggle").ClickAsync();
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(1);
+        await Page.GetByTestId("rules-remove").ClickAsync();
+        await Expect(Page.GetByTestId("rules-item")).ToHaveCountAsync(0);
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(2);
+        await Page.GetByTestId("rules-dismissed-remove").First.ClickAsync();
+        await Expect(Page.GetByTestId("rules-dismissed-item")).ToHaveCountAsync(1);
+    }
+
+    // The other kinds of rule: "only X may use Y" and layers, each picked in the same panel.
+    [E2EFact]
+    public async Task RuleKinds_ShouldAddOnlyMayUseAndLayers_AndEvaluateEach()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        ILocator rules = Page.GetByTestId("rules-item");
+
+        // Other projects than UI use Core, so "only UI may use Core" is broken.
+        await Page.GetByTestId("rules-add-kind").SelectOptionAsync("OnlyMayUse");
+        await AddRuleAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        await Expect(rules).ToHaveCountAsync(1);
+        await Expect(rules.Nth(0)).ToContainTextAsync("may use");
+        await Expect(rules.Nth(0).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+
+        // UI uses Core, so UI above Core is kept, and Core above UI is broken.
+        await Page.GetByTestId("rules-add-kind").SelectOptionAsync("Layers");
+        await Expect(Page.GetByTestId("rules-add")).ToBeDisabledAsync();
+        await AddLayersAsync("Demo.UI (dll)", "Demo.Core (dll)");
+        await Expect(rules).ToHaveCountAsync(2);
+        await Expect(rules.Nth(1).GetByTestId("rules-item-layer")).ToHaveCountAsync(2);
+        await Expect(rules.Nth(1).GetByTestId("rules-item-count")).ToContainTextAsync("kept");
+        await Expect(Page.GetByTestId("rules-add-layer")).ToHaveCountAsync(0);
+
+        await AddLayersAsync("Demo.Core (dll)", "Demo.UI (dll)");
+        await Expect(rules).ToHaveCountAsync(3);
+        await Expect(rules.Nth(2).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+        await Expect(rules.Nth(2).GetByTestId("rules-violation").First).ToBeVisibleAsync();
+    }
+
+    // The rules about one node: "X is independent" and "no cycles inside X".
+    [E2EFact]
+    public async Task OneNodeRules_ShouldReportUsesOutsideTheNode_AndCyclesInsideIt()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-rules")).ClickAsync();
+        ILocator rules = Page.GetByTestId("rules-item");
+        var search = new Shared.Pages.SearchDialog(App, Page);
+
+        // Core uses the shared cloud sync types, so it is not independent; it has cycles inside.
+        foreach (var kind in new[] { "Independent", "NoCycles" })
+        {
+            await Page.GetByTestId("rules-add-kind").SelectOptionAsync(kind);
+            await Expect(Page.GetByTestId("rules-add-to")).ToHaveCountAsync(0);
+            await Page.GetByTestId("rules-add-from").ClickAsync();
+            await Expect(Page.GetByTestId("search-pick-caption")).ToBeVisibleAsync();
+            await search.FillAsync("Demo.Core (dll)");
+            await search.Result("Demo.Core (dll)").First.ClickAsync();
+            await Page.GetByTestId("rules-add").ClickAsync();
+        }
+
+        await Expect(rules).ToHaveCountAsync(2);
+        await Expect(rules.Nth(0)).ToContainTextAsync("is independent");
+        await Expect(rules.Nth(0).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+        await Expect(rules.Nth(1)).ToContainTextAsync("no cycles inside");
+        await Expect(rules.Nth(1).GetByTestId("rules-item-count")).ToContainTextAsync("broken");
+    }
+
+    // Picks the layers top first through the search dialog in picker mode and adds the rule.
+    async Task AddLayersAsync(params string[] layers)
+    {
+        var search = new Shared.Pages.SearchDialog(App, Page);
+        foreach (var layer in layers)
+        {
+            await Page.GetByTestId("rules-add-layer-pick").ClickAsync();
+            await Expect(Page.GetByTestId("search-pick-caption")).ToBeVisibleAsync();
+            await search.FillAsync(layer);
+            await search.Result(layer).First.ClickAsync();
+            await Expect(Page.GetByTestId("rules-add-layer").Last).ToContainTextAsync(layer);
+        }
+        await Page.GetByTestId("rules-add").ClickAsync();
     }
 
     // Picks both nodes through the search dialog in picker mode and adds the rule.

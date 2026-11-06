@@ -23,6 +23,10 @@ interface IPanZoomService
     // Keyboard navigation: zoom by a factor (> 1 zooms in) around the viewport center, and pan
     // by a screen-pixel delta.
     void ZoomBy(double factor);
+
+    // Moves the view so the canvas point from shows at to's place on screen, with the content
+    // around it scaled by scale (> 1: the content got larger in canvas units, so zoom out).
+    void FollowPoint(Pos from, Pos to, double scale);
     void PanBy(double dxPixels, double dyPixels);
 }
 
@@ -123,6 +127,24 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
             var centerX = cx * model.Zoom + model.Offset.X;
             var centerY = cy * model.Zoom + model.Offset.Y;
             newOffset = new Pos(centerX - cx * newZoom, centerY - cy * newZoom);
+        }
+
+        SetView(newOffset, newZoom);
+    }
+
+    public void FollowPoint(Pos from, Pos to, double scale)
+    {
+        if (scale <= 0 || !double.IsFinite(scale))
+            return;
+        Interlocked.Increment(ref goToRequestId);
+        Pos newOffset;
+        double newZoom;
+        using (var model = modelMgr.UseModel())
+        {
+            // model.Zoom is canvas units per pixel: the point's screen position is (canvas - Offset) / Zoom.
+            newZoom = Math.Min(MaxZoom, model.Zoom * scale);
+            var ratio = newZoom / model.Zoom;
+            newOffset = new Pos(to.X - (from.X - model.Offset.X) * ratio, to.Y - (from.Y - model.Offset.Y) * ratio);
         }
 
         SetView(newOffset, newZoom);

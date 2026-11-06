@@ -94,7 +94,7 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   `ModelDto.ParseProblems`). Decided with the user: errors only as a brief summary (the editor lists
   each error), no compile warnings for now (many users never fix them, so the indicator would always
   be on), rule violations counted per broken rule. Phase 3: `GetNodeProblems` counts each problem at
-  its node and every ancestor, `NodeSvg.ProblemBadgeSvg` draws the badge (View menu toggle); badges
+  its node and every ancestor, `BadgeSvg.Problem` draws the badge (View menu toggle); badges
   are baked into tiles, so `SvgService` clears the tiles when that dictionary's instance changes.
   Still open: a namespace commented in several files and links to missing targets (delegate
   `Invoke`) as problems, unresolved rules (info, list only).
@@ -102,7 +102,7 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   dimmed or hidden ancestor decides for its whole subtree, View › Reveal Hidden Nodes is a
   temporary peek). Phase 2 (Oct 23): `HiddenNodesPanel` lists the user-set nodes
   (`HiddenNodeService`, cached on `Model.VisibilityVersion`), opened from `HiddenNodesIndicator` in
-  the app bar; going to a hidden node turns Reveal on. Phase 3 (Oct 23): `NodeSvg.HiddenBadgeSvg`,
+  the app bar; going to a hidden node turns Reveal on. Phase 3 (Oct 23): `BadgeSvg.Hidden`,
   a grey count on the top-left of the direct parent of user-hidden nodes only (decided with the
   user: not every ancestor, for now), View toggle, node menu "List Hidden Children". The badge is
   not clickable (pointer events pass through, like the problem badge). Still open: hide rules (by
@@ -133,6 +133,15 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   name, so it survives a refresh and travels with cloud sync; plays in the browser app without AI),
   edit it (remove, reorder, edit text, "Add to tour" from the node menu). Phase 3: topic tours
   ("how does cloud sync work"), "Play as tour" from an Ask answer, `ask-eval` cases.
+- **Rules and cycles, next** (design doc https://claude.ai/artifact/MmaLqut6aKQvpEoRJxvGYi,
+  Nov 4): phase 1 is suggestion memory and rule reasons (`DismissedRule`, `ArchitectureRule.Reason`),
+  phase 2 Fix later for rule violations (`AllowedViolation.IsToFix`, `RuleReport.ToFix`), phase 3
+  rule kinds (`RuleKind`: `OnlyMayUse`, `Layers`, then `Independent` and `NoCycles`, which reuses
+  `CycleService.Compute`; `RuleService.IsBreaking`), then `SiblingsIndependent` ("the parts of
+  X are independent"). Suggest rules proposes and checks every kind (`SuggestedRule.Kind/Nodes`,
+  answer `{kind, nodes, why}`), dismissals cover every kind (`KindDismissedRules`), and the MCP
+  `check_rule` takes a kind. Name-pattern rules ("*.Tests may use anything") were postponed by
+  Michael (Nov 4). Cycles stay their own always-on detector; only the decisions are shared.
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

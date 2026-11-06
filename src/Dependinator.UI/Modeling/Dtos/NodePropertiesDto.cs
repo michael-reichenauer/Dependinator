@@ -15,6 +15,10 @@ record NodePropertiesDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool? IsExecutable { get; init; }
 
+    // A member row's signature (see Parsing.NodeProperties.Signature).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? Signature { get; init; }
+
     // Source location so code navigation works right after a cached load, before the
     // background re-parse has refreshed the model. Persisted relative to the model
     // (.sln) folder (see FileSpanPaths) so the cache stays valid when the same solution

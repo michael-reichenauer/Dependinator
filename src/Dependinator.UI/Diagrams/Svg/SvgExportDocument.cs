@@ -64,12 +64,36 @@ static class SvgExportDocument
                 dominant-baseline: hanging;
                 text-anchor: start;
             }
+            .memberHeading, .summaryPrivate, .summaryMuted {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.CardMutedText}};
+                text-anchor: start;
+            }
+            .summaryMember {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.Text}};
+                text-anchor: start;
+            }
             .iconDescription {
                 font-family: Verdana, Helvetica, Arial, sans-serif;
                 font-style: italic;
                 fill: {{DColors.Text}};
                 fill-opacity: 0.7;
                 text-anchor: middle;
+            }
+            .privateToggleText {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.CardMutedText}};
+                text-anchor: start;
+            }
+            .summaryMember.summaryPrivate, .memberName.memberPrivate {
+                fill: {{DColors.CardMutedText}};
+            }
+            .memberSignature {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                fill: {{DColors.CardMutedText}};
+                text-anchor: start;
             }
             .memberDescription {
                 font-family: Verdana, Helvetica, Arial, sans-serif;

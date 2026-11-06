@@ -32,7 +32,11 @@ project works.
   Claude's suggestions for cycles and broken rules, About Node with a question for an AI, comments improved by Claude Code, an MCP server for AI agents, AI-suggested rules and questions about the model, one default AI for all of them, C# member naming fixes, and a problem indicator with node badges.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
-  "Ask how to break it" for accepted cycles, and an AI-planned tour of the codebase.
+  "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
+  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
+  Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
+  independent" and "no cycles inside X", and member cards: types show their members like a class
+  box, with a summary card on the way in, and styled hover cards for nodes and lines.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -138,6 +142,16 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   lights its lines the same way (a hover preview, CSS only, no redraw). Settings › Soft lines
   turns it off. Tried and dropped: opacity by link count (the long crossing lines are the heavy
   ones) and fading only lines that leave their container.
+  Since Nov 4 a selected container lights only the lines leading out of it; every line inside it
+  stays dimmed until a child is selected or hovered.
+- **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
+  styled card in the app's theme: a node's kind and container, description, how many nodes it
+  uses and is used by (a member counts as its type), its members and its problems (compile errors,
+  cycles, broken rules); a line's ends, link count, first three links and whether it is part of a
+  cycle or breaks a rule. The tiles no longer carry any tooltip text (the SVG `<title>`s are gone,
+  `data-name` stays for the e2e locators): the card is built only when the mouse rests on an item
+  (`TooltipService`, `initTooltips` in jsInterop.js). Chosen over a larger card with top
+  dependencies and the source file.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
@@ -242,6 +256,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   comment in one file only). It runs like Fix with Claude Code, on the current branch (edits, no
   commands), with a warning above 150 namespaces and types; without the Claude Code route the prompt
   is copied for any coding agent. Claude Code's run limit went from 15 to 30 minutes for it.
+  Since Nov 4 it also covers projects: a dll's description, its `[assembly: AssemblyDescription]`
+  attribute (or the project file's `<Description>`), is added or rewritten like a comment.
 - **MCP server (Oct 27).** `Dependinator.Mcp` (the official MCP C# SDK, Streamable HTTP) gives AI
   agents read-only tools over the open diagram: `get_model`, `list_children`, `search_nodes`,
   `get_dependencies`, `find_paths`, `list_cycles`, `list_rules` and `check_rule`, which counts what
@@ -339,6 +355,65 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   leaves out the stops that are no nodes, and Start tour plays it in a callout like the tips
   (`TourCallout`), zooming to and selecting each stop's node, with Back and Next. Phase 1: the tour
   is not saved yet.
+- **Suggest rules remembers (Nov 4).** A suggested rule can be dismissed (`DismissedRule`, saved
+  with the model; removing a rule dismisses it too), and later answers leave out the dismissed
+  rules and those an earlier answer suggested: the prompt lists them, and Dependinator drops
+  repeats itself ("2 more were left out"). The prompt asks for the rules clearly worth keeping,
+  at most 8, and an answer with none is fine. An added rule keeps the AI's why as its reason
+  (`ArchitectureRule.Reason`), shown and editable in the Rules panel, whose "Not suggested again"
+  list takes a dismissal back.
+- **Fix later for rule violations (Nov 4).** The rule review dialog has Fix later beside Allow,
+  like the cycle review: the dependency moves to the rule's To fix list (`AllowedViolation.IsToFix`,
+  saved with the model) with the AI's suggested change as the plan. It stays drawn as breaking the
+  rule but is no longer counted as a problem; its row copies a fix prompt for the plan, reviews it
+  again, edits the plan or reports it again.
+- **Rule kinds (Nov 4).** Besides "X must not use Y", the Rules panel adds "only X may use Y"
+  (nothing outside both may use Y) and layers, picked top first (each layer may use only the
+  layers below it). `ArchitectureRule.Kind` and `LayerNames`, saved with the model; an unknown kind
+  reads as "must not use". Reviews, prompts, Fix later and the MCP `list_rules` text know the
+  kinds. Suggest rules still suggests only "must not use".
+- **One-node rules (Nov 4).** "X is independent" (nothing in X may use the rest of the solution,
+  only externals) and "no cycles inside X" (the cycles the Cycles panel finds at or inside X,
+  each of their links a violation with the usual review, Allow and Fix later; cycles accepted or
+  marked to fix in the Cycles panel are left out, decisions both share).
+- **Suggest rules proposes every kind (Nov 4).** The AI picks the kind that says a rule best
+  (one layers rule rather than several "must not use", "is independent" for a shared part),
+  answering `{kind, nodes, why}`; pasted answers read every form. Dependinator checks each kind
+  itself, and dismissals remember every kind (`ModelDto.KindDismissedRules`). The MCP
+  `check_rule` takes a kind (and layers), so an agent can test any kind of rule. A new kind, "the
+  parts of X are independent" (`SiblingsIndependent`: no child of X may use another child), keeps
+  features or modules apart. Name-pattern rules were postponed.
+- **AI-suggested line labels (Nov 4).** The line label dialog asks any AI provider for a label
+  and description (`LineLabelPrompt`: the line's ends, its links and their code, its label now
+  and the labels on other lines, for a matching style), with up to three other labels to pick
+  from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
+  at once, else "Use suggestion" fills them; nothing is saved before Save.
+- **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
+  section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
+  Variables, Resources, Outputs), public members first, flowed into as many columns as the box
+  takes (`MemberCard`). A type of only members is shaped like its card, so the card fills it.
+  Zooming in, the type is first an icon, then a summary card (kind, counts, the first members and
+  "+ N more", `NodeViewPolicy.IsMemberSummary`) until the rows are readable, then the full card.
+  Lines land on the member rows (in at the left, out at the right), calls inside one type show
+  only for the selected or hovered member, and rows can no longer be dragged or resized. A Bicep
+  module gets the card left of its resources. The layout version is 2, so saved models lay their
+  containers out again.
+- **Member signatures and private rows (Nov 4).** Member rows show their signature after the
+  name (`(string query): Task<int>`, `: string`; Bicep parameters and outputs their type) and
+  their comment after it, in the row instead of squeezed under it. A large type (more than 12
+  members, public and private) folds its private rows into a "+ N private" row; a click shows
+  them ("hide N private" folds them again), saved with the model, and the view keeps the row
+  under the pointer. Lines from folded rows end at that row, and going to a private member (search,
+  a link, the editor) opens the private rows. Layout version 3.
+- **One UML card (Nov 6).** An open type is now drawn as the card itself: its box gets the
+  summary card's header (icon, name, kind) and the member rows run from its top left under it,
+  with signatures and lines, instead of a container with a smaller card centered inside and the
+  name below. Nested types sit inside the card below the rows. The summary card shares the frame
+  and header and shows signatures too, so zooming in just fills the card. Layout version 4.
+  Every type card has the same lavender header and border (a custom color still wins), signatures
+  follow the name UML style (`Url: string`), private rows are muted with a small lock on their
+  icon (first a "private" tag on the right, replaced the same day at Michael's pick), and the
+  summary card lists nested types last and shows its counts line only when rows are left out.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the
@@ -424,7 +499,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     `Dependinator.Bicep` (Oct).
 - **Namespace refactors.** Modeling, Diagrams, Tiles and Commands namespaces (Mar). In Jul 10–12
   every project was cleaned up namespace by namespace: interaction services split out, `async
-  void` removed, SVG/CSS numbers formatted culture-invariant.
+  void` removed, SVG/CSS numbers formatted culture-invariant. On Nov 3 the `Diagrams` root went
+  from 64 files to 19: the features moved into a folder each (`Cycles`, `Rules`, `Lines`,
+  `Navigation`, `Tours`, `Ask`, `NodeHelp`), and `Interaction` was split into input and `Editing`.
 - **Architecture tests (Jun 22).** NetArchTest enforces `Hosts → UI → Core → Shared`.
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
   types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. The GA follow-up is in

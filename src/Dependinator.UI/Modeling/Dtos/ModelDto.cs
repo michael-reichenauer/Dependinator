@@ -29,8 +29,19 @@ record ModelDto
     // Defaulted, so models saved before rules existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<RuleDto> Rules { get; init; } = [];
 
+    // The rules not to suggest again (see DismissedRule). Defaulted (no FormatVersion bump).
+    public IReadOnlyList<RuleDto> DismissedRules { get; init; } = [];
+
     // Defaulted, so models saved before allowed violations existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AllowedViolationDto> AllowedViolations { get; init; } = [];
+
+    // The rules of the other kinds than "must not use" (RuleDto.Kind), and the dependencies allowed
+    // under them, in lists of their own: a version that knows only "must not use" skips them,
+    // instead of reading "only X may use Y" or layers as "X must not use Y". Defaulted (no
+    // FormatVersion bump).
+    public IReadOnlyList<RuleDto> KindRules { get; init; } = [];
+    public IReadOnlyList<RuleDto> KindDismissedRules { get; init; } = [];
+    public IReadOnlyList<AllowedViolationDto> KindAllowedViolations { get; init; } = [];
 
     // Defaulted, so models saved before accepted cycles existed still deserialize (no FormatVersion bump).
     public IReadOnlyList<AcceptedCycleDto> AcceptedCycles { get; init; } = [];
@@ -50,15 +61,23 @@ record ParseProblemDto
     public string? NodeName { get; init; }
 }
 
-// An architecture rule: "From" must not depend on "To" (node names, see ArchitectureRule).
+// An architecture rule of its kind: "From" must not depend on "To", only "From" may use "To", or
+// layers (From the top one, To the bottom one), with why (node names, see ArchitectureRule); also
+// a dismissed rule (see DismissedRule).
 [Serializable]
 record RuleDto
 {
     public required string From { get; init; }
     public required string To { get; init; }
+    public string Reason { get; init; } = "";
+
+    // The rule's kind (RuleKind; only in ModelDto.KindRules) and a layers rule's layers, top first.
+    // Defaulted (no FormatVersion bump).
+    public int Kind { get; init; }
+    public IReadOnlyList<string>? Layers { get; init; }
 }
 
-// A dependency that breaks the rule "From must not use To" and that the user allowed, with why:
+// A dependency that breaks the rule (its kind, From and To) and that the user allowed, with why:
 // the units at both ends (node names, see AllowedViolation).
 [Serializable]
 record AllowedViolationDto
@@ -68,6 +87,14 @@ record AllowedViolationDto
     public required string Source { get; init; }
     public required string Target { get; init; }
     public string Reason { get; init; } = "";
+
+    // Marked to fix later, with the planned change as the Reason. Defaulted (no FormatVersion bump).
+    public bool IsToFix { get; init; }
+
+    // The kind of the rule it breaks (RuleKind; only in ModelDto.KindAllowedViolations) and, for
+    // layers, the rule's layers. Defaulted (no FormatVersion bump).
+    public int RuleKind { get; init; }
+    public IReadOnlyList<string>? Layers { get; init; }
 }
 
 // A circular dependency the user accepted, with why, or marked to fix later, with the planned

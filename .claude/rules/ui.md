@@ -34,7 +34,7 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:
-  - endpoint-visibility culling in `SvgService` (`IsEitherEndpointRendered`);
+  - endpoint-visibility culling in `NodeLinesSvg` (`IsEitherEndpointRendered`);
   - no eager pruning of inactive lines (it caused GC stalls of up to 9 s);
   - the `Sync` skip via `StructureVersion` plus the expansion memo, so zooming skips Sync in the
     default view.
@@ -69,7 +69,7 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   boundary).
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
-  `SvgService.RenderRootContent` re-renders at most 3 rounds after a lazy layout.
+  `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.
 - `NodeDto.IsChildrenLayoutRequired` is persisted. A `ModelDto.LayoutVersion` below
   `CurrentLayoutVersion` re-flags only containers the user has not customized.
 - Work budgets, measured in WASM Release (~0.4 ms per 1k units, ~10x slower than Blazor Server):
@@ -80,6 +80,45 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `NodeLayout.InlineThoroughWorkBudget` temporarily (only Demo.UI.Diagrams exceeds 250k).
 - For WASM timings, publish `src/Dependinator.Wasm` in Release and serve its `wwwroot` with
   `python3 -I -m http.server 5000`.
+
+## Member cards
+
+- Member rows are laid out by `MemberCard` (sections, columns, `RowPitch` 16, off the 20-grid on
+  purpose); headings and the card are derived from row positions when rendering, nothing stored.
+  Rows never move or resize by hand (`NodeEditService` skips members), and a customized container
+  still re-arranges its rows (`NodeLayout.ArrangeCustomizedTypeChildren`).
+- A node of only members gets a non-square size shaped like its card (`NodeLayout.ShapedSize`)
+  and `MemberCardCoverage` 0.9; `ApplyContainerTransform` caps the zoom at 1, so a tiny card
+  covers less.
+- The summary card is part of `IsShowIcon` (lines attach to the type, a click selects it); it is
+  decided by `zoom * ContainerZoom`, so `NodeTreeSvg.RenderNode` lays such nodes out before
+  deciding. Its rows use class `summaryMember`, never `memberName`, which the e2e node locators match.
+- "Show node" on a member frames it closer (`NodeViewPolicy.FramingZoomFactor`): rows readable and
+  the parent open, also 1.3x apart in a tile. A small type's card is at natural scale, so at 1 px
+  per unit its type would still be an icon (the e2e `WaitForContainerNodeAsync("Main")` failed).
+- A row's signature and description are `<tspan>`s inside its `text.memberName`, so the name
+  text has `data-name` (the e2e point finder reads `dataset.name ?? textContent`); `ColumnWidth`
+  counts the signature (up to `MaxColumnWidth`).
+- "+ N private" (`MemberCard.HasPrivateToggle`, `Node.IsPrivateMembersShown`, saved): folded
+  private rows get the toggle row's rect (their lines end there) and are skipped in
+  `NodeTreeSvg.IsRendered`. Rendering asks the fold as of the last layout (`Node.LaidOutToggle`,
+  `IsFoldedAway`, `LaidOutToggleRect`; runtime only, `MemberCard.RestoreLayoutState` on load),
+  never the live member counts: a re-parse can cross `FoldMinRows` or change a member's access
+  without a layout, and `MemberCard.IsLayoutStale` (checked in `NodeTreeSvg.RenderNode`) asks for
+  one. Going to a folded member (`NavigationService.EnsureLayoutForPath`) opens the private rows. The toggle (`PointerId` sub-id "pt") is drawn after the lines, or a
+  line polyline takes its click. Toggling re-lays out the card at once and the view follows
+  (`CardToggleMove`, `PanZoomService.FollowPoint`): more rows in the same box means a smaller
+  `ContainerZoom`, which otherwise drops the card back to its summary.
+- An open member card node (`NodeViewPolicy.IsMemberCardNode`) is drawn by `MemberCardSvg.GetCardNodeSvg`
+  (the shared `CardFrameSvg` header, no container label, no inner card rect) and laid out by
+  `NodeLayout.ArrangeCardNode`: children from child (0,0) at the box's top left
+  (`ApplyCardTransform`, zoom ≤ 1), rows from `MemberCard.CardRowsTop`, nested types below.
+- Card colors are fixed (`DColors.CardHeader`/`CardFrame`, `MemberCardSvg.CardColors`), not the type's
+  random color; only a user-set custom color or edit mode uses `NodeColors`. A private row is
+  muted and gets `BadgeSvg.Private`, a padlock on its icon's lower right corner (Michael
+  picked it over a faded icon, a UML "-" and the earlier "private" text on the right, Nov 6).
+- Lines between members of one type carry `line-inner` (LineSvg) and are hidden unless lit or
+  hover-previewed (Canvas LineCss, jsInterop.js `initLinePreview`).
 
 ## Design layer: zones, notes, line labels, aliases, hide, rows
 
@@ -102,4 +141,4 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - `HideNodesCommand` needs its own `MergeKey`: same-type commands within 500 ms merge, which turned
   hide+show into a no-op undo. The line rule lives in `LineVisibility.Update`.
 - View › Rows is a view option (`RowFilter`), not a model edit: rows are skipped in
-  `SvgService.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.
+  `NodeTreeSvg.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.

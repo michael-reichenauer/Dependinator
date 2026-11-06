@@ -494,7 +494,8 @@ export function initLinePreview(elementId) {
     shownId = id;
     style.textContent = id
       ? `#${elementId} .line-vis:not([data-n~="${id}"]):not(.line-accent, .line-cycle, .line-path, .line-rule) { opacity: var(--line-preview-dim) !important; }
-         #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }`
+         #${elementId} .line-vis[data-n~="${id}"] { opacity: 1 !important; }
+         #${elementId} .line-vis.line-inner:not([data-n~="${id}"]) { opacity: 0 !important; }`
       : "";
   }
 
@@ -521,6 +522,122 @@ export function initLinePreview(elementId) {
   svg.addEventListener("wheel", clear, { passive: true });
   svg.addEventListener("pointerleave", clear);
   document.addEventListener("keydown", clear);
+}
+
+// Hover card of nodes and lines: the tiles carry no tooltip text; when the mouse rests on a
+// node or line hover group (id "<id>.n" or "<id>.l") for a moment, .NET builds that one item's
+// card (TooltipService.GetTooltipHtml) and it shows near the pointer, in one reused element.
+// A press, a key, the wheel, a drag or leaving the item hides it; touch never shows it.
+const tooltipDelayMs = 600;
+const tooltipOffset = 14;
+
+let tooltipCleanup = null;
+let tooltipOwner = null;
+
+export function initTooltips(elementId, dotNetRef, token) {
+  const svg = document.getElementById(elementId);
+  if (!svg) return;
+  // A canvas made again (a re-mounted component) replaces the listeners of the one before.
+  tooltipCleanup?.();
+  tooltipOwner = token;
+
+  let card = document.getElementById("dep-tooltip");
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "dep-tooltip";
+    card.className = "dep-tooltip";
+    card.setAttribute("role", "tooltip");
+    card.setAttribute("data-testid", "diagram-tooltip");
+    document.body.appendChild(card);
+  }
+  card.hidden = true;
+
+  let hoverId = null;
+  let timer = null;
+  let request = 0;
+  let pointer = { x: 0, y: 0 };
+
+  function hide() {
+    clearTimeout(timer);
+    timer = null;
+    hoverId = null;
+    request++;
+    card.hidden = true;
+  }
+
+  function place() {
+    const margin = 8;
+    const width = card.offsetWidth;
+    const height = card.offsetHeight;
+    let x = pointer.x + tooltipOffset;
+    let y = pointer.y + tooltipOffset + 4;
+    if (x + width + margin > window.innerWidth) x = Math.max(margin, pointer.x - tooltipOffset - width);
+    if (y + height + margin > window.innerHeight) y = Math.max(margin, pointer.y - tooltipOffset - height);
+    card.style.left = `${x}px`;
+    card.style.top = `${y}px`;
+  }
+
+  async function show(id) {
+    timer = null;
+    const thisRequest = ++request;
+    let html = null;
+    try {
+      html = await dotNetRef.invokeMethodAsync("GetTooltipHtml", id);
+    } catch {
+      return; // The circuit or the component is gone
+    }
+    if (thisRequest !== request || hoverId !== id || !html) return;
+    card.innerHTML = html;
+    card.hidden = false;
+    place();
+  }
+
+  function onOver(event) {
+    if (event.pointerType !== "mouse" || event.buttons !== 0) return hide();
+    const group = event.target.closest?.("g.hoverable[id], g.hoverableedit[id]");
+    const id = group?.id;
+    if (!id || !(id.endsWith(".n") || id.endsWith(".l"))) return hide();
+    if (id === hoverId) return;
+    hide();
+    hoverId = id;
+    timer = setTimeout(() => show(id), tooltipDelayMs);
+  }
+
+  function onMove(event) {
+    pointer = { x: event.clientX, y: event.clientY };
+    if (event.buttons !== 0) return hide();
+    // The card waits until the mouse rests, not merely stays on one item (a large container
+    // is under the pointer most of the time while zoomed in).
+    if (timer) {
+      clearTimeout(timer);
+      const id = hoverId;
+      timer = setTimeout(() => show(id), tooltipDelayMs);
+    }
+  }
+
+  const options = { passive: true };
+  svg.addEventListener("pointerover", onOver);
+  svg.addEventListener("pointermove", onMove, options);
+  svg.addEventListener("pointerdown", hide);
+  svg.addEventListener("pointerleave", hide);
+  svg.addEventListener("wheel", hide, options);
+  document.addEventListener("keydown", hide);
+
+  tooltipCleanup = () => {
+    hide();
+    svg.removeEventListener("pointerover", onOver);
+    svg.removeEventListener("pointermove", onMove, options);
+    svg.removeEventListener("pointerdown", hide);
+    svg.removeEventListener("pointerleave", hide);
+    svg.removeEventListener("wheel", hide, options);
+    document.removeEventListener("keydown", hide);
+    tooltipCleanup = null;
+    tooltipOwner = null;
+  };
+}
+
+export function disposeTooltips(token) {
+  if (tooltipOwner === token) tooltipCleanup?.();
 }
 
 const openDatabases = new Map();

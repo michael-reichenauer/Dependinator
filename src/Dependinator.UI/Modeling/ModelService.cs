@@ -1,5 +1,6 @@
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -586,15 +587,28 @@ class ModelService : IModelService, IDisposable
         modelDto.Links.ForEach(l => modelStructureService.SetLinkDto(model, l));
         modelDto.Lines.ForEach(l => modelStructureService.SetLineLayoutDto(model, l));
         PassThroughService.UpdatePassThroughFlags(model);
+        // The saved rows were laid out with the saved fold of their cards' private rows.
+        foreach (var node in model.Nodes.Values)
+            MemberCard.RestoreLayoutState(node);
         RequireChildrenLayoutIfOlder(model, modelDto.LayoutVersion);
     }
 
     // A model saved with an older automatic layout gets it redone (lazily, as containers are
     // shown), except in the containers the user arranged; the flags are saved with the model
-    // until each container is laid out.
+    // until each container is laid out. Member rows are never arranged by hand (their card
+    // keeps them in order), so containers with members are laid out again even when arranged.
     internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
     {
-        if (layoutVersion < NodeLayout.CurrentLayoutVersion)
-            RequireChildrenLayout(model);
+        if (layoutVersion >= NodeLayout.CurrentLayoutVersion)
+            return;
+        RequireChildrenLayout(model);
+        foreach (var node in model.Nodes.Values)
+        {
+            if (node.IsChildrenLayoutCustomized && NodeLayout.HasMemberChildren(node))
+                node.IsChildrenLayoutRequired = true;
+            // Before version 4 nested types sat right of a type's card; now they go below it.
+            if (layoutVersion < 4 && node.IsChildrenLayoutCustomized && NodeViewPolicy.IsMemberCardNode(node))
+                NodeLayout.ForgetCustomLayout(node);
+        }
     }
 }

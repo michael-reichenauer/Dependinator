@@ -1101,6 +1101,43 @@ button.dep-rules__node:hover {
     font-size: 0.8125rem;
 }
 
+/* Why a rule exists, under its names; click to edit. */
+.dep-rules__rule-reason {
+    display: block;
+    margin: 0 0 2px 22px;
+    padding: 0 6px;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    white-space: pre-line;
+    word-break: break-word;
+    cursor: pointer;
+}
+
+.dep-rules__rule-reason:hover {
+    color: var(--mud-palette-primary);
+}
+
+/* A rule's dependencies marked to fix later, above its allowed ones. */
+.dep-rules__tofix-title {
+    padding: 2px 0;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+/* The rules not to suggest again, after the rules. */
+.dep-rules__dismissed {
+    margin: 6px 0 2px 0;
+}
+
+.dep-rules__dismissed > .dep-rules__allowed-toggle {
+    justify-content: flex-start;
+}
+
 /* A rule's collapsed list of allowed dependencies. */
 .dep-rules__allowed-toggle {
     display: flex;
@@ -1128,6 +1165,64 @@ button.dep-rules__node:hover {
 
 .dep-rules__suggest {
     margin-top: 2px;
+}
+
+/* The kind of rule to add, above its node picks. */
+.dep-rules__add-kind {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+.dep-rules__kind {
+    align-self: flex-start;
+    padding: 2px 4px;
+    font: inherit;
+    font-size: 0.8125rem;
+    color: var(--mud-palette-text-primary);
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-inputs);
+    border-radius: 4px;
+}
+
+.dep-rules__kind-hint {
+    font-size: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-rules__add--one {
+    display: flex;
+}
+
+.dep-rules__add--one > .dep-path__pick {
+    flex: 1;
+}
+
+.dep-rules__add-kind + .dep-rules__add {
+    margin-top: 4px;
+    padding-top: 0;
+    border-top: none;
+}
+
+.dep-rules__layers {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.dep-rules__layer {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.dep-rules__layer:last-child {
+    grid-template-columns: minmax(0, 1fr) auto;
 }
 
 /* The first-run tour's callout (CoachCallout.razor), bottom-center over the diagram. */
@@ -1507,3 +1602,155 @@ button.dep-rules__node:hover {
 
 
 
+
+/* The hover card of a diagram node or line (TooltipService, initTooltips in jsInterop.js):
+   one element on the body, filled when the mouse rests on an item. */
+.dep-tooltip {
+    --dep-tt-bg: #ffffff;
+    --dep-tt-fg: #1d1b20;
+    --dep-tt-muted: #5f5b66;
+    --dep-tt-line: #e6e1ee;
+    --dep-tt-chip: #f1edf9;
+    --dep-tt-accent: #5b3fd6;
+    --dep-tt-warn: #b24d00;
+    --dep-tt-warn-bg: #fff1e5;
+    --dep-tt-err: #c62828;
+    --dep-tt-err-bg: #fdecec;
+    --dep-tt-code: #f6f4fa;
+    position: fixed;
+    z-index: 2000;
+    max-width: 320px;
+    padding: 10px 12px;
+    pointer-events: none;
+    background: var(--dep-tt-bg);
+    color: var(--dep-tt-fg);
+    border: 1px solid var(--dep-tt-line);
+    border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(30, 20, 60, 0.18), 0 1px 3px rgba(30, 20, 60, 0.12);
+    font-family: var(--mud-typography-default-family, Roboto, Arial, sans-serif);
+    font-size: 12.5px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+:root[data-theme="dark"] .dep-tooltip {
+    --dep-tt-bg: #26242c;
+    --dep-tt-fg: #ece9f2;
+    --dep-tt-muted: #a9a3b5;
+    --dep-tt-line: #3b3846;
+    --dep-tt-chip: #353142;
+    --dep-tt-accent: #b4a2ff;
+    --dep-tt-warn: #ffb26b;
+    --dep-tt-warn-bg: #3d2c1c;
+    --dep-tt-err: #ff8a80;
+    --dep-tt-err-bg: #3d2224;
+    --dep-tt-code: #2f2c37;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+.dep-tooltip[hidden] {
+    display: none;
+}
+
+.dep-tt-head {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.dep-tt-icon {
+    flex: none;
+}
+
+.dep-tt-name {
+    font-weight: 600;
+    font-size: 13.5px;
+}
+
+.dep-tt-arrow {
+    color: var(--dep-tt-accent);
+    font-weight: 700;
+    margin: 0 4px;
+}
+
+.dep-tt-kind,
+.dep-tt-more {
+    color: var(--dep-tt-muted);
+    font-size: 11.5px;
+}
+
+.dep-tt-real {
+    margin-top: 2px;
+}
+
+.dep-tt-desc {
+    margin-top: 6px;
+    white-space: pre-line;
+    display: -webkit-box;
+    -webkit-line-clamp: 8;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.dep-tt-code,
+.dep-tooltip code {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: 11.5px;
+    background: var(--dep-tt-code);
+    border-radius: 3px;
+}
+
+.dep-tt-code {
+    margin-top: 6px;
+    padding: 2px 5px;
+}
+
+.dep-tooltip code {
+    padding: 0 3px;
+}
+
+.dep-tt-sec {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid var(--dep-tt-line);
+}
+
+.dep-tt-link {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.dep-tt-link span {
+    color: var(--dep-tt-muted);
+    white-space: nowrap;
+}
+
+.dep-tt-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dep-tt-chip {
+    background: var(--dep-tt-chip);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11.5px;
+}
+
+.dep-tt-chip b {
+    color: var(--dep-tt-accent);
+}
+
+.dep-tt-chip.dep-tt-warn {
+    background: var(--dep-tt-warn-bg);
+    color: var(--dep-tt-warn);
+}
+
+.dep-tt-chip.dep-tt-err {
+    background: var(--dep-tt-err-bg);
+    color: var(--dep-tt-err);
+}

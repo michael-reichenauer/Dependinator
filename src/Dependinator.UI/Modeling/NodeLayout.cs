@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -20,11 +21,6 @@ class NodeLayout
     const double RegularHorizontalGap = 70;
     const double RegularVerticalGap = 70;
     const double RootGap = 10;
-    const double MemberNodeWidth = 100;
-    const double MemberNodeHeight = 18;
-    const double MemberHorizontalGap = 26;
-    const double MemberVerticalGap = 6;
-    const double MemberAspectBias = 0.45;
     const double EmptyCellPenaltyWeight = 0.15;
     const double MinimumZoom = 1.0 / 40.0;
     const double MaximumZoom = 1.0;
@@ -49,7 +45,12 @@ class NodeLayout
     // redone: a model saved with an older version gets its containers laid out again when
     // loaded, except those the user arranged (see ModelService.LoadCachedModelDataAsync).
     // 1: sizes by code and centrality (NodeSizing), straighter lines.
-    public const int CurrentLayoutVersion = 1;
+    // 2: member cards (MemberCard), types shaped like their card.
+    // 3: signatures widen the card's columns, large cards fold their private rows.
+    // 4: an open type is a UML card: rows under its header from the top left, nested types below.
+    // 5: room for a private row's "private" tag.
+    // 6: no more "private" tag (a lock on the row's icon), so narrower columns again.
+    public const int CurrentLayoutVersion = 6;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
@@ -77,22 +78,28 @@ class NodeLayout
     // parent's layout sizes a child before the child lays out its own children.
     public static void ResetChildrenLayout(Node node, bool recursively)
     {
-        node.IsChildrenLayoutCustomized = false;
-        foreach (var line in LinesDrawnInside(node).Where(line => line.IsSegmentsUserSet))
-        {
-            line.IsSegmentsUserSet = false;
-            line.SetSegmentPoints([]);
-        }
-
+        ForgetCustomLayout(node);
         AdjustChildren(node, forceAllChildren: true);
 
         if (recursively)
             node.Children.ForEach(child => ResetChildrenLayout(child, recursively));
     }
 
+    // Forgets the user's arrangement of the node's children and their lines' waypoints, so the
+    // next layout arranges every child.
+    public static void ForgetCustomLayout(Node node)
+    {
+        node.IsChildrenLayoutCustomized = false;
+        foreach (var line in LinesDrawnInside(node).Where(line => line.IsSegmentsUserSet))
+        {
+            line.IsSegmentsUserSet = false;
+            line.SetSegmentPoints([]);
+        }
+    }
+
     // The lines rendered in the container's coordinate space: the fan-out from the container
     // to its children, the children's sibling and child-to-container lines, and the direct
-    // lines the container renders (see SvgService.DrawnNodeLines).
+    // lines the container renders (see NodeLinesSvg.DrawnNodeLines).
     internal static IEnumerable<Line> LinesDrawnInside(Node container) =>
         container
             .SourceLines.Where(line => line.Target.Parent == container)
@@ -117,9 +124,20 @@ class NodeLayout
         if (parent.Children.Count == 1 && parent.Children[0].IsPassThrough)
             return;
 
+        if (NodeViewPolicy.IsMemberCardNode(parent))
+        {
+            var cardSizesBefore = CaptureSizes(parent.Children);
+            ArrangeCardNode(parent, isCustomized: !forceAllChildren && parent.IsChildrenLayoutCustomized);
+            RescaleResizedContent(cardSizesBefore);
+            return;
+        }
+
         if (!forceAllChildren && parent.IsChildrenLayoutCustomized)
         {
-            ArrangeOnlyNewChildren(parent);
+            if (HasMemberChildren(parent))
+                ArrangeCustomizedTypeChildren(parent);
+            else
+                ArrangeOnlyNewChildren(parent);
             return;
         }
 
@@ -164,7 +182,7 @@ class NodeLayout
 
     // Members (C# type members, Bicep params/vars/outputs) are laid out as rows; a C# type is the
     // usual such parent, but a Bicep file or module holds member rows next to resources too.
-    static bool HasMemberChildren(Node parent) => parent.Children.Any(child => child.Type.IsMember);
+    internal static bool HasMemberChildren(Node parent) => MemberCard.HasMembers(parent);
 
     // Zones and notes stay where the user put them: a layout (also a forced "Reset Children
     // Layout") arranges the other children around them. They still count for the container fit.
@@ -181,8 +199,32 @@ class NodeLayout
     {
         var sides = NodeSizing.ComputeSides(sizedChildren, parent);
         var defaultSize = new Size(metrics.Width, metrics.Height);
-        return node => sides.TryGetValue(node, out var side) ? new Size(side, side) : defaultSize;
+        return node => sides.TryGetValue(node, out var side) ? ShapedSize(node, side) : defaultSize;
     }
+
+    // A node holding only member rows (a C# type without nested types, a Bicep resource with
+    // auxiliary rows) is shaped like its member card, with the area of its size step, so the card
+    // fills it when it opens; other nodes are squares.
+    const double MinCardNodeAspect = 0.6;
+    const double MaxCardNodeAspect = 1.8;
+
+    static Size ShapedSize(Node node, double side)
+    {
+        if (!IsOnlyMembers(node))
+            return new Size(side, side);
+        var sections = MemberCard.Sections(node.Children.Where(c => c.Type.IsMember), CompareMemberChildren);
+        var aspect = Math.Clamp(
+            MemberCard.NaturalAspect(sections, MemberCard.ToggleOf(node)),
+            MinCardNodeAspect,
+            MaxCardNodeAspect
+        );
+        var width = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side * Math.Sqrt(aspect)));
+        var height = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side / Math.Sqrt(aspect)));
+        return new Size(width, height);
+    }
+
+    internal static bool IsOnlyMembers(Node node) =>
+        HasMemberChildren(node) && node.Children.All(c => c.Type.IsMember || !IsArranged(c));
 
     static List<(Node Child, Size Size)> CaptureSizes(IEnumerable<Node> children) =>
         children
@@ -210,6 +252,12 @@ class NodeLayout
                 container = container.Children[0];
             if (container.Children.Count == 0 || container.IsChildrenLayoutRequired)
                 continue;
+
+            if (NodeViewPolicy.IsMemberCardNode(container))
+            {
+                EnsureCardTransform(container); // Rows stay under the header
+                continue;
+            }
 
             var scale = Math.Min(after.Width / before.Width, after.Height / before.Height);
             var offset = container.ContainerOffset;
@@ -336,40 +384,183 @@ class NodeLayout
         return (positions, new Size(blockWidth, rowTop + rowHeight));
     }
 
+    // A container with member rows: the rows as a member card (see MemberCard) at the top left,
+    // the other children (a C# type's nested types, a Bicep module's resources) right of it. A
+    // container of only members gets a card shaped like the container, so the rows fill it.
     static void ArrangeTypeChildren(Node parent)
     {
         var density = GetDensityProfile();
-        var memberMetrics = MemberMetrics(density);
         var regularMetrics = RegularMetrics(density);
-
-        var members = parent.Children.Where(c => c.Type.IsMember).ToList();
         var nonMembers = parent.Children.Where(c => !c.Type.IsMember && IsArranged(c)).ToList();
-
-        Sorter.Sort(members, CompareMemberChildren);
         SortChildren(nonMembers);
 
-        var publicMembers = members.Where(m => !(m.IsPrivate ?? false)).ToList();
-        var privateMembers = members.Where(m => m.IsPrivate ?? false).ToList();
-
-        var startY = Math.Max(memberMetrics.VerticalGap, regularMetrics.VerticalGap);
-        var cursorX = Math.Max(memberMetrics.HorizontalGap, regularMetrics.HorizontalGap);
-
-        cursorX = ArrangeGroup(parent, publicMembers, memberMetrics, cursorX, startY);
-        if (publicMembers.Count > 0 && privateMembers.Count > 0)
-            cursorX += memberMetrics.HorizontalGap;
-        cursorX = ArrangeGroup(parent, privateMembers, memberMetrics, cursorX, startY);
-        if (members.Count > 0 && nonMembers.Count > 0)
-            cursorX += regularMetrics.HorizontalGap;
+        var card = ArrangeMemberCard(parent, CardStart, CardStart, nonMembers.Count == 0);
         _ = ArrangeAsShelves(
             nonMembers,
             ChildSizes(parent, SizedChildren(nonMembers), regularMetrics),
             regularMetrics,
             TargetAspect(parent, regularMetrics),
-            cursorX + regularMetrics.HorizontalGap,
-            startY + regularMetrics.VerticalGap
+            card.X + card.Width + regularMetrics.HorizontalGap,
+            CardStart
         );
 
-        ApplyContainerTransform(parent, GetChildrenBounds(parent.Children), density.TargetLinearCoverage);
+        ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
+    }
+
+    // A customized container with member rows: the rows are always in card order (they cannot be
+    // arranged by hand), so the card is laid out again, left of the children the user placed;
+    // new other children go to free slots right of the card.
+    static void ArrangeCustomizedTypeChildren(Node parent)
+    {
+        var density = GetDensityProfile();
+        var regularMetrics = RegularMetrics(density);
+        var placed = parent
+            .Children.Where(c => !c.Type.IsMember && c.Boundary != Rect.None)
+            .Select(c => c.Boundary)
+            .ToList();
+        var newNonMembers = parent.Children.Where(c => !c.Type.IsMember && c.Boundary == Rect.None).ToList();
+        var isOnlyMembers = IsOnlyMembers(parent); // Zones and notes don't count, as in Coverage
+
+        var card = ArrangeMemberCard(parent, 0, 0, isOnlyMembers);
+        var startX = CardStart;
+        if (placed.Count > 0)
+            startX = Math.Min(startX, SnapToGrid(placed.Min(r => r.X) - regularMetrics.HorizontalGap - card.Width));
+        var startY = placed.Count > 0 ? SnapToGrid(placed.Min(r => r.Y)) : CardStart;
+        card = ArrangeMemberCard(parent, startX, startY, isOnlyMembers);
+
+        if (newNonMembers.Count > 0)
+        {
+            SortChildren(newNonMembers);
+            PlaceNodesInFreeSlots(
+                parent,
+                newNonMembers,
+                ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
+                [card, .. placed],
+                regularMetrics,
+                card.X + card.Width + regularMetrics.HorizontalGap
+            );
+        }
+
+        ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
+    }
+
+    // A type (or a node of only members) drawn as a UML card when open (MemberCardSvg.GetCardNodeSvg):
+    // its own box is the card, with the header (icon, name, kind) at the top and the member rows
+    // under it from the top left, then any other children (nested types) below the rows. The
+    // children's coordinates start at the box's top left (see ApplyCardTransform), so the header
+    // takes the top CardHeaderHeight child units. A customized card keeps the children the user
+    // placed; new ones go to free slots below the rows.
+    static void ArrangeCardNode(Node parent, bool isCustomized)
+    {
+        var density = GetDensityProfile();
+        var regularMetrics = RegularMetrics(density);
+        var nonMembers = parent.Children.Where(c => !c.Type.IsMember && IsArranged(c)).ToList();
+
+        var card = ArrangeMemberCard(parent, MemberCard.Padding, MemberCard.CardRowsTop, isOnlyMembers: true);
+        var belowCard = card == Rect.None ? MemberCard.CardRowsTop : card.Y + card.Height + NodeGrid.SnapSize;
+
+        if (isCustomized)
+        {
+            // The rows may have grown (a re-parse, unfolded private rows): the children the user
+            // placed (zones and notes too) move down together, out of the rows' way.
+            // Only when one of them overlaps the header or the rows; their lines' waypoints were
+            // placed for the old positions.
+            var placed = parent.Children.Where(c => !c.Type.IsMember && c.Boundary != Rect.None).ToList();
+            // The header and the rows take the box's width above belowCard.
+            var cardBand = new Rect(
+                0,
+                0,
+                Math.Max(
+                    Math.Max(card.X + card.Width, MemberCard.MinCardWidth),
+                    parent.Boundary.Width / Math.Max(parent.ContainerZoom, MinimumZoom)
+                ),
+                belowCard
+            );
+            var overlapping = placed.Where(c => Intersects(c.Boundary, cardBand)).ToList();
+            if (overlapping.Count > 0)
+            {
+                var shift = SnapToGrid(belowCard - overlapping.Min(c => c.Boundary.Y) + NodeGrid.SnapSize / 2);
+                placed.ForEach(c => c.Boundary = c.Boundary with { Y = c.Boundary.Y + shift });
+                var moved = placed.ToHashSet();
+                foreach (
+                    var line in LinesDrawnInside(parent)
+                        .Where(line =>
+                            line.IsSegmentsUserSet && (moved.Contains(line.Source) || moved.Contains(line.Target))
+                        )
+                )
+                {
+                    line.IsSegmentsUserSet = false;
+                    line.SetSegmentPoints([]);
+                }
+            }
+
+            var newNonMembers = nonMembers.Where(c => c.Boundary == Rect.None).ToList();
+            if (newNonMembers.Count > 0)
+            {
+                SortChildren(newNonMembers);
+                // New children go below the header and the rows.
+                PlaceNodesInFreeSlots(
+                    parent,
+                    newNonMembers,
+                    ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
+                    [cardBand, .. placed.Select(c => c.Boundary)],
+                    regularMetrics,
+                    CardStart
+                );
+            }
+        }
+        else if (nonMembers.Count > 0)
+        {
+            SortChildren(nonMembers);
+            _ = ArrangeAsShelves(
+                nonMembers,
+                ChildSizes(parent, SizedChildren(nonMembers), regularMetrics),
+                regularMetrics,
+                TargetAspect(parent, regularMetrics),
+                CardStart,
+                SnapToGrid(belowCard + NodeGrid.SnapSize / 2)
+            );
+        }
+
+        ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
+    }
+
+    // Where the card's first heading goes in a freshly laid out container.
+    const double CardStart = 2 * NodeGrid.SnapSize;
+
+    // Members of a container of only members fill it (the card takes the container's shape); next
+    // to other children the card is a taller column, leaving the width to them.
+    const double MemberColumnAspect = 0.45;
+
+    static Rect ArrangeMemberCard(Node parent, double startX, double startY, bool isOnlyMembers)
+    {
+        var sections = MemberCard.Sections(parent.Children.Where(c => c.Type.IsMember), CompareMemberChildren);
+        var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
+        var targetAspect = isOnlyMembers ? parentAspect : parentAspect * MemberColumnAspect;
+        return MemberCard.Arrange(sections, startX, startY, targetAspect, MemberCard.ToggleOf(parent));
+    }
+
+    // A container of only member rows is its card, so the card nearly fills it; other containers
+    // leave the density's room around their children.
+    const double MemberCardCoverage = 0.9;
+
+    static double Coverage(Node parent, DensityProfile density) =>
+        IsOnlyMembers(parent) ? MemberCardCoverage : density.TargetLinearCoverage;
+
+    // The bounds the container transform fits: the children, and the member card behind the rows.
+    static Rect ContentBounds(Node parent)
+    {
+        var children = parent.Children.Where(child => child.Boundary != Rect.None).ToList();
+        var bounds = GetChildrenBounds(children);
+        if (MemberCard.Bounds(parent) is var card && card != Rect.None)
+        {
+            var left = Math.Min(bounds.X, card.X);
+            var top = Math.Min(bounds.Y, card.Y);
+            var right = Math.Max(bounds.X + bounds.Width, card.X + card.Width);
+            var bottom = Math.Max(bounds.Y + bounds.Height, card.Y + card.Height);
+            bounds = new Rect(left, top, right - left, bottom - top);
+        }
+        return bounds;
     }
 
     static void ArrangeOnlyNewChildren(Node parent)
@@ -378,19 +569,11 @@ class NodeLayout
         if (newChildren.Count == 0)
             return;
 
-        var density = GetDensityProfile();
-        var memberMetrics = MemberMetrics(density);
-        var regularMetrics = RegularMetrics(density);
+        var regularMetrics = RegularMetrics(GetDensityProfile());
         var occupied = parent
             .Children.Where(child => child.Boundary != Rect.None)
             .Select(child => child.Boundary)
             .ToList();
-
-        if (HasMemberChildren(parent))
-        {
-            ArrangeOnlyNewTypeChildren(parent, newChildren, occupied, memberMetrics, regularMetrics);
-            return;
-        }
 
         SortChildren(newChildren);
         PlaceNodesInFreeSlots(
@@ -400,64 +583,6 @@ class NodeLayout
             occupied,
             regularMetrics,
             regularMetrics.HorizontalGap
-        );
-    }
-
-    static void ArrangeOnlyNewTypeChildren(
-        Node parent,
-        IReadOnlyList<Node> newChildren,
-        List<Rect> occupied,
-        LayoutMetrics memberMetrics,
-        LayoutMetrics regularMetrics
-    )
-    {
-        var newMembers = newChildren.Where(c => c.Type.IsMember).ToList();
-        var newNonMembers = newChildren.Where(c => !c.Type.IsMember).ToList();
-
-        Sorter.Sort(newMembers, CompareMemberChildren);
-        SortChildren(newNonMembers);
-
-        var existingMembers = parent.Children.Where(c => c.Boundary != Rect.None && c.Type.IsMember).ToList();
-        var existingPublicMembers = existingMembers
-            .Where(m => !(m.IsPrivate ?? false))
-            .Select(m => m.Boundary)
-            .ToList();
-        var existingPrivateMembers = existingMembers.Where(m => m.IsPrivate ?? false).Select(m => m.Boundary).ToList();
-        var existingNonMembers = parent
-            .Children.Where(c => c.Boundary != Rect.None && !c.Type.IsMember)
-            .Select(c => c.Boundary)
-            .ToList();
-
-        var newPublicMembers = newMembers.Where(m => !(m.IsPrivate ?? false)).ToList();
-        var newPrivateMembers = newMembers.Where(m => m.IsPrivate ?? false).ToList();
-
-        var minStartX = Math.Max(memberMetrics.HorizontalGap, regularMetrics.HorizontalGap);
-        var publicStartX = PreferredStartX(existingPublicMembers, minStartX);
-        var memberSize = new Size(memberMetrics.Width, memberMetrics.Height);
-        PlaceNodesInFreeSlots(parent, newPublicMembers, _ => memberSize, occupied, memberMetrics, publicStartX);
-
-        var publicRight = MaxRight(existingPublicMembers, newPublicMembers.Select(m => m.Boundary));
-        var privateStartX = PreferredStartX(
-            existingPrivateMembers,
-            Math.Max(minStartX, publicRight + memberMetrics.HorizontalGap)
-        );
-        PlaceNodesInFreeSlots(parent, newPrivateMembers, _ => memberSize, occupied, memberMetrics, privateStartX);
-
-        var membersRight = MaxRight(
-            existingPublicMembers.Concat(existingPrivateMembers),
-            newPublicMembers.Concat(newPrivateMembers).Select(m => m.Boundary)
-        );
-        var nonMemberStartX = PreferredStartX(
-            existingNonMembers,
-            Math.Max(minStartX, membersRight + regularMetrics.HorizontalGap)
-        );
-        PlaceNodesInFreeSlots(
-            parent,
-            newNonMembers,
-            ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
-            occupied,
-            regularMetrics,
-            nonMemberStartX
         );
     }
 
@@ -524,86 +649,11 @@ class NodeLayout
         return x1 < sx2 && x2 > sx1 && y1 < sy2 && y2 > sy1;
     }
 
-    static double PreferredStartX(IEnumerable<Rect> existing, double fallback)
-    {
-        var list = existing.ToList();
-        return list.Count == 0 ? fallback : list.Min(rect => rect.X);
-    }
-
-    static double MaxRight(IEnumerable<Rect> existing, IEnumerable<Rect> added)
-    {
-        var all = existing.Concat(added).ToList();
-        return all.Count == 0 ? 0 : all.Max(rect => rect.X + rect.Width);
-    }
-
-    static double ArrangeGroup(
-        Node parent,
-        IReadOnlyList<Node> nodes,
-        LayoutMetrics metrics,
-        double startX,
-        double startY
-    )
-    {
-        if (nodes.Count == 0)
-            return startX;
-
-        var columns = FindBestColumnCount(parent, nodes.Count, metrics);
-        var (layoutWidth, _) = LayoutSize(columns, (int)Math.Ceiling(nodes.Count / (double)columns), metrics);
-
-        for (var index = 0; index < nodes.Count; index++)
-        {
-            var column = index % columns;
-            var row = index / columns;
-            var x = startX + metrics.HorizontalGap + column * (metrics.Width + metrics.HorizontalGap);
-            var y = startY + metrics.VerticalGap + row * (metrics.Height + metrics.VerticalGap);
-            nodes[index].Boundary = SnapPositionToGrid(new Rect(x, y, metrics.Width, metrics.Height));
-        }
-
-        return startX + layoutWidth;
-    }
-
-    static int FindBestColumnCount(Node parent, int childrenCount, LayoutMetrics metrics)
-    {
-        if (childrenCount <= 1)
-            return 1;
-
-        var targetAspect = TargetAspect(parent, metrics);
-
-        var bestColumns = 1;
-        var bestScore = double.MaxValue;
-
-        for (var columns = 1; columns <= childrenCount; columns++)
-        {
-            var rows = (int)Math.Ceiling(childrenCount / (double)columns);
-            var (layoutWidth, layoutHeight) = LayoutSize(columns, rows, metrics);
-            var gridAspect = layoutWidth / Math.Max(MinimumDimension, layoutHeight);
-
-            var aspectError = Math.Abs(Math.Log(gridAspect / targetAspect));
-            var emptyCells = columns * rows - childrenCount;
-            var emptyCellPenalty = emptyCells / (double)childrenCount;
-            var score = aspectError + EmptyCellPenaltyWeight * emptyCellPenalty;
-
-            if (score >= bestScore)
-                continue;
-
-            bestScore = score;
-            bestColumns = columns;
-        }
-        return bestColumns;
-    }
-
     // The aspect ratio a block of children should have to fill the parent well.
     static double TargetAspect(Node parent, LayoutMetrics metrics)
     {
         var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
         return Math.Max(0.2, parentAspect * metrics.AspectBias);
-    }
-
-    static (double Width, double Height) LayoutSize(int columns, int rows, LayoutMetrics metrics)
-    {
-        var width = columns * metrics.Width + (columns + 1) * metrics.HorizontalGap;
-        var height = rows * metrics.Height + (rows + 1) * metrics.VerticalGap;
-        return (width, height);
     }
 
     static Rect GetChildrenBounds(IReadOnlyList<Node> children)
@@ -635,11 +685,17 @@ class NodeLayout
         if (children.Count == 0)
             return;
 
-        ApplyContainerTransform(parent, GetChildrenBounds(children), GetDensityProfile().TargetLinearCoverage);
+        ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, GetDensityProfile()));
     }
 
     static void ApplyContainerTransform(Node parent, Rect contentBounds, double targetLinearCoverage)
     {
+        if (NodeViewPolicy.IsMemberCardNode(parent))
+        {
+            ApplyCardTransform(parent, contentBounds);
+            return;
+        }
+
         var availableWidth = Math.Max(MinimumDimension, parent.Boundary.Width);
         var availableHeight = Math.Max(MinimumDimension, parent.Boundary.Height);
         var contentWidth = Math.Max(MinimumDimension, contentBounds.Width);
@@ -655,6 +711,47 @@ class NodeLayout
         parent.ContainerZoom = zoom;
         parent.ContainerOffset = new Pos(offsetX, offsetY);
     }
+
+    // A card node's children start at its box's top left (child 0,0, where the header is), at the
+    // largest zoom that fits them all (at most 1, so a small card does not get large rows): the
+    // card fills the box's width or height, leaving room at the right or bottom, not around it.
+    static void ApplyCardTransform(Node parent, Rect contentBounds) =>
+        (parent.ContainerZoom, parent.ContainerOffset) = CardTransform(parent, parent.Boundary, contentBounds);
+
+    // The card transform for the node with the given box (a resize keeps the rows under the header).
+    public static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary) =>
+        parent.Children.Any(child => child.Boundary != Rect.None)
+            ? CardTransform(parent, boundary, ContentBounds(parent))
+            : (parent.ContainerZoom, parent.ContainerOffset); // Laid out (and fitted) when opened
+
+    // The card's transform is derived from its box and children, which many edits change (size
+    // steps, moving a nested type, undo): rendering re-fits it when it drifted. True when changed.
+    public static bool EnsureCardTransform(Node node)
+    {
+        var (zoom, offset) = CardTransform(node, node.Boundary);
+        if (Math.Abs(node.ContainerZoom - zoom) < 1e-9 && node.ContainerOffset == offset)
+            return false;
+        (node.ContainerZoom, node.ContainerOffset) = (zoom, offset);
+        BumpGeneration();
+        return true;
+    }
+
+    static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary, Rect contentBounds)
+    {
+        var left = Math.Min(0, contentBounds.X);
+        var top = Math.Min(0, contentBounds.Y);
+        var right = Math.Max(contentBounds.X + contentBounds.Width, MemberCard.MinCardWidth);
+        // Nested types are icons with their names below the box: room for those.
+        var labelRoom = parent.Children.Any(c => !c.Type.IsMember && IsArranged(c)) ? NodeGrid.SnapSize * 2 : 0;
+        var bottom = contentBounds.Y + contentBounds.Height + Math.Max(MemberCard.Padding / 2, labelRoom);
+        var zoomX = Math.Max(MinimumDimension, boundary.Width) / Math.Max(MinimumDimension, right - left);
+        var zoomY = Math.Max(MinimumDimension, boundary.Height) / Math.Max(MinimumDimension, bottom - top);
+        var zoom = Math.Clamp(Math.Min(zoomX, zoomY), MinimumZoom, MaximumZoom);
+        return (zoom, new Pos(-left * zoom, -top * zoom));
+    }
+
+    static bool Intersects(Rect a, Rect b) =>
+        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
 
     // Orders siblings so referencing children come before the children they reference: first by
     // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children
@@ -745,15 +842,6 @@ class NodeLayout
             RegularHorizontalGap * density.GapScale,
             RegularVerticalGap * density.GapScale,
             1.0
-        );
-
-    static LayoutMetrics MemberMetrics(DensityProfile density) =>
-        new(
-            MemberNodeWidth,
-            MemberNodeHeight,
-            MemberHorizontalGap * density.GapScale,
-            MemberVerticalGap * density.GapScale,
-            MemberAspectBias
         );
 
     static DensityProfile GetDensityProfile() =>

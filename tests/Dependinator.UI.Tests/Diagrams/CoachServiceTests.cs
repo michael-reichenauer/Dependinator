@@ -1,6 +1,7 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Tours;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;

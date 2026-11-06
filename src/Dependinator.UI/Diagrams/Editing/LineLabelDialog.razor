@@ -1,0 +1,130 @@
+@using Dependinator.UI.Diagrams.Ai
+@using MudBlazor
+
+@* A line's label and description (LineLabelService), typed in or suggested by an AI (AiOpinion:
+   the default provider's button with the ▾ menu for another one, or the user's AI chat with the
+   answer pasted back). A suggestion fills the fields when they are empty, else "Use suggestion"
+   does; an alternative label fills the label only. Nothing is saved until Save. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Line label</MudText>
+  </TitleContent>
+  <DialogContent>
+    <MudTextField @ref="labelField" T="string" @bind-Value="Label" Label="Label" Immediate="true"
+                  HelperText="Short text drawn on the line, e.g. what flows across it" OnKeyDown="OnKeyDown"
+                  data-testid="line-label-text" />
+    <MudTextField T="string" @bind-Value="Description" Label="Description (optional)" Lines="2" Class="mt-3"
+                  HelperText="Smaller text under the label" data-testid="line-label-description" />
+    @if (GetPrompt is not null)
+    {
+      <div class="mt-3">
+        <AiOpinion TAnswer="LineLabelSuggestion" TestId="line-label" GetPrompt="GetPrompt" Ask="Suggest"
+                   ParsePasted="LineLabelSuggestion.ParseText" OnAnswerSelected="OnSuggestion"
+                   ExpandText="Suggest a label with AI" AnswerTitle="AI suggestion"
+                   RouteText="Claude reads the line's links and their code and suggests a label here."
+                   AskTitle="Ask Claude to suggest a label for this line"
+                   CopyTitle="Copy a prompt with the line, its links and their code"
+                   PromptCopiedText="The prompt is copied, with the line, its links and their code.">
+          <AnswerContent Context="s">
+            <div class="dep-ai__suggestion" data-testid="line-label-suggestion">
+              <div class="dep-ai__suggestion-verdict">@($"{s.Source.Name()} suggests")</div>
+              <div data-testid="line-label-suggested-label"><strong>@s.Label</strong></div>
+              @if (s.Description != "")
+              {
+                <div class="dep-ai__suggestion-note" data-testid="line-label-suggested-description">@s.Description</div>
+              }
+              <div>
+                @if (IsShown(s))
+                {
+                  <span class="dep-ai__suggest-note" data-testid="line-label-used">In the fields above.</span>
+                }
+                else
+                {
+                  <MudButton Size="Size.Small" Variant="Variant.Text" StartIcon="@MudBlazor.Icons.Material.Outlined.ArrowUpward"
+                             OnClick="() => Use(s)" data-testid="line-label-use">Use suggestion</MudButton>
+                }
+              </div>
+              @if (s.Alternatives.Count > 0)
+              {
+                <div class="dep-ai__suggestion-note">Or use another label:</div>
+                <div class="dep-ai__answers">
+                  @foreach (var alternative in s.Alternatives)
+                  {
+                    <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="() => Label = alternative"
+                               title="Use this label, and keep the description"
+                               data-testid="line-label-alternative">@alternative</MudButton>
+                  }
+                </div>
+              }
+            </div>
+          </AnswerContent>
+        </AiOpinion>
+      </div>
+    }
+  </DialogContent>
+  <DialogActions>
+    @if (HasLabel)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.LabelOff" OnClick="Clear"
+                 data-testid="line-label-clear">Remove</MudButton>
+    }
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="line-label-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="line-label-save">Save</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public string Label { get; set; } = "";
+  [Parameter] public string Description { get; set; } = "";
+  [Parameter] public bool HasLabel { get; set; }
+
+  // The prompt that asks any AI for the label, to copy or show; null hides the AI section.
+  [Parameter] public Func<Task<string>>? GetPrompt { get; set; }
+
+  // Asks Claude (or Claude Code, Copilot) for a label, telling each step; null where the host cannot.
+  [Parameter] public Func<AiSource, Action<SuggestStep>, Task<Result<LineLabelSuggestion>>>? Suggest { get; set; }
+
+  MudTextField<string> labelField = null!;
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && labelField is not null)
+    {
+      await labelField.FocusAsync();
+      await labelField.SelectAsync();
+    }
+  }
+
+  // A new suggestion fills empty fields at once; the user's own text stays until "Use suggestion".
+  void OnSuggestion(LineLabelSuggestion suggestion)
+  {
+    if (string.IsNullOrWhiteSpace(Label) && string.IsNullOrWhiteSpace(Description))
+      Use(suggestion);
+  }
+
+  void Use(LineLabelSuggestion suggestion)
+  {
+    Label = suggestion.Label;
+    Description = suggestion.Description;
+  }
+
+  bool IsShown(LineLabelSuggestion suggestion) =>
+    (Label ?? "").Trim() == suggestion.Label && (Description ?? "").Trim() == suggestion.Description;
+
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+      Save();
+  }
+
+  // Empty texts save as "no label".
+  void Save() =>
+      MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), (Description ?? "").Trim(), false)));
+
+  void Clear() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult("", "", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

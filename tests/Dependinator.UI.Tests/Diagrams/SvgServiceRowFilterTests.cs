@@ -1,5 +1,8 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
@@ -81,15 +84,15 @@ public class SvgServiceRowFilterTests
         var between = AddLink(model, module, other);
         var hideParameters = RowFilter.None with { HideParameters = true };
 
-        Assert.True(SvgService.IsLineFilteredOut(toRow, LineFilter.None, hideParameters));
-        Assert.False(SvgService.IsLineFilteredOut(toRow, LineFilter.None, RowFilter.None));
-        Assert.False(SvgService.IsLineFilteredOut(between, LineFilter.None, hideParameters));
+        Assert.True(LineEmphasis.IsLineFilteredOut(toRow, LineFilter.None, hideParameters));
+        Assert.False(LineEmphasis.IsLineFilteredOut(toRow, LineFilter.None, RowFilter.None));
+        Assert.False(LineEmphasis.IsLineFilteredOut(between, LineFilter.None, hideParameters));
 
         toRow.IsFocused = true;
-        Assert.True(SvgService.IsLineFilteredOut(toRow, LineFilter.None, hideParameters));
+        Assert.True(LineEmphasis.IsLineFilteredOut(toRow, LineFilter.None, hideParameters));
         var direct = new Line(module, location, isDirect: true);
-        Assert.True(SvgService.IsLineFilteredOut(direct, LineFilter.None, hideParameters));
-        Assert.False(SvgService.IsLineFilteredOut(direct, LineFilter.None, RowFilter.None));
+        Assert.True(LineEmphasis.IsLineFilteredOut(direct, LineFilter.None, hideParameters));
+        Assert.False(LineEmphasis.IsLineFilteredOut(direct, LineFilter.None, RowFilter.None));
     }
 
     [Fact]

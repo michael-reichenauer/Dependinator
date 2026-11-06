@@ -1,0 +1,264 @@
+@using MudBlazor
+@inject IClipboardService clipboardService
+@inject IAiService aiService
+
+@* Reviews a dependency that breaks an architecture rule (or edits one that is allowed): allow it as
+   an exception, with why, listed under its rule in the rules panel; editing also offers to stop
+   allowing it. "Get an AI opinion" (AiOpinion) asks Claude, Claude Code or the user's AI chat
+   whether to fix the code or allow the dependency, and the selected answer drives the rest:
+   allowing fills in the reason, fixing shows the change to make, with one fix button under the
+   answer (AiFixButton, as in the cycle review), and allowing anyway as the
+   dialog's alternative. A reason the dialog filled in follows the selected answer until the user
+   edits it. Nothing is saved until the user decides. Once Claude Code changed the code, only "Done" is left, unless a re-parse shows the
+   dependency still there. Fix later lists the dependency under the rule's To fix, with the selected
+   answer's change as the plan; editing one to fix edits that plan, or reports it again. *@
+<MudDialog ActionsClass="dep-ai__actions">
+  <TitleContent>
+    <MudText Typo="Typo.h6">@(IsToFix ? "Dependency to fix" : IsEdit ? "Allowed dependency" : "Review dependency")</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-cycles__dialog-cycle" data-testid="rule-review-text">
+      <span class="dep-cycles__container">@SourceName → @TargetName</span>
+      <span class="dep-cycles__members">breaks the rule "@RuleText"</span>
+    </div>
+    <AiOpinion TAnswer="RuleSuggestion" TestId="rule-review" GetPrompt="CopyPrompt" Ask="Suggest"
+               ParsePasted="RuleSuggestion.ParseText" OnAnswerSelected="Select"
+               RouteText="Claude reads the rule, the dependency and its code and answers here."
+               AskTitle="Ask Claude whether to fix this dependency or allow it"
+               CopyTitle="Copy a prompt with the rule, the dependency and the code behind it"
+               PromptCopiedText="The prompt is copied, with the rule, the dependency and the code behind it.">
+      <AnswerContent Context="s">
+        <div class="dep-ai__suggestion" data-testid="rule-review-suggestion"
+             data-verdict="@(s.IsFix ? "fix" : "allow")">
+          <div class="dep-ai__suggestion-verdict">
+            @($"{s.Source.Name()} suggests {(s.IsFix ? "fixing" : "allowing")} it")
+          </div>
+          <div>@s.Why</div>
+          @if (s.IsFix && s.Change != "")
+          {
+            <div><b>Change:</b> @s.Change</div>
+          }
+          @if (s.Assumptions is not ("" or "None" or "None."))
+          {
+            <div class="dep-ai__suggestion-note"><b>Assumptions:</b> @s.Assumptions</div>
+          }
+          @if (!s.IsFix && s.Reason != "" && s.Reason != Reason)
+          {
+            <div class="dep-ai__suggestion-note">
+              <b>Suggested reason:</b> @s.Reason
+              <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => UseReason(s.Reason)"
+                         data-testid="rule-review-use-reason">Use it</MudButton>
+            </div>
+          }
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+    @if (IsFixSuggested && !IsDone)
+    {
+      @* The fix, under the change it makes: one button for the AI that makes it, the provider menu
+         beside it (AiFixButton, like the ask button above), or "Copy fix prompt" where no AI can. *@
+      <div class="dep-ai__fix-actions">
+        <AiFixButton TestId="rule-review" CanRunClaudeCode="CanFix" IsRunning="@(fixPanel?.IsRunning == true)"
+                     OnClaudeCode="() => fixPanel!.StartAsync()" OnCopilot="FixWithCopilotAsync" OnCopy="CopyFixPromptAsync" />
+      </div>
+    }
+    @if (copyNote is not null)
+    {
+      <div class="dep-ai__suggest-note mt-2" data-testid="rule-review-copied">@copyNote</div>
+    }
+    @if (copyError is not null)
+    {
+      <div class="dep-ai__suggest-error" data-testid="rule-review-copy-error">@copyError</div>
+    }
+    @if (canFixWithClaudeCode)
+    {
+      <ClaudeCodeFix @ref="fixPanel" TestId="rule-review" GetFixPrompt="FixPromptText" OnStateChanged="StateHasChanged"
+                     IsResolved="IsViolationGone" ResolvedText="The dependency is gone: nothing is left to decide."
+                     StillThereText="The dependency is still there after the re-parse. Ask again, fix it yourself, or decide below."
+                     CheckingText="Once the model is re-parsed, this shows whether the dependency is gone." />
+    }
+    @if (!IsDone && IsToFix)
+    {
+      <MudTextField @ref="reasonField" T="string" @bind-Value="Reason" Label="Planned change" Lines="3"
+                    Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                    HelperText="Shown with the dependency under its rule's To fix; it is not counted as a problem meanwhile."
+                    data-testid="rule-review-reason" />
+    }
+    else if (!IsDone)
+    {
+      <MudTextField @ref="reasonField" T="string" @bind-Value="Reason"
+                    Label="@(IsFixSuggested ? "Why allow it anyway?" : "Why is this dependency fine?")" Lines="3"
+                    Immediate="true" Class="mt-3" OnKeyDown="OnKeyDown"
+                    HelperText="Shown with the allowed dependency under its rule, which no longer reports it."
+                    data-testid="rule-review-reason" />
+    }
+  </DialogContent>
+  <DialogActions>
+    @if (IsEdit)
+    {
+      <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.Delete" OnClick="Disallow"
+                 title="Report it as a violation again"
+                 data-testid="rule-review-disallow">@(IsToFix ? "Report again" : "Stop allowing")</MudButton>
+    }
+    <MudSpacer />
+    @if (IsDone)
+    {
+      @* Claude Code changed the code: nothing is left to decide. *@
+      <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Cancel" data-testid="rule-review-done">Done</MudButton>
+    }
+    else
+    {
+      <MudButton OnClick="Cancel" data-testid="rule-review-cancel">Cancel</MudButton>
+      @if (!IsEdit)
+      {
+        <MudButton Variant="Variant.Text" OnClick="FixLater" data-testid="rule-review-fix-later"
+                   title="@(IsFixSuggested ? "List it under the rule's To fix, with the suggested change as the plan" : "List it under the rule's To fix: it stays drawn, but is not counted as a problem")">Fix later</MudButton>
+      }
+      @if (IsToFix)
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="FixLater" data-testid="rule-review-save">Save</MudButton>
+      }
+      else if (IsFixSuggested)
+      {
+        <MudButton Variant="Variant.Text" OnClick="Save" data-testid="rule-review-save">Allow anyway</MudButton>
+      }
+      else
+      {
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="rule-review-save">
+          @(IsEdit ? "Save" : "Allow")
+        </MudButton>
+      }
+    }
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // The rule in words, as RuleReport.Text has it.
+  [Parameter] public string RuleText { get; set; } = "";
+  [Parameter] public string SourceName { get; set; } = "";
+  [Parameter] public string TargetName { get; set; } = "";
+  [Parameter] public string Reason { get; set; } = "";
+  [Parameter] public bool IsEdit { get; set; }
+
+  // Editing a dependency marked to fix later (with IsEdit): Reason is its planned change.
+  [Parameter] public bool IsToFix { get; set; }
+
+  // The prompt that asks any AI about the dependency, to copy or show.
+  [Parameter] public Func<Task<string>>? CopyPrompt { get; set; }
+
+  // Asks Claude (or Claude Code) for a verdict, telling each step; null where the host cannot ask.
+  [Parameter] public Func<AiSource, Action<SuggestStep>, Task<Result<RuleSuggestion>>>? Suggest { get; set; }
+
+  // The prompt that asks an AI that can change the code to remove the dependency as suggested.
+  [Parameter] public Func<RuleSuggestion, string>? FixPrompt { get; set; }
+
+  // Whether the dependency is gone from the model, after "Fix with Claude Code".
+  [Parameter] public Func<bool>? IsViolationGone { get; set; }
+
+  MudTextField<string> reasonField = null!;
+  ClaudeCodeFix? fixPanel;
+  bool canFixWithClaudeCode;
+  RuleSuggestion? selected;
+  string? prefilledReason;
+  string? copyNote;
+  string? copyError;
+
+  // An AI suggests fixing it: copying the fix prompt is the main action, allowing it the override.
+  bool IsFixSuggested => selected is { IsFix: true } && FixPrompt is not null;
+
+  // Claude Code changed the code: the dialog only closes, unless a re-parse shows the dependency is still there.
+  bool IsDone => fixPanel is { HasChanged: true, IsStillThere: false };
+
+  // Claude Code can make the suggested change itself, where the experimental route is on.
+  bool CanFix => IsFixSuggested && canFixWithClaudeCode;
+
+  string FixPromptText() => selected is { } s && FixPrompt is not null ? FixPrompt(s) : "";
+
+  protected override async Task OnInitializedAsync()
+  {
+    canFixWithClaudeCode = await aiService.CanFixWithClaudeCodeAsync();
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender && reasonField is not null)
+      await reasonField.FocusAsync();
+  }
+
+  // The reason field follows the selected answer while it holds what the dialog filled in (or is
+  // empty); a reason the user wrote is kept, and an allowing answer's reason offered next to it.
+  void Select(RuleSuggestion answer)
+  {
+    selected = answer;
+    copyNote = null;
+    copyError = null;
+    if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
+      UseReason(ReasonFrom(answer));
+  }
+
+  void UseReason(string reason)
+  {
+    Reason = reason;
+    prefilledReason = reason;
+  }
+
+  // Allowing anyway keeps the suggested fix with the allowed dependency, for whoever looks later.
+  static string ReasonFrom(RuleSuggestion answer) =>
+    !answer.IsFix ? answer.Reason
+    : answer.Change == "" ? $"Allowed anyway, though {(answer.Source is AiSource.Chat ? "an AI" : answer.Source.Name())} suggested fixing it."
+    : $"Allowed anyway; suggested fix: {answer.Change}";
+
+  async Task CopyFixPromptAsync()
+  {
+    if (selected is not { } s || FixPrompt is null)
+      return;
+    var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
+    copyNote = isCopied ? FixPromptCopiedNote : null;
+    copyError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // Copilot Chat makes the change in its own view: the dialog only says so, and can be left open
+  // to decide later.
+  async Task FixWithCopilotAsync()
+  {
+    copyNote = null;
+    copyError = null;
+    var handed = await aiService.FixWithCopilotAsync(FixPromptText());
+    copyNote = handed is Error ? null : AiService.CopilotFixNote;
+    copyError = handed is Error e ? e.Message : null;
+  }
+
+  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
+  public const string FixPromptCopiedNote =
+    "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
+    + "is made, re-parse: the dependency should be gone from the rule's list.";
+
+  // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
+  void OnKeyDown(KeyboardEventArgs e)
+  {
+    if (e.Key != "Enter" || !(e.CtrlKey || e.MetaKey))
+      return;
+    if (IsToFix)
+      FixLater();
+    else
+      Save();
+  }
+
+  void Save() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult((Reason ?? "").Trim(), false)));
+
+  // Editing one to fix keeps what the user typed; a new review too, when they typed their own
+  // words, else the selected fixing answer's change is the plan (an allowing answer has none).
+  void FixLater()
+  {
+    var typed = (Reason ?? "").Trim();
+    var isOwnWords = typed != "" && Reason != prefilledReason;
+    var plan = IsToFix || isOwnWords ? typed : selected is { IsFix: true } s ? s.Change : "";
+    MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult(plan, false, IsFixLater: true)));
+  }
+
+  void Disallow() => MudDialog.Close(DialogResult.Ok(new RuleReviewDialogResult("", true)));
+
+  void Cancel() => MudDialog.Cancel();
+}

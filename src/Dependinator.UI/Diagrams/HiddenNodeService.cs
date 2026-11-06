@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 

@@ -94,15 +94,20 @@ call returns. `Shared` holds the few DTOs that the API and the client both use.
 
 `Dependinator.UI` is where most of the product lives (about 29k lines): `Modeling/` owns the
 in-memory model, the automatic layout and the undoable commands; `Diagrams/` renders and handles
-interaction, and holds the analysis features; `App/` is the shell; `Shared/` holds the
+interaction, and holds the analysis features, one folder (and namespace) each: the canvas and view
+state in its root, `Svg/` and `Tiles/` render, `Lines/` decides which lines show and where they run,
+`Interaction/` takes input (pan, zoom, selection) and `Editing/` changes the model, then the
+features `Cycles/`, `Rules/`, `Navigation/` (search, paths), `Dependencies/`, `Export/`, `Tours/`,
+`Ask/` and `NodeHelp/`, with `Ai/` the plumbing the AI features share; `App/` is the shell; `Shared/` holds the
 cross-cutting services. Adding a language means adding a library with an `ISourceParser`,
 registering it in the Lsp and Web hosts, and adding an architecture rule; nothing else changes.
 
 `Dependinator.Architecture.Tests` turns the layering into failing tests (NetArchTest), so a
 reference in the wrong direction breaks the build in CI rather than surfacing in a review.
 
-Points to discuss: `Dependinator.UI` is large and growing; `Diagrams/` alone mixes rendering,
-interaction and five analysis features, and could be split into libraries if it keeps growing.
+Points to discuss: `Dependinator.UI` is large and growing; `Diagrams/` alone holds rendering,
+interaction and the analysis features (in sub-folders since Nov 2026), and could be split into
+libraries if it keeps growing.
 `Dependinator.Reflection` (2.5k lines, plus tests) is kept but not used by any host.
 
 ## 4. Runtime view: from source code to a picture on the screen
@@ -242,7 +247,7 @@ so they need regenerating when the parser or the UI changes visibly.
 | C# parsing | `src/Dependinator.Roslyn/Parsing/SourceParser.cs` |
 | Bicep parsing | `src/Dependinator.Bicep/Parsing/BicepParser.cs`, `ModelBuilder.cs`, and [docs/notes/BICEP-PARSER.md](notes/BICEP-PARSER.md) |
 | The in-memory model | `src/Dependinator.UI/Modeling/Models/Model.cs`, `Node.cs` |
-| Rendering and zoom | `src/Dependinator.UI/Diagrams/Svg/SvgService.cs`, `RepLineService.cs`, `NodeViewPolicy.cs` |
+| Rendering and zoom | `src/Dependinator.UI/Diagrams/`: `Svg/SvgService.cs` (tile cache), `Svg/NodeTreeSvg.cs` (drawing), `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
 | Layout | `src/Dependinator.UI/Modeling/NodeLayout.cs`, `Layout/LayeredEngine.cs` |
 | The VS Code bridge | `src/DependinatorVsCode/src/extension.ts`, `src/Dependinator.Lsp/LspMessageHandler.cs`, `src/Dependinator.Core/Rpc/` |
 | Cloud sync | `src/Dependinator.UI/Shared/CloudSync/AppCloudSyncService.cs`, `src/Api/ModelFunctions.cs` |
