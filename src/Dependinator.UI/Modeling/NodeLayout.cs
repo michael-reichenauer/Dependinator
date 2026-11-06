@@ -251,6 +251,12 @@ class NodeLayout
             if (container.Children.Count == 0 || container.IsChildrenLayoutRequired)
                 continue;
 
+            if (NodeViewPolicy.IsMemberCardNode(container))
+            {
+                ApplyCardTransform(container, ContentBounds(container)); // Rows stay under the header
+                continue;
+            }
+
             var scale = Math.Min(after.Width / before.Width, after.Height / before.Height);
             var offset = container.ContainerOffset;
             container.ContainerZoom *= scale;
@@ -455,26 +461,36 @@ class NodeLayout
         {
             // The rows may have grown (a re-parse, unfolded private rows): the children the user
             // placed (zones and notes too) move down together, out of the rows' way.
+            // Only when one of them overlaps the header or the rows; their lines' waypoints were
+            // placed for the old positions.
             var placed = parent.Children.Where(c => !c.Type.IsMember && c.Boundary != Rect.None).ToList();
-            if (placed.Count > 0 && placed.Min(c => c.Boundary.Y) is var top && top < belowCard)
+            var cardBand = new Rect(0, 0, Math.Max(card.X + card.Width, MemberCard.MinCardWidth), belowCard);
+            var overlapping = placed.Where(c => Intersects(c.Boundary, cardBand)).ToList();
+            if (overlapping.Count > 0)
             {
-                var shift = SnapToGrid(belowCard - top + NodeGrid.SnapSize / 2);
+                var shift = SnapToGrid(belowCard - overlapping.Min(c => c.Boundary.Y) + NodeGrid.SnapSize / 2);
                 placed.ForEach(c => c.Boundary = c.Boundary with { Y = c.Boundary.Y + shift });
+                foreach (var line in LinesDrawnInside(parent).Where(line => line.IsSegmentsUserSet))
+                {
+                    line.IsSegmentsUserSet = false;
+                    line.SetSegmentPoints([]);
+                }
             }
 
             var newNonMembers = nonMembers.Where(c => c.Boundary == Rect.None).ToList();
             if (newNonMembers.Count > 0)
             {
                 SortChildren(newNonMembers);
-                // The header and the rows take the whole width above belowCard: new children go below.
+                // The header and the rows take the box's width above belowCard: new children go below.
+                var bandWidth = Math.Max(
+                    cardBand.Width,
+                    parent.Boundary.Width / Math.Max(parent.ContainerZoom, MinimumZoom)
+                );
                 PlaceNodesInFreeSlots(
                     parent,
                     newNonMembers,
                     ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
-                    [
-                        new Rect(-HeaderBandWidth, -HeaderBandWidth, 2 * HeaderBandWidth, belowCard + HeaderBandWidth),
-                        .. placed.Select(c => c.Boundary),
-                    ],
+                    [cardBand with { Width = bandWidth }, .. placed.Select(c => c.Boundary)],
                     regularMetrics,
                     CardStart
                 );
@@ -494,25 +510,6 @@ class NodeLayout
         }
 
         ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
-    }
-
-    // Wide enough to cover any card's header band and rows as an occupied area.
-    const double HeaderBandWidth = 1_000_000;
-
-    // A card node's children start at its box's top left (ApplyCardTransform), where its header is
-    // drawn. Other code writes the container transform too (rescaling after a resize, resizing
-    // from the top or left edge): re-fit the card's transform when it drifted. True when it changed.
-    public static bool EnsureCardTransform(Node node)
-    {
-        var zoom = node.ContainerZoom;
-        var offset = node.ContainerOffset;
-        if (node.Children.All(child => child.Boundary == Rect.None))
-            return false;
-        ApplyCardTransform(node, ContentBounds(node));
-        if (Math.Abs(node.ContainerZoom - zoom) < 1e-9 && offset == node.ContainerOffset)
-            return false;
-        BumpGeneration();
-        return true;
     }
 
     // Where the card's first heading goes in a freshly laid out container.
@@ -705,7 +702,14 @@ class NodeLayout
     // A card node's children start at its box's top left (child 0,0, where the header is), at the
     // largest zoom that fits them all (at most 1, so a small card does not get large rows): the
     // card fills the box's width or height, leaving room at the right or bottom, not around it.
-    static void ApplyCardTransform(Node parent, Rect contentBounds)
+    static void ApplyCardTransform(Node parent, Rect contentBounds) =>
+        (parent.ContainerZoom, parent.ContainerOffset) = CardTransform(parent, parent.Boundary, contentBounds);
+
+    // The card transform for the node with the given box (a resize keeps the rows under the header).
+    public static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary) =>
+        CardTransform(parent, boundary, ContentBounds(parent));
+
+    static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary, Rect contentBounds)
     {
         var left = Math.Min(0, contentBounds.X);
         var top = Math.Min(0, contentBounds.Y);
@@ -713,12 +717,14 @@ class NodeLayout
         // Nested types are icons with their names below the box: room for those.
         var labelRoom = parent.Children.Any(c => !c.Type.IsMember && IsArranged(c)) ? NodeGrid.SnapSize * 2 : 0;
         var bottom = contentBounds.Y + contentBounds.Height + Math.Max(MemberCard.Padding / 2, labelRoom);
-        var zoomX = Math.Max(MinimumDimension, parent.Boundary.Width) / Math.Max(MinimumDimension, right - left);
-        var zoomY = Math.Max(MinimumDimension, parent.Boundary.Height) / Math.Max(MinimumDimension, bottom - top);
+        var zoomX = Math.Max(MinimumDimension, boundary.Width) / Math.Max(MinimumDimension, right - left);
+        var zoomY = Math.Max(MinimumDimension, boundary.Height) / Math.Max(MinimumDimension, bottom - top);
         var zoom = Math.Clamp(Math.Min(zoomX, zoomY), MinimumZoom, MaximumZoom);
-        parent.ContainerZoom = zoom;
-        parent.ContainerOffset = new Pos(-left * zoom, -top * zoom);
+        return (zoom, new Pos(-left * zoom, -top * zoom));
     }
+
+    static bool Intersects(Rect a, Rect b) =>
+        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
 
     // Orders siblings so referencing children come before the children they reference: first by
     // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children

@@ -264,6 +264,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         NodeId nodeId;
         Rect newBoundary;
         Pos newContainerOffset;
+        double? newContainerZoom = null;
         using (var model = modelMgr.UseModel())
         {
             // Member rows are placed by their card, off the grid on purpose
@@ -281,12 +282,22 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
                 Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
             };
+            // A card keeps its rows under its header at the top left: fit them to the new box.
+            if (NodeViewPolicy.IsMemberCardNode(node))
+                (newContainerZoom, newContainerOffset) = NodeLayout.CardTransform(node, newBoundary);
 
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
+        commandService.Do(
+            new NodeEditCommand(nodeId)
+            {
+                Boundary = newBoundary,
+                ContainerOffset = newContainerOffset,
+                ContainerZoom = newContainerZoom,
+            }
+        );
     }
 
     public void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId)
@@ -300,6 +311,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
 
             node = ResolveContainerTarget(node);
             nodeId = node.Id;
+            if (NodeViewPolicy.IsMemberCardNode(node))
+                return; // A card's rows stay under its header, at the card's own scale
             var nodeZoom = node.GetZoom() * zoom;
             var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
             newContainerOffset = node.ContainerOffset with
@@ -397,6 +410,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         NodeId nodeId;
         Rect newBoundary;
         Pos newContainerOffset;
+        double? newContainerZoom = null;
         using (var model = modelMgr.UseModel())
         {
             // Member rows have the size of their member card's column (MemberCard).
@@ -460,11 +474,21 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 X = node.ContainerOffset.X - (newBoundary.X - oldBoundary.X),
                 Y = node.ContainerOffset.Y - (newBoundary.Y - oldBoundary.Y),
             };
+            // A card keeps its rows under its header at the top left: fit them to the new box.
+            if (NodeViewPolicy.IsMemberCardNode(node))
+                (newContainerZoom, newContainerOffset) = NodeLayout.CardTransform(node, newBoundary);
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
 
-        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary, ContainerOffset = newContainerOffset });
+        commandService.Do(
+            new NodeEditCommand(nodeId)
+            {
+                Boundary = newBoundary,
+                ContainerOffset = newContainerOffset,
+                ContainerZoom = newContainerZoom,
+            }
+        );
     }
 
     public void ZoomSelectedNode(PointerEvent e, PointerId pointerId)
@@ -479,6 +503,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
 
             node = ResolveContainerTarget(node);
             nodeId = node.Id;
+            if (NodeViewPolicy.IsMemberCardNode(node))
+                return; // A card's rows stay under its header, at the card's own scale
             if (e.DeltaY == 0)
                 return;
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
@@ -520,6 +546,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
 
             node = ResolveContainerTarget(node);
             nodeId = node.Id;
+            if (NodeViewPolicy.IsMemberCardNode(node))
+                return; // A card's rows stay under its header, at the card's own scale
             Rect b = node.GetTotalBounds();
 
             // Determine the X or y zoom that best fits the bounds (including margin)

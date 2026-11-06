@@ -463,10 +463,6 @@ class SvgService : ISvgService
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
-        // A card's rows start at its top left, under its header, whatever else set its transform.
-        if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node))
-            NodeLayout.EnsureCardTransform(node);
-
         // A re-parse may have changed which rows fold since the card was laid out.
         if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node) && MemberCard.IsLayoutStale(node))
             node.IsChildrenLayoutRequired = true;

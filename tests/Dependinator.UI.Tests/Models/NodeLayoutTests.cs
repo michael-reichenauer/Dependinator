@@ -124,20 +124,16 @@ public class NodeLayoutTests
     }
 
     [Fact]
-    public void EnsureCardTransform_ShouldPutTheRowsBackUnderTheHeader()
+    public void CardTransform_ShouldKeepTheRowsUnderTheHeader_ForAResizedBox()
     {
         var (parent, _, _) = CardType();
         NodeLayout.AdjustChildren(parent);
-        var (zoom, offset) = (parent.ContainerZoom, parent.ContainerOffset);
+        Assert.Equal((parent.ContainerZoom, parent.ContainerOffset), NodeLayout.CardTransform(parent, parent.Boundary));
 
-        // As a resize from the top edge or a rescale would leave it
-        parent.ContainerOffset = new Pos(5, 12);
-        parent.ContainerZoom = zoom * 1.5;
-
-        Assert.True(NodeLayout.EnsureCardTransform(parent));
-        Assert.Equal(offset, parent.ContainerOffset);
-        Assert.Equal(zoom, parent.ContainerZoom, 9);
-        Assert.False(NodeLayout.EnsureCardTransform(parent));
+        // Resized from the top left handle: the children still start at the box's top left
+        var (zoom, offset) = NodeLayout.CardTransform(parent, new Rect(-50, -40, 300, 220));
+        Assert.Equal(new Pos(0, 0), offset);
+        Assert.True(zoom < parent.ContainerZoom, $"Expected a smaller zoom for a smaller box but got {zoom}");
     }
 
     [Fact]
