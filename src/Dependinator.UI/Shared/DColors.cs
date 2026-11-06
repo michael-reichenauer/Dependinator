@@ -23,6 +23,13 @@ class DColors
     static readonly string CardMutedTextDark = "#9C99AA";
     static readonly string CardMutedTextLight = "#6E6A7C";
 
+    // A type card's header and border (the summary and the open UML card), the same calm
+    // lavender on every type instead of the container's name-based color.
+    static readonly string CardHeaderDark = "#2A2640";
+    static readonly string CardHeaderLight = "#EFEAFD";
+    static readonly string CardFrameDark = "#4A4466";
+    static readonly string CardFrameLight = "#C9C0E8";
+
     // Tests
     static readonly string TextDark = "#ECECEC";
     static readonly string TextLight = "#1A1A1A";
@@ -176,6 +183,8 @@ class DColors
     public static string CardBorder => IsDark ? CardBorderDark : CardBorderLight;
     public static string CardDivider => IsDark ? CardDividerDark : CardDividerLight;
     public static string CardMutedText => IsDark ? CardMutedTextDark : CardMutedTextLight;
+    public static string CardHeader => IsDark ? CardHeaderDark : CardHeaderLight;
+    public static string CardFrame => IsDark ? CardFrameDark : CardFrameLight;
 
     public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
     public static string LineSelected => ItemLineSelected;

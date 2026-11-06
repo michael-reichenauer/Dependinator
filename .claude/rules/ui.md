@@ -109,6 +109,15 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   line polyline takes its click. Toggling re-lays out the card at once and the view follows
   (`CardToggleMove`, `PanZoomService.FollowPoint`): more rows in the same box means a smaller
   `ContainerZoom`, which otherwise drops the card back to its summary.
+- An open member card node (`NodeViewPolicy.IsMemberCardNode`) is drawn by `NodeSvg.GetCardNodeSvg`
+  (the shared `CardFrameSvg` header, no container label, no inner card rect) and laid out by
+  `NodeLayout.ArrangeCardNode`: children from child (0,0) at the box's top left
+  (`ApplyCardTransform`, zoom ≤ 1), rows from `MemberCard.CardRowsTop`, nested types below.
+- Card colors are fixed (`DColors.CardHeader`/`CardFrame`, `NodeSvg.CardColors`), not the type's
+  random color; only a user-set custom color or edit mode uses `NodeColors`. A private row's
+  "private" tag is a separate `<text class="privateTag">`, so the row's `memberName` text (e2e
+  tests match its content) keeps only name, signature and comment; `MemberCard.ColumnWidth`
+  leaves room for it.
 - Lines between members of one type carry `line-inner` (LineSvg) and are hidden unless lit or
   hover-previewed (Canvas LineCss, jsInterop.js `initLinePreview`).
 

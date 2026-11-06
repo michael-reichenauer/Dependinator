@@ -376,7 +376,16 @@ class SvgService : ISvgService
         // A container's member rows sit on a card, drawn behind everything inside the container.
         var memberCardSvg =
             !node.IsRoot && NodeLayout.HasMemberChildren(node)
-                ? NodeSvg.GetMemberCardSvg(node, childrenCanvasOffset, childrenZoom, row => IsRowShown(row, context))
+                ? NodeSvg.GetMemberCardSvg(
+                    node,
+                    childrenCanvasOffset,
+                    childrenZoom,
+                    row => IsRowShown(row, context),
+                    // GetCardNodeSvg draws the card, except when the node is drawn without chrome
+                    NodeViewPolicy.IsMemberCardNode(node)
+                        && !NodeViewPolicy.IsRenderedFlat(context.Zoom)
+                        && !NodeViewPolicy.IsTooLargeToBeSeen(node, context.Zoom)
+                )
                 : "";
 
         var privateToggleSvg =
@@ -454,9 +463,15 @@ class SvgService : ISvgService
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
-        // A re-parse may have changed which rows fold since the card was laid out.
-        if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node) && MemberCard.IsLayoutStale(node))
-            node.IsChildrenLayoutRequired = true;
+        // A re-parse may have changed which rows fold since the card was laid out; otherwise an
+        // edit may have moved the card's rows from under its header (NodeLayout.EnsureCardTransform).
+        if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node))
+        {
+            if (MemberCard.IsLayoutStale(node))
+                node.IsChildrenLayoutRequired = true;
+            else
+                NodeLayout.EnsureCardTransform(node);
+        }
 
         // The summary card decides by the rows' size, so lay out the rows it may switch to first
         // (a layout bumps NodeLayout.Generation, which redoes the render with synced lines).
@@ -496,6 +511,18 @@ class SvgService : ISvgService
 
         if (NodeViewPolicy.IsTooLargeToBeSeen(node, context.Zoom))
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
+
+        if (NodeViewPolicy.IsMemberCardNode(node))
+            return NodeSvg.GetCardNodeSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Zoom * node.ContainerZoom,
+                childrenContentSvg,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context),
+                HiddenChildCountOf(node, context)
+            );
 
         return NodeSvg.GetNodeContainerSvg(
             node,

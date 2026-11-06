@@ -214,11 +214,18 @@ static partial class NodeSvg
         var fontSize = FontSize * textZoom;
         var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
         var rowEnd = nodeCanvasRect.X + nodeCanvasRect.Width;
+        // A private row is muted, with a "private" tag at its end (MemberCard.ColumnWidth has room).
+        var isPrivate = node.IsPrivate ?? false;
+        var tagSize = fontSize * PrivateTagScale;
+        var tagStart = rowEnd - EstimateTextWidth(PrivateTag, tagSize) - 4 * MemberSignatureGap * textZoom;
+        // No tag over a name too long for the row (the column width is capped).
+        var hasTag = isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= tagStart;
+        var detailsEnd = hasTag ? tagStart : rowEnd;
 
         var layout = new LeafNodeLayout(
             IconRect: member.Icon,
             TextPos: member.Text,
-            TextClass: "memberName",
+            TextClass: isPrivate ? "memberName memberPrivate" : "memberName",
             TextBaseline: "middle",
             FontSize: fontSize,
             DescriptionClass: "memberDescription",
@@ -230,11 +237,20 @@ static partial class NodeSvg
                 Width = Math.Max(member.Bounds.Width, rowEnd - member.Bounds.X),
             },
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y),
-            TextSuffix: MemberDetailsSvg(node, member.Text, rowEnd, fontSize, textZoom),
+            TextSuffix: MemberDetailsSvg(node, member.Text, detailsEnd, fontSize, textZoom),
             TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
         );
 
+        var tag = hasTag
+            ? PrivateTagSvg(
+                rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
+                member.Text.Y,
+                tagSize,
+                HiddenAttributes(node).TextOpacity
+            )
+            : "";
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
+            + tag
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
 
@@ -249,8 +265,9 @@ static partial class NodeSvg
         if (signature.Length == 0 && description.Length == 0)
             return "";
 
+        // The signature follows the name directly, UML style ("Url: string", "Start(int a)").
         var gap = MemberSignatureGap * textZoom;
-        var available = rowEnd - (namePos.X + EstimateTextWidth(node.DisplayName, fontSize) + gap);
+        var available = rowEnd - (namePos.X + EstimateTextWidth(node.DisplayName, fontSize));
         var charWidth = fontSize * AverageCharWidthFactor;
         var svg = new System.Text.StringBuilder();
         var signatureText = ClipRow(signature, (int)(available / charWidth));
@@ -259,7 +276,7 @@ static partial class NodeSvg
             svg.Append(
                 string.Create(
                     CultureInfo.InvariantCulture,
-                    $"""<tspan class="memberSignature" dx="{gap:0.##}">{HttpUtility.HtmlEncode(signatureText)}</tspan>"""
+                    $"""<tspan class="memberSignature">{HttpUtility.HtmlEncode(signatureText)}</tspan>"""
                 )
             );
             available -= EstimateTextWidth(signatureText, fontSize) + 2 * gap;
@@ -287,8 +304,9 @@ static partial class NodeSvg
         : maxChars < 6 ? ""
         : Clip(text, maxChars);
 
-    const double MemberSignatureGap = 3;
+    const double MemberSignatureGap = 3; // Before the comment
     const double MemberDescriptionScale = 0.85;
+    const double PrivateTagScale = 0.8;
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
     // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
@@ -447,6 +465,11 @@ static partial class NodeSvg
     // place the manual marker after a name.
     static double EstimateTextWidth(string text, double fontSize) =>
         string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * AverageCharWidthFactor;
+
+    // Whether the node is drawn in its own colors (edit mode or a user-set color) rather than its
+    // kind's default (the random color, or a card's lavender: CardColors).
+    static bool HasOwnColors(Node node) =>
+        node.IsEditMode || node.CustomColor is { } customColor && DColors.IsCustomNodeColor(customColor);
 
     internal static (string Border, string Background) NodeColors(Node node)
     {

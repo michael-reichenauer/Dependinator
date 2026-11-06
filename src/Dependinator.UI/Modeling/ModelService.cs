@@ -606,6 +606,9 @@ class ModelService : IModelService, IDisposable
         {
             if (node.IsChildrenLayoutCustomized && NodeLayout.HasMemberChildren(node))
                 node.IsChildrenLayoutRequired = true;
+            // Before version 4 nested types sat right of a type's card; now they go below it.
+            if (layoutVersion < 4 && node.IsChildrenLayoutCustomized && NodeViewPolicy.IsMemberCardNode(node))
+                NodeLayout.ForgetCustomLayout(node);
         }
     }
 }

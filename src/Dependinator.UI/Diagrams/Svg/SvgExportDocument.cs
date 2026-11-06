@@ -87,6 +87,15 @@ static class SvgExportDocument
                 fill: {{DColors.CardMutedText}};
                 text-anchor: start;
             }
+            .summaryMember.summaryPrivate, .memberName.memberPrivate {
+                fill: {{DColors.CardMutedText}};
+            }
+            .privateTag {
+                font-family: Verdana, Helvetica, Arial, sans-serif;
+                font-style: italic;
+                fill: {{DColors.CardMutedText}};
+                text-anchor: end;
+            }
             .memberSignature {
                 font-family: Verdana, Helvetica, Arial, sans-serif;
                 fill: {{DColors.CardMutedText}};

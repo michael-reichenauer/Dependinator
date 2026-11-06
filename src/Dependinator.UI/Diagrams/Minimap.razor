@@ -146,7 +146,7 @@
         // A pass-through namespace covers its parent; draw its contents, not a second box.
         if (!child.IsPassThrough)
         {
-          var (border, background) = NodeSvg.NodeColors(child);
+          var (border, background) = NodeViewPolicy.IsMemberCardNode(child) ? NodeSvg.CardColors(child) : NodeSvg.NodeColors(child);
           boxCount++;
           svg.Append($"<rect x=\"{F(box.X)}\" y=\"{F(box.Y)}\" width=\"{F(box.Width)}\" height=\"{F(box.Height)}\"")
             .Append($" rx=\"1.5\" fill=\"{background}\" stroke=\"{border}\" stroke-width=\"{(depth == 1 ? "1" : "0.5")}\"")
