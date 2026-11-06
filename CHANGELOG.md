@@ -9,6 +9,21 @@ with the next official release.
 
 ## [Unreleased]
 
+### New
+
+- An open type is drawn as a UML-like card: a lavender header with its name and kind, then its members in sections (fields, constructors, properties, events, methods; a Bicep module's parameters, variables, resources and outputs) with their signatures and comments, public members first and private ones muted with a small lock on their icon; nested types sit inside the card below the rows. Zooming in, a type goes from an icon to a summary card to the full card, and lines land on the member rows
+- A large type folds its private members into a **+ N private** row; a click shows them and **hide N private** folds them again, and going to a private member opens them
+- Resting the mouse on a node or line shows a card in the app's theme: a node's kind, container, description, how many nodes it uses and is used by, its members and its problems; a line's ends, link count, first links and whether it is part of a cycle or breaks a rule
+- More kinds of architecture rules: **only X may use Y**, **layers** (each layer may use only the layers below it), **X is independent**, **no cycles inside X** and **the parts of X are independent**; **Suggest rules …** proposes and checks every kind
+- **Fix later** in the rule review keeps a dependency that breaks a rule on the rule's to-fix list with the AI's suggested change as the plan, no longer counted as a problem, with a fix prompt to copy when it is time
+- The line label dialog asks an AI for a label and description that match the other labels, with a few alternatives to pick from
+
+### Improved
+
+- **Suggest rules …** remembers the suggestions you dismissed and the ones it already made, and leaves them out of later answers; an added rule keeps the AI's reason, shown and editable in the Rules panel
+- **Improve Comments** also adds or rewrites a project's description
+- A selected container lights only the lines leading out of it; the lines inside it stay dimmed until a child is selected or hovered
+
 ## [v0.88.441194] - 2026-11-03
 
 ### New
