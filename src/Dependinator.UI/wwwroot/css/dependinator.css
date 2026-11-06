@@ -1,6 +1,13 @@
 /* The device's safe area (viewport-fit=cover in the hosts' viewport meta). Zero in a normal
    browser tab; on an iPad or iPhone home-screen web app the page runs under the status bar, so
    everything pinned to the top or bottom edge keeps clear of it. */
+/* The page itself never scrolls (the diagram pans inside the canvas). */
+html,
+body {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
 :root {
     --dep-safe-top: env(safe-area-inset-top, 0px);
     --dep-safe-bottom: env(safe-area-inset-bottom, 0px);
