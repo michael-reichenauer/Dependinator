@@ -5,6 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <meta name="HandheldFriendly" content="true" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#fafafa" />
     <meta name="description"
           content="Dependinator visualizes the structure and dependencies of a C#/.NET codebase or an Azure Bicep deployment as an interactive, navigable map." />
     <title>Dependinator</title>
@@ -180,7 +184,7 @@
                     if (id === "fog-header") document.body.insertBefore(d, document.body.firstChild); else document.body.appendChild(d);
                 });
                 var panel = document.createElement("div"); panel.id = "fog-test";
-                panel.innerHTML = "<b>Fog test 4</b>";
+                panel.innerHTML = "<b>Fog test 5</b>";
                 variants.forEach(function (v) {
                     var b = document.createElement("button"); b.textContent = v;
                     b.onclick = function () { apply(v); }; panel.appendChild(b);
