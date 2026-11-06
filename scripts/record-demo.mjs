@@ -7,7 +7,10 @@
 //   3. The diagram zooms to the node; the node toolbar appears.
 //   4. "Show dependencies" opens the Dependencies explorer.
 //   5. Tree items are expanded to drill into member-level dependencies.
-//   6. The explorer is closed and the view zooms back out (Fit to Screen).
+//   6. The explorer is closed and the wheel zooms in until the type opens into its UML-like
+//      member card.
+//   7. Hovering the card's header shows the type's tooltip, then a member row's.
+//   8. The view zooms back out (Fit to Screen).
 //
 // Run via ./scripts/record-demo (repo root), which starts the app if needed and sets
 // NODE_PATH so the globally installed playwright (bundled with @playwright/cli
@@ -37,6 +40,10 @@ const gifFps = 10;
 
 const searchText = "ModelService";
 const searchResultFullName = "Dependinator.UI.Modeling.ModelService";
+// Wheel steps from the searched node's zoom until the type shows its full member card.
+const typeCardWheelSteps = 9;
+// The member row hovered for a member tooltip.
+const tooltipMemberName = "LoadAsync";
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -98,6 +105,12 @@ const findTreeChevron = (name) => {
     );
     return label?.closest("li")?.querySelector("button.mud-treeview-item-expand-button");
 };
+
+// A diagram node's hover group (data-name holds the node's full name).
+const findNode = (fullName) => document.querySelector(`g[data-name="${fullName}"]`);
+
+// A member row of an open type card (its name text carries data-name, the member's short name).
+const findMemberRow = (name) => document.querySelector(`text[data-name="${name}"]`);
 
 const findTestId = (testId) => document.querySelector(`[data-testid=${testId}]`);
 
@@ -250,11 +263,42 @@ async function run() {
     await clickRect(page, await rectOf(page, findTreeChevron, "IModelMgr"));
     await wait(2600);
 
-    // Close the explorer and zoom back out to the overview.
+    // Close the explorer.
     await clickRect(page, await rectOf(page, findTestId, "explorer-close"));
-    await wait(900);
+    await wait(1200);
+
+    // Clear the selection on an empty spot below the type: a selected type card draws the
+    // lines of all its member rows, which hides the card.
+    const typeRect = await rectOf(page, findNode, searchResultFullName);
+    if (!typeRect) throw new Error("The searched type is not on screen");
+    await moveAndClick(page, typeRect.x + typeRect.w / 2 - 70, typeRect.y + typeRect.h + 45);
+    await wait(800);
+
+    // Zoom in on the type with the wheel until it opens into its UML-like member card.
+    const zoomAt = { x: typeRect.x + typeRect.w / 2, y: typeRect.y + typeRect.h / 2 };
+    await page.mouse.move(zoomAt.x, zoomAt.y, { steps: 25 });
+    await wait(400);
+    for (let step = 0; step < typeCardWheelSteps; step++) {
+        await page.mouse.wheel(0, -100);
+        await wait(450);
+    }
+    await wait(2000); // let the card render
+
+    // Hover the card's header: after a moment the node's tooltip appears.
+    const cardRect = await rectOf(page, findNode, searchResultFullName);
+    await page.mouse.move(cardRect.x + cardRect.w * 0.55, cardRect.y + 18, { steps: 25 });
+    await wait(2800);
+    // ...and a member row, for the member's own tooltip.
+    const rowRect = await rectOf(page, findMemberRow, tooltipMemberName);
+    if (rowRect) {
+        await page.mouse.move(rowRect.x + Math.min(rowRect.w * 0.5, 120), rowRect.y + rowRect.h / 2, { steps: 20 });
+        await wait(2600);
+    }
+
+    // Zoom back out to the overview.
     await fitToScreen(page, true);
-    await page.mouse.move(640, 620, { steps: 20 }); // park the cursor
+    // Park the cursor below the diagram, off every node, so no tooltip shows at the end.
+    await page.mouse.move(1000, 705, { steps: 20 });
     await wait(2800); // zoom-out animation + final hold
 
     const sceneEnd = Date.now();

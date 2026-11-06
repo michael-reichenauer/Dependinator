@@ -31,7 +31,9 @@ resources with their Azure icons, parameters and outputs, and the dependencies
 between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
-![The Dependinator map of a Bicep deployment: the network module with its network security groups, NAT gateway, public IP, private DNS zones and virtual network drawn with Azure icons, and the module's parameters and outputs as rows](docs/images/bicep.png)
+![A type opened as its UML-like member card, with fields, constructors, properties and methods in sections and a padlock on private members, and the hover card that shows the type's description and how many dependencies and members it has](docs/images/types.png)
+
+![The Dependinator map of a Bicep deployment: the apps resource group with Front Door, App Service, AI Search, Functions, Container Apps, API Management and Azure OpenAI drawn with their Azure icons, and the dependencies between them](docs/images/bicep.png)
 
 ## Why
 
@@ -51,6 +53,11 @@ inside, and jump from any node straight to its source.
 - **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
   deployments with the Bicep compiler; resources carry their Azure icons, local
   modules expand in place, and existing resources show as externals.
+- **Types as UML cards.** Zoom into a type and it opens into a card with its
+  fields, constructors, properties and methods, their signatures and comments,
+  a padlock on private members, and a line from each member that has
+  dependencies. Hover any node or line for a card with its description and
+  dependency counts.
 - **Dependencies explorer.** Pick a node and browse everything it uses and
   everything that uses it, down to member level.
 - **Jump to code.** Open the source of a node or dependency in the editor. The
@@ -93,7 +100,7 @@ installation; the extension bundles a self-contained language server with the Bi
 
 ### In action
 
-![Navigating to a node with search and exploring its dependencies in the Dependencies explorer](src/DependinatorVsCode/resources/demo.gif)
+![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](src/DependinatorVsCode/resources/demo.gif)
 
 ## Web app and device sync
 
