@@ -31,8 +31,6 @@ resources with their Azure icons, parameters and outputs, and the dependencies
 between them. Zoom out for the big picture, zoom in to see how a component works
 inside, and jump from any node straight to its source.
 
-![A type opened as its UML-like member card, with fields, constructors, properties and methods in sections and a padlock on private members, and the hover card that shows the type's description and how many dependencies and members it has](docs/images/types.png)
-
 ![The Dependinator map of a Bicep deployment: the apps resource group with Front Door, App Service, AI Search, Functions, Container Apps, API Management and Azure OpenAI drawn with their Azure icons, and the dependencies between them](docs/images/bicep.png)
 
 ## Why

@@ -9,8 +9,6 @@ inside, and jump from any node straight to its source.
 
 ![The Dependinator map of a solution: projects as containers, their namespaces and types inside, and dependencies as lines between them](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/hero.png)
 
-![A type opened as its UML-like member card, with fields, constructors, properties and methods in sections and a padlock on private members, and the hover card that shows the type's description and how many dependencies and members it has](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/types.png)
-
 ![The Dependinator map of a Bicep deployment: the apps resource group with Front Door, App Service, AI Search, Functions, Container Apps, API Management and Azure OpenAI drawn with their Azure icons, and the dependencies between them](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/docs/images/bicep.png)
 
 Dependinator is in beta: the core works end to end, but expect rough edges and
