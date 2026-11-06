@@ -650,8 +650,9 @@ else if (HasSelectedLine)
   {
     get
     {
-      var (customColor, autoColor) = GetCurrentNodeColors();
-      var (autoBorder, autoBackground) = DColors.NodeColorByName(autoColor);
+      var (customColor, autoColor, isCard) = GetCurrentNodeColors();
+      // A type card's own color is the shared lavender, not its random one (NodeSvg.CardColors).
+      var (autoBorder, autoBackground) = isCard ? (DColors.CardFrame, DColors.CardHeader) : DColors.NodeColorByName(autoColor);
       return ColorMenuRows(
           "color-item",
           [
@@ -678,12 +679,14 @@ else if (HasSelectedLine)
   }
 
   // The selected node's user-set container color (null = auto) and its auto-assigned color name.
-  (string? Custom, string Auto) GetCurrentNodeColors()
+  (string? Custom, string Auto, bool IsCard) GetCurrentNodeColors()
   {
     if (!TryGetSelectedNodeId(out var nodeId))
-      return (null, "");
+      return (null, "", false);
     using var model = modelMgr.UseModel();
-    return model.Nodes.TryGetValue(nodeId, out var node) ? (node.CustomColor, node.Color) : (null, "");
+    return model.Nodes.TryGetValue(nodeId, out var node)
+      ? (node.CustomColor, node.Color, NodeViewPolicy.IsMemberCardNode(node))
+      : (null, "", false);
   }
 
   void SetIconColor(string? colorName)

@@ -240,14 +240,16 @@ static partial class NodeSvg
             TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
         );
 
-        var tag = isPrivate
-            ? PrivateTagSvg(
-                rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
-                member.Text.Y,
-                tagSize,
-                HiddenAttributes(node).TextOpacity
-            )
-            : "";
+        // No tag over a name too long for the row (the column width is capped).
+        var tag =
+            isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= detailsEnd
+                ? PrivateTagSvg(
+                    rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
+                    member.Text.Y,
+                    tagSize,
+                    HiddenAttributes(node).TextOpacity
+                )
+                : "";
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
             + tag
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
@@ -464,6 +466,11 @@ static partial class NodeSvg
     // place the manual marker after a name.
     static double EstimateTextWidth(string text, double fontSize) =>
         string.IsNullOrEmpty(text) ? 0 : text.Length * fontSize * AverageCharWidthFactor;
+
+    // Whether the node is drawn in its own colors (edit mode or a user-set color) rather than its
+    // kind's default (the random color, or a card's lavender: CardColors).
+    static bool HasOwnColors(Node node) =>
+        node.IsEditMode || node.CustomColor is { } customColor && DColors.IsCustomNodeColor(customColor);
 
     internal static (string Border, string Background) NodeColors(Node node)
     {
