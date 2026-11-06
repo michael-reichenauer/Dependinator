@@ -421,6 +421,21 @@ class InteractionService(
             return;
         }
 
+        if (pointerId.IsPrivateToggle)
+        {
+            if (nodeEditService.TogglePrivateMembers(pointerId.NodeId) is { } move)
+            {
+                // The card's rows get a new scale (more or fewer rows in the same box): keep the
+                // toggle under the pointer at the same size, so the rows stay readable and a second
+                // click folds them back.
+                panZoomService.FollowPoint(move.From, move.To, move.Scale);
+                applicationEvents.TriggerModelChanged();
+                applicationEvents.TriggerUIStateChanged();
+                applicationEvents.TriggerSaveNeeded();
+            }
+            return;
+        }
+
         dependenciesService.Clicked(pointerId);
 
         // On a narrow screen a click in the diagram folds the cycles panel down to its title bar,

@@ -33,6 +33,9 @@ class Node : IItem
     NodeType type = NodeType.None;
     public DateTime UpdateStamp { get; set; }
     public bool? IsPrivate { get; set; }
+
+    // A member row's signature, shown after its name (Parsing.NodeProperties.Signature).
+    public string? Signature { get; set; }
     bool? isExecutable;
     FileSpan? fileSpan;
 
@@ -106,6 +109,19 @@ class Node : IItem
     public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
+
+    // The member card shows its private rows instead of folding them into "+ N private"
+    // (MemberCard.HasPrivateToggle).
+    public bool IsPrivateMembersShown { get; set; }
+
+    // The member card's fold as of its last layout (MemberCard.Arrange, or MemberCard.RestoreLayoutState
+    // for a loaded model), not saved: the rows' boundaries match it, so rendering asks it rather
+    // than the current members, which a re-parse may have changed until the next layout.
+    public MemberCard.PrivateToggle LaidOutToggle { get; set; }
+    public Rect LaidOutToggleRect { get; set; } = Rect.None;
+
+    // A member row folded into its card's "+ N private" row at the last layout: not drawn.
+    public bool IsFoldedAway { get; set; }
 
     // The children got the fast layered layout only (too much work for the thorough pass when
     // first shown); LayoutRefineService refines it in idle moments. Transient, not saved.
@@ -199,6 +215,7 @@ class Node : IItem
                 Description = string.IsNullOrEmpty(Description) ? null : Description,
                 IsPrivate = IsPrivate,
                 IsExecutable = IsExecutable,
+                Signature = Signature,
                 FileSpan = fileSpan,
                 IconName = IconName,
             },
@@ -215,6 +232,7 @@ class Node : IItem
             IsUserSetHidden = UserVisibility != NodeVisibility.Visible,
             IsParentSetHidden = ParentVisibility != NodeVisibility.Visible,
             IsChildrenLayoutCustomized = IsChildrenLayoutCustomized,
+            IsPrivateMembersShown = IsPrivateMembersShown,
             IsChildrenLayoutRequired = IsChildrenLayoutRequired,
             IsManual = IsManual,
             IsNote = IsNote,
@@ -227,6 +245,7 @@ class Node : IItem
 
         SetDescription(dto.Properties.Description);
         IsPrivate = dto.Properties.IsPrivate;
+        Signature = dto.Properties.Signature;
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
         IconName = dto.Properties.IconName;
@@ -242,6 +261,7 @@ class Node : IItem
         UserVisibility = VisibilityFromDto(dto.Visibility, dto.IsUserSetHidden);
         ParentVisibility = VisibilityFromDto(dto.ParentVisibility, dto.IsParentSetHidden);
         IsChildrenLayoutCustomized = dto.IsChildrenLayoutCustomized;
+        IsPrivateMembersShown = dto.IsPrivateMembersShown;
         IsChildrenLayoutRequired = dto.IsChildrenLayoutRequired;
         IsManual = dto.IsManual;
         IsNote = dto.IsNote;
@@ -252,6 +272,7 @@ class Node : IItem
     {
         Type = node.Properties.Type ?? Type;
         IsPrivate = node.Properties.IsPrivate ?? IsPrivate;
+        Signature = node.Properties.Signature == NoValue.String ? null : node.Properties.Signature ?? Signature;
         IsExecutable = node.Properties.IsExecutable ?? IsExecutable;
         SetDescription(
             node.Properties.Description == NoValue.String ? null : node.Properties.Description ?? Description

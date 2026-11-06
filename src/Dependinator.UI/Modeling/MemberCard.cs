@@ -20,13 +20,14 @@ static class MemberCard
     public const double Padding = 10;
     const double ColumnGap = 2 * NodeGrid.SnapSize;
 
-    // A column is as wide as its widest row (estimated from the name), in grid steps.
+    // A column is as wide as its widest row (estimated from the name and signature), in grid steps.
     const double MinColumnWidth = 100;
-    const double MaxColumnWidth = 220;
+    const double MaxColumnWidth = 300;
     const double IconAndGapWidth = 12; // The 8-unit member icon and the gap to its name
     const double NameFontSize = 8; // NodeSvg.FontSize
     const double CharWidthFactor = 0.6; // NodeSvg.AverageCharWidthFactor
     const double RowEndPadding = 6;
+    const double SignatureGap = 3; // NodeSvg.MemberSignatureGap
 
     // A section of the card: the members of one kind, public before private.
     public sealed record Section(string Title, IReadOnlyList<Node> Rows);
@@ -48,6 +49,104 @@ static class MemberCard
     ];
 
     public static bool HasMembers(Node parent) => parent.Children.Any(child => child.Type.IsMember);
+
+    // A card of more rows than this, with public and private rows, folds its private rows into one
+    // "+ N private" row at its end (the private toggle), until the user opens it
+    // (Node.IsPrivateMembersShown); then the row reads "hide N private". Folded rows share the
+    // toggle row's place, so their lines start and end there.
+    public const int FoldMinRows = 12;
+
+    public static bool HasPrivateToggle(Node parent)
+    {
+        var (publicCount, privateCount) = (0, 0);
+        foreach (var child in parent.Children)
+        {
+            if (!child.Type.IsMember)
+                continue;
+            if (child.IsPrivate ?? false)
+                privateCount++;
+            else
+                publicCount++;
+        }
+        return publicCount > 0 && privateCount > 0 && publicCount + privateCount > FoldMinRows;
+    }
+
+    // The card was laid out with its private rows folded.
+    public static bool IsPrivateFolded(Node parent) => parent.LaidOutToggle == PrivateToggle.Folded;
+
+    // The row is folded into its card's "+ N private" row: not drawn on its own.
+    public static bool IsFoldedRow(Node row) => row.IsFoldedAway;
+
+    // The private rows the toggle stands for (only those shown when given isShown).
+    public static int PrivateCount(Node parent, Func<Node, bool>? isShown = null) =>
+        parent.Children.Count(c =>
+            c.Type.IsMember
+            && (IsPrivateFolded(parent) ? c.IsFoldedAway : c.IsPrivate ?? false)
+            && (isShown?.Invoke(c) ?? true)
+        );
+
+    // The toggle row is drawn: the card was laid out with one, and some of its private rows are
+    // shown (not all hidden by the user or View › Rows).
+    public static bool IsToggleShown(Node parent, Func<Node, bool>? isShown = null) =>
+        parent.LaidOutToggle != PrivateToggle.None && PrivateCount(parent, isShown) > 0;
+
+    // The private toggle row's place, as laid out: below the last row (the flow keeps it in the
+    // last row's column). Folded rows share it. Rect.None without a toggle.
+    public static Rect PrivateToggleRect(Node parent) =>
+        parent.LaidOutToggle == PrivateToggle.None ? Rect.None : parent.LaidOutToggleRect;
+
+    // The members changed since the card was laid out (a re-parse crossed FoldMinRows or changed
+    // a member's access, or the fold was toggled): the rows' boundaries no longer match the fold.
+    public static bool IsLayoutStale(Node parent)
+    {
+        if (ToggleOf(parent) != parent.LaidOutToggle)
+            return true;
+        var isFolded = IsPrivateFolded(parent);
+        return parent.Children.Any(c => c.Type.IsMember && c.IsFoldedAway != (isFolded && (c.IsPrivate ?? false)));
+    }
+
+    // Sets the layout state Arrange keeps (Node.LaidOutToggle, IsFoldedAway, LaidOutToggleRect) from
+    // a loaded model's saved boundaries. They were laid out with the saved fold, unless a re-parse
+    // changed the members and the model was saved before the card was laid out again: then the
+    // folded rows do not share one place (or other rows do), and the card is laid out again.
+    public static void RestoreLayoutState(Node parent)
+    {
+        if (!HasMembers(parent))
+            return;
+        var toggle = ToggleOf(parent);
+        var rows = parent.Children.Where(c => c.Type.IsMember).ToList();
+        rows.ForEach(r => r.IsFoldedAway = toggle == PrivateToggle.Folded && (r.IsPrivate ?? false));
+        var folded = rows.Where(r => r.IsFoldedAway).Select(r => r.Boundary).Distinct().ToList();
+        var placed = rows.Where(r => !r.IsFoldedAway).Select(r => r.Boundary).ToList();
+        var isConsistent =
+            rows.All(r => r.Boundary != Rect.None)
+            && folded.Count <= 1
+            && placed.Distinct().Count() == placed.Count
+            && !folded.Any(placed.Contains);
+        if (!isConsistent)
+        {
+            rows.ForEach(r => r.IsFoldedAway = false);
+            parent.LaidOutToggle = PrivateToggle.None;
+            parent.LaidOutToggleRect = Rect.None;
+            parent.IsChildrenLayoutRequired = true;
+            return;
+        }
+
+        parent.LaidOutToggle = toggle;
+        if (toggle == PrivateToggle.Folded)
+        {
+            parent.LaidOutToggleRect = folded[0];
+        }
+        else if (toggle == PrivateToggle.Open)
+        {
+            var last = rows.MaxBy(r => (r.Boundary.X, r.Boundary.Y))!.Boundary;
+            parent.LaidOutToggleRect = last with { Y = last.Y + RowPitch };
+        }
+        else
+        {
+            parent.LaidOutToggleRect = Rect.None;
+        }
+    }
 
     // The plural title of a member kind ("Methods"), also used for counts in the summary card.
     public static string SectionTitle(NodeType type) =>
@@ -75,40 +174,77 @@ static class MemberCard
     // Lays the members out as a card whose top-left row area starts at (startX, startY), choosing
     // the column count whose card shape is closest to the target aspect (width / height). Returns
     // the card's bounds, padding included.
-    public static Rect Arrange(IReadOnlyList<Section> sections, double startX, double startY, double targetAspect)
+    // With a private toggle, the card ends with the toggle row, and folded private rows are given
+    // its place.
+    public static Rect Arrange(
+        IReadOnlyList<Section> sections,
+        double startX,
+        double startY,
+        double targetAspect,
+        PrivateToggle toggle = PrivateToggle.None
+    )
     {
         if (sections.Count == 0)
             return Rect.None;
 
-        var columnWidth = ColumnWidth(sections);
-        var items = Items(sections);
+        var columnWidth = ColumnWidth(sections, toggle);
+        var (items, folded) = Items(sections, toggle);
         var best = BestFlow(items, columnWidth, targetAspect);
+        var toggleRect = Rect.None;
 
         for (var index = 0; index < items.Count; index++)
         {
             var (column, step) = best.Places[index];
-            if (items[index] is not { } row)
-                continue;
-            row.Boundary = new Rect(
+            var rect = new Rect(
                 startX + column * (columnWidth + ColumnGap),
                 startY + step * RowPitch,
                 columnWidth,
                 RowHeight
             );
+            if (ReferenceEquals(items[index], ToggleItem))
+                toggleRect = rect;
+            else if (items[index] is { } row)
+                row.Boundary = rect;
+        }
+
+        // Keep the fold the boundaries were made for (see Node.LaidOutToggle).
+        foreach (var row in sections.SelectMany(section => section.Rows))
+            row.IsFoldedAway = false;
+        folded.ForEach(row =>
+        {
+            row.Boundary = toggleRect;
+            row.IsFoldedAway = true;
+        });
+        if (sections[0].Rows.FirstOrDefault()?.Parent is { } parent)
+        {
+            parent.LaidOutToggle = toggle;
+            parent.LaidOutToggleRect = toggleRect;
         }
 
         var size = CardSize(best, columnWidth);
         return new Rect(startX - Padding, startY - Padding, size.Width, size.Height);
     }
 
+    public enum PrivateToggle
+    {
+        None,
+        Folded,
+        Open,
+    }
+
+    public static PrivateToggle ToggleOf(Node parent) =>
+        !HasPrivateToggle(parent) ? PrivateToggle.None
+        : parent.IsPrivateMembersShown ? PrivateToggle.Open
+        : PrivateToggle.Folded;
+
     // The aspect (width / height) of the card closest to a square that the members can make: the
     // shape a container of only these members is given, so its card fills it.
-    public static double NaturalAspect(IReadOnlyList<Section> sections)
+    public static double NaturalAspect(IReadOnlyList<Section> sections, PrivateToggle toggle = PrivateToggle.None)
     {
         if (sections.Count == 0)
             return 1;
-        var columnWidth = ColumnWidth(sections);
-        var size = CardSize(BestFlow(Items(sections), columnWidth, 1), columnWidth);
+        var columnWidth = ColumnWidth(sections, toggle);
+        var size = CardSize(BestFlow(Items(sections, toggle).Items, columnWidth, 1), columnWidth);
         return size.Width / size.Height;
     }
 
@@ -142,14 +278,16 @@ static class MemberCard
     // the parent's child coordinates; Rect.None when the parent has no laid-out members.
     public static Rect Bounds(Node parent, Func<Node, bool>? isShown = null)
     {
-        var rows = LaidOutRows(parent, isShown);
+        var rows = LaidOutRows(parent, isShown).Select(r => r.Boundary).ToList();
+        if (IsToggleShown(parent, isShown))
+            rows.Add(PrivateToggleRect(parent));
         if (rows.Count == 0)
             return Rect.None;
         var headings = Headings(parent, isShown);
-        var left = rows.Min(r => r.Boundary.X);
-        var top = Math.Min(rows.Min(r => r.Boundary.Y), headings.Count > 0 ? headings.Min(h => h.Y) : double.MaxValue);
-        var right = rows.Max(r => r.Boundary.X + r.Boundary.Width);
-        var bottom = rows.Max(r => r.Boundary.Y + r.Boundary.Height);
+        var left = rows.Min(r => r.X);
+        var top = Math.Min(rows.Min(r => r.Y), headings.Count > 0 ? headings.Min(h => h.Y) : double.MaxValue);
+        var right = rows.Max(r => r.X + r.Width);
+        var bottom = rows.Max(r => r.Y + r.Height);
         return new Rect(left - Padding, top - Padding, right - left + 2 * Padding, bottom - top + 2 * Padding);
     }
 
@@ -172,28 +310,54 @@ static class MemberCard
 
     // The laid-out rows, only those shown when given isShown (rows the user hid or View › Rows
     // leaves out get no heading and no room on the card).
-    static List<Node> LaidOutRows(Node parent, Func<Node, bool>? isShown) =>
-        parent.Children.Where(c => c.Type.IsMember && c.Boundary != Rect.None && (isShown?.Invoke(c) ?? true)).ToList();
-
-    // The width every column gets: the widest row name, on the snap grid.
-    static double ColumnWidth(IReadOnlyList<Section> sections)
+    // Rows folded into the private toggle are left out too.
+    static List<Node> LaidOutRows(Node parent, Func<Node, bool>? isShown)
     {
-        var widest = sections.SelectMany(s => s.Rows).Max(row => row.DisplayName.Length);
-        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + RowEndPadding;
+        return parent
+            .Children.Where(c =>
+                c.Type.IsMember && c.Boundary != Rect.None && !c.IsFoldedAway && (isShown?.Invoke(c) ?? true)
+            )
+            .ToList();
+    }
+
+    // The width every column gets: the widest row name, on the snap grid (folded rows not counted).
+    static double ColumnWidth(IReadOnlyList<Section> sections, PrivateToggle toggle)
+    {
+        // The name and its signature (NodeSvg.MemberDetailsSvg); a comment gets what is left.
+        var rows = sections.SelectMany(s => s.Rows).ToList();
+        if (toggle == PrivateToggle.Folded)
+            rows = [.. rows.Where(r => !(r.IsPrivate ?? false))];
+        var widest = rows.Max(row => row.DisplayName.Length + (row.Signature?.Length ?? 0));
+        var width = IconAndGapWidth + widest * NameFontSize * CharWidthFactor + SignatureGap + RowEndPadding;
         return Math.Clamp(Math.Ceiling(width / NodeGrid.SnapSize) * NodeGrid.SnapSize, MinColumnWidth, MaxColumnWidth);
     }
 
-    // The card's items top to bottom, one grid step each: a section's heading (null), then its rows.
-    static List<Node?> Items(IReadOnlyList<Section> sections)
+    // The card's items top to bottom, one step each: a section's heading (null), then its rows,
+    // and the private toggle (ToggleItem) last. Folded private rows are left out (and returned).
+    static (List<Node?> Items, List<Node> Folded) Items(IReadOnlyList<Section> sections, PrivateToggle toggle)
     {
         var items = new List<Node?>();
+        var folded = new List<Node>();
         foreach (var section in sections)
         {
+            var rows = section.Rows;
+            if (toggle == PrivateToggle.Folded)
+            {
+                folded.AddRange(rows.Where(r => r.IsPrivate ?? false));
+                rows = rows.Where(r => !(r.IsPrivate ?? false)).ToList();
+            }
+            if (rows.Count == 0)
+                continue;
             items.Add(null);
-            items.AddRange(section.Rows);
+            items.AddRange(rows);
         }
-        return items;
+        if (toggle != PrivateToggle.None)
+            items.Add(ToggleItem);
+        return (items, folded);
     }
+
+    // A stand-in for the private toggle row in the flow.
+    static readonly Node ToggleItem = new("$privateToggle", null!);
 
     readonly record struct FlowResult(int Columns, int Steps, (int Column, int Step)[] Places);
 
@@ -215,9 +379,11 @@ static class MemberCard
         var step = 0;
         for (var index = 0; index < items.Count; index++)
         {
-            // A heading needs its first row below it in the same column.
+            // A heading needs its first row below it in the same column, and the private toggle
+            // stays below the last row (PrivateToggleRect finds it there).
             var needed = items[index] is null ? 2 : 1;
-            if (step + needed > height && step > 0)
+            var isGlued = ReferenceEquals(items[index], ToggleItem);
+            if (step + needed > height && step > 0 && !isGlued)
             {
                 column++;
                 step = 0;

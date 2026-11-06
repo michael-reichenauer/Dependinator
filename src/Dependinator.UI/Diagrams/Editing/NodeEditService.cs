@@ -26,6 +26,11 @@ interface INodeEditService
     void SetNodeIconColor(NodeId nodeId, string? colorName);
     void SetNodeColor(NodeId nodeId, string? colorName);
 
+    // Shows or folds the private rows of the node's member card and lays the card out again.
+    // Null when nothing changed; otherwise where the toggle row moved to (canvas positions) and
+    // the factor its rows were scaled by, so the view can keep the toggle in place.
+    CardToggleMove? TogglePrivateMembers(NodeId nodeId);
+
     // Group variants: one undo step for all the nodes.
     void IncreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds);
     void DecreaseNodeSize(IReadOnlyCollection<NodeId> nodeIds);
@@ -218,6 +223,40 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
         commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+    }
+
+    // A view of the card, not an edit: no undo step.
+    public CardToggleMove? TogglePrivateMembers(NodeId nodeId)
+    {
+        using var model = modelMgr.UseModel();
+        // The toggle that was clicked is the one drawn: as laid out, whatever a re-parse changed since.
+        if (!model.Nodes.TryGetValue(nodeId, out var node) || MemberCard.PrivateToggleRect(node) == Rect.None)
+            return null;
+        var (from, zoomBefore) = ToggleCanvasPos(node);
+        node.IsPrivateMembersShown = !node.IsPrivateMembersShown;
+        NodeLayout.AdjustChildren(node);
+        model.BumpStructureVersion();
+        if (MemberCard.PrivateToggleRect(node) == Rect.None)
+            return new CardToggleMove(from, from, 1); // The members changed: no toggle any more
+        var (to, zoomAfter) = ToggleCanvasPos(node);
+        return new CardToggleMove(from, to, zoomAfter / zoomBefore);
+    }
+
+    // The canvas position of the card's toggle row (its left end, mid-height) and the zoom of the
+    // card's rows.
+    static (Pos Pos, double RowZoom) ToggleCanvasPos(Node node)
+    {
+        var (pos, zoom) = node.GetPosAndZoom();
+        var rowZoom = zoom * node.ContainerZoom;
+        var rect = MemberCard.PrivateToggleRect(node);
+        var offset = node.ContainerOffset;
+        return (
+            new Pos(
+                pos.X + rect.X * rowZoom + offset.X * zoom,
+                pos.Y + (rect.Y + rect.Height / 2) * rowZoom + offset.Y * zoom
+            ),
+            rowZoom
+        );
     }
 
     public void SnapResizedSelectedNodeToGrid(PointerId pointerId)
@@ -548,3 +587,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         };
     }
 }
+
+// Where a member card's private toggle row moved when the card was laid out again (canvas
+// positions), and the factor its rows were scaled by.
+record CardToggleMove(Pos From, Pos To, double Scale);

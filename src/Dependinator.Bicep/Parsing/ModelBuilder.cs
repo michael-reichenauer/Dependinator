@@ -71,8 +71,9 @@ class ModelBuilder(string entryPath)
             AddNode(
                 names[parameter],
                 NodeType.ParameterMember,
-                Describe(model, parameter, $"param {parameter.Type.Name}"),
-                Locations.ToFileSpan(model, parameter.DeclaringSyntax)
+                DecoratorText(model, parameter),
+                Locations.ToFileSpan(model, parameter.DeclaringSyntax),
+                signature: $": {parameter.Type.Name}"
             );
         }
 
@@ -82,7 +83,7 @@ class ModelBuilder(string entryPath)
             AddNode(
                 names[variable],
                 NodeType.VariableMember,
-                Describe(model, variable, "var"),
+                DecoratorText(model, variable),
                 Locations.ToFileSpan(model, variable.DeclaringSyntax),
                 isPrivate: true
             );
@@ -103,8 +104,9 @@ class ModelBuilder(string entryPath)
             AddNode(
                 names[output],
                 NodeType.OutputMember,
-                Describe(model, output, $"output {output.Type.Name}"),
-                Locations.ToFileSpan(model, output.DeclaringSyntax)
+                DecoratorText(model, output),
+                Locations.ToFileSpan(model, output.DeclaringSyntax),
+                signature: $": {output.Type.Name}"
             );
         }
 
@@ -482,19 +484,23 @@ class ModelBuilder(string entryPath)
         }
     }
 
-    static string Describe(SemanticModel model, DeclaredSymbol symbol, string defaultText) =>
+    // A row's own @description, if any: its kind and type are in its section and signature.
+    static string? DecoratorText(SemanticModel model, DeclaredSymbol symbol) =>
         symbol.DeclaringSyntax is DecorableSyntax decorable
-        && DescriptionHelper.TryGetFromDecorator(model, decorable) is { } text
-            ? $"{text} ({defaultText})"
-            : defaultText;
+            ? DescriptionHelper.TryGetFromDecorator(model, decorable)
+            : null;
+
+    static string Describe(SemanticModel model, DeclaredSymbol symbol, string defaultText) =>
+        DecoratorText(model, symbol) is { } text ? $"{text} ({defaultText})" : defaultText;
 
     void AddNode(
         string name,
         NodeType type,
-        string description,
+        string? description,
         FileSpan fileSpan,
         string? iconName = null,
-        bool? isPrivate = null
+        bool? isPrivate = null,
+        string? signature = null
     )
     {
         nodeTypes[name] = type;
@@ -506,10 +512,11 @@ class ModelBuilder(string entryPath)
                     new NodeProperties
                     {
                         Type = type,
-                        Description = description,
+                        Description = description ?? NoValue.String,
                         FileSpan = fileSpan,
                         IconName = iconName,
                         IsPrivate = isPrivate,
+                        Signature = signature,
                     }
                 ),
                 null

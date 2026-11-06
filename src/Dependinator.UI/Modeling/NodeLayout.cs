@@ -45,7 +45,8 @@ class NodeLayout
     // loaded, except those the user arranged (see ModelService.LoadCachedModelDataAsync).
     // 1: sizes by code and centrality (NodeSizing), straighter lines.
     // 2: member cards (MemberCard), types shaped like their card.
-    public const int CurrentLayoutVersion = 2;
+    // 3: signatures widen the card's columns, large cards fold their private rows.
+    public const int CurrentLayoutVersion = 3;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
@@ -194,7 +195,11 @@ class NodeLayout
         if (!IsOnlyMembers(node))
             return new Size(side, side);
         var sections = MemberCard.Sections(node.Children.Where(c => c.Type.IsMember), CompareMemberChildren);
-        var aspect = Math.Clamp(MemberCard.NaturalAspect(sections), MinCardNodeAspect, MaxCardNodeAspect);
+        var aspect = Math.Clamp(
+            MemberCard.NaturalAspect(sections, MemberCard.ToggleOf(node)),
+            MinCardNodeAspect,
+            MaxCardNodeAspect
+        );
         var width = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side * Math.Sqrt(aspect)));
         var height = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side / Math.Sqrt(aspect)));
         return new Size(width, height);
@@ -427,7 +432,7 @@ class NodeLayout
         var sections = MemberCard.Sections(parent.Children.Where(c => c.Type.IsMember), CompareMemberChildren);
         var parentAspect = parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height;
         var targetAspect = isOnlyMembers ? parentAspect : parentAspect * MemberColumnAspect;
-        return MemberCard.Arrange(sections, startX, startY, targetAspect);
+        return MemberCard.Arrange(sections, startX, startY, targetAspect, MemberCard.ToggleOf(parent));
     }
 
     // A container of only member rows is its card, so the card nearly fills it; other containers

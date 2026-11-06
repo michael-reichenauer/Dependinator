@@ -137,7 +137,8 @@ public class BicepParserTests(BicepFixture fixture)
     {
         var location = Items.Node($"{Main}.location");
         Assert.Equal(NodeType.ParameterMember, location.Properties.Type);
-        Assert.Equal("Azure region for all resources. (param string)", location.Properties.Description);
+        Assert.Equal("Azure region for all resources.", location.Properties.Description);
+        Assert.Equal(": string", location.Properties.Signature);
 
         var prefix = Items.Node($"{Main}.prefix");
         Assert.Equal(NodeType.VariableMember, prefix.Properties.Type);

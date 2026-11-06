@@ -989,7 +989,7 @@ public sealed class AppPage
             @"(name) => {
             const selector = '#svgcanvas text.iconName, #svgcanvas text.nodeName, #svgcanvas text.memberName';
             const labels = [...document.querySelectorAll(selector)]
-                .filter(t => t.textContent.trim() === name);
+                .filter(t => (t.dataset.name ?? t.textContent).trim() === name); // A member row's name is data-name
             if (labels.length === 0) return null;
             const lr = labels[0].getBoundingClientRect();
             const lx = lr.x + lr.width / 2, ly = lr.y + lr.height / 2;
