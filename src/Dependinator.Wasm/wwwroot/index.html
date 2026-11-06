@@ -146,6 +146,47 @@
             Blazor.start();
         })();
     </script>
+    <!-- TEMPORARY iPad fog experiment (PR #187): remove before merging. -->
+    <style>
+        #fog-test { position: fixed; left: 12px; bottom: 12px; z-index: 3000; background: #fff3; font: 13px sans-serif;
+            background: #ffe9a8; border: 1px solid #c90; border-radius: 6px; padding: 6px 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        #fog-test button { font: 13px sans-serif; padding: 4px 8px; border: 1px solid #999; border-radius: 4px; background: #fff; }
+        #fog-test button.on { background: #6200ea; color: #fff; }
+        html.fog-short .drop-zone, html.fog-short #svgcanvas { height: 50vh !important; overflow: hidden; }
+        html.fog-short .mud-layout { min-height: 0 !important; height: 50vh !important; }
+        #fog-bar, #fog-header, #fog-overlay { display: none; position: fixed; left: 0; right: 0; top: 0; pointer-events: none; }
+        html.fog-bar #fog-bar { display: block; height: 8px; background: #b39ddb; z-index: 2500; }
+        html.fog-header #fog-header { display: block; height: 64px; background: #fafafa; border-bottom: 1px solid #ddd; }
+        html.fog-overlay #fog-overlay { display: block; bottom: 0; background: transparent; z-index: 1500; }
+    </style>
+    <script>
+        (function () {
+            var variants = ["off", "short", "bar", "header", "overlay"];
+            var current = "off";
+            try { current = localStorage.getItem("fog-test") || "off"; } catch (e) { }
+            function apply(v) {
+                variants.forEach(function (x) { document.documentElement.classList.remove("fog-" + x); });
+                document.documentElement.classList.add("fog-" + v);
+                current = v;
+                try { localStorage.setItem("fog-test", v); } catch (e) { }
+                document.querySelectorAll("#fog-test button").forEach(function (b) { b.classList.toggle("on", b.textContent === v); });
+            }
+            window.addEventListener("DOMContentLoaded", function () {
+                ["fog-header", "fog-bar", "fog-overlay"].forEach(function (id) {
+                    var d = document.createElement("div"); d.id = id;
+                    if (id === "fog-header") document.body.insertBefore(d, document.body.firstChild); else document.body.appendChild(d);
+                });
+                var panel = document.createElement("div"); panel.id = "fog-test";
+                panel.innerHTML = "<b>Fog test 3</b>";
+                variants.forEach(function (v) {
+                    var b = document.createElement("button"); b.textContent = v;
+                    b.onclick = function () { apply(v); }; panel.appendChild(b);
+                });
+                document.body.appendChild(panel);
+                apply(current);
+            });
+        })();
+    </script>
 </body>
 
 </html>
