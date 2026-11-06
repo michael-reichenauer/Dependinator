@@ -276,16 +276,19 @@ else if (HasSelectedLine)
           <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenWith" OnClick="() => IsEditNodeMode = false"
                          Color="@Color.Warning" data-testid="node-edit" />
         </MudTooltip>
-        <MudTooltip Text="Fit contents inside the node">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
-                         data-testid="node-fit-contents" />
-        </MudTooltip>
+        @if (!interactionService.IsCard)
+        {
+          <MudTooltip Text="Fit contents inside the node">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
+                           data-testid="node-fit-contents" />
+          </MudTooltip>
+        }
       }
       else
       {
         @if (viewOptions.IsEditingEnabled)
         {
-          <MudTooltip Text="Arrange inside: pan and zoom the node's contents">
+          <MudTooltip Text="@(interactionService.IsCard ? "Arrange inside: move the nested types" : "Arrange inside: pan and zoom the node's contents")">
             <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.OpenWith" OnClick="() => IsEditNodeMode = true"
                            data-testid="node-edit" />
           </MudTooltip>

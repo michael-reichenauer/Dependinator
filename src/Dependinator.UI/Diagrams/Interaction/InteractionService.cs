@@ -11,6 +11,9 @@ interface IInteractionService
 {
     string Cursor { get; }
     bool IsContainer { get; }
+
+    // The selected node is an open UML card: its rows are not panned or zoomed inside it.
+    bool IsCard { get; }
     bool CanShowSource { get; }
     bool CanShowLineSource { get; }
     bool IsEditNodeMode { get; set; }
@@ -113,6 +116,18 @@ class InteractionService(
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             return NodeViewPolicy.IsContainerView(node, Zoom);
+        }
+    }
+
+    public bool IsCard
+    {
+        get
+        {
+            if (!selectionService.IsSelected)
+                return false;
+            using var model = modelMgr.UseModel();
+            return model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node)
+                && NodeViewPolicy.IsMemberCardNode(node);
         }
     }
 
@@ -350,7 +365,7 @@ class InteractionService(
             // In edit mode, a wheel gesture on the selected node (or anything inside it) zooms
             // the node's content instead of the canvas.
             var targetId = PointerId.Parse(e.TargetId);
-            if (targetId.Id == selectionService.SelectedId.Id || IsInsideSelectedNode(targetId))
+            if (!IsCard && (targetId.Id == selectionService.SelectedId.Id || IsInsideSelectedNode(targetId)))
             {
                 nodeEditService.ZoomSelectedNode(e, selectionService.SelectedId);
                 return;

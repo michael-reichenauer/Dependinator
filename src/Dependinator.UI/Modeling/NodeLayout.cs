@@ -253,7 +253,7 @@ class NodeLayout
 
             if (NodeViewPolicy.IsMemberCardNode(container))
             {
-                ApplyCardTransform(container, ContentBounds(container)); // Rows stay under the header
+                EnsureCardTransform(container); // Rows stay under the header
                 continue;
             }
 
@@ -464,13 +464,28 @@ class NodeLayout
             // Only when one of them overlaps the header or the rows; their lines' waypoints were
             // placed for the old positions.
             var placed = parent.Children.Where(c => !c.Type.IsMember && c.Boundary != Rect.None).ToList();
-            var cardBand = new Rect(0, 0, Math.Max(card.X + card.Width, MemberCard.MinCardWidth), belowCard);
+            // The header and the rows take the box's width above belowCard.
+            var cardBand = new Rect(
+                0,
+                0,
+                Math.Max(
+                    Math.Max(card.X + card.Width, MemberCard.MinCardWidth),
+                    parent.Boundary.Width / Math.Max(parent.ContainerZoom, MinimumZoom)
+                ),
+                belowCard
+            );
             var overlapping = placed.Where(c => Intersects(c.Boundary, cardBand)).ToList();
             if (overlapping.Count > 0)
             {
                 var shift = SnapToGrid(belowCard - overlapping.Min(c => c.Boundary.Y) + NodeGrid.SnapSize / 2);
                 placed.ForEach(c => c.Boundary = c.Boundary with { Y = c.Boundary.Y + shift });
-                foreach (var line in LinesDrawnInside(parent).Where(line => line.IsSegmentsUserSet))
+                var moved = placed.ToHashSet();
+                foreach (
+                    var line in LinesDrawnInside(parent)
+                        .Where(line =>
+                            line.IsSegmentsUserSet && (moved.Contains(line.Source) || moved.Contains(line.Target))
+                        )
+                )
                 {
                     line.IsSegmentsUserSet = false;
                     line.SetSegmentPoints([]);
@@ -481,16 +496,12 @@ class NodeLayout
             if (newNonMembers.Count > 0)
             {
                 SortChildren(newNonMembers);
-                // The header and the rows take the box's width above belowCard: new children go below.
-                var bandWidth = Math.Max(
-                    cardBand.Width,
-                    parent.Boundary.Width / Math.Max(parent.ContainerZoom, MinimumZoom)
-                );
+                // New children go below the header and the rows.
                 PlaceNodesInFreeSlots(
                     parent,
                     newNonMembers,
                     ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
-                    [cardBand with { Width = bandWidth }, .. placed.Select(c => c.Boundary)],
+                    [cardBand, .. placed.Select(c => c.Boundary)],
                     regularMetrics,
                     CardStart
                 );
@@ -707,7 +718,21 @@ class NodeLayout
 
     // The card transform for the node with the given box (a resize keeps the rows under the header).
     public static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary) =>
-        CardTransform(parent, boundary, ContentBounds(parent));
+        parent.Children.Any(child => child.Boundary != Rect.None)
+            ? CardTransform(parent, boundary, ContentBounds(parent))
+            : (parent.ContainerZoom, parent.ContainerOffset); // Laid out (and fitted) when opened
+
+    // The card's transform is derived from its box and children, which many edits change (size
+    // steps, moving a nested type, undo): rendering re-fits it when it drifted. True when changed.
+    public static bool EnsureCardTransform(Node node)
+    {
+        var (zoom, offset) = CardTransform(node, node.Boundary);
+        if (Math.Abs(node.ContainerZoom - zoom) < 1e-9 && node.ContainerOffset == offset)
+            return false;
+        (node.ContainerZoom, node.ContainerOffset) = (zoom, offset);
+        BumpGeneration();
+        return true;
+    }
 
     static (double Zoom, Pos Offset) CardTransform(Node parent, Rect boundary, Rect contentBounds)
     {

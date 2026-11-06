@@ -224,7 +224,7 @@ static partial class NodeSvg
     static string SummaryRowText(Node member, int maxChars, double u)
     {
         var name = Clip(member.DisplayName, maxChars);
-        var signature = ClipRow(member.Signature ?? "", maxChars - name.Length);
+        var signature = ClipRow(member.Signature ?? "", maxChars - name.Length - 1); // A character for the gap
         if (signature.Length == 0)
             return Encode(name);
         return string.Create(

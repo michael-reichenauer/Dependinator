@@ -463,9 +463,15 @@ class SvgService : ISvgService
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, passThroughContentSvg);
         }
 
-        // A re-parse may have changed which rows fold since the card was laid out.
-        if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node) && MemberCard.IsLayoutStale(node))
-            node.IsChildrenLayoutRequired = true;
+        // A re-parse may have changed which rows fold since the card was laid out; otherwise an
+        // edit may have moved the card's rows from under its header (NodeLayout.EnsureCardTransform).
+        if (!node.IsChildrenLayoutRequired && NodeViewPolicy.IsMemberCardNode(node))
+        {
+            if (MemberCard.IsLayoutStale(node))
+                node.IsChildrenLayoutRequired = true;
+            else
+                NodeLayout.EnsureCardTransform(node);
+        }
 
         // The summary card decides by the rows' size, so lay out the rows it may switch to first
         // (a layout bumps NodeLayout.Generation, which redoes the render with synced lines).
