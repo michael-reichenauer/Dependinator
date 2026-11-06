@@ -51,7 +51,7 @@ public class NodeLayoutTests
     }
 
     [Fact]
-    public void AdjustChildren_TypeWithMixedChildren_ShouldPutMembersOnACardBesideTheNestedTypes()
+    public void AdjustChildren_TypeWithMixedChildren_ShouldPutMembersUnderTheHeaderAndNestedTypesBelow()
     {
         NodeLayout.SetDensity(NodeLayoutDensity.Balanced);
 
@@ -99,10 +99,7 @@ public class NodeLayoutTests
         AssertGridAligned(nestedType1.Boundary);
         AssertGridAligned(nestedType2.Boundary);
 
-        // A list: more rows than columns, one row per step
-        var xCount = members.Select(c => c.Boundary.X).Distinct().Count();
-        var yCount = members.Select(c => c.Boundary.Y).Distinct().Count();
-        Assert.True(yCount > xCount, $"Expected list-like columns but got xCount={xCount}, yCount={yCount}");
+        // One row per step
         var yPositions = members.Select(c => c.Boundary.Y).Distinct().OrderBy(y => y).ToList();
         Assert.Equal(MemberCard.RowPitch, yPositions.Zip(yPositions.Skip(1), (y1, y2) => y2 - y1).Min());
 
@@ -113,16 +110,17 @@ public class NodeLayoutTests
             cardOrder.Select(m => m.IsPrivate ?? false)
         );
 
-        // The nested types are right of the card
+        // The type is a UML card: its children start at its top left, the rows under the header,
+        // the nested types below the rows
         var card = MemberCard.Bounds(parent);
-        Assert.True(nestedType1.Boundary.X >= card.X + card.Width);
-        Assert.True(nestedType2.Boundary.X >= card.X + card.Width);
-
+        Assert.Equal(0, card.X);
+        Assert.Equal(MemberCard.CardRowsTop, members.Min(m => m.Boundary.Y) - MemberCard.HeadingHeight);
+        Assert.Equal(new Pos(0, 0), parent.ContainerOffset);
+        Assert.True(nestedType1.Boundary.Y >= card.Y + card.Height);
+        Assert.True(nestedType2.Boundary.Y >= card.Y + card.Height);
         var displayedBounds = GetDisplayedBounds(parent);
-        var parentArea = parent.Boundary.Width * parent.Boundary.Height;
-        var displayedArea = displayedBounds.Width * displayedBounds.Height;
-        var occupiedRatio = displayedArea / parentArea;
-        Assert.True(occupiedRatio <= 0.255, $"Expected occupied ratio <= 0.255 but was {occupiedRatio:0.###}");
+        Assert.True(displayedBounds.X + displayedBounds.Width <= parent.Boundary.Width + 0.001);
+        Assert.True(displayedBounds.Y + displayedBounds.Height <= parent.Boundary.Height + 0.001);
     }
 
     [Fact]

@@ -22,7 +22,8 @@ static partial class NodeSvg
         Node node,
         Pos childrenOffset,
         double childrenZoom,
-        Func<Node, bool>? isRowShown = null
+        Func<Node, bool>? isRowShown = null,
+        bool isCardNode = false
     )
     {
         var card = MemberCard.Bounds(node, isRowShown);
@@ -36,25 +37,34 @@ static partial class NodeSvg
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
 
         var svg = new System.Text.StringBuilder();
-        svg.Append(
-            string.Create(
-                CultureInfo.InvariantCulture,
-                $"""<rect class="memberCard" x="{X(card.X):0.##}" y="{Y(card.Y):0.##}" width="{card.Width * childrenZoom:0.##}" height="{card.Height
+        // A card node is the card itself (GetCardNodeSvg); other containers get one behind the rows.
+        if (!isCardNode)
+            svg.Append(
+                string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"""<rect class="memberCard" x="{X(card.X):0.##}" y="{Y(card.Y):0.##}" width="{card.Width * childrenZoom:0.##}" height="{card.Height
                     * childrenZoom:0.##}" rx="{CardCornerRadius * childrenZoom:0.##}" fill="{DColors.CardBackground}" stroke="{DColors.CardBorder}" stroke-width="{CardStrokeWidth
                     * textZoom:0.##}" pointer-events="none" {nodeOpacity}/>"""
-            )
-        );
+                )
+            );
 
-        foreach (var heading in MemberCard.Headings(node, isRowShown))
+        var headings = MemberCard.Headings(node, isRowShown);
+        // In a card node a divider in the first or last column reaches the box's edge.
+        var (firstColumnX, lastColumnX) =
+            headings.Count > 0 ? (headings.Min(h => h.X), headings.Max(h => h.X)) : (0, 0);
+        var boxLeft = -node.ContainerOffset.X / node.ContainerZoom;
+        var boxRight = (node.Boundary.Width - node.ContainerOffset.X) / node.ContainerZoom;
+        foreach (var heading in headings)
         {
             if (!heading.IsColumnTop)
             {
+                var x1 = isCardNode && heading.X == firstColumnX ? boxLeft : heading.X - MemberCard.Padding;
+                var x2 =
+                    isCardNode && heading.X == lastColumnX ? boxRight : heading.X + heading.Width + MemberCard.Padding;
                 svg.Append(
                     string.Create(
                         CultureInfo.InvariantCulture,
-                        $"""<line x1="{X(heading.X - MemberCard.Padding):0.##}" y1="{Y(heading.Y):0.##}" x2="{X(heading.X
-                            + heading.Width
-                            + MemberCard.Padding):0.##}" y2="{Y(heading.Y):0.##}" stroke="{DColors.CardDivider}" stroke-width="{CardStrokeWidth
+                        $"""<line x1="{X(x1):0.##}" y1="{Y(heading.Y):0.##}" x2="{X(x2):0.##}" y2="{Y(heading.Y):0.##}" stroke="{DColors.CardDivider}" stroke-width="{CardStrokeWidth
                             * textZoom:0.##}" pointer-events="none" {nodeOpacity}/>"""
                     )
                 );
@@ -126,53 +136,14 @@ static partial class NodeSvg
         var (nodeOpacity, textOpacity) = HiddenAttributes(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
 
-        var headerHeight = 36 * u;
-        var nameSize = 12 * u;
+        var headerHeight = MemberCard.CardHeaderHeight * u;
         var smallSize = 8.5 * u;
         var rowSize = 9 * u;
         var rowPitch = 13 * u;
         var padding = 9 * u;
-        var textLeft = x + padding + 26 * u;
 
         var svg = new System.Text.StringBuilder();
-        svg.Append(
-            string.Create(
-                CultureInfo.InvariantCulture,
-                $"""
-                <g {nodeOpacity}>
-                <rect x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" rx="{6 * u:0.##}" fill="{DColors.CardBackground}" stroke="{border}" stroke-width="{1.2
-                    * u:0.##}"/>
-                <path d="M{x:0.##},{y + headerHeight:0.##} V{y + 6 * u:0.##} a{6 * u:0.##},{6 * u:0.##} 0 0 1 {6 * u:0.##},{-6 * u:0.##} H{x
-                    + w
-                    - 6 * u:0.##} a{6 * u:0.##},{6 * u:0.##} 0 0 1 {6 * u:0.##},{6 * u:0.##} V{y + headerHeight:0.##} Z" fill="{background}" stroke="{border}" stroke-width="{1.2
-                    * u:0.##}"/>
-                <use href="#{IconName(node)}" x="{x + padding:0.##}" y="{y + 7 * u:0.##}" width="{22 * u:0.##}" height="{22
-                    * u:0.##}"/>
-                </g>
-                """
-            )
-        );
-
-        var nameChars = MaxChars(x + w - padding - textLeft, nameSize);
-        var kindText = node.Parent is { IsRoot: false } parent
-            ? $"{KindText(node)} · {parent.DisplayName}"
-            : KindText(node);
-        svg.Append(
-            string.Create(
-                CultureInfo.InvariantCulture,
-                $"""
-                <text x="{textLeft:0.##}" y="{y + 7 * u:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{nameSize:0.##}px" font-weight="600" {textOpacity}>{Encode(Clip(
-                    node.DisplayName,
-                    nameChars
-                ))}</text>
-                <text x="{textLeft:0.##}" y="{y + 29 * u:0.##}" class="summaryMuted" font-size="{smallSize:0.##}px" {textOpacity}>{Encode(Clip(
-                    kindText,
-                    MaxChars(x + w - padding - textLeft, smallSize)
-                ))}</text>
-                """
-            )
-        );
-
+        svg.Append(CardFrameSvg(node, rect, u, u));
         var members = node.Children.Where(c => c.Type.IsMember && (isRowShown?.Invoke(c) ?? true)).ToList();
         var sections = MemberCard.Sections(members, (a, b) => string.CompareOrdinal(a.Name, b.Name));
         // The counts, on up to two lines.
@@ -214,10 +185,7 @@ static partial class NodeSvg
                     $"""
                     <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
-                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{Encode(Clip(
-                        member.DisplayName,
-                        rowChars
-                    ))}</text>
+                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars)}</text>
                     """
                 )
             );
@@ -250,6 +218,100 @@ static partial class NodeSvg
         svg.Append(ProblemBadgeSvg(problems, rect, textZoom));
         svg.Append(HiddenBadgeSvg(hiddenChildCount, rect, textZoom));
         return svg.ToString();
+    }
+
+    // A summary row: the name, then its signature (muted) in what room is left, like a full row.
+    static string SummaryRowText(Node member, int maxChars)
+    {
+        var name = Clip(member.DisplayName, maxChars);
+        var room = maxChars - name.Length - 1;
+        if (string.IsNullOrEmpty(member.Signature) || room < 3)
+            return Encode(name);
+        return $"""{Encode(name)}<tspan class="memberSignature" dx="{MemberSignatureGap}"> {Encode(
+            Clip(member.Signature, room)
+        )}</tspan>""";
+    }
+
+    // A card's box and header: the border in the node's color, the header tinted with its
+    // background, the icon, the name and "class · Namespace". u scales the layout (1 for a
+    // 180-unit card), textU the text (u, or capped like the other names).
+    static string CardFrameSvg(Node node, Rect rect, double u, double textU)
+    {
+        var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
+        var (border, background) = NodeColors(node);
+        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var headerHeight = MemberCard.CardHeaderHeight * u;
+        var radius = Math.Min(6 * u, Math.Min(w, h) / 4);
+        var strokeWidth = node.IsEditMode ? 10 : 1.2 * Math.Min(u, 1.5);
+        var padding = 9 * u;
+        var iconSize = 22 * Math.Min(u, textU * 1.5);
+        var nameSize = 12 * textU;
+        var smallSize = 8.5 * textU;
+        var textLeft = x + padding + iconSize + 4 * u;
+        // The name and the kind line as one block, centered in the header.
+        var nameTop = y + (headerHeight - (nameSize + 3 * textU + smallSize)) / 2;
+        var kindTop = nameTop + nameSize + 3 * textU;
+        var nameChars = MaxChars(x + w - padding - textLeft, nameSize);
+        var kindText = node.Parent is { IsRoot: false } parent
+            ? $"{KindText(node)} · {parent.DisplayName}"
+            : KindText(node);
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""
+            <g {nodeOpacity}>
+            <rect x="{x:0.##}" y="{y:0.##}" width="{w:0.##}" height="{h:0.##}" rx="{radius:0.##}" fill="{DColors.CardBackground}" stroke="{border}" stroke-width="{strokeWidth:0.##}"/>
+            <path d="M{x:0.##},{y + headerHeight:0.##} V{y + radius:0.##} a{radius:0.##},{radius:0.##} 0 0 1 {radius:0.##},{-radius:0.##} H{x
+                + w
+                - radius:0.##} a{radius:0.##},{radius:0.##} 0 0 1 {radius:0.##},{radius:0.##} V{y + headerHeight:0.##} Z" fill="{background}" stroke="{border}" stroke-width="{strokeWidth:0.##}"/>
+            <use href="#{IconName(node)}" x="{x + padding:0.##}" y="{y + (headerHeight - iconSize) / 2:0.##}" width="{iconSize:0.##}" height="{iconSize:0.##}"/>
+            </g>
+            <text x="{textLeft:0.##}" y="{nameTop:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{nameSize:0.##}px" font-weight="600" {textOpacity}>{Encode(Clip(
+                node.DisplayName,
+                nameChars
+            ))}</text>
+            <text x="{textLeft:0.##}" y="{kindTop:0.##}" class="summaryMuted" dominant-baseline="hanging" font-size="{smallSize:0.##}px" {textOpacity}>{Encode(Clip(
+                kindText,
+                MaxChars(x + w - padding - textLeft, smallSize)
+            ))}</text>
+            """
+        );
+    }
+
+    // An open card node (NodeViewPolicy.IsMemberCardNode): its box is the card, with the header at
+    // the top and the children (member rows, nested types) under it, in its child coordinates
+    // from the box's top left (NodeLayout.ArrangeCardNode). Replaces the container box and the
+    // name under it.
+    public static string GetCardNodeSvg(
+        Node node,
+        Rect nodeCanvasRect,
+        double parentZoom,
+        double childrenZoom,
+        string childrenContent,
+        bool isEditing = false,
+        NodeProblems? problems = null,
+        int hiddenChildCount = 0
+    )
+    {
+        var elementId = PointerId.FromNode(node.Id).ElementId;
+        var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
+        var (w, h) = (nodeCanvasRect.Width, nodeCanvasRect.Height);
+        var innerRect = new Rect(0, 0, w, h);
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerRect, TitleName(node), node.HtmlDescription);
+        var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
+        var textZoom = TextZoom(parentZoom);
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""
+            <svg x="{nodeCanvasRect.X:0.##}" y="{nodeCanvasRect.Y:0.##}" width="{w:0.##}" height="{h:0.##}" viewBox="0 0 {w:0.##} {h:0.##}" xmlns="http://www.w3.org/2000/svg">
+              {frame}
+              {hoverGroup}
+              {childrenContent}
+            </svg>
+            {SelectedNodeSvg(node, nodeCanvasRect, isEditing)}
+            {ProblemBadgeSvg(problems, nodeCanvasRect, textZoom)}
+            {HiddenBadgeSvg(hiddenChildCount, nodeCanvasRect, textZoom)}
+            """
+        );
     }
 
     // "class", "interface", … for a type; the node type's plain name otherwise.

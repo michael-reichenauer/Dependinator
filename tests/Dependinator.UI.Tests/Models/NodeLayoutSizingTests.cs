@@ -66,12 +66,14 @@ public class NodeLayoutSizingTests
 
         // A heading and two rows make a wide card: wider than tall
         Assert.True(type.Boundary.Width > type.Boundary.Height, $"Expected a wide type but got {SizeOf(type)}");
+        // The card (with its header) fills the type's width or height, unless a small card
+        // would be magnified (at most zoom 1)
         var card = MemberCard.Bounds(type);
         var coverage = Math.Max(
-            card.Width * type.ContainerZoom / type.Boundary.Width,
-            card.Height * type.ContainerZoom / type.Boundary.Height
+            (card.X + card.Width) * type.ContainerZoom / type.Boundary.Width,
+            (card.Y + card.Height) * type.ContainerZoom / type.Boundary.Height
         );
-        Assert.InRange(coverage, 0.8, 0.9001); // At most the card coverage (a small card cannot be magnified)
+        Assert.True(type.ContainerZoom == 1 || coverage > 0.9, $"Expected a filled card but got {coverage:0.###}");
     }
 
     [Fact]

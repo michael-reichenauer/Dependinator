@@ -18,6 +18,14 @@ static class MemberCard
 
     // Space between the rows and the card's edge, and between columns.
     public const double Padding = 10;
+
+    // An open card node (NodeLayout.ArrangeCardNode, NodeSvg.GetCardNodeSvg) in its child units:
+    // the header (icon, name, kind) at the top, then the first section heading.
+    public const double CardHeaderHeight = 36;
+    public const double CardRowsTop = CardHeaderHeight + 4;
+
+    // The narrowest open card, so a type of one short member still has room for its name.
+    public const double MinCardWidth = 140;
     const double ColumnGap = 2 * NodeGrid.SnapSize;
 
     // A column is as wide as its widest row (estimated from the name and signature), in grid steps.

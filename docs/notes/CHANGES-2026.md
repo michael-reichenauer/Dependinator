@@ -397,6 +397,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   them ("hide N private" folds them again), saved with the model, and the view keeps the row
   under the pointer. Lines from folded rows end at that row, and going to a private member (search,
   a link, the editor) opens the private rows. Layout version 3.
+- **One UML card (Nov 6).** An open type is now drawn as the card itself: its box gets the
+  summary card's header (icon, name, kind) and the member rows run from its top left under it,
+  with signatures and lines, instead of a container with a smaller card centered inside and the
+  name below. Nested types sit inside the card below the rows. The summary card shares the frame
+  and header and shows signatures too, so zooming in just fills the card. Layout version 4.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code
   version and OS or browser, language, window size) filled in. VS Code opens the page through the

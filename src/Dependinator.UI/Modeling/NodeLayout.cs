@@ -1,3 +1,4 @@
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -46,7 +47,8 @@ class NodeLayout
     // 1: sizes by code and centrality (NodeSizing), straighter lines.
     // 2: member cards (MemberCard), types shaped like their card.
     // 3: signatures widen the card's columns, large cards fold their private rows.
-    public const int CurrentLayoutVersion = 3;
+    // 4: an open type is a UML card: rows under its header from the top left, nested types below.
+    public const int CurrentLayoutVersion = 4;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
@@ -113,6 +115,12 @@ class NodeLayout
         // viewport; arranging it or fitting the container transform to it would fight that.
         if (parent.Children.Count == 1 && parent.Children[0].IsPassThrough)
             return;
+
+        if (NodeViewPolicy.IsMemberCardNode(parent))
+        {
+            ArrangeCardNode(parent, isCustomized: !forceAllChildren && parent.IsChildrenLayoutCustomized);
+            return;
+        }
 
         if (!forceAllChildren && parent.IsChildrenLayoutCustomized)
         {
@@ -420,6 +428,60 @@ class NodeLayout
         ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
     }
 
+    // A type (or a node of only members) drawn as a UML card when open (NodeSvg.GetCardNodeSvg):
+    // its own box is the card, with the header (icon, name, kind) at the top and the member rows
+    // under it from the top left, then any other children (nested types) below the rows. The
+    // children's coordinates start at the box's top left (see ApplyCardTransform), so the header
+    // takes the top CardHeaderHeight child units. A customized card keeps the children the user
+    // placed; new ones go to free slots below the rows.
+    static void ArrangeCardNode(Node parent, bool isCustomized)
+    {
+        var density = GetDensityProfile();
+        var regularMetrics = RegularMetrics(density);
+        var nonMembers = parent.Children.Where(c => !c.Type.IsMember && IsArranged(c)).ToList();
+
+        var card = MemberCard.Arrange(
+            MemberCard.Sections(parent.Children.Where(c => c.Type.IsMember), CompareMemberChildren),
+            MemberCard.Padding,
+            MemberCard.CardRowsTop,
+            parent.Boundary.Height <= 0 ? 1.0 : parent.Boundary.Width / parent.Boundary.Height,
+            MemberCard.ToggleOf(parent)
+        );
+        var belowCard = card == Rect.None ? MemberCard.CardRowsTop : card.Y + card.Height + NodeGrid.SnapSize;
+
+        if (isCustomized)
+        {
+            var newNonMembers = nonMembers.Where(c => c.Boundary == Rect.None).ToList();
+            if (newNonMembers.Count > 0)
+            {
+                SortChildren(newNonMembers);
+                var placed = nonMembers.Where(c => c.Boundary != Rect.None).Select(c => c.Boundary).ToList();
+                PlaceNodesInFreeSlots(
+                    parent,
+                    newNonMembers,
+                    ChildSizes(parent, SizedChildren(parent.Children), regularMetrics),
+                    [new Rect(0, 0, Math.Max(card.X + card.Width, 1), belowCard), .. placed],
+                    regularMetrics,
+                    CardStart
+                );
+            }
+        }
+        else if (nonMembers.Count > 0)
+        {
+            SortChildren(nonMembers);
+            _ = ArrangeAsShelves(
+                nonMembers,
+                ChildSizes(parent, SizedChildren(nonMembers), regularMetrics),
+                regularMetrics,
+                TargetAspect(parent, regularMetrics),
+                CardStart,
+                SnapToGrid(belowCard + NodeGrid.SnapSize / 2)
+            );
+        }
+
+        ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
+    }
+
     // Where the card's first heading goes in a freshly laid out container.
     const double CardStart = 2 * NodeGrid.SnapSize;
 
@@ -585,6 +647,12 @@ class NodeLayout
 
     static void ApplyContainerTransform(Node parent, Rect contentBounds, double targetLinearCoverage)
     {
+        if (NodeViewPolicy.IsMemberCardNode(parent))
+        {
+            ApplyCardTransform(parent, contentBounds);
+            return;
+        }
+
         var availableWidth = Math.Max(MinimumDimension, parent.Boundary.Width);
         var availableHeight = Math.Max(MinimumDimension, parent.Boundary.Height);
         var contentWidth = Math.Max(MinimumDimension, contentBounds.Width);
@@ -599,6 +667,24 @@ class NodeLayout
 
         parent.ContainerZoom = zoom;
         parent.ContainerOffset = new Pos(offsetX, offsetY);
+    }
+
+    // A card node's children start at its box's top left (child 0,0, where the header is), at the
+    // largest zoom that fits them all (at most 1, so a small card does not get large rows): the
+    // card fills the box's width or height, leaving room at the right or bottom, not around it.
+    static void ApplyCardTransform(Node parent, Rect contentBounds)
+    {
+        var left = Math.Min(0, contentBounds.X);
+        var top = Math.Min(0, contentBounds.Y);
+        var right = Math.Max(contentBounds.X + contentBounds.Width, MemberCard.MinCardWidth);
+        // Nested types are icons with their names below the box: room for those.
+        var labelRoom = parent.Children.Any(c => !c.Type.IsMember && IsArranged(c)) ? NodeGrid.SnapSize * 2 : 0;
+        var bottom = contentBounds.Y + contentBounds.Height + Math.Max(MemberCard.Padding / 2, labelRoom);
+        var zoomX = Math.Max(MinimumDimension, parent.Boundary.Width) / Math.Max(MinimumDimension, right - left);
+        var zoomY = Math.Max(MinimumDimension, parent.Boundary.Height) / Math.Max(MinimumDimension, bottom - top);
+        var zoom = Math.Clamp(Math.Min(zoomX, zoomY), MinimumZoom, MaximumZoom);
+        parent.ContainerZoom = zoom;
+        parent.ContainerOffset = new Pos(-left * zoom, -top * zoom);
     }
 
     // Orders siblings so referencing children come before the children they reference: first by

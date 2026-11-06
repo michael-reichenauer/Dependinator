@@ -376,7 +376,13 @@ class SvgService : ISvgService
         // A container's member rows sit on a card, drawn behind everything inside the container.
         var memberCardSvg =
             !node.IsRoot && NodeLayout.HasMemberChildren(node)
-                ? NodeSvg.GetMemberCardSvg(node, childrenCanvasOffset, childrenZoom, row => IsRowShown(row, context))
+                ? NodeSvg.GetMemberCardSvg(
+                    node,
+                    childrenCanvasOffset,
+                    childrenZoom,
+                    row => IsRowShown(row, context),
+                    NodeViewPolicy.IsMemberCardNode(node)
+                )
                 : "";
 
         var privateToggleSvg =
@@ -496,6 +502,18 @@ class SvgService : ISvgService
 
         if (NodeViewPolicy.IsTooLargeToBeSeen(node, context.Zoom))
             return NodeSvg.GetTooLargeNodeContainerSvg(geometry.CanvasRect, childrenContentSvg);
+
+        if (NodeViewPolicy.IsMemberCardNode(node))
+            return NodeSvg.GetCardNodeSvg(
+                node,
+                geometry.CanvasRect,
+                context.Zoom,
+                context.Zoom * node.ContainerZoom,
+                childrenContentSvg,
+                context.Flags.IsEditing,
+                ProblemsOf(node, context),
+                HiddenChildCountOf(node, context)
+            );
 
         return NodeSvg.GetNodeContainerSvg(
             node,
