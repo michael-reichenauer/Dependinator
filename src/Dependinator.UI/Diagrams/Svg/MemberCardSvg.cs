@@ -251,20 +251,6 @@ static partial class NodeSvg
         return svg.ToString();
     }
 
-    // A private member's mark: a small padlock on the lower right corner of its icon, on a disc of
-    // the card's background so it reads over the icon (like private members in an IDE).
-    internal static string PrivateBadgeSvg(Rect icon, string nodeOpacity)
-    {
-        var s = icon.Width;
-        var (cx, cy, r) = (icon.X + s * 0.88, icon.Y + s * 0.86, s * 0.46);
-        var (w, h) = (r, r * 0.8);
-        var lockColor = DColors.PrivateLock;
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"""<g class="privateBadge" pointer-events="none" {nodeOpacity}><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.CardBackground}"/><path d="M{cx - w * 0.32:0.##},{cy - h * 0.15:0.##} v{-h * 0.35:0.##} a{w * 0.32:0.##},{w * 0.32:0.##} 0 0 1 {w * 0.64:0.##},0 v{h * 0.35:0.##}" fill="none" stroke="{lockColor}" stroke-width="{s * 0.08:0.##}"/><rect x="{cx - w / 2:0.##}" y="{cy - h * 0.15:0.##}" width="{w:0.##}" height="{h * 0.75:0.##}" rx="{s * 0.04:0.##}" fill="{lockColor}"/></g>"""
-        );
-    }
-
     // A summary row: the name, then its signature (muted) in what room is left, like a full row
     // (MemberDetailsSvg).
     static string SummaryRowText(Node member, int maxChars)

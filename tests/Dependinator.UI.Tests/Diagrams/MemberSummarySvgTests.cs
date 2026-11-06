@@ -6,7 +6,7 @@ using Rect = Dependinator.UI.Shared.Types.Rect;
 namespace Dependinator.UI.Tests.Diagrams;
 
 // The summary card (NodeSvg.GetMemberSummarySvg): public rows, then private ones with a
-// "private" tag, then the nested types under their own heading; the counts line only when some
+// lock on their icon, then the nested types under their own heading; the counts line only when some
 // rows are left out.
 public class MemberSummarySvgTests
 {
