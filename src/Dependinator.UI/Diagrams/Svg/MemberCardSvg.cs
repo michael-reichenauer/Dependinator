@@ -1,9 +1,9 @@
 using System.Globalization;
-using System.Web;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
+using static Dependinator.UI.Diagrams.Svg.SvgText;
 using NodeType = Dependinator.Core.Parsing.NodeType;
 
 namespace Dependinator.UI.Diagrams.Svg;
@@ -11,7 +11,7 @@ namespace Dependinator.UI.Diagrams.Svg;
 // The member card's drawing: behind an open container's member rows, a card with a heading per
 // section (see MemberCard); and, while the rows are still too small to read, a summary card in
 // place of the container (see NodeViewPolicy.IsMemberSummary).
-static partial class NodeSvg
+static class MemberCardSvg
 {
     const double HeadingFontSize = 6.5; // In member units, like the 8-unit member names
     const double CardCornerRadius = 4;
@@ -34,7 +34,7 @@ static partial class NodeSvg
         double Y(double y) => childrenOffset.Y + y * childrenZoom;
         var textZoom = TextZoom(childrenZoom);
         var fontSize = HeadingFontSize * textZoom;
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);
 
         var svg = new System.Text.StringBuilder();
         // A card node is the card itself (GetCardNodeSvg); other containers get one behind the rows.
@@ -132,7 +132,7 @@ static partial class NodeSvg
         // growing it reveals more rows instead.
         var u = Math.Min(rect.Width / 180, 1.3);
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
 
         var headerHeight = MemberCard.CardHeaderHeight * u;
@@ -213,14 +213,14 @@ static partial class NodeSvg
                 string.Create(
                     CultureInfo.InvariantCulture,
                     $"""
-                    <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
+                    <use href="#{NodeSvg.IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
                     <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars)}</text>
                     """
                 )
             );
             if (isPrivate)
-                svg.Append(PrivateBadgeSvg(new Rect(x + padding, rowY + 2 * u, 9 * u, 9 * u), nodeOpacity));
+                svg.Append(BadgeSvg.Private(new Rect(x + padding, rowY + 2 * u, 9 * u, 9 * u), nodeOpacity));
         }
 
         if (shown < rows.Count && slots > 0)
@@ -235,19 +235,19 @@ static partial class NodeSvg
             );
         }
 
-        var hoverGroup = BuildHoverGroup(
+        var hoverGroup = NodeSvg.BuildHoverGroup(
             elementId,
             "hoverable",
             rect,
-            TitleName(node),
-            LinkHandleSvg(node, new Pos(x + w + LinkHandleGap, y + h / 2), isEditing),
+            NodeSvg.TitleName(node),
+            NodeSvg.LinkHandleSvg(node, new Pos(x + w + NodeSvg.LinkHandleGap, y + h / 2), isEditing),
             isLinePreview: true
         );
         var textZoom = TextZoom(parentZoom);
         svg.Append(hoverGroup);
-        svg.Append(SelectedNodeSvg(node, rect, isEditing));
-        svg.Append(ProblemBadgeSvg(problems, rect, textZoom));
-        svg.Append(HiddenBadgeSvg(hiddenChildCount, rect, textZoom));
+        svg.Append(NodeSvg.SelectedNodeSvg(node, rect, isEditing));
+        svg.Append(BadgeSvg.Problem(problems, rect, textZoom));
+        svg.Append(BadgeSvg.Hidden(hiddenChildCount, rect, textZoom));
         return svg.ToString();
     }
 
@@ -272,7 +272,7 @@ static partial class NodeSvg
     {
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
         var (border, background) = CardColors(node);
-        var (nodeOpacity, textOpacity) = HiddenAttributes(node);
+        var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);
         var headerHeight = MemberCard.CardHeaderHeight * u;
         var radius = Math.Min(6 * u, Math.Min(w, h) / 4);
         var strokeWidth = node.IsEditMode ? 10 : 1.2 * Math.Min(u, 1.5);
@@ -296,7 +296,7 @@ static partial class NodeSvg
             <path d="M{x:0.##},{y + headerHeight:0.##} V{y + radius:0.##} a{radius:0.##},{radius:0.##} 0 0 1 {radius:0.##},{-radius:0.##} H{x
                 + w
                 - radius:0.##} a{radius:0.##},{radius:0.##} 0 0 1 {radius:0.##},{radius:0.##} V{y + headerHeight:0.##} Z" fill="{background}" stroke="{border}" stroke-width="{strokeWidth:0.##}"/>
-            <use href="#{IconName(node)}" x="{x + padding:0.##}" y="{y + (headerHeight - iconSize) / 2:0.##}" width="{iconSize:0.##}" height="{iconSize:0.##}"/>
+            <use href="#{NodeSvg.IconName(node)}" x="{x + padding:0.##}" y="{y + (headerHeight - iconSize) / 2:0.##}" width="{iconSize:0.##}" height="{iconSize:0.##}"/>
             </g>
             <text x="{textLeft:0.##}" y="{nameTop:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{nameSize:0.##}px" font-weight="600" {textOpacity}>{Encode(Clip(
                 node.DisplayName,
@@ -313,7 +313,7 @@ static partial class NodeSvg
     // A card's border and header tint: the same lavender on every type (DColors.CardFrame,
     // CardHeader), unless the user set the node's color, or it is being edited.
     internal static (string Border, string Background) CardColors(Node node) =>
-        HasOwnColors(node) ? NodeColors(node) : DefaultCardColors;
+        NodeSvg.HasOwnColors(node) ? NodeSvg.NodeColors(node) : DefaultCardColors;
 
     internal static (string Border, string Background) DefaultCardColors => (DColors.CardFrame, DColors.CardHeader);
 
@@ -336,7 +336,7 @@ static partial class NodeSvg
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
         var (w, h) = (nodeCanvasRect.Width, nodeCanvasRect.Height);
         var innerRect = new Rect(0, 0, w, h);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerRect, TitleName(node));
+        var hoverGroup = NodeSvg.BuildHoverGroup(elementId, hoverClass, innerRect, NodeSvg.TitleName(node));
         var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
         var textZoom = TextZoom(parentZoom);
         return string.Create(
@@ -347,9 +347,9 @@ static partial class NodeSvg
               {hoverGroup}
               {childrenContent}
             </svg>
-            {SelectedNodeSvg(node, nodeCanvasRect, isEditing)}
-            {ProblemBadgeSvg(problems, nodeCanvasRect, textZoom)}
-            {HiddenBadgeSvg(hiddenChildCount, nodeCanvasRect, textZoom)}
+            {NodeSvg.SelectedNodeSvg(node, nodeCanvasRect, isEditing)}
+            {BadgeSvg.Problem(problems, nodeCanvasRect, textZoom)}
+            {BadgeSvg.Hidden(hiddenChildCount, nodeCanvasRect, textZoom)}
             """
         );
     }
@@ -415,12 +415,4 @@ static partial class NodeSvg
             singular = "nested type";
         return $"1 {singular}";
     }
-
-    static int MaxChars(double width, double fontSize) =>
-        fontSize <= 0 ? 0 : Math.Max(1, (int)(width / (fontSize * AverageCharWidthFactor)));
-
-    static string Clip(string text, int maxChars) =>
-        text.Length <= maxChars ? text : text[..Math.Max(1, maxChars - 1)].TrimEnd() + "…";
-
-    static string Encode(string text) => HttpUtility.HtmlEncode(text);
 }

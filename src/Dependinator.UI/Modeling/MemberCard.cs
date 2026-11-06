@@ -19,7 +19,7 @@ static class MemberCard
     // Space between the rows and the card's edge, and between columns.
     public const double Padding = 10;
 
-    // An open card node (NodeLayout.ArrangeCardNode, NodeSvg.GetCardNodeSvg) in its child units:
+    // An open card node (NodeLayout.ArrangeCardNode, MemberCardSvg.GetCardNodeSvg) in its child units:
     // the header (icon, name, kind) at the top, then the first section heading.
     public const double CardHeaderHeight = 36;
     public const double CardRowsTop = CardHeaderHeight + 4;
@@ -32,8 +32,8 @@ static class MemberCard
     const double MinColumnWidth = 100;
     const double MaxColumnWidth = 300;
     const double IconAndGapWidth = 12; // The 8-unit member icon and the gap to its name
-    const double NameFontSize = 8; // NodeSvg.FontSize
-    const double CharWidthFactor = 0.6; // NodeSvg.AverageCharWidthFactor
+    const double NameFontSize = 8; // SvgText.FontSize
+    const double CharWidthFactor = 0.6; // SvgText.AverageCharWidthFactor
     const double RowEndPadding = 6;
 
     // A section of the card: the members of one kind, public before private.
@@ -330,7 +330,7 @@ static class MemberCard
     // The width every column gets: the widest row name, on the snap grid (folded rows not counted).
     static double ColumnWidth(IReadOnlyList<Section> sections, PrivateToggle toggle)
     {
-        // The name and its signature (NodeSvg.MemberDetailsSvg); a comment gets what is left.
+        // The name and its signature (MemberRowSvg.MemberDetailsSvg); a comment gets what is left.
         var rows = sections.SelectMany(s => s.Rows).ToList();
         if (toggle == PrivateToggle.Folded)
             rows = [.. rows.Where(r => !(r.IsPrivate ?? false))];

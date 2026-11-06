@@ -100,7 +100,7 @@ static class NodeViewPolicy
     // at 8 px, the size the summary card's rows have); until then a member card container shows its summary card instead.
     const double MinMemberRowZoom = 1.0;
 
-    // The node shows its summary card (NodeSvg.GetMemberSummarySvg): it is past its icon size, but
+    // The node shows its summary card (MemberCardSvg.GetMemberSummarySvg): it is past its icon size, but
     // its member rows would still be too small to read. It acts as an icon (lines attach to it, a
     // click selects it), so it is part of IsShowIcon. Only containers whose rows are the point: a
     // C# type, or a node of only member rows (a Bicep resource with auxiliary rows); a Bicep

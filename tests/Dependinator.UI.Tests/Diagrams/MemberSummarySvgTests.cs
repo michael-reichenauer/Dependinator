@@ -15,7 +15,7 @@ public class MemberSummarySvgTests
     {
         var type = TypeWithRows();
 
-        var svg = NodeSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 120), 1);
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 120), 1);
 
         Assert.DoesNotContain("nested type", svg); // No counts line
         Assert.DoesNotContain("more</text>", svg);
@@ -33,7 +33,7 @@ public class MemberSummarySvgTests
     {
         var type = TypeWithRows();
 
-        var svg = NodeSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 106), 1);
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 106), 1);
 
         Assert.Contains("1 nested type", svg);
         Assert.Contains("+ 3 more</text>", svg); // The heading is no row
@@ -45,7 +45,7 @@ public class MemberSummarySvgTests
     {
         var type = TypeWithRows();
 
-        var svg = NodeSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 120), 1);
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 120), 1);
 
         Assert.Contains("Run<tspan class=\"memberSignature\">(int count)</tspan>", svg);
     }
@@ -57,7 +57,7 @@ public class MemberSummarySvgTests
         Add(type, "Alpha", NodeType.ClassType, isPrivate: true);
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = NodeSvg.GetMemberSummarySvg(
+        var svg = MemberCardSvg.GetMemberSummarySvg(
             type,
             new Rect(0, 0, 180, 300),
             1,
@@ -76,7 +76,7 @@ public class MemberSummarySvgTests
         var type = TypeWithRows();
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = NodeSvg.GetMemberSummarySvg(
+        var svg = MemberCardSvg.GetMemberSummarySvg(
             type,
             new Rect(0, 0, 180, 106),
             1,

@@ -24,8 +24,8 @@ static class ZoneSvg
     public static string GetZoneSvg(Node node, Rect canvasRect, double zoom)
     {
         var (border, background) = NodeSvg.NodeColors(node);
-        var textZoom = NodeSvg.TextZoom(zoom);
-        var fontSize = NodeSvg.FontSize * textZoom;
+        var textZoom = SvgText.TextZoom(zoom);
+        var fontSize = SvgText.FontSize * textZoom;
         var subtitleFontSize = fontSize * SubtitleFontFactor;
         var strokeWidth = Math.Max(0.5, textZoom);
         var elementId = PointerId.FromNode(node.Id).ElementId;

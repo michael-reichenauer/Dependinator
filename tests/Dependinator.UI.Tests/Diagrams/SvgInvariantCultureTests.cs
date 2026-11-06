@@ -35,7 +35,7 @@ public class SvgInvariantCultureTests
             () =>
             {
                 var node = new Node("N.M", CreateRoot()) { Type = Dependinator.Core.Parsing.NodeType.MethodMember };
-                var svg = NodeSvg.GetMemberNodeSvg(node, new Rect(10.5, 20.25, 30.75, 8.5), 1.5);
+                var svg = MemberRowSvg.GetMemberNodeSvg(node, new Rect(10.5, 20.25, 30.75, 8.5), 1.5);
 
                 var numericAttributes = Regex
                     .Matches(svg, "\\b(x|y|cx|cy|r|dy|width|height|font-size)=\"([^\"]*)\"")

@@ -652,8 +652,8 @@ else if (HasSelectedLine)
     get
     {
       var (customColor, autoColor, isCard) = GetCurrentNodeColors();
-      // A type card's own color is the shared lavender, not its random one (NodeSvg.CardColors).
-      var (autoBorder, autoBackground) = isCard ? NodeSvg.DefaultCardColors : DColors.NodeColorByName(autoColor);
+      // A type card's own color is the shared lavender, not its random one (MemberCardSvg.CardColors).
+      var (autoBorder, autoBackground) = isCard ? MemberCardSvg.DefaultCardColors : DColors.NodeColorByName(autoColor);
       return ColorMenuRows(
           "color-item",
           [

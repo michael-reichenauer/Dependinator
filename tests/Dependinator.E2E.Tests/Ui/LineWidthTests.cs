@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the line width rule (SvgService.IsLineWeighted + LineSvg): every aggregated line is
+// Exercises the line width rule (LineEmphasis.IsLineWeighted + LineSvg): every aggregated line is
 // drawn at the same thin width, also while a node is selected, until View › Line Widths by Link
 // Count is on; then selecting a node draws the lines that touch it at their link-count width
 // while the dimmed, unrelated lines stay thin.

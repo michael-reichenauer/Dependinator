@@ -99,7 +99,7 @@ class NodeLayout
 
     // The lines rendered in the container's coordinate space: the fan-out from the container
     // to its children, the children's sibling and child-to-container lines, and the direct
-    // lines the container renders (see SvgService.DrawnNodeLines).
+    // lines the container renders (see NodeLinesSvg.DrawnNodeLines).
     internal static IEnumerable<Line> LinesDrawnInside(Node container) =>
         container
             .SourceLines.Where(line => line.Target.Parent == container)
@@ -444,7 +444,7 @@ class NodeLayout
         ApplyContainerTransform(parent, ContentBounds(parent), Coverage(parent, density));
     }
 
-    // A type (or a node of only members) drawn as a UML card when open (NodeSvg.GetCardNodeSvg):
+    // A type (or a node of only members) drawn as a UML card when open (MemberCardSvg.GetCardNodeSvg):
     // its own box is the card, with the header (icon, name, kind) at the top and the member rows
     // under it from the top left, then any other children (nested types) below the rows. The
     // children's coordinates start at the box's top left (see ApplyCardTransform), so the header

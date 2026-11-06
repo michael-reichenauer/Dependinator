@@ -10,7 +10,7 @@ namespace Dependinator.UI.Tests.Diagrams;
 
 // The View › Lines filter: externals, inheritance, member-level and link-count filters, with
 // explorer focus lines and direct lines exempt.
-public class SvgServiceLineFilterTests
+public class LineEmphasisFilterTests
 {
     static Node CreateRoot() => new("", null!) { Type = NodeType.Root };
 
@@ -54,16 +54,16 @@ public class SvgServiceLineFilterTests
         var fromMember = AddLine(method, b, 1);
         var plain = AddLine(b, a, 1);
 
-        Assert.True(SvgService.IsLineFilteredOut(toExternal, LineFilter.None with { HideExternal = true }));
-        Assert.False(SvgService.IsLineFilteredOut(plain, LineFilter.None with { HideExternal = true }));
+        Assert.True(LineEmphasis.IsLineFilteredOut(toExternal, LineFilter.None with { HideExternal = true }));
+        Assert.False(LineEmphasis.IsLineFilteredOut(plain, LineFilter.None with { HideExternal = true }));
 
-        Assert.True(SvgService.IsLineFilteredOut(inherits, LineFilter.None with { HideInheritance = true }));
-        Assert.False(SvgService.IsLineFilteredOut(plain, LineFilter.None with { HideInheritance = true }));
+        Assert.True(LineEmphasis.IsLineFilteredOut(inherits, LineFilter.None with { HideInheritance = true }));
+        Assert.False(LineEmphasis.IsLineFilteredOut(plain, LineFilter.None with { HideInheritance = true }));
 
-        Assert.True(SvgService.IsLineFilteredOut(fromMember, LineFilter.None with { HideMember = true }));
-        Assert.False(SvgService.IsLineFilteredOut(plain, LineFilter.None with { HideMember = true }));
+        Assert.True(LineEmphasis.IsLineFilteredOut(fromMember, LineFilter.None with { HideMember = true }));
+        Assert.False(LineEmphasis.IsLineFilteredOut(plain, LineFilter.None with { HideMember = true }));
 
-        Assert.False(SvgService.IsLineFilteredOut(toExternal, LineFilter.None));
+        Assert.False(LineEmphasis.IsLineFilteredOut(toExternal, LineFilter.None));
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class SvgServiceLineFilterTests
 
         var filter = LineFilter.None with { MinLinkCount = 5 };
 
-        Assert.True(SvgService.IsLineFilteredOut(thin, filter));
-        Assert.False(SvgService.IsLineFilteredOut(thick, filter));
+        Assert.True(LineEmphasis.IsLineFilteredOut(thin, filter));
+        Assert.False(LineEmphasis.IsLineFilteredOut(thick, filter));
     }
 
     [Fact]
@@ -96,9 +96,9 @@ public class SvgServiceLineFilterTests
         mixed.Add(new Link(AddNode(module, "Module.res", NodeType.Resource), other));
 
         var hideConfiguration = LineFilter.None with { HideConfiguration = true };
-        Assert.True(SvgService.IsLineFilteredOut(plumbing, hideConfiguration));
-        Assert.False(SvgService.IsLineFilteredOut(mixed, hideConfiguration));
-        Assert.False(SvgService.IsLineFilteredOut(plumbing, LineFilter.None));
+        Assert.True(LineEmphasis.IsLineFilteredOut(plumbing, hideConfiguration));
+        Assert.False(LineEmphasis.IsLineFilteredOut(mixed, hideConfiguration));
+        Assert.False(LineEmphasis.IsLineFilteredOut(plumbing, LineFilter.None));
 
         // The default-on filter does not make the menu say "filtered".
         Assert.False(hideConfiguration.IsAny);
@@ -116,7 +116,7 @@ public class SvgServiceLineFilterTests
 
         var everything = new LineFilter(true, true, true, true, 100);
 
-        Assert.False(SvgService.IsLineFilteredOut(focused, everything));
-        Assert.False(SvgService.IsLineFilteredOut(direct, everything));
+        Assert.False(LineEmphasis.IsLineFilteredOut(focused, everything));
+        Assert.False(LineEmphasis.IsLineFilteredOut(direct, everything));
     }
 }

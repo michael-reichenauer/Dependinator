@@ -263,9 +263,9 @@ static class LineSvg
             return "";
 
         var middle = LinePathGeometry.MidPoint(polylinePoints);
-        var textZoom = NodeSvg.TextZoom(childrenZoom);
-        var fontSize = NodeSvg.FontSize * textZoom;
-        var descriptionFontSize = NodeSvg.DescriptionFontSize * textZoom;
+        var textZoom = SvgText.TextZoom(childrenZoom);
+        var fontSize = SvgText.FontSize * textZoom;
+        var descriptionFontSize = SvgText.DescriptionFontSize * textZoom;
         var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
         // With both texts the pair is centered on the line: the label just above, the
