@@ -36,7 +36,7 @@ project works.
   line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
-  box, with a summary card on the way in.
+  box, with a summary card on the way in, and styled hover cards for nodes and lines.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -144,6 +144,14 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   ones) and fading only lines that leave their container.
   Since Nov 4 a selected container lights only the lines leading out of it; every line inside it
   stays dimmed until a child is selected or hovered.
+- **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
+  styled card in the app's theme: a node's kind and container, description, how many nodes it
+  uses and is used by (a member counts as its type), its members and its problems (compile errors,
+  cycles, broken rules); a line's ends, link count, first three links and whether it is part of a
+  cycle or breaks a rule. The tiles no longer carry any tooltip text (the SVG `<title>`s are gone,
+  `data-name` stays for the e2e locators): the card is built only when the mouse rests on an item
+  (`TooltipService`, `initTooltips` in jsInterop.js). Chosen over a larger card with top
+  dependencies and the source file.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.

@@ -64,10 +64,10 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
     // Click the Settings checkbox and verify it really flipped (the dialog is closed again).
     Task ToggleWidthsAsync(bool expectOn) => App.ToggleSettingAsync("settings-link-count-widths", expectOn);
 
-    // The visible polyline of the line with the given hover title ("Source→Target (n)", see
-    // AppPage.LineTitle). The Has filter is resolved relative to each line group, so the title
-    // locator must be relative too.
+    // The visible polyline of the line whose data-name ("Source→Target (n)", see
+    // AppPage.LineTitle) contains the text. The Has filter is resolved relative to each line
+    // group, so the inner locator must be relative too.
     ILocator LinePolyline(string title) =>
-        Page.Locator("#svgcanvas g.line", new() { Has = Page.Locator("title", new() { HasTextString = title }) })
+        Page.Locator("#svgcanvas g.line", new() { Has = Page.Locator($"g.hoverable[data-name*=\"{title}\"]") })
             .Locator("g.line-vis > polyline");
 }

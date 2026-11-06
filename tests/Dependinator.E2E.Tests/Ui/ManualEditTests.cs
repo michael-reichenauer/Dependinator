@@ -181,8 +181,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator search = Page.GetByTestId("icon-dialog-search");
         await Expect(search).ToBeFocusedAsync();
         await App.PressEscapeUntilGoneAsync(search);
-        ILocator anyLineFromNode = Page.Locator("#svgcanvas g.hoverable")
-            .Filter(new() { HasTextRegex = new Regex($@"^\s*{Regex.Escape(DragCancelIcon)}→") });
+        ILocator anyLineFromNode = Page.Locator($"#svgcanvas g.hoverable[data-name^=\"{DragCancelIcon}→\"]");
         await Expect(anyLineFromNode).ToHaveCountAsync(0);
 
         // Dropping again and picking an icon creates the new node and the link to it.

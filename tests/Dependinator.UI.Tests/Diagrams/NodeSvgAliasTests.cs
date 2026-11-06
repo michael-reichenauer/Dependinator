@@ -5,8 +5,8 @@ using ModelNode = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
-// A display alias replaces the drawn label; the tooltip keeps the real long name first (the
-// identity, which the e2e locators match) and adds the alias after it.
+// A display alias replaces the drawn label; the hover group's data-name keeps the real long name
+// first (the identity, which the e2e locators match) and adds the alias after it.
 public class NodeSvgAliasTests
 {
     static ModelNode CreateNode()
@@ -24,7 +24,7 @@ public class NodeSvgAliasTests
     }
 
     [Fact]
-    public void GetNodeIconSvg_ShouldShowTheAlias_AndKeepTheLongNameInTheTitle()
+    public void GetNodeIconSvg_ShouldShowTheAlias_AndKeepTheLongNameInTheDataName()
     {
         var node = CreateNode();
         node.SetAlias("Storefront");
@@ -33,7 +33,8 @@ public class NodeSvgAliasTests
 
         Assert.Contains(">Storefront</text>", svg);
         Assert.DoesNotContain(">frontend</text>", svg);
-        Assert.Contains("<title>frontend (Storefront)</title>", svg);
+        Assert.Contains("data-name=\"frontend (Storefront)\"", svg);
+        Assert.DoesNotContain("<title>", svg);
     }
 
     [Fact]
@@ -44,7 +45,7 @@ public class NodeSvgAliasTests
 
         var container = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 2.0, "");
         Assert.Contains(">Storefront</text>", container);
-        Assert.Contains("<title>frontend (Storefront)", container);
+        Assert.Contains("data-name=\"frontend (Storefront)\"", container);
 
         node.Type = NodeType.MethodMember;
         var member = NodeSvg.GetMemberNodeSvg(node, new Rect(0, 0, 80, 18), 2.0, isEditing: false);
@@ -59,6 +60,6 @@ public class NodeSvgAliasTests
         var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: false);
 
         Assert.Contains(">frontend</text>", svg);
-        Assert.Contains("<title>frontend</title>", svg);
+        Assert.Contains("data-name=\"frontend\"", svg);
     }
 }
