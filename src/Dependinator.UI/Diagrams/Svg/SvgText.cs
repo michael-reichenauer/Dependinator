@@ -142,7 +142,7 @@ static partial class SvgText
     [GeneratedRegex(@"\s+")]
     private static partial Regex WhitespaceRegex();
 
-    internal static List<string> WrapText(string text, int maxWidth)
+    static List<string> WrapText(string text, int maxWidth)
     {
         var lines = new List<string>();
         var current = "";

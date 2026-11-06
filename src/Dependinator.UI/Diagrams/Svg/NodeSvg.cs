@@ -121,7 +121,7 @@ static class NodeSvg
     }
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
-    // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
+    // (an icon node or a member row); GetNodeIconSvg and MemberRowSvg.GetMemberNodeSvg differ only in these
     // values, not in structure.
     internal readonly record struct LeafNodeLayout(
         Rect IconRect,
@@ -224,7 +224,7 @@ static class NodeSvg
     // A small pencil glyph placed just after the node's name label, marking a manually added
     // (user-drawn) node so it reads as "hand-drawn/editable" (not a status). Empty for parsed
     // nodes. textEndX is the x just past the end of the name text; textCenterY its vertical center.
-    internal static string ManualMarkerSvg(Node node, double textEndX, double textCenterY, double fontSize)
+    static string ManualMarkerSvg(Node node, double textEndX, double textCenterY, double fontSize)
     {
         if (!node.IsManual)
             return "";
