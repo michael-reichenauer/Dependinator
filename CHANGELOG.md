@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.89.445863] - 2026-11-06
+
 ### New
 
 - An open type is drawn as a UML-like card: a lavender header with its name and kind, then its members in sections (fields, constructors, properties, events, methods; a Bicep module's parameters, variables, resources and outputs) with their signatures and comments, public members first and private ones muted with a small lock on their icon; nested types sit inside the card below the rows. Zooming in, a type goes from an icon to a summary card to the full card, and lines land on the member rows
