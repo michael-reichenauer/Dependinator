@@ -8,7 +8,13 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Home-screen web app (iPad/iPhone): a normal, opaque status bar. See .dep-top-edge in
+         dependinator.css for why the page also needs a touchable bar at its top edge. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FAFAFA" />
     <base href="~/" />
     <!-- Warm up the TLS connection to Clerk early so the cloud sign-in/token
          calls resolve faster once the app starts. -->

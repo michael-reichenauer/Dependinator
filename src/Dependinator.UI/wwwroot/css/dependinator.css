@@ -1,6 +1,3 @@
-/* The device's safe area (viewport-fit=cover in the hosts' viewport meta). Zero in a normal
-   browser tab; on an iPad or iPhone home-screen web app the page runs under the status bar, so
-   everything pinned to the top or bottom edge keeps clear of it. */
 /* The page itself never scrolls (the diagram pans inside the canvas). */
 html,
 body {
@@ -8,26 +5,22 @@ body {
     overscroll-behavior: none;
 }
 
-:root {
-    --dep-safe-top: env(safe-area-inset-top, 0px);
-    --dep-safe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* An opaque strip under the status bar of a home-screen web app. Without it Safari (iPadOS 26)
-   shows the diagram blurred through the status bar, a foggy band at the top. A fixed element at
-   the top edge is also what Safari takes the status bar's color from. */
-.dep-safe-area-top {
+/* A thin opaque bar along the top edge (Main.razor), in the canvas color. Safari on iPadOS 26
+   blurs the top of a home-screen web app ("scroll edge" fog over the toolbar) unless it finds an
+   opaque, fixed element there that it can hit-test about 4px inside the top edge; it then gives
+   the status bar that element's color instead. So it must take pointer events and be at least
+   5px tall; the app bar sits just below it. Colors match DColors.CanvasBackground. */
+.dep-top-edge {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: var(--dep-safe-top);
+    height: 5px;
     background: #fafafa;
-    z-index: 1400;
-    pointer-events: none;
+    z-index: 1250;
 }
 
-:root[data-theme="dark"] .dep-safe-area-top {
+:root[data-theme="dark"] .dep-top-edge {
     background: #101113;
 }
 
@@ -57,7 +50,7 @@ body {
 /* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
 .dep-breadcrumb {
     position: fixed;
-    top: calc(var(--dep-safe-top) + 42px);
+    top: 45px;
     left: 15px;
     z-index: 1200;
     display: flex;
@@ -110,7 +103,7 @@ body {
 .dep-legend {
     position: fixed;
     left: 15px;
-    bottom: calc(var(--dep-safe-bottom) + 12px);
+    bottom: 12px;
     z-index: 1200;
     padding: 6px 10px 8px;
     font-size: 0.75rem;
@@ -162,11 +155,11 @@ body {
 /* The analysis panels (CyclesPanel.razor, PathPanel.razor), top-right over the diagram. */
 .dep-panel {
     position: fixed;
-    top: calc(var(--dep-safe-top) + 42px);
+    top: 45px;
     right: 15px;
     z-index: 1200;
     width: min(380px, calc(100vw - 30px));
-    max-height: calc(100vh - 60px - var(--dep-safe-top) - var(--dep-safe-bottom));
+    max-height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
     padding: 4px 8px 8px 12px;
@@ -871,7 +864,7 @@ body {
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
 .dep-mode-banner {
     position: fixed;
-    top: calc(var(--dep-safe-top) + 8px);
+    top: 8px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1300;
@@ -908,7 +901,7 @@ body {
 .dep-minimap {
     position: fixed;
     right: 15px;
-    bottom: calc(var(--dep-safe-bottom) + 12px);
+    bottom: 12px;
     z-index: 1200;
     padding: 4px;
     line-height: 0;
@@ -1262,7 +1255,7 @@ button.dep-rules__node:hover {
 .dep-coach {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--dep-safe-bottom) + 20px);
+    bottom: 20px;
     transform: translateX(-50%);
     z-index: 1300;
     display: flex;

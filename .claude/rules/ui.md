@@ -142,3 +142,16 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   hide+show into a no-op undo. The line rule lives in `LineVisibility.Update`.
 - View › Rows is a view option (`RowFilter`), not a model edit: rows are skipped in
   `NodeTreeSvg.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.
+
+## iPad home-screen web app (Nov 2026)
+
+- iPadOS 26 draws a foggy "scroll edge" blur over the top ~100px of a home-screen web app (the
+  toolbar too) unless an opaque, fixed element covers the top edge and takes pointer events
+  (WebKit hit-tests ~4px inside the edge, then colors the status bar with it): that is
+  `.dep-top-edge` (5px, canvas color). Tried on the device and not enough on their own: a
+  `pointer-events: none` strip or header, `viewport-fit=cover` with safe-area insets, a page
+  that cannot scroll. The meta tags in `index.html`/`_Host.cshtml` (status bar `default`, never
+  `black-translucent`) matter too, and iOS reads them only when the icon is added: re-add it
+  to test. A Playwright browser cannot reproduce any of this; the user tests on the iPad.
+- The canvas fits the window exactly (`ScreenService.CheckResizeAsync`, svg `display: block`);
+  the page itself never scrolls.
