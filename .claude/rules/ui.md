@@ -114,10 +114,9 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `NodeLayout.ArrangeCardNode`: children from child (0,0) at the box's top left
   (`ApplyCardTransform`, zoom ≤ 1), rows from `MemberCard.CardRowsTop`, nested types below.
 - Card colors are fixed (`DColors.CardHeader`/`CardFrame`, `NodeSvg.CardColors`), not the type's
-  random color; only a user-set custom color or edit mode uses `NodeColors`. A private row's
-  "private" tag is a separate `<text class="privateTag">`, so the row's `memberName` text (e2e
-  tests match its content) keeps only name, signature and comment; `MemberCard.ColumnWidth`
-  leaves room for it.
+  random color; only a user-set custom color or edit mode uses `NodeColors`. A private row is
+  muted and gets `NodeSvg.PrivateBadgeSvg`, a padlock on its icon's lower right corner (Michael
+  picked it over a faded icon, a UML "-" and the earlier "private" text on the right, Nov 6).
 - Lines between members of one type carry `line-inner` (LineSvg) and are hidden unless lit or
   hover-previewed (Canvas LineCss, jsInterop.js `initLinePreview`).
 

@@ -29,6 +29,8 @@ class DColors
     static readonly string CardHeaderLight = "#EFEAFD";
     static readonly string CardFrameDark = "#4A4466";
     static readonly string CardFrameLight = "#C9C0E8";
+    static readonly string PrivateLockDark = "#E4E0F0";
+    static readonly string PrivateLockLight = "#3F3A55";
 
     // Tests
     static readonly string TextDark = "#ECECEC";
@@ -185,6 +187,7 @@ class DColors
     public static string CardMutedText => IsDark ? CardMutedTextDark : CardMutedTextLight;
     public static string CardHeader => IsDark ? CardHeaderDark : CardHeaderLight;
     public static string CardFrame => IsDark ? CardFrameDark : CardFrameLight;
+    public static string PrivateLock => IsDark ? PrivateLockDark : PrivateLockLight;
 
     public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
     public static string LineSelected => ItemLineSelected;

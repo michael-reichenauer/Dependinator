@@ -411,7 +411,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   name below. Nested types sit inside the card below the rows. The summary card shares the frame
   and header and shows signatures too, so zooming in just fills the card. Layout version 4.
   Every type card has the same lavender header and border (a custom color still wins), signatures
-  follow the name UML style (`Url: string`), private rows are muted with a "private" tag, and the
+  follow the name UML style (`Url: string`), private rows are muted with a small lock on their
+  icon (first a "private" tag on the right, replaced the same day at Michael's pick), and the
   summary card lists nested types last and shows its counts line only when rows are left out.
 - **Report a bug / suggest an improvement (Oct 23).** Two Help menu items open a new GitHub
   issue from the repo's issue forms, with the version and environment (host, build, VS Code

@@ -193,7 +193,6 @@ static partial class NodeSvg
         if (shown > 0 && rows[shown - 1] is null)
             shown--; // No heading without a row under it
         var rowChars = MaxChars(w - 2 * padding - 13 * u, rowSize);
-        var tagChars = (int)Math.Ceiling(PrivateTag.Length * smallSize / rowSize) + 1;
         for (var index = 0; index < shown; index++)
         {
             var rowY = firstRowY + index * rowPitch;
@@ -216,12 +215,12 @@ static partial class NodeSvg
                     $"""
                     <use href="#{IconName(member)}" x="{x + padding:0.##}" y="{rowY + 2 * u:0.##}" width="{9 * u:0.##}" height="{9
                         * u:0.##}" {nodeOpacity}/>
-                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, isPrivate ? rowChars - tagChars : rowChars)}</text>
+                    <text x="{x + padding + 13 * u:0.##}" y="{rowY + rowPitch / 2:0.##}" class="{cssClass}" dominant-baseline="middle" font-size="{rowSize:0.##}px" {textOpacity}>{SummaryRowText(member, rowChars)}</text>
                     """
                 )
             );
             if (isPrivate)
-                svg.Append(PrivateTagSvg(x + w - padding, rowY + rowPitch / 2, smallSize, textOpacity));
+                svg.Append(PrivateBadgeSvg(new Rect(x + padding, rowY + 2 * u, 9 * u, 9 * u), nodeOpacity));
         }
 
         if (shown < rows.Count && slots > 0)
@@ -252,14 +251,19 @@ static partial class NodeSvg
         return svg.ToString();
     }
 
-    const string PrivateTag = "private";
-
-    // The "private" tag at the right end of a private row, ending at x.
-    internal static string PrivateTagSvg(double x, double y, double fontSize, string textOpacity) =>
-        string.Create(
+    // A private member's mark: a small padlock on the lower right corner of its icon, on a disc of
+    // the card's background so it reads over the icon (like private members in an IDE).
+    internal static string PrivateBadgeSvg(Rect icon, string nodeOpacity)
+    {
+        var s = icon.Width;
+        var (cx, cy, r) = (icon.X + s * 0.88, icon.Y + s * 0.86, s * 0.46);
+        var (w, h) = (r, r * 0.8);
+        var lockColor = DColors.PrivateLock;
+        return string.Create(
             CultureInfo.InvariantCulture,
-            $"""<text x="{x:0.##}" y="{y:0.##}" class="privateTag" dominant-baseline="middle" font-size="{fontSize:0.##}px" {textOpacity}>{PrivateTag}</text>"""
+            $"""<g class="privateBadge" pointer-events="none" {nodeOpacity}><circle cx="{cx:0.##}" cy="{cy:0.##}" r="{r:0.##}" fill="{DColors.CardBackground}"/><path d="M{cx - w * 0.32:0.##},{cy - h * 0.15:0.##} v{-h * 0.35:0.##} a{w * 0.32:0.##},{w * 0.32:0.##} 0 0 1 {w * 0.64:0.##},0 v{h * 0.35:0.##}" fill="none" stroke="{lockColor}" stroke-width="{s * 0.08:0.##}"/><rect x="{cx - w / 2:0.##}" y="{cy - h * 0.15:0.##}" width="{w:0.##}" height="{h * 0.75:0.##}" rx="{s * 0.04:0.##}" fill="{lockColor}"/></g>"""
         );
+    }
 
     // A summary row: the name, then its signature (muted) in what room is left, like a full row
     // (MemberDetailsSvg).

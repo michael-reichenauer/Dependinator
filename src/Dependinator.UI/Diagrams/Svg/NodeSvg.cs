@@ -214,13 +214,8 @@ static partial class NodeSvg
         var fontSize = FontSize * textZoom;
         var member = CalculateMemberNodeLayout(node, nodeCanvasRect, textZoom, fontSize);
         var rowEnd = nodeCanvasRect.X + nodeCanvasRect.Width;
-        // A private row is muted, with a "private" tag at its end (MemberCard.ColumnWidth has room).
+        // A private row is muted, with a lock on its icon.
         var isPrivate = node.IsPrivate ?? false;
-        var tagSize = fontSize * PrivateTagScale;
-        var tagStart = rowEnd - EstimateTextWidth(PrivateTag, tagSize) - 4 * MemberSignatureGap * textZoom;
-        // No tag over a name too long for the row (the column width is capped).
-        var hasTag = isPrivate && member.Text.X + EstimateTextWidth(node.DisplayName, fontSize) <= tagStart;
-        var detailsEnd = hasTag ? tagStart : rowEnd;
 
         var layout = new LeafNodeLayout(
             IconRect: member.Icon,
@@ -237,20 +232,13 @@ static partial class NodeSvg
                 Width = Math.Max(member.Bounds.Width, rowEnd - member.Bounds.X),
             },
             MarkerPos: new Pos(member.Text.X + EstimateTextWidth(node.DisplayName, fontSize), member.Text.Y),
-            TextSuffix: MemberDetailsSvg(node, member.Text, detailsEnd, fontSize, textZoom),
+            TextSuffix: MemberDetailsSvg(node, member.Text, rowEnd, fontSize, textZoom),
             TextAttributes: $"data-name=\"{node.HtmlDisplayName}\""
         );
 
-        var tag = hasTag
-            ? PrivateTagSvg(
-                rowEnd - 2 * MemberSignatureGap * textZoom, // Clear of a line's end dot
-                member.Text.Y,
-                tagSize,
-                HiddenAttributes(node).TextOpacity
-            )
-            : "";
+        var badge = isPrivate ? PrivateBadgeSvg(member.Icon, HiddenAttributes(node).NodeOpacity) : "";
         return BuildLeafNodeSvg(node, layout, DescriptionFontSize * textZoom, isEditing)
-            + tag
+            + badge
             + ProblemBadgeSvg(problems, member.Bounds, textZoom);
     }
 
@@ -306,7 +294,6 @@ static partial class NodeSvg
 
     const double MemberSignatureGap = 3; // Before the comment
     const double MemberDescriptionScale = 0.85;
-    const double PrivateTagScale = 0.8;
 
     // The shared icon/name/description/hover/selection/manual-marker layout of a leaf node
     // (an icon node or a member row); GetNodeIconSvg and GetMemberNodeSvg differ only in these
