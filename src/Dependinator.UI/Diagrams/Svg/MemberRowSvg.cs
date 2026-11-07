@@ -16,6 +16,12 @@ static class MemberRowSvg
     const double MemberSignatureGap = 3; // Before the comment
     const double MemberDescriptionScale = 0.85;
 
+    // Offset (in em) from the row's center down to the alphabetic baseline: half the x-height,
+    // where Chromium puts `dominant-baseline: middle`. The row's text uses the alphabetic baseline
+    // instead, because WebKit (iPad Safari) and Firefox do not apply dominant-baseline to the
+    // signature and comment <tspan>s, which then sat higher than the name.
+    const double MemberBaselineOffsetFactor = 0.27;
+
     public static string GetMemberNodeSvg(
         Node node,
         Rect nodeCanvasRect,
@@ -33,9 +39,12 @@ static class MemberRowSvg
 
         var layout = new NodeSvg.LeafNodeLayout(
             IconRect: member.Icon,
-            TextPos: member.Text,
+            TextPos: member.Text with
+            {
+                Y = member.Text.Y + MemberBaselineOffsetFactor * fontSize,
+            },
             TextClass: isPrivate ? "memberName memberPrivate" : "memberName",
-            TextBaseline: "middle",
+            TextBaseline: "alphabetic",
             FontSize: fontSize,
             DescriptionClass: "memberDescription",
             DescriptionY: member.Text.Y,
