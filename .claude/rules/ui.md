@@ -87,9 +87,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   purpose); headings and the card are derived from row positions when rendering, nothing stored.
   Rows never move or resize by hand (`NodeEditService` skips members), and a customized container
   still re-arranges its rows (`NodeLayout.ArrangeCustomizedTypeChildren`).
-- A node of only members gets a non-square size shaped like its card (`NodeLayout.ShapedSize`)
-  and `MemberCardCoverage` 0.9; `ApplyContainerTransform` caps the zoom at 1, so a tiny card
-  covers less.
+- A node of only members is a square like every sized node, and its card flows its columns to
+  the square (`MemberCard.Arrange` with the container's aspect), `MemberCardCoverage` 0.9;
+  `ApplyContainerTransform` caps the zoom at 1, so a tiny card covers less. Shaping the node like
+  its card (#178, removed Nov 7 2026) made long-signature types up to 1.8x wider than tall: the
+  icon stays square in the box, so lines (anchored at the box edges) ended far from the icon.
 - The summary card is part of `IsShowIcon` (lines attach to the type, a click selects it); it is
   decided by `zoom * ContainerZoom`, so `NodeTreeSvg.RenderNode` lays such nodes out before
   deciding. Its rows use class `summaryMember`, never `memberName`, which the e2e node locators match.
