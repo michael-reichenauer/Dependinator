@@ -391,7 +391,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
   section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
   Variables, Resources, Outputs), public members first, flowed into as many columns as the box
-  takes (`MemberCard`). A type of only members is shaped like its card, so the card fills it.
+  takes (`MemberCard`). A type of only members was shaped like its card, so the card filled it;
+  since Nov 7 types are squares again, like their icon, so lines end at the icon (the card flows
+  its columns to the square; layout version 7).
   Zooming in, the type is first an icon, then a summary card (kind, counts, the first members and
   "+ N more", `NodeViewPolicy.IsMemberSummary`) until the rows are readable, then the full card.
   Lines land on the member rows (in at the left, out at the right), calls inside one type show
