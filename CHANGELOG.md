@@ -9,6 +9,11 @@ with the next official release.
 
 ## [Unreleased]
 
+### Fixed
+
+- The iPad home-screen web app no longer shows a foggy blur over the top of the page and the toolbar (iPadOS 26); remove the home-screen icon and add it again to get the fix
+- The canvas fits the window exactly, and the page no longer scrolls a few pixels
+
 ## [v0.89.445863] - 2026-11-06
 
 ### New
