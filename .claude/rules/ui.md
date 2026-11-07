@@ -99,6 +99,10 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - A row's signature and description are `<tspan>`s inside its `text.memberName`, so the name
   text has `data-name` (the e2e point finder reads `dataset.name ?? textContent`); `ColumnWidth`
   counts the signature (up to `MaxColumnWidth`).
+- Text with `<tspan>` children must not rely on `dominant-baseline` (middle, hanging): WebKit
+  (iPad Safari) and Firefox do not apply it to the tspans, so they sit off the first run. Use the
+  alphabetic baseline and shift `y` (`MemberRowSvg.MemberBaselineOffsetFactor`, `SvgText`'s
+  `DescriptionFirstLineOffsetFactor`).
 - "+ N private" (`MemberCard.HasPrivateToggle`, `Node.IsPrivateMembersShown`, saved): folded
   private rows get the toggle row's rect (their lines end there) and are skipped in
   `NodeTreeSvg.IsRendered`. Rendering asks the fold as of the last layout (`Node.LaidOutToggle`,
