@@ -4,6 +4,7 @@ class DColors
 {
     // A very dark grey rather than black: lighter greys (#1E1F22 and up) were tried and looked
     // misty, and pure black makes the colored frames and white text glare.
+    // Also the top edge bar in dependinator.css (.dep-top-edge): keep them in step.
     static readonly string CanvasBackgroundDark = "#101113";
     static readonly string CanvasBackgroundLight = "#FAFAFA";
 

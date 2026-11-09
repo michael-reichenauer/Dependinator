@@ -391,7 +391,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
   section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
   Variables, Resources, Outputs), public members first, flowed into as many columns as the box
-  takes (`MemberCard`). A type of only members is shaped like its card, so the card fills it.
+  takes (`MemberCard`). A type of only members was shaped like its card, so the card filled it;
+  since Nov 7 types are squares again, like their icon, so lines end at the icon (the card flows
+  its columns to the square; layout version 7).
   Zooming in, the type is first an icon, then a summary card (kind, counts, the first members and
   "+ N more", `NodeViewPolicy.IsMemberSummary`) until the rows are readable, then the full card.
   Lines land on the member rows (in at the left, out at the right), calls inside one type show
@@ -560,6 +562,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   labels and a verdict, a comment with its reasoning, and a fix PR into dev for small clear bugs.
   `issue-triage.yml` starts it through its API trigger as soon as an issue is opened; its own
   schedule catches anything a fire missed.
+- **Branch graph on the web (Nov 9).** `branch-graph.yml` publishes gmd's graph of all active
+  branches as a page on GitHub Pages (https://michael-reichenauer.github.io/Dependinator/), to
+  follow the branches and pull requests from a phone or tablet. It runs the latest gmd release's
+  `gmd --web-log` on every push, pull request change and hourly.
 
 ## Docs and presentation
 

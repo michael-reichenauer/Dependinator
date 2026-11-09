@@ -48,10 +48,10 @@ public class NodeLayoutSizingTests
         AssertNoOverlaps(type.Children);
     }
 
-    // A type of only members is shaped like its member card (with the area of its size step), so
-    // the card fills it when it opens; it nearly fills it (the card coverage).
+    // A type of only members is a square like its icon (so lines end at the icon), whatever its
+    // card's shape; the card fills its width or height when it opens.
     [Fact]
-    public void AdjustChildren_TypeOfOnlyMembers_ShouldBeShapedLikeItsCard()
+    public void AdjustChildren_TypeOfOnlyMembers_ShouldBeASquare()
     {
         using var model = NewModel();
         var parent = AddNode(model, model.Root, "Parent", NodeType.Namespace, new Rect(0, 0, 1200, 800));
@@ -64,13 +64,13 @@ public class NodeLayoutSizingTests
         NodeLayout.AdjustChildren(parent);
         NodeLayout.AdjustChildren(type);
 
-        // A heading and two rows make a wide card: wider than tall
-        Assert.True(type.Boundary.Width > type.Boundary.Height, $"Expected a wide type but got {SizeOf(type)}");
-        // The card (with its header) fills the type's width or height, unless a small card
-        // would be magnified (at most zoom 1)
+        // A heading and two long rows make a wide card, but the type stays a square
+        Assert.Equal(type.Boundary.Width, type.Boundary.Height);
+        // The card (with its header, at least MinCardWidth wide) fills the type's width or
+        // height, unless a small card would be magnified (at most zoom 1)
         var card = MemberCard.Bounds(type);
         var coverage = Math.Max(
-            (card.X + card.Width) * type.ContainerZoom / type.Boundary.Width,
+            Math.Max(card.X + card.Width, MemberCard.MinCardWidth) * type.ContainerZoom / type.Boundary.Width,
             (card.Y + card.Height) * type.ContainerZoom / type.Boundary.Height
         );
         Assert.True(type.ContainerZoom == 1 || coverage > 0.9, $"Expected a filled card but got {coverage:0.###}");

@@ -1,3 +1,29 @@
+/* The page itself never scrolls (the diagram pans inside the canvas). */
+html,
+body {
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+/* A thin opaque bar along the top edge (Main.razor), in the canvas color. Safari on iPadOS 26
+   blurs the top of a home-screen web app ("scroll edge" fog over the toolbar) unless it finds an
+   opaque, fixed element there that it can hit-test about 4px inside the top edge; it then gives
+   the status bar that element's color instead. So it must take pointer events and be at least
+   5px tall; the app bar sits just below it. Colors match DColors.CanvasBackground. */
+.dep-top-edge {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: #fafafa;
+    z-index: 1250;
+}
+
+:root[data-theme="dark"] .dep-top-edge {
+    background: #101113;
+}
+
 /* Floating toolbar cards (app bar, node/line toolbars, mode banner): a translucent card in
    the theme's surface color so the diagram still shows through. The theme is set on the
    root element (data-theme, see applyTheme in jsInterop.js). */
@@ -24,7 +50,7 @@
 /* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
 .dep-breadcrumb {
     position: fixed;
-    top: 42px;
+    top: 45px;
     left: 15px;
     z-index: 1200;
     display: flex;
@@ -129,7 +155,7 @@
 /* The analysis panels (CyclesPanel.razor, PathPanel.razor), top-right over the diagram. */
 .dep-panel {
     position: fixed;
-    top: 42px;
+    top: 45px;
     right: 15px;
     z-index: 1200;
     width: min(380px, calc(100vw - 30px));

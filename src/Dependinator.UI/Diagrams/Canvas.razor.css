@@ -15,6 +15,9 @@ svg {
     /* Diagram drags (pan, area selection) must not also select the svg text elements. */
     user-select: none;
     -webkit-user-select: none;
+    /* Block, not inline: an inline svg leaves a line-height gap below it that made the page
+       taller than the window (see ScreenService.CheckResizeAsync). */
+    display: block;
 }
 
 .drop-zone {

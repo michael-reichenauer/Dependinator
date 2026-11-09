@@ -55,7 +55,7 @@ static class SvgExportDocument
             .memberName {
                 font-family: Verdana, Helvetica, Arial, sans-serif;
                 fill: {{DColors.Text}};
-                dominant-baseline: middle;
+                dominant-baseline: alphabetic;
                 text-anchor: start;
             }
             .nodeName {

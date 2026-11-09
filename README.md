@@ -130,6 +130,11 @@ development setup, the repository layout and the conventions, and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) explains how it is built. The repo includes
 a devcontainer, so you can build, run and test everything without local setup.
 
+To see what is going on across the branches, the
+[branch graph](https://michael-reichenauer.github.io/Dependinator/) shows every active branch and
+its open pull request, latest changed first, drawn by [gmd](https://github.com/michael-reichenauer/gmd)
+and updated on every push.
+
 ## License
 
 [MIT](LICENSE)

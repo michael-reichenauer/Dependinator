@@ -5,6 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <meta name="HandheldFriendly" content="true" />
+    <!-- Home-screen web app (iPad/iPhone): a normal, opaque status bar. See .dep-top-edge in
+         dependinator.css for why the page also needs a touchable bar at its top edge. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="theme-color" content="#FAFAFA" />
     <meta name="description"
           content="Dependinator visualizes the structure and dependencies of a C#/.NET codebase or an Azure Bicep deployment as an interactive, navigable map." />
     <title>Dependinator</title>

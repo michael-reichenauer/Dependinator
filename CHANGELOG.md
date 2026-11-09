@@ -9,6 +9,18 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.90.450284] - 2026-11-09
+
+### Improved
+
+- A type is drawn as a square again, like its icon, so its lines meet the icon instead of ending far to its sides; saved models are laid out again once, except containers you arranged yourself
+
+### Fixed
+
+- A member's signature and comment line up with its name on iPad Safari and in Firefox
+- The iPad home-screen web app no longer shows a foggy blur over the top of the page and the toolbar (iPadOS 26); remove the home-screen icon and add it again to get the fix
+- The canvas fits the window exactly, and the page no longer scrolls a few pixels
+
 ## [v0.89.445863] - 2026-11-06
 
 ### New

@@ -87,9 +87,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   purpose); headings and the card are derived from row positions when rendering, nothing stored.
   Rows never move or resize by hand (`NodeEditService` skips members), and a customized container
   still re-arranges its rows (`NodeLayout.ArrangeCustomizedTypeChildren`).
-- A node of only members gets a non-square size shaped like its card (`NodeLayout.ShapedSize`)
-  and `MemberCardCoverage` 0.9; `ApplyContainerTransform` caps the zoom at 1, so a tiny card
-  covers less.
+- A node of only members is a square like every sized node, and its card flows its columns to
+  the square (`MemberCard.Arrange` with the container's aspect), `MemberCardCoverage` 0.9;
+  `ApplyContainerTransform` caps the zoom at 1, so a tiny card covers less. Shaping the node like
+  its card (#178, removed Nov 7 2026) made long-signature types up to 1.8x wider than tall: the
+  icon stays square in the box, so lines (anchored at the box edges) ended far from the icon.
 - The summary card is part of `IsShowIcon` (lines attach to the type, a click selects it); it is
   decided by `zoom * ContainerZoom`, so `NodeTreeSvg.RenderNode` lays such nodes out before
   deciding. Its rows use class `summaryMember`, never `memberName`, which the e2e node locators match.
@@ -99,6 +101,10 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - A row's signature and description are `<tspan>`s inside its `text.memberName`, so the name
   text has `data-name` (the e2e point finder reads `dataset.name ?? textContent`); `ColumnWidth`
   counts the signature (up to `MaxColumnWidth`).
+- Text with `<tspan>` children must not rely on `dominant-baseline` (middle, hanging): WebKit
+  (iPad Safari) and Firefox do not apply it to the tspans, so they sit off the first run. Use the
+  alphabetic baseline and shift `y` (`MemberRowSvg.MemberBaselineOffsetFactor`, `SvgText`'s
+  `DescriptionFirstLineOffsetFactor`).
 - "+ N private" (`MemberCard.HasPrivateToggle`, `Node.IsPrivateMembersShown`, saved): folded
   private rows get the toggle row's rect (their lines end there) and are skipped in
   `NodeTreeSvg.IsRendered`. Rendering asks the fold as of the last layout (`Node.LaidOutToggle`,
@@ -142,3 +148,16 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   hide+show into a no-op undo. The line rule lives in `LineVisibility.Update`.
 - View › Rows is a view option (`RowFilter`), not a model edit: rows are skipped in
   `NodeTreeSvg.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.
+
+## iPad home-screen web app (Nov 2026)
+
+- iPadOS 26 draws a foggy "scroll edge" blur over the top ~100px of a home-screen web app (the
+  toolbar too) unless an opaque, fixed element covers the top edge and takes pointer events
+  (WebKit hit-tests ~4px inside the edge, then colors the status bar with it): that is
+  `.dep-top-edge` (5px, canvas color). Tried on the device and not enough on their own: a
+  `pointer-events: none` strip or header, `viewport-fit=cover` with safe-area insets, a page
+  that cannot scroll. The meta tags in `index.html`/`_Host.cshtml` (status bar `default`, never
+  `black-translucent`) matter too, and iOS reads them only when the icon is added: re-add it
+  to test. A Playwright browser cannot reproduce any of this; the user tests on the iPad.
+- The canvas fits the window exactly (`ScreenService.CheckResizeAsync`, svg `display: block`);
+  the page itself never scrolls.
