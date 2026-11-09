@@ -45,7 +45,9 @@ permissions:
 jobs:
   e2e:
     name: e2e (${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04, not ubuntu-latest: on 26.04 (resolute) Microsoft's apt feed has no
+    # azure-functions-core-tools-4, which the sync tests need (release run 23, Nov 9 2026).
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     # The Build workflow passes no inputs, which runs Chromium only, without sync.
     strategy:
