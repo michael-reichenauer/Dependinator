@@ -1,0 +1,85 @@
+name: Branch graph
+
+# Publishes gmd's branch graph of this repository as a web page on GitHub Pages, to follow what is
+# going on across the branches from a phone or a tablet. The page is written by gmd
+# (https://github.com/michael-reichenauer/gmd), a terminal git client, with 'gmd --web-log': all
+# active branches, each commit linked to its diff on GitHub and each branch to its open pull request.
+# See docs/BRANCH-GRAPH.md in gmd's repository.
+#
+# Needs, once, in the repository's settings: Pages, Source "GitHub Actions"; and in Environments,
+# github-pages, Deployment branches and tags "No restriction", since a push to any branch updates
+# the page.
+on:
+  push:
+    branches: ['**']
+  # A pull request opened or closed changes the page without a push
+  pull_request:
+    types: [opened, closed, reopened, ready_for_review, converted_to_draft]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  pages: write
+  id-token: write
+
+# One page: a newer run replaces the one still going
+concurrency:
+  group: branch-graph
+  cancel-in-progress: true
+
+jobs:
+  page:
+    runs-on: ubuntu-latest
+    # A pull request from a fork has no right to publish the page
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      # Every branch, with its whole history, as the graph needs
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # The latest gmd release, a self-contained single-file binary, checked against the release's
+      # checksums. Kept outside the checkout, so it is not drawn as a change.
+      - name: Download gmd
+        working-directory: ${{ runner.temp }}
+        run: |
+          base=https://github.com/michael-reichenauer/gmd/releases/latest/download
+          curl -fsSL -o gmd_linux_x64 "$base/gmd_linux_x64"
+          curl -fsSL -o SHA256SUMS "$base/SHA256SUMS"
+          sha256sum -c --ignore-missing SHA256SUMS
+          chmod +x gmd_linux_x64
+
+      - name: Read the open pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr list --state open --limit 100 --json number,title,headRefName,url,isDraft,isCrossRepository > "$RUNNER_TEMP/prs.json"
+
+      # A throwaway HOME, since gmd writes its config and log there. The checkout is of the default
+      # branch, so that no detached HEAD is drawn as a branch of its own, and the pull request refs
+      # a pull request event leaves are dropped, which would be drawn as branches too.
+      - name: Write the page
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git checkout -q -B "$DEFAULT_BRANCH" "origin/$DEFAULT_BRANCH"
+          git for-each-ref --format='%(refname)' refs/remotes/pull | xargs -r -n1 git update-ref -d
+          mkdir -p "$RUNNER_TEMP/home" site
+          echo '{"CheckUpdates": false}' > "$RUNNER_TEMP/home/.gmdconfig"
+          HOME="$RUNNER_TEMP/home" "$RUNNER_TEMP/gmd_linux_x64" --web-log site/index.html --prs "$RUNNER_TEMP/prs.json" --max 400
+
+      - name: Upload the page
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - name: Publish the page
+        id: deploy
+        uses: actions/deploy-pages@v4
