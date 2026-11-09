@@ -562,6 +562,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   labels and a verdict, a comment with its reasoning, and a fix PR into dev for small clear bugs.
   `issue-triage.yml` starts it through its API trigger as soon as an issue is opened; its own
   schedule catches anything a fire missed.
+- **Branch graph on the web (Nov 9).** `branch-graph.yml` publishes gmd's graph of all active
+  branches as a page on GitHub Pages (https://michael-reichenauer.github.io/Dependinator/), to
+  follow the branches and pull requests from a phone or tablet. It runs the latest gmd release's
+  `gmd --web-log` on every push, pull request change and hourly.
 
 ## Docs and presentation
 
