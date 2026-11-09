@@ -50,7 +50,8 @@ class NodeLayout
     // 4: an open type is a UML card: rows under its header from the top left, nested types below.
     // 5: room for a private row's "private" tag.
     // 6: no more "private" tag (a lock on the row's icon), so narrower columns again.
-    public const int CurrentLayoutVersion = 6;
+    // 7: types are squares again (like their icon), no longer shaped like their card.
+    public const int CurrentLayoutVersion = 7;
 
     public static NodeLayoutDensity Density { get; private set; } = NodeLayoutDensity.Balanced;
 
@@ -193,34 +194,15 @@ class NodeLayout
     static IReadOnlyList<Node> SizedChildren(IEnumerable<Node> children) =>
         children.Where(child => IsArranged(child) && !child.Type.IsMember && !child.IsPassThrough).ToList();
 
-    // The size of each arranged (non-member) child: its size step among the sized siblings,
-    // or the metrics' default size for a child without one.
+    // The size of each arranged (non-member) child: a square of its size step among the sized
+    // siblings, or the metrics' default size for a child without one. Types are squares too, like
+    // their icon, so lines end at the icon when it is shown; an open type's card flows its
+    // columns to the square (MemberCard.Arrange).
     static Func<Node, Size> ChildSizes(Node parent, IReadOnlyList<Node> sizedChildren, LayoutMetrics metrics)
     {
         var sides = NodeSizing.ComputeSides(sizedChildren, parent);
         var defaultSize = new Size(metrics.Width, metrics.Height);
-        return node => sides.TryGetValue(node, out var side) ? ShapedSize(node, side) : defaultSize;
-    }
-
-    // A node holding only member rows (a C# type without nested types, a Bicep resource with
-    // auxiliary rows) is shaped like its member card, with the area of its size step, so the card
-    // fills it when it opens; other nodes are squares.
-    const double MinCardNodeAspect = 0.6;
-    const double MaxCardNodeAspect = 1.8;
-
-    static Size ShapedSize(Node node, double side)
-    {
-        if (!IsOnlyMembers(node))
-            return new Size(side, side);
-        var sections = MemberCard.Sections(node.Children.Where(c => c.Type.IsMember), CompareMemberChildren);
-        var aspect = Math.Clamp(
-            MemberCard.NaturalAspect(sections, MemberCard.ToggleOf(node)),
-            MinCardNodeAspect,
-            MaxCardNodeAspect
-        );
-        var width = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side * Math.Sqrt(aspect)));
-        var height = Math.Max(2 * NodeGrid.SnapSize, NodeGrid.Snap(side / Math.Sqrt(aspect)));
-        return new Size(width, height);
+        return node => sides.TryGetValue(node, out var side) ? new Size(side, side) : defaultSize;
     }
 
     internal static bool IsOnlyMembers(Node node) =>

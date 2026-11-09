@@ -103,18 +103,21 @@ public class MemberCardTests
     }
 
     [Fact]
-    public void NaturalAspect_ShouldBeCloserToASquare_ThanASingleColumn()
+    public void Arrange_SquareTarget_ShouldBeCloserToASquare_ThanASingleColumn()
     {
         var type = Type();
         for (var i = 0; i < 40; i++)
             Member(type, $"method{i:00}", NodeType.MethodMember);
         var sections = MemberCard.Sections(type.Children, ByName);
 
-        var aspect = MemberCard.NaturalAspect(sections);
         MemberCard.Arrange(sections, 0, 0, 0.01);
         var column = MemberCard.Bounds(type);
+        MemberCard.Arrange(sections, 0, 0, 1);
+        var square = MemberCard.Bounds(type);
 
-        Assert.True(Math.Abs(Math.Log(aspect)) < Math.Abs(Math.Log(column.Width / column.Height)));
+        Assert.True(
+            Math.Abs(Math.Log(square.Width / square.Height)) < Math.Abs(Math.Log(column.Width / column.Height))
+        );
     }
 
     [Fact]

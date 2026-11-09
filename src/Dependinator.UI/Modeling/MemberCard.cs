@@ -244,17 +244,6 @@ static class MemberCard
         : parent.IsPrivateMembersShown ? PrivateToggle.Open
         : PrivateToggle.Folded;
 
-    // The aspect (width / height) of the card closest to a square that the members can make: the
-    // shape a container of only these members is given, so its card fills it.
-    public static double NaturalAspect(IReadOnlyList<Section> sections, PrivateToggle toggle = PrivateToggle.None)
-    {
-        if (sections.Count == 0)
-            return 1;
-        var columnWidth = ColumnWidth(sections, toggle);
-        var size = CardSize(BestFlow(Items(sections, toggle).Items, columnWidth, 1), columnWidth);
-        return size.Width / size.Height;
-    }
-
     static FlowResult BestFlow(List<Node?> items, double columnWidth, double targetAspect)
     {
         var best = Flow(items, 1);
