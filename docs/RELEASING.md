@@ -33,6 +33,10 @@ extension's packages, its notes the `Unreleased` section so far. A preview with 
 allowed, and says so in a warning. The Releases page keeps the latest five previews; the
 Marketplace keeps every version.
 
+Both end by starting the Branch graph workflow (`branch-graph.yml`), so its page on GitHub Pages
+shows the new tag: nothing else would start it, since tags made with the `GITHUB_TOKEN` start no
+workflow.
+
 The Marketplace's pre-release track is opt-in: a user gets the previews after **Switch to
 Pre-Release Version** on the extension's page in VS Code, and everyone else only the releases. A
 preview's packages are built with `vsce package --pre-release`, which marks them as pre-release,

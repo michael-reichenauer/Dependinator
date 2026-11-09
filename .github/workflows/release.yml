@@ -29,10 +29,11 @@ on:
         type: boolean
         default: true
 
-# Needed to push the release commits and to create releases. The jobs that only test or build say
-# contents: read for themselves.
+# Needed to push the release commits and to create releases, and actions: write to start the Branch
+# graph workflow at the end. The jobs that only test or build say contents: read for themselves.
 permissions:
   contents: write
+  actions: write
 
 # One release at a time, queued rather than cancelled, since a cancelled run can leave a release half
 # made. GitHub keeps one pending run per group: a third run started meanwhile replaces the pending
@@ -594,3 +595,11 @@ jobs:
                 gh release delete "$TAG" --yes --cleanup-tag || true
               fi
             done
+
+      # The branch graph page (branch-graph.yml) shows the release tags, but nothing here starts it:
+      # a preview pushes nothing, a release's push runs before its tag is made, and tags made or
+      # deleted with the GITHUB_TOKEN start no workflow. A dispatch with it does. Tidying only.
+      - name: Refresh the branch graph
+        if: inputs.publish
+        continue-on-error: true
+        run: gh workflow run branch-graph.yml --ref dev
