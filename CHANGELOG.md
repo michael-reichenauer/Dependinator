@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.90.450284] - 2026-11-09
+
 ### Improved
 
 - A type is drawn as a square again, like its icon, so its lines meet the icon instead of ending far to its sides; saved models are laid out again once, except containers you arranged yourself
