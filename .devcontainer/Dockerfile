@@ -13,4 +13,4 @@ RUN apt-get update \
 # The C# 15 union patterns (see global.json) need the .NET 11 SDK. It is installed beside the image's
 # SDK 10, whose runtime the net10.0 projects, the csharpier tool and CSharpier.MsBuild still need.
 RUN wget -qO- https://dot.net/v1/dotnet-install.sh \
-    | bash -s -- --channel 11.0 --quality preview --install-dir /usr/share/dotnet
+    | bash -s -- --channel 11.0 --install-dir /usr/share/dotnet

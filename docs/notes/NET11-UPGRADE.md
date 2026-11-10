@@ -1,45 +1,34 @@
 # .NET 11 / C# 15 follow-up checklist
 
 The `Result` / `Result<T>` union types (`src/Dependinator.Core/Utils/Result.cs`) need the C# 15 compiler,
-so the repo builds with the **.NET 11 RC1 SDK** (`global.json`) while every project still targets
-**net10.0**. Two follow-ups remain, in order. The first is small and due at GA; the second is optional.
+so the repo builds with the **.NET 11 SDK** (`global.json`) while every project still targets
+**net10.0**. Phase A, the move from the RC1 SDK to the GA SDK, is done. Phase B, the move of the target
+framework, is optional and waits for Azure Static Web Apps.
 Background: the `result-union-kit.md` notes (kept outside the repo), section 7.
 
-## Phase A: .NET 11 GA (expected November 2026), target framework stays net10.0
+## Phase A: .NET 11 GA SDK, target framework stays net10.0 (done Nov 10, 2026)
 
-Required as soon as the GA SDK is out; nothing else in the repo changes.
-
-- [ ] `global.json`: `"version": "11.0.100"` (the GA version), remove `"allowPrerelease": true`, keep
-      `"rollForward": "latestFeature"`.
-- [ ] `Directory.Build.props`: `<LangVersion>preview</LangVersion>` → `<LangVersion>15</LangVersion>`.
-      Keep `CS8509` in `WarningsAsErrors`.
-- [ ] `Directory.Build.props`: remove `<SuppressNETCoreSdkPreviewMessage>` (the GA SDK prints no NETSDK1057).
-- [ ] `.devcontainer/Dockerfile` (the `dotnet-install.sh` RUN line) and `scripts/installdevtools`
-      (the same line): drop `--quality preview`; `--channel 11.0` then resolves to GA. Rebuild the
-      devcontainer, or run the line once in an existing one.
-- [ ] `README.md`, Prerequisites: ".NET SDK 11.0 preview" → ".NET SDK 11.0". `CLAUDE.md` line 11:
-      "the .NET 11 preview SDK" → "the .NET 11 SDK". `src/DependinatorVsCode/DEVELOPMENT.md`:
-      "the .NET 11 preview SDK" → "the .NET 11 SDK".
-- [ ] CI: **no change**. The four workflows keep `dotnet-version: "10.0.x"` (the net10.0 runtime the
-      tests, the csharpier tool and CSharpier.MsBuild need) next to `global-json-file: global.json`.
-- [ ] `Directory.Packages.props`: move `Microsoft.CodeAnalysis.CSharp`, `.Workspaces.MSBuild`,
-      `.CSharp.Workspaces` (5.6.0) to the versions that ship with the GA SDK, so Dependinator parses
-      user code that uses C# 15 syntax (the union *patterns* already bind with 5.6.0; the `union`
-      *keyword* may not). `./scripts/updatepackages -u` then `dotnet test tests/Dependinator.Roslyn.Tests`.
-      Keep `Microsoft.Build`, `.Framework` and `Microsoft.NET.StringTools` at 18.9.6: from 18.10 they
-      ship `lib/net11.0` only, and every net10.0 build then warns "doesn't support net10.0".
-      `.github/dependabot.yml` ignores 18.10+ for the three; `updatepackages -u` does not, so revert
-      them if it bumps them. They move in phase B.
-- [ ] If the build reports **CS0104** (ambiguous `Result`, `Error`, `Success`): the base class library
-      shipped a type of that name. Resolve with `using Result = Dependinator.Core.Utils.Result;` style
-      aliases in the affected `Usings.cs`, or rename ours; do not remove the global using of
-      `Dependinator.Core.Utils`.
-- [ ] CSharpier: check the release notes for C# 15 support. Until it parses the `union` keyword, keep
-      the hand-written union structs. Converting `Result.cs` and
-      `src/Dependinator.UI/Shared/CloudSync/SyncDownOutcome.cs` to `union` declarations later is
-      optional; note a compiler-generated union adds the `HasValue`/`TryGetValue` members the kit
-      deliberately leaves out, and the `Error` accessor and `Result<T>` → `Result` conversion would have
-      to be kept as extensions.
+- `global.json` pins `11.0.100` with `"rollForward": "latestFeature"`, no `allowPrerelease`.
+- `Directory.Build.props` sets `<LangVersion>15</LangVersion>` (net10.0 defaults to C# 14) and no longer
+  suppresses the preview SDK notice. `CS8509` stays in `WarningsAsErrors`.
+- `.devcontainer/Dockerfile` and `scripts/installdevtools` install `--channel 11.0` without
+  `--quality preview`. An existing devcontainer needs a rebuild, or that line run once.
+  `scripts/cloud-setup` installs the exact `global.json` version, so it followed by itself.
+- CI: no change. The workflows keep `dotnet-version: "10.0.x"` (the net10.0 runtime the tests, the
+  csharpier tool and CSharpier.MsBuild need) next to `global-json-file: global.json`.
+- `Microsoft.CodeAnalysis.*` is at 5.9.0, the newest release at GA. `Microsoft.Build`, `.Framework` and
+  `Microsoft.NET.StringTools` stay at 18.9.6: from 18.10 they ship `lib/net11.0` only, and every net10.0
+  build then warns "doesn't support net10.0". `.github/dependabot.yml` ignores 18.10+ for the three;
+  `./scripts/updatepackages -u` does not, so revert them if it bumps them. They move in phase B.
+- No **CS0104** (ambiguous `Result`, `Error`, `Success`) showed up with the GA base class library. If a
+  later SDK brings one: resolve it with `using Result = Dependinator.Core.Utils.Result;` style aliases
+  in the affected `Usings.cs`, or rename ours; do not remove the global using of `Dependinator.Core.Utils`.
+- Still open, optional: CSharpier 1.3.0 is the version in use; check its release notes for C# 15
+  support. Until it parses the `union` keyword, keep the hand-written union structs. Converting
+  `Result.cs` and `src/Dependinator.UI/Shared/CloudSync/SyncDownOutcome.cs` to `union` declarations
+  later is optional; note a compiler-generated union adds the `HasValue`/`TryGetValue` members the kit
+  deliberately leaves out, and the `Error` accessor and `Result<T>` → `Result` conversion would have
+  to be kept as extensions.
 
 Verify (all must be clean, as for every migration commit):
 
@@ -60,8 +49,13 @@ dotnet publish src/Api/Api.csproj -c Release -o /tmp/api
 
 net10.0 is LTS (supported to November 2028); net11.0 is STS. Move only when every host supports it.
 Gate: the **Azure Functions isolated worker** (`src/Api`) and **Azure Static Web Apps** must support
-.NET 11, which usually lags GA by months; the Api project can stay on net10.0 alone if needed (it does
-not reference `Dependinator.Core`).
+.NET 11; the Api project can stay on net10.0 alone if needed (it does not reference `Dependinator.Core`).
+
+Status on Nov 10, 2026: Azure Functions announced .NET 11 as generally available for the isolated
+worker, and it requires the new `Azure.Functions.Sdk` project SDK (1.0.1 or later) in `src/Api/Api.csproj`.
+Azure Static Web Apps, which hosts the Api as managed functions, lists `dotnet-isolated:10.0` as its
+newest `apiRuntime`, no 11.0. So the gate is not met: check the Static Web Apps "Supported languages
+and runtimes" page again before starting.
 
 - [ ] Every `*.csproj` under `src/` and `tests/` (18 projects, including `src/Dependinator.DemoGen`
       which is outside `Dependinator.sln`): `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
@@ -91,6 +85,8 @@ not reference `Dependinator.Core`).
       `.github/dependabot.yml`.
 - [ ] `dotnet workload restore Dependinator.sln` on the new band (a no-op today because
       `WasmBuildNative` is false; keep the CI step either way).
+- [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
+      require, and set `apiRuntime` in `src/Dependinator.Wasm/staticwebapp.config.json` to the 11.0 value.
 - [ ] Docs: `README.md` (Solution structure and Prerequisites), `CLAUDE.md` line 11,
       `src/DependinatorVsCode/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
       `UnionPolyfill.cs` comments disappear with those edits.

@@ -269,7 +269,7 @@ d.node("azurite", 1370, 360, "Storage-Account", "Azurite", "local Blob emulator"
 d.box("tools", 1110, 500, 340, 125, "Dev tools (outside the solution)", [
     "Dependinator.DemoGen: regenerates the demo models",
     "scripts/: build, watch, run, test, e2e, changelog",
-    "dev container: .NET 11 preview SDK, Playwright",
+    "dev container: .NET 11 SDK, Playwright",
     "browsers, Functions Core Tools, Azurite"], icon="Configuration")
 d.port("webhost.b1", 1200, 250)
 d.edge("webhost.b1", "funclocal", "sync tests (./scripts/e2e -s)", ASYNC, dashed=True, label_dx=6, anchor="start", label_dy=4)
