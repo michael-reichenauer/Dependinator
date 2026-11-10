@@ -1728,7 +1728,15 @@ button.dep-rules__node:hover {
 
 .dep-tt-code {
     margin-top: 6px;
-    padding: 2px 5px;
+    /* A declaration that wraps continues indented, like formatted code. */
+    padding: 2px 5px 2px 21px;
+    text-indent: -16px;
+    color: var(--dep-tt-muted);
+}
+
+.dep-tt-code b {
+    color: var(--dep-tt-fg);
+    font-weight: 600;
 }
 
 .dep-tooltip code {
@@ -1741,16 +1749,18 @@ button.dep-rules__node:hover {
     border-top: 1px solid var(--dep-tt-line);
 }
 
+/* A link's two ends side by side, the target below when both do not fit (long member names). */
 .dep-tt-link {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 12px;
+    column-gap: 12px;
     font-size: 12px;
 }
 
 .dep-tt-link span {
     color: var(--dep-tt-muted);
-    white-space: nowrap;
+    margin-left: auto;
 }
 
 .dep-tt-row {

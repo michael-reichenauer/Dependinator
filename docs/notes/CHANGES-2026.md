@@ -152,6 +152,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `data-name` stays for the e2e locators): the card is built only when the mouse rests on an item
   (`TooltipService`, `initTooltips` in jsInterop.js). Chosen over a larger card with top
   dependencies and the source file.
+  Nov 10: the card reads like code. "Interface in Namespace" instead of a dot, a member as it is
+  declared (`Task<Rect?> SelectAreaAsync(AreaSelectionPurpose purpose)`, the name in bold, wrapping
+  between parameters; `param name type` in Bicep), code comments flow instead of keeping the source
+  file's line breaks, and an open container larger than 400 px on screen gets no card (`data-open`),
+  since the user is then looking at its children; resting on its name, or on an open type card's
+  header (`data-tip-label`, `data-header-height`), still shows it.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.

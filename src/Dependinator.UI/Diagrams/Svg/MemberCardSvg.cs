@@ -336,7 +336,14 @@ static class MemberCardSvg
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
         var (w, h) = (nodeCanvasRect.Width, nodeCanvasRect.Height);
         var innerRect = new Rect(0, 0, w, h);
-        var hoverGroup = NodeSvg.BuildHoverGroup(elementId, hoverClass, innerRect, NodeSvg.TitleName(node));
+        var hoverGroup = NodeSvg.BuildHoverGroup(
+            elementId,
+            hoverClass,
+            innerRect,
+            NodeSvg.TitleName(node),
+            isOpen: true,
+            headerHeight: MemberCard.CardHeaderHeight * childrenZoom
+        );
         var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
         var textZoom = TextZoom(parentZoom);
         return string.Create(
