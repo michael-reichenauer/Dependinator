@@ -244,9 +244,10 @@ public class AskModelTests
         Assert.Contains("`UI.View`", prompt);
         Assert.Contains("MCP server named dependinator", prompt);
         Assert.Contains("If you do not have those tools", prompt);
-        // All but the task is the panel's own prompt, which asks for the answer's fields instead.
-        var task = prompt.IndexOf("## How to answer", StringComparison.Ordinal);
-        Assert.Equal(inPanel[..inPanel.IndexOf("## How to answer", StringComparison.Ordinal)], prompt[..task]);
+        // It may have no tools, so only the panel's own prompt says to use them whatever.
+        Assert.Contains("Start from these nodes, by these names.", prompt);
+        Assert.Contains("Look these nodes up with the tools", inPanel);
+        Assert.DoesNotContain("up with the tools", prompt);
         Assert.DoesNotContain("Under change", prompt);
     }
 
