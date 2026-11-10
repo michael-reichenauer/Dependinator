@@ -39,6 +39,22 @@ public class SolutionDescriptionReaderTests
     }
 
     [Fact]
+    public void ExtractFirstParagraph_StopsAtTheClosingTagOfAnHtmlParagraph()
+    {
+        var markdown = """
+            <h1 align="center">Title</h1>
+
+            <p align="center">
+              The description, written in HTML.
+            </p>
+            """;
+
+        var result = SolutionDescriptionReader.ExtractFirstParagraph(markdown);
+
+        Assert.Equal("The description, written in HTML.", result);
+    }
+
+    [Fact]
     public void ExtractFirstParagraph_SkipsBadgesAndHtmlPreamble()
     {
         var markdown = """

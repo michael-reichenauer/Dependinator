@@ -530,6 +530,9 @@ export function initLinePreview(elementId) {
 // A press, a key, the wheel, a drag or leaving the item hides it; touch never shows it.
 const tooltipDelayMs = 600;
 const tooltipOffset = 14;
+// An open container larger than this on screen (px, its longer side) gets no card: the user is
+// then looking at its children, and the container is under the pointer wherever it rests.
+const tooltipOpenContainerMaxSize = 400;
 
 let tooltipCleanup = null;
 let tooltipOwner = null;
@@ -553,6 +556,7 @@ export function initTooltips(elementId, dotNetRef, token) {
   card.hidden = true;
 
   let hoverId = null;
+  let hoverGroup = null;
   let timer = null;
   let request = 0;
   let pointer = { x: 0, y: 0 };
@@ -577,7 +581,13 @@ export function initTooltips(elementId, dotNetRef, token) {
     card.style.top = `${y}px`;
   }
 
-  async function show(id) {
+  function isLargeOpenContainer(group) {
+    if (group.dataset.open !== "1") return false;
+    const rect = group.getBoundingClientRect();
+    return Math.max(rect.width, rect.height) > tooltipOpenContainerMaxSize;
+  }
+
+  async function show(id, group) {
     timer = null;
     const thisRequest = ++request;
     let html = null;
@@ -587,6 +597,7 @@ export function initTooltips(elementId, dotNetRef, token) {
       return; // The circuit or the component is gone
     }
     if (thisRequest !== request || hoverId !== id || !html) return;
+    if (isLargeOpenContainer(group)) return; // Zoomed in while the mouse rested
     card.innerHTML = html;
     card.hidden = false;
     place();
@@ -599,8 +610,10 @@ export function initTooltips(elementId, dotNetRef, token) {
     if (!id || !(id.endsWith(".n") || id.endsWith(".l"))) return hide();
     if (id === hoverId) return;
     hide();
+    if (isLargeOpenContainer(group)) return;
     hoverId = id;
-    timer = setTimeout(() => show(id), tooltipDelayMs);
+    hoverGroup = group;
+    timer = setTimeout(() => show(id, group), tooltipDelayMs);
   }
 
   function onMove(event) {
@@ -611,7 +624,8 @@ export function initTooltips(elementId, dotNetRef, token) {
     if (timer) {
       clearTimeout(timer);
       const id = hoverId;
-      timer = setTimeout(() => show(id), tooltipDelayMs);
+      const group = hoverGroup;
+      timer = setTimeout(() => show(id, group), tooltipDelayMs);
     }
   }
 

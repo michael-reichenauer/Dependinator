@@ -47,9 +47,9 @@ static class SolutionDescriptionReader
                 )
                     continue;
             }
-            else if (line.Length == 0 || line.StartsWith("#"))
+            else if (line.Length == 0 || line.StartsWith("#") || line.StartsWith("<"))
             {
-                break; // end of the first paragraph
+                break; // end of the first paragraph (a closing "</p>" when it is written in HTML)
             }
 
             paragraph.Add(line);

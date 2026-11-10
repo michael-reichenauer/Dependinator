@@ -77,7 +77,7 @@ static class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node));
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), isOpen: true);
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -268,17 +268,21 @@ static class NodeSvg
         Rect geometry,
         string htmlName,
         string extraContent = "",
-        bool isLinePreview = false
+        bool isLinePreview = false,
+        bool isOpen = false
     )
     {
         // data-line-preview marks the nodes whose lines the hover preview lights (linePreview in
         // jsInterop.js): icons and member rows. Not open containers, which the pointer is
         // always over when zoomed in, so they would keep the preview on.
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
+        // data-open marks an open container (or open type card): once it is large on screen the
+        // user looks at what is inside it, and it gets no hover card (initTooltips).
+        var openAttribute = isOpen ? " data-open=\"1\"" : "";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}>
+                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}{openAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                   {extraContent}
                 </g>

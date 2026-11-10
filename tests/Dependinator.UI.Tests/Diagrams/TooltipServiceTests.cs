@@ -78,7 +78,7 @@ public class TooltipServiceTests
 
         Assert.NotNull(html);
         Assert.Contains(">Service</div>", html);
-        Assert.Contains("Class · App", html);
+        Assert.Contains("Class in App", html);
         Assert.Contains("Runs <the> app.", html);
         Assert.DoesNotContain("<the>", NewService().GetHtml(NodeElement(service))); // Encoded
         Assert.Contains("uses <b>1</b>", html);
@@ -105,9 +105,75 @@ public class TooltipServiceTests
 
         var html = Html(NewService(), NodeElement(run));
 
-        Assert.Contains("Method · Service", html);
+        Assert.Contains("Method in Service", html);
         Assert.Contains("uses <b>1</b>", html); // Repo, not Service
         Assert.DoesNotContain("used by", html);
+    }
+
+    // A member reads as it is declared in code, not as its row shows it (UML style).
+    [Theory]
+    [InlineData(
+        nameof(NodeType.MethodMember),
+        "(Purpose purpose): Task<Rect?>",
+        "Task<Rect?> <b>Run</b>(Purpose purpose)"
+    )]
+    [InlineData(nameof(NodeType.MethodMember), "(int count)", "void <b>Run</b>(int count)")]
+    [InlineData(
+        nameof(NodeType.MethodMember),
+        "((int X, int Y) pos, int[] ids): (int, int)",
+        "(int, int) <b>Run</b>((int X, int Y) pos, int[] ids)"
+    )]
+    [InlineData(nameof(NodeType.ConstructorMember), "(int count)", "<b>Run</b>(int count)")]
+    [InlineData(nameof(NodeType.PropertyMember), ": int", "int <b>Run</b>")]
+    [InlineData(nameof(NodeType.PropertyMember), "[int index]: string", "string this[int index]")]
+    [InlineData(nameof(NodeType.FieldMember), ": List<string>", "List<string> <b>Run</b>")]
+    [InlineData(nameof(NodeType.EventMember), ": Action?", "event Action? <b>Run</b>")]
+    [InlineData(nameof(NodeType.ParameterMember), ": string", "param <b>Run</b> string")]
+    [InlineData(nameof(NodeType.OutputMember), ": string", "output <b>Run</b> string")]
+    [InlineData(nameof(NodeType.MethodMember), "(int count", "(int count")]
+    public void DeclarationHtml_ShouldReadLikeCode(string type, string signature, string expected)
+    {
+        Node member;
+        using (var model = modelMgr.UseModel())
+        {
+            var service = AddNode(model, "App.Service", model.Root);
+            member = AddNode(model, "App.Service.Run", service, Enum.Parse<NodeType>(type));
+            member.Signature = signature;
+        }
+
+        // Without where it may wrap: after "(", not at the non-breaking spaces
+        var html = TooltipService.DeclarationHtml(member).Replace("<wbr>", "").Replace("&nbsp;", " ");
+        Assert.Equal(expected, WebUtility.HtmlDecode(html));
+    }
+
+    [Fact]
+    public void DeclarationHtml_ShouldWrapOnlyBetweenParameters()
+    {
+        Node member;
+        using (var model = modelMgr.UseModel())
+        {
+            var service = AddNode(model, "App.Service", model.Root);
+            member = AddNode(model, "App.Service.Run", service, NodeType.MethodMember);
+            member.Signature = "(int count, string name): Task<int>";
+        }
+
+        Assert.Equal(
+            "Task&lt;int&gt;&nbsp;<b>Run</b>(<wbr>int&nbsp;count, string&nbsp;name)",
+            TooltipService.DeclarationHtml(member)
+        );
+    }
+
+    [Fact]
+    public void GetHtml_ShouldFlowADescriptionsSourceLines_AndKeepItsParagraphs()
+    {
+        Node node;
+        using (var model = modelMgr.UseModel())
+        {
+            node = AddNode(model, "App", model.Root, NodeType.Namespace);
+            node.SetDescription("First line\n  second line.\n\nNext paragraph.");
+        }
+
+        Assert.Contains("First line second line.\n\nNext paragraph.", Html(NewService(), NodeElement(node)));
     }
 
     [Fact]
@@ -149,8 +215,8 @@ public class TooltipServiceTests
         var html = Html(NewService(), PointerId.FromLine(line.Id).ElementId);
 
         Assert.NotNull(html);
-        Assert.Contains("A<span class=\"dep-tt-arrow\">→</span>B", html);
-        Assert.Contains("N · 5 links", html);
+        Assert.Contains("A<span class=\"dep-tt-arrow\">→</span><wbr>B", html);
+        Assert.Contains("5 links in N", html);
         Assert.Contains("<code>A.Alpha</code>", html);
         Assert.Contains("<code>A.Charlie</code>", html);
         Assert.DoesNotContain("A.Delta", html); // Sorted, three shown
