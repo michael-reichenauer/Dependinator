@@ -12,7 +12,6 @@ namespace Dependinator.UI.Diagrams.Editing;
 // read the files, the source of the types that make the links.
 static class LineLabelPrompt
 {
-    const int MaxOtherLabels = 15;
     const int MaxSourceUnits = 4;
 
     // The code to show with the prompt: the types (or modules, resources) that make the links,
@@ -51,7 +50,7 @@ static class LineLabelPrompt
 
         AppendLine(text, model, line);
         AppendCurrentLabel(text, line);
-        AppendOtherLabels(text, model, line);
+        AppendOtherLabels(text, model, "Labels on other lines", line);
 
         if (sources is { Count: > 0 })
             AppendSource(text, model, sources, "The code of the types that make the links.");
@@ -103,25 +102,6 @@ static class LineLabelPrompt
         text.AppendLine($"Label: {line.Label ?? ""}");
         text.AppendLine($"Description: {line.LabelDescription ?? ""}");
         text.AppendLine("Keep what is right in it, and improve the rest.");
-    }
-
-    static void AppendOtherLabels(StringBuilder text, IModel model, Line line)
-    {
-        var others = model
-            .Lines.Values.Where(l => l != line && l.Label is not null)
-            .OrderBy(l => l.Source.LongName, StringComparer.Ordinal)
-            .ThenBy(l => l.Target.LongName, StringComparer.Ordinal)
-            .ToList();
-        if (others.Count == 0)
-            return;
-        text.AppendLine().AppendLine("## Labels on other lines").AppendLine();
-        foreach (var other in others.Take(MaxOtherLabels))
-        {
-            var description = other.LabelDescription is { } d ? $" ({d})" : "";
-            text.AppendLine($"- {other.Source.DisplayName} \"{other.Label}\"{description} {other.Target.DisplayName}");
-        }
-        if (others.Count > MaxOtherLabels)
-            text.AppendLine($"- … and {others.Count - MaxOtherLabels} more");
     }
 
     // The closest node around both ends, so the links are named relative to it.

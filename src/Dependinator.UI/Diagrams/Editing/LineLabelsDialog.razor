@@ -6,7 +6,7 @@
 
 @* Suggest Line Labels (LineLabelsService): an AI labels the unlabeled lines of a container, or of
    the whole model, in one answer (AiOpinion, open at once since asking is what the dialog is
-   for). The user unticks the labels they do not want; "Add labels" adds the rest as one step,
+   for). The user unticks the labels they do not want; the answer's "Add labels" adds the rest as one step,
    with their descriptions only when asked for (they crowd a diagram of close lines). Nothing is
    saved before that. *@
 <MudDialog>
@@ -16,7 +16,7 @@
   <DialogContent>
     <div class="dep-panel__hint" data-testid="line-labels-intro" data-total="@TotalCount">@Intro</div>
     <AiOpinion TAnswer="LineLabelsSuggestion" TestId="line-labels" GetPrompt="GetPrompt" Ask="Ask"
-               ParsePasted="ParsePasted" OnAnswerSelected="OnAnswer" IsExpandedAtStart="true"
+               ParsePasted="ParsePasted" IsExpandedAtStart="true"
                IsVerdictCompared="false" ExpandText="Suggest labels with AI" AnswerTitle="Suggested labels"
                AnswersTitle="Suggested labels"
                RouteText="Claude reads the lines, their links and their code and suggests the labels here."
@@ -56,19 +56,22 @@
           {
             <div class="dep-ai__suggestion-note" data-testid="line-labels-left-out">@LeftOutText(s)</div>
           }
+          <div class="dep-line-labels__add">
+            <label class="dep-line-labels__option" title="The smaller text under each label. It tells more, and takes room where lines are close.">
+              <input type="checkbox" @bind="withDescriptions" data-testid="line-labels-descriptions" />
+              Add the descriptions too
+            </label>
+            <MudSpacer />
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small" Disabled="@(TickedCount(s) == 0)"
+                       OnClick="() => Add(s)" data-testid="line-labels-add">@AddText(s)</MudButton>
+          </div>
         </div>
       </AnswerContent>
     </AiOpinion>
   </DialogContent>
   <DialogActions>
-    <label class="dep-line-labels__option" title="The smaller text under each label. It tells more, and takes room where lines are close.">
-      <input type="checkbox" @bind="withDescriptions" data-testid="line-labels-descriptions" />
-      Add the descriptions too
-    </label>
     <MudSpacer />
     <MudButton OnClick="Cancel" data-testid="line-labels-cancel">Cancel</MudButton>
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(TickedCount == 0)" OnClick="Add"
-               data-testid="line-labels-add">@AddText</MudButton>
   </DialogActions>
 </MudDialog>
 
@@ -87,8 +90,7 @@
   // Off at first: in a diagram of close lines the descriptions run into each other.
   bool withDescriptions;
 
-  // The answer shown, and per answer the labels the user unticked (by line number).
-  LineLabelsSuggestion? shown;
+  // Per answer, the labels the user unticked (by line number).
   readonly Dictionary<LineLabelsSuggestion, HashSet<int>> unticked = new(ReferenceEqualityComparer.Instance);
 
   Func<AiSource, Action<SuggestStep>, Task<Result<LineLabelsSuggestion>>>? Ask =>
@@ -112,11 +114,9 @@
     }
   }
 
-  int TickedCount => shown is null ? 0 : shown.Labels.Count(l => IsTicked(shown, l));
+  int TickedCount(LineLabelsSuggestion s) => s.Labels.Count(l => IsTicked(s, l));
 
-  string AddText => TickedCount == 1 ? "Add 1 label" : $"Add {TickedCount} labels";
-
-  void OnAnswer(LineLabelsSuggestion suggestion) => shown = suggestion;
+  string AddText(LineLabelsSuggestion s) => TickedCount(s) == 1 ? "Add 1 label" : $"Add {TickedCount(s)} labels";
 
   bool IsTicked(LineLabelsSuggestion suggestion, SuggestedLineLabel label) =>
     !(unticked.TryGetValue(suggestion, out var numbers) && numbers.Contains(label.Number));
@@ -134,10 +134,9 @@
   void SetAll(LineLabelsSuggestion suggestion, bool isTicked) =>
     unticked[suggestion] = isTicked ? [] : [.. suggestion.Labels.Select(l => l.Number)];
 
-  void Add()
+  // The button is part of the answer, so only an answer the user sees can be added.
+  void Add(LineLabelsSuggestion shown)
   {
-    if (shown is null)
-      return;
     IReadOnlyList<SuggestedLineLabel> labels =
     [
       .. shown.Labels.Where(l => IsTicked(shown, l)).Select(l => withDescriptions ? l : l with { Description = "" }),

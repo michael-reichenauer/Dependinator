@@ -40,6 +40,10 @@ class LineLabelsService(
     ISnackbar snackbar
 ) : ILineLabelsService
 {
+    // The lines asked about that got no label (the AI left them out, or the user unticked
+    // them): they come last the next time, so asking again reaches the rest of a large model.
+    readonly HashSet<LineId> askedBefore = [];
+
     public async Task SuggestLabelsAsync(NodeId? scopeId)
     {
         List<LineId> lineIds;
@@ -47,9 +51,12 @@ class LineLabelsService(
         string scopeName;
         using (var model = modelMgr.UseModel())
         {
-            var scope = scopeId is not null && model.Nodes.TryGetValue(scopeId, out var node) ? node : model.Root;
-            lineIds = [.. LineLabelsPrompt.Candidates(model, scope).Select(l => l.Id)];
-            total = LineLabelsPrompt.CandidateCount(model, scope);
+            Node scope = model.Root;
+            // A container that is gone (a re-parse since the menu opened) is not the whole model.
+            if (scopeId is not null && !model.Nodes.TryGetValue(scopeId, out scope!))
+                return;
+            (var lines, total) = LineLabelsPrompt.Candidates(model, scope, askedBefore);
+            lineIds = [.. lines.Select(l => l.Id)];
             scopeName = scope.IsRoot ? "" : scope.DisplayName;
         }
         if (lineIds.Count == 0)
@@ -80,15 +87,22 @@ class LineLabelsService(
         )
             return;
 
-        List<LineLabelCommand> commands =
-        [
-            .. labels
-                .Where(l => l.Id is not null)
-                .Select(l => new LineLabelCommand(l.Id!) { Label = l.Label, Description = l.Description }),
-        ];
+        // The model may have changed while the dialog was open (a re-parse, a cloud sync): a line
+        // that is gone, or has a label by now, is left as it is.
+        List<LineLabelCommand> commands;
+        using (var model = modelMgr.UseModel())
+        {
+            commands =
+            [
+                .. labels
+                    .Where(l => l.Id is not null && model.Lines.TryGetValue(l.Id, out var line) && !line.HasLabel)
+                    .Select(l => new LineLabelCommand(l.Id!) { Label = l.Label, Description = l.Description }),
+            ];
+        }
+        askedBefore.UnionWith(lineIds);
         if (commands.Count == 0)
             return;
-        commandService.Do(commands.Count == 1 ? commands[0] : new LineLabelsCommand(commands));
+        commandService.Do(new LineLabelsCommand(commands));
     }
 
     public async Task<string> GetPromptAsync(IReadOnlyList<LineId> lineIds)

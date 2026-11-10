@@ -7,10 +7,6 @@ namespace Dependinator.UI.Modeling.Commands;
 // of a gesture, and forty labels are one step.
 class LineLabelsCommand(IReadOnlyList<LineLabelCommand> labels) : Command
 {
-    readonly IReadOnlyList<LineLabelCommand> labels = labels;
-
-    public IReadOnlyList<LineLabelCommand> Labels => labels;
-
     // Never merged with another edit.
     public override string MergeKey { get; } = Guid.NewGuid().ToString();
 

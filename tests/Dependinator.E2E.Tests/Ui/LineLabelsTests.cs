@@ -18,7 +18,7 @@ public class LineLabelsTests(ITestOutputHelper output) : E2ETestBase(output)
 
         var total = await OpenAsync();
         ILocator add = Page.GetByTestId("line-labels-add");
-        await Expect(add).ToBeDisabledAsync();
+        await Expect(add).ToHaveCountAsync(0);
 
         await Page.GetByTestId("line-labels-show-prompt").ClickAsync();
         await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The lines");

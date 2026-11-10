@@ -16,25 +16,35 @@ static class LineLabelsPrompt
     // The most lines in one question: the answer stays readable, and the prompt within bounds.
     internal const int MaxLines = 40;
     const int MaxLinksPerLine = 4;
-    const int MaxOtherLabels = 15;
     const int MaxSourceUnits = 12;
 
     // The lines to label inside the scope (a container, or the root for the whole model): lines
     // between siblings that stand for links and have no label yet, drawn like the nodes (not
     // hidden or dimmed), no rows of a card, no pure configuration plumbing and nothing to or from
-    // the external references (two opposite lines that say little). Outer levels come first, then the lines with most links, so a cut at MaxLines keeps the lines that say most.
-    public static IReadOnlyList<Line> Candidates(IModel model, Node scope) =>
-        [.. AllCandidates(model, scope).Take(MaxLines)];
-
-    public static int CandidateCount(IModel model, Node scope) => AllCandidates(model, scope).Count();
-
-    static IEnumerable<Line> AllCandidates(IModel model, Node scope) =>
-        model
-            .Lines.Values.Where(l => IsCandidate(l) && IsInside(l.Source, scope))
-            .OrderBy(l => l.Source.Ancestors().Count())
-            .ThenByDescending(l => l.Links.Count)
-            .ThenBy(l => l.Source.LongName, StringComparer.Ordinal)
-            .ThenBy(l => l.Target.LongName, StringComparer.Ordinal);
+    // the external references (two opposite lines that say little). Outer levels come first,
+    // then the lines with most links, so a cut at MaxLines keeps the lines that say most. Lines
+    // asked about before (and left without a label by the AI or the user) come last, so asking
+    // again reaches the rest. Total is the number of such lines before the cut.
+    public static (IReadOnlyList<Line> Lines, int Total) Candidates(
+        IModel model,
+        Node scope,
+        IReadOnlySet<LineId>? askedBefore = null
+    )
+    {
+        List<Line> all =
+        [
+            .. model
+                .Lines.Values.Where(l => IsCandidate(l) && IsInside(l.Source, scope))
+                .Select(l => (Line: l, Depth: l.Source.Ancestors().Count()))
+                .OrderBy(c => askedBefore?.Contains(c.Line.Id) ?? false)
+                .ThenBy(c => c.Depth)
+                .ThenByDescending(c => c.Line.Links.Count)
+                .ThenBy(c => c.Line.Source.LongName, StringComparer.Ordinal)
+                .ThenBy(c => c.Line.Target.LongName, StringComparer.Ordinal)
+                .Select(c => c.Line),
+        ];
+        return ([.. all.Take(MaxLines)], all.Count);
+    }
 
     static bool IsCandidate(Line line) =>
         line.Source.Parent is not null
@@ -97,7 +107,7 @@ static class LineLabelsPrompt
 
         AppendNodes(text, present);
         AppendLines(text, lines);
-        AppendOtherLabels(text, model);
+        AppendOtherLabels(text, model, "Labels other lines already have");
 
         if (sources is { Count: > 0 })
             AppendSource(text, model, sources, "The code that makes most of the links.");
@@ -158,24 +168,5 @@ static class LineLabelsPrompt
             text.AppendLine($"   - {group.Key} → {Targets(group, container)}");
         if (bySource.Count > MaxLinksPerLine)
             text.AppendLine($"   - … and links from {bySource.Count - MaxLinksPerLine} more");
-    }
-
-    static void AppendOtherLabels(StringBuilder text, IModel model)
-    {
-        var others = model
-            .Lines.Values.Where(l => l.Label is not null)
-            .OrderBy(l => l.Source.LongName, StringComparer.Ordinal)
-            .ThenBy(l => l.Target.LongName, StringComparer.Ordinal)
-            .ToList();
-        if (others.Count == 0)
-            return;
-        text.AppendLine().AppendLine("## Labels other lines already have").AppendLine();
-        foreach (var other in others.Take(MaxOtherLabels))
-        {
-            var description = other.LabelDescription is { } d ? $" ({d})" : "";
-            text.AppendLine($"- {other.Source.DisplayName} \"{other.Label}\"{description} {other.Target.DisplayName}");
-        }
-        if (others.Count > MaxOtherLabels)
-            text.AppendLine($"- … and {others.Count - MaxOtherLabels} more");
     }
 }

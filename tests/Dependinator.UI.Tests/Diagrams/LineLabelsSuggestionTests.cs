@@ -67,10 +67,17 @@ public class LineLabelsSuggestionTests
         using var model = modelMgr.UseModel();
         Setup(model);
 
-        var lines = LineLabelsPrompt.Candidates(model, model.Root);
+        var lines = LineLabelsPrompt.Candidates(model, model.Root).Lines;
 
         Assert.Equal("Parsing→Model, Model→Utils, Store→Node", Names(lines));
-        Assert.Equal(3, LineLabelsPrompt.CandidateCount(model, model.Root));
+        Assert.Equal(3, LineLabelsPrompt.Candidates(model, model.Root).Total);
+
+        // Lines asked about before come last.
+        HashSet<LineId> asked = [lines[0].Id];
+        Assert.Equal(
+            "Model→Utils, Store→Node, Parsing→Model",
+            Names(LineLabelsPrompt.Candidates(model, model.Root, asked).Lines)
+        );
     }
 
     [Fact]
@@ -80,8 +87,8 @@ public class LineLabelsSuggestionTests
         var modelNs = Setup(model);
         model.Lines.Values.Single(l => l.Source.LongName == "Model" && l.Target.LongName == "Utils").SetLabel("logs");
 
-        Assert.Equal("Parsing→Model, Store→Node", Names(LineLabelsPrompt.Candidates(model, model.Root)));
-        Assert.Equal("Store→Node", Names(LineLabelsPrompt.Candidates(model, modelNs)));
+        Assert.Equal("Parsing→Model, Store→Node", Names(LineLabelsPrompt.Candidates(model, model.Root).Lines));
+        Assert.Equal("Store→Node", Names(LineLabelsPrompt.Candidates(model, modelNs).Lines));
     }
 
     [Fact]
@@ -89,7 +96,7 @@ public class LineLabelsSuggestionTests
     {
         using var model = modelMgr.UseModel();
         Setup(model);
-        var lines = LineLabelsPrompt.Candidates(model, model.Root);
+        var lines = LineLabelsPrompt.Candidates(model, model.Root).Lines;
 
         var prompt = LineLabelsPrompt.Build(model, lines).ReplaceLineEndings("\n");
 
@@ -106,7 +113,7 @@ public class LineLabelsSuggestionTests
     {
         using var model = modelMgr.UseModel();
         Setup(model);
-        var lines = LineLabelsPrompt.Candidates(model, model.Root);
+        var lines = LineLabelsPrompt.Candidates(model, model.Root).Lines;
         lines[1].SetLabel("logs to", "errors");
 
         var prompt = LineLabelsPrompt.Build(model, [lines[0], null, lines[2]]).ReplaceLineEndings("\n");
@@ -162,11 +169,28 @@ public class LineLabelsSuggestionTests
     }
 
     [Fact]
+    public void ParseText_ShouldSkipTheQuestionsOwnLines_AndTakeTheLastLabelOfANumber()
+    {
+        var text = """
+            1. I looked at the links first.
+            1. `Parsing` → `Model`
+            2. Store → Node
+            1. builds | the nodes
+
+            """;
+
+        var suggestion = AssertOk(LineLabelsSuggestion.ParseText(text));
+
+        Assert.Equal([new SuggestedLineLabel(1, "builds", "the nodes")], suggestion.Labels);
+        AssertError(LineLabelsSuggestion.ParseText("1. `Parsing` → `Model`"));
+    }
+
+    [Fact]
     public void Resolve_ShouldFindTheLines_AndLeaveOutLabelsForNoLineOrALineTwice()
     {
         using var model = modelMgr.UseModel();
         Setup(model);
-        var lines = LineLabelsPrompt.Candidates(model, model.Root);
+        var lines = LineLabelsPrompt.Candidates(model, model.Root).Lines;
         List<LineId> ids = [.. lines.Select(l => l.Id)];
         var suggestion = new LineLabelsSuggestion([
             new SuggestedLineLabel(3, "creates", ""),
@@ -195,7 +219,7 @@ public class LineLabelsSuggestionTests
     {
         using var model = modelMgr.UseModel();
         Setup(model);
-        var lines = LineLabelsPrompt.Candidates(model, model.Root);
+        var lines = LineLabelsPrompt.Candidates(model, model.Root).Lines;
         lines[1].SetLabel("old", "text");
         var command = new LineLabelsCommand([
             new LineLabelCommand(lines[0].Id) { Label = "builds", Description = "the nodes" },

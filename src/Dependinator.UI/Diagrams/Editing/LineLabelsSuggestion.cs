@@ -73,20 +73,25 @@ public record LineLabelsSuggestion(IReadOnlyList<SuggestedLineLabel> Labels) : I
     );
 
     // An AI chat's answer to the copied prompt, pasted back: a line per label, "<number>. <label>
-    // | <description>" (the description may be left out).
+    // | <description>" (the description may be left out). The last line for a number counts (an
+    // answer may open with numbered words of its own), and lines that list the question's lines
+    // again ("1. `a` → `b`", as in the prompt itself) are no labels.
     public static Result<LineLabelsSuggestion> ParseText(string text)
     {
-        List<(int, string?, string?)> labels = [];
+        Dictionary<int, (int, string?, string?)> labels = [];
         foreach (var line in text.Replace("\r", "").Split('\n'))
         {
             if (LabelLine.Match(line) is not { Success: true } match)
                 continue;
             var parts = match.Groups["text"].Value.Split('|', 2);
-            labels.Add((int.Parse(match.Groups["number"].Value), parts[0], parts.Length > 1 ? parts[1] : ""));
+            if (parts[0].Contains('→') || parts[0].TrimStart().StartsWith('`'))
+                continue;
+            var number = int.Parse(match.Groups["number"].Value);
+            labels[number] = (number, parts[0], parts.Length > 1 ? parts[1] : "");
         }
         return labels.Count == 0
             ? new Error("The answer has no \"<number>. <label>\" lines, so it could not be read.")
-            : Create(labels, AiSource.Chat);
+            : Create(labels.Values.OrderBy(l => l.Item1), AiSource.Chat);
     }
 
     static Result<LineLabelsSuggestion> Create(

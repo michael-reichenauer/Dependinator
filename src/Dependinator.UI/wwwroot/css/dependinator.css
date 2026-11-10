@@ -1824,11 +1824,16 @@ button.dep-rules__node:hover {
     opacity: 0.55;
 }
 
+.dep-line-labels__add {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+}
+
 .dep-line-labels__option {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: 16px;
     font-size: 0.875rem;
     cursor: pointer;
 }
