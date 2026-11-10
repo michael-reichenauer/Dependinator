@@ -30,7 +30,7 @@
       <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" Size="Size.Small" />
       <span class="dep-panel__title">Ask</span>
       <MudSpacer />
-      @if (entries.Count > 0 && !IsAsking)
+      @if (entries.Count > 0 && !IsAsking && !IsChanging)
       {
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteSweep" Size="Size.Small" title="Clear the conversation, so the next question starts a new one"
                        OnClick="Clear" data-testid="ask-clear" />
@@ -118,7 +118,7 @@
                   <div><b>Proposed change:</b> <span data-testid="ask-change-text">@answer.Change</span></div>
                   <div class="dep-ai__fix-actions">
                     <AiFixButton TestId="ask" Verb="Do it" CopyText="Copy prompt" CanRunClaudeCode="canFixWithClaudeCode"
-                                 IsRunning="IsChanging" OnClaudeCode="() => entry.FixPanel!.StartAsync()"
+                                 IsRunning="IsChanging" OnClaudeCode="() => entry.FixPanel?.StartAsync() ?? Task.CompletedTask"
                                  OnCopilot="() => ChangeWithCopilotAsync(entry, answer)"
                                  OnCopy="() => CopyChangePromptAsync(entry, answer)" />
                   </div>
@@ -130,12 +130,11 @@
                   {
                     <div class="dep-ai__suggest-error" data-testid="ask-change-error">@changeError</div>
                   }
-                  @if (canFixWithClaudeCode)
-                  {
-                    <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
-                                   OnStateChanged="StateHasChanged" ConfirmTitle="Change the code with Claude Code?"
-                                   ConfirmYesText="Change anyway" />
-                  }
+                  @* Always there (it shows nothing until a run): a run or its report must not go
+                     away when Claude Code is turned off meanwhile. *@
+                  <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
+                                 OnStateChanged="OnChangeStateChanged" ConfirmTitle="Change the code with Claude Code?"
+                                 ConfirmYesText="Change anyway" />
                 </div>
               }
             </div>
@@ -385,7 +384,15 @@
 
   bool IsChanging => entries.Any(e => e.FixPanel?.IsRunning == true);
 
-  string ChangePrompt(Entry entry, ModelAnswer answer) => askModelService.GetChangePrompt(answer, entry.Context);
+  string ChangePrompt(Entry entry, ModelAnswer answer) =>
+    askModelService.GetChangePrompt(answer, entry.Context, entry.AboutNames);
+
+  // A run started or ended, or the model changed after one: nothing to draw while the panel is hidden.
+  void OnChangeStateChanged()
+  {
+    if (viewOptions.IsAskShown)
+      StateHasChanged();
+  }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
   const string ChangePromptCopiedNote =

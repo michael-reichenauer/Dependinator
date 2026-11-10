@@ -1,4 +1,5 @@
 using System.Text;
+using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
 
@@ -13,7 +14,10 @@ static class AskChangePrompt
     internal const int MaxFiles = 25;
     internal const int MaxRules = 30;
 
-    public static string Build(IModel model, ModelAnswer answer, AskContext context)
+    internal const int MaxFilesInside = 8;
+
+    // about names the nodes the question was asked about, as they were then ("" for the model).
+    public static string Build(IModel model, ModelAnswer answer, AskContext context, string about)
     {
         if (answer.Change == "")
             return "";
@@ -27,7 +31,6 @@ static class AskChangePrompt
         text.AppendLine(answer.Change);
 
         text.AppendLine().AppendLine("## The question and the answer that proposed it").AppendLine();
-        var about = AskModelPrompt.AboutNames(model, context);
         text.AppendLine($"**Question{(about != "" ? $" (about {about})" : "")}:** {answer.Question.Trim()}");
         text.AppendLine().AppendLine($"**Answer:** {answer.Text.Trim()}");
 
@@ -57,21 +60,36 @@ static class AskChangePrompt
     }
 
     // The nodes the question was about, then the ones the answer names, each with the file its
-    // code is in; a node without a file of its own (a namespace, say) is left out.
+    // code is in. A node without a file of its own (a namespace, a project) that was asked about
+    // with what is inside gets the first files of what is inside it.
     static List<(string Name, string File)> Files(IModel model, ModelAnswer answer, AskContext context)
     {
-        var nodes = AskModelPrompt
-            .ContextNodes(model, context)
+        var asked = AskModelPrompt.ContextNodes(model, context);
+        var nodes = asked
             .Concat(answer.Links.Values.Select(l => model.Nodes.GetValueOrDefault(l.Id)).OfType<Node>())
             .Distinct();
         List<(string, string)> files = [];
         foreach (var node in nodes)
         {
-            if (node.FileSpan is { } span && span.Path != "")
-                files.Add((node.Name, DisplayPath(model, span.Path)));
+            if (FileOf(model, node) is { } file)
+                files.Add((node.Name, file));
+            else if (context.IsBelow && asked.Contains(node))
+                files.AddRange(
+                    node.DescendantsAndSelfPreOrder()
+                        .Skip(1)
+                        .Where(n => n.Type.IsType)
+                        .Select(n => (n.Name, File: FileOf(model, n)))
+                        .Where(n => n.File is not null)
+                        .DistinctBy(n => n.File)
+                        .Take(MaxFilesInside)
+                        .Select(n => (n.Name, n.File!))
+                );
         }
-        return files;
+        return [.. files.DistinctBy(f => f.Item1)];
     }
+
+    static string? FileOf(IModel model, Node node) =>
+        node.FileSpan is { } span && span.Path != "" ? DisplayPath(model, span.Path) : null;
 
     const string TaskSection = """
         ## Your task
@@ -79,7 +97,7 @@ static class AskChangePrompt
         1. Read the code first, and check what the answer says about it. It was written from the dependency model and may be wrong in details: if the change does not fit the code, say so, and propose another before editing.
         2. Make the change without changing behavior, and no larger than it needs to be.
         3. Update the code that refers to what you moved, split or renamed.
-        4. Build, and run the tests.
+        4. Build and run the tests if you can run commands; if you cannot, say that this is left to do.
         5. Summarize what you changed. Dependinator shows the new structure after its next parse.
 
         """;

@@ -322,7 +322,8 @@ interface IAskModelService
 
     // The prompt that asks an AI that can change the code to make the change the answer proposes
     // (AskChangePrompt); empty when it proposes none.
-    string GetChangePrompt(ModelAnswer answer, AskContext context);
+    // aboutNames names what the question was about as it was asked (the nodes may be gone since).
+    string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames);
 
     Task<Result<ModelAnswer>> AskAsync(
         string question,
@@ -369,10 +370,10 @@ class AskModelService(
         return AskModelPrompt.Build(model, question, earlier, context);
     }
 
-    public string GetChangePrompt(ModelAnswer answer, AskContext context)
+    public string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames)
     {
         using var model = modelMgr.UseModel();
-        return AskChangePrompt.Build(model, answer, context);
+        return AskChangePrompt.Build(model, answer, context, aboutNames);
     }
 
     public async Task<Result<ModelAnswer>> AskAsync(

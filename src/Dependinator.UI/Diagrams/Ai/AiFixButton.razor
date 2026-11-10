@@ -87,9 +87,22 @@
   AiProvider? Runner =>
     choice.DefaultFor(AiCapability.EditCode) ?? (!isChoiceRead && CanRunClaudeCode ? AiProvider.ClaudeCode : null);
 
+  bool couldRunClaudeCode;
+
   protected override async Task OnInitializedAsync()
   {
     aiService.ChoiceChanged += OnChoiceChanged;
+    couldRunClaudeCode = CanRunClaudeCode;
+    await RefreshChoiceAsync();
+  }
+
+  // Where the button outlives a settings change (the Ask panel), whether Claude Code can run may
+  // change after the choice was read with the old value.
+  protected override async Task OnParametersSetAsync()
+  {
+    if (!isChoiceRead || couldRunClaudeCode == CanRunClaudeCode)
+      return;
+    couldRunClaudeCode = CanRunClaudeCode;
     await RefreshChoiceAsync();
   }
 

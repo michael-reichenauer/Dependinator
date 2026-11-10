@@ -195,7 +195,9 @@ public class AskModelTests
             Links = new Dictionary<string, NodeLink> { ["UI.View"] = new(view.Id, "View", "UI.View") },
         };
 
-        var prompt = AskChangePrompt.Build(model, answer, new AskContext([view.Id], true)).Replace("\r", "");
+        var prompt = AskChangePrompt
+            .Build(model, answer, new AskContext([view.Id], true), "`UI.View`")
+            .Replace("\r", "");
 
         Assert.Contains("## The change\n\nSplit View into a view and a model.\n", prompt);
         Assert.Contains("**Question (about `UI.View`):** Should it be split?", prompt);
@@ -203,7 +205,29 @@ public class AskModelTests
         Assert.Contains("- `UI.View`: /src/UI/View.cs", prompt);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(prompt, "View.cs"));
         Assert.Contains("## Architecture rules to keep", prompt);
-        Assert.Contains("Build, and run the tests.", prompt);
+        Assert.Contains("Build and run the tests if you can run commands", prompt);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldListTheFilesInsideAnAskedContainer_ThatHasNoFileOfItsOwn()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = model.Nodes[NodeId.FromName("UI")];
+        model
+            .Nodes[NodeId.FromName("UI.View")]
+            .Update(
+                new Dependinator.Core.Parsing.Node(
+                    "UI.View",
+                    new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+                )
+            );
+        var answer = new ModelAnswer("Split it.", []) { Question = "Split?", Change = "Split UI." };
+
+        var inside = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], true), "`UI`");
+        var alone = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], false), "`UI`");
+
+        Assert.Contains("- `UI.View`: /src/UI/View.cs", inside);
+        Assert.DoesNotContain("View.cs", alone);
     }
 
     [Fact]
@@ -211,7 +235,7 @@ public class AskModelTests
     {
         using var model = modelMgr.UseModel();
 
-        Assert.Equal("", AskChangePrompt.Build(model, new ModelAnswer("It is a view.", []), AskContext.Model));
+        Assert.Equal("", AskChangePrompt.Build(model, new ModelAnswer("It is a view.", []), AskContext.Model, ""));
     }
 
     [Fact]
