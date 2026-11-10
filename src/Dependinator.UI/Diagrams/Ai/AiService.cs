@@ -430,7 +430,10 @@ class AiService(
             try
             {
                 await Task.Delay(TestModeFixDelay, stop.Token);
-                return new ClaudeCodeFixReport("Test mode: Claude Code was not run.", ["src/Test.cs"]);
+                // With the first name the prompt has in backticks: the Ask panel links node names.
+                var named = System.Text.RegularExpressions.Regex.Match(fixPrompt, "`[^`\n]+`");
+                var names = named.Success ? $" The prompt names {named.Value}." : "";
+                return new ClaudeCodeFixReport($"Test mode: Claude Code was not run.{names}", ["src/Test.cs"]);
             }
             catch (OperationCanceledException)
             {

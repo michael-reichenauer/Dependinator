@@ -34,6 +34,10 @@ function score(question, answer) {
     if (!answer.names.some((n) => alternatives.some((a) => namesNode(n, a)))) missing.push(expected);
   }
   if (question.text && !new RegExp(question.text, "i").test(answer.text)) missing.push(`text /${question.text}/`);
+  // "change": true expects the answer to propose a change (the panel then offers to make it),
+  // false expects none.
+  if (question.change === true && !answer.change) missing.push("a proposed change");
+  if (question.change === false && answer.change) missing.push(`no proposed change (got "${answer.change}")`);
   return missing;
 }
 
@@ -86,7 +90,8 @@ async function ask(page, question) {
   const rows = await entry.getByTestId("ask-answer-node-name").allInnerTexts();
   const titles = await entry.getByTestId("ask-node-link").evaluateAll((links) => links.map((l) => l.title));
   const meta = (await entry.getByTestId("ask-answer-meta").innerText()).replace(/\s+/g, " ");
-  return { seconds, text, meta, names: [...rows, ...titles.map((t) => t.replace(/^Go to /, ""))] };
+  const changes = await entry.getByTestId("ask-change-text").allInnerTexts();
+  return { seconds, text, meta, change: changes[0] ?? "", names: [...rows, ...titles.map((t) => t.replace(/^Go to /, ""))] };
 }
 
 const browser = await chromium.launch();

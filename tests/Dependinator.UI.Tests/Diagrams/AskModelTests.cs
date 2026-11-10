@@ -163,6 +163,82 @@ public class AskModelTests
     }
 
     [Fact]
+    public void Parse_ShouldReadTheProposedChange_OnOneLine_OrNone()
+    {
+        var with = AssertOk(
+            ModelAnswer.Parse("""{"answer":"Split it.","nodes":[],"change":" Split View\n into two. "}""")
+        );
+        var none = AssertOk(ModelAnswer.Parse("""{"answer":"It is a view.","nodes":[],"change":"None."}"""));
+        var missing = AssertOk(ModelAnswer.Parse("""{"answer":"It is a view.","nodes":[]}"""));
+
+        Assert.Equal("Split View into two.", with.Change);
+        Assert.Equal("", none.Change);
+        Assert.Equal("", missing.Change);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldHoldTheChange_TheAnswer_TheFilesAndTheRules()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        view.Update(
+            new Dependinator.Core.Parsing.Node(
+                "UI.View",
+                new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+            )
+        );
+        model.AddRule(new ArchitectureRule("Data", "UI"));
+        var answer = new ModelAnswer("Split `UI.View` in two.", [])
+        {
+            Question = "Should it be split?",
+            Change = "Split View into a view and a model.",
+            Links = new Dictionary<string, NodeLink> { ["UI.View"] = new(view.Id, "View", "UI.View") },
+        };
+
+        var prompt = AskChangePrompt
+            .Build(model, answer, new AskContext([view.Id], true), "`UI.View`")
+            .Replace("\r", "");
+
+        Assert.Contains("## The change\n\nSplit View into a view and a model.\n", prompt);
+        Assert.Contains("**Question (about `UI.View`):** Should it be split?", prompt);
+        Assert.Contains("**Answer:** Split `UI.View` in two.", prompt);
+        Assert.Contains("- `UI.View`: /src/UI/View.cs", prompt);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(prompt, "View.cs"));
+        Assert.Contains("## Architecture rules to keep", prompt);
+        Assert.Contains("Build and run the tests if you can run commands", prompt);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldListTheFilesInsideAnAskedContainer_ThatHasNoFileOfItsOwn()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = model.Nodes[NodeId.FromName("UI")];
+        model
+            .Nodes[NodeId.FromName("UI.View")]
+            .Update(
+                new Dependinator.Core.Parsing.Node(
+                    "UI.View",
+                    new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+                )
+            );
+        var answer = new ModelAnswer("Split it.", []) { Question = "Split?", Change = "Split UI." };
+
+        var inside = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], true), "`UI`");
+        var alone = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], false), "`UI`");
+
+        Assert.Contains("- `UI.View`: /src/UI/View.cs", inside);
+        Assert.DoesNotContain("View.cs", alone);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldBeEmpty_ForAnAnswerThatProposesNoChange()
+    {
+        using var model = modelMgr.UseModel();
+
+        Assert.Equal("", AskChangePrompt.Build(model, new ModelAnswer("It is a view.", []), AskContext.Model, ""));
+    }
+
+    [Fact]
     public void Parse_ShouldFail_ForAnEmptyAnswer()
     {
         AssertError(ModelAnswer.Parse("""{"answer":" ","nodes":[]}"""));

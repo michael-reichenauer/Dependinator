@@ -1,9 +1,19 @@
 {
-  "about": "Questions for ./scripts/ask-eval, about this repository's own model (Dependinator.sln, as the dev host opens it). Each case is one conversation: its questions are asked in turn, later ones as follow-ups. An answer passes when every 'nodes' entry names a node the answer lists or links (alternatives split by |, matched on the name's last parts) and 'text' (a case-insensitive regex) matches its text. Keep the expectations to facts that stay true as the code changes, and update them when a name moves.",
+  "about": "Questions for ./scripts/ask-eval, about this repository's own model (Dependinator.sln, as the dev host opens it). Each case is one conversation: its questions are asked in turn, later ones as follow-ups. An answer passes when every 'nodes' entry names a node the answer lists or links (alternatives split by |, matched on the name's last parts) and 'text' (a case-insensitive regex) matches its text; 'change' true or false says whether it must propose a change to the code. Keep the expectations to facts that stay true as the code changes, and update them when a name moves.",
   "cases": [
     {
       "name": "bicep-parser",
-      "questions": [{ "question": "Which class parses Azure Bicep files?", "nodes": ["BicepParser"] }]
+      "questions": [{ "question": "Which class parses Azure Bicep files?", "nodes": ["BicepParser"], "change": false }]
+    },
+    {
+      "name": "propose-split",
+      "questions": [
+        {
+          "question": "Dependinator.UI.Modeling.ModelService has many members. Should it be split, and how?",
+          "nodes": ["ModelService"],
+          "change": true
+        }
+      ]
     },
     {
       "name": "csharp-parser",
