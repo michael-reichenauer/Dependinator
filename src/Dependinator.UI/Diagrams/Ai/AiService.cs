@@ -39,13 +39,29 @@ interface IAiService
 
     Task SetCopilotModelAsync(string? modelId);
 
+    // The models the API key can ask (IClaudeService.GetModelsAsync; none without a key, which
+    // is never asked for here), and the one picked in Settings › AI (Config.ClaudeModelId; null:
+    // the app picks per task). isFresh skips the cached list.
+    Task<ClaudeModel[]> GetClaudeModelsAsync(bool isFresh = false);
+
+    Task<string?> GetClaudeModelIdAsync();
+
+    Task SetClaudeModelAsync(string? modelId);
+
+    // The model Claude Code is started with (Config.ClaudeCodeModel, an alias or a full name;
+    // null: Claude Code's own setting).
+    Task<string?> GetClaudeCodeModelAsync();
+
+    Task SetClaudeCodeModelAsync(string? model);
+
     // Raised when Settings › AI changes the providers or the default.
     event Action? ChoiceChanged;
 
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
-    // onStep tells the dialog what is going on. The prompt is built only once it is needed. A
-    // quick question goes to Claude's faster, cheaper model (Claude Code uses the user's own).
+    // onStep tells the dialog what is going on. The prompt is built only once it is needed.
+    // Claude answers on the model picked in Settings › AI; without a pick a quick question goes
+    // to its faster, cheaper model. Claude Code uses the model picked for it, or the user's own.
     // withModelTools lets Claude Code ask the open model through Dependinator's MCP tools too.
     // Copilot asks the VS Code model picked in Settings › AI, the same for a quick question, with
     // the model tools too where withModelTools asks for them (the LSP's tool loop).
@@ -153,25 +169,10 @@ class AiService(
 
     // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI
     // needs it, so it is kept a minute (an empty one a few seconds: Copilot may be starting).
-    static readonly TimeSpan CopilotModelsTtl = TimeSpan.FromMinutes(1);
-    static readonly TimeSpan NoCopilotModelsTtl = TimeSpan.FromSeconds(5);
-    Task<VsCodeModel[]>? copilotModels;
-    DateTime copilotModelsTime;
+    readonly CachedList<VsCodeModel> copilotModels = new();
 
-    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false)
-    {
-        if (!Dependinator.Core.Build.IsVsCodeExtWasm)
-            return [];
-        if (!isFresh && copilotModels is { } cached)
-        {
-            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
-            if (!cached.IsCompleted || DateTime.UtcNow - copilotModelsTime < ttl)
-                return await cached;
-        }
-        copilotModelsTime = DateTime.UtcNow;
-        copilotModels = ListCopilotModelsAsync();
-        return await copilotModels;
-    }
+    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false) =>
+        Dependinator.Core.Build.IsVsCodeExtWasm ? await copilotModels.GetAsync(ListCopilotModelsAsync, isFresh) : [];
 
     async Task<VsCodeModel[]> ListCopilotModelsAsync()
     {
@@ -194,6 +195,57 @@ class AiService(
         ChoiceChanged?.Invoke();
     }
 
+    // Kept like the Copilot list; an empty one (no key yet, or the list failed) only a few seconds.
+    readonly CachedList<ClaudeModel> claudeModels = new();
+
+    // What the e2e tests pick from, where no key is set.
+    static readonly ClaudeModel[] TestModeClaudeModels =
+    [
+        new("claude-opus-5-5", "Claude Opus 5.5"),
+        new("claude-sonnet-5-5", "Claude Sonnet 5.5"),
+    ];
+
+    public async Task<ClaudeModel[]> GetClaudeModelsAsync(bool isFresh = false) =>
+        IsAvailable ? await claudeModels.GetAsync(ListClaudeModelsAsync, isFresh) : [];
+
+    async Task<ClaudeModel[]> ListClaudeModelsAsync()
+    {
+        try
+        {
+            var keyState = await claudeService.GetApiKeyStateAsync();
+            if (keyState is ClaudeApiKeyState.Missing && Dependinator.Core.Build.IsTestMode)
+                return TestModeClaudeModels;
+            if (keyState is not ClaudeApiKeyState.Set)
+                return [];
+            var models = await claudeService.GetModelsAsync();
+            if (models is ClaudeModel[] listed)
+                return listed;
+            Log.Warn($"Could not list Claude's models: {models.Error.Message}");
+            return [];
+        }
+        catch (Exception e) when (e.IsNotFatal())
+        {
+            Log.Warn($"Could not list Claude's models: {e.Message}");
+            return [];
+        }
+    }
+
+    public async Task<string?> GetClaudeModelIdAsync() => (await configService.GetAsync()).ClaudeModelId;
+
+    public async Task SetClaudeModelAsync(string? modelId)
+    {
+        await configService.SetAsync(config => config.ClaudeModelId = modelId);
+        ChoiceChanged?.Invoke();
+    }
+
+    public async Task<string?> GetClaudeCodeModelAsync() => (await configService.GetAsync()).ClaudeCodeModel;
+
+    public async Task SetClaudeCodeModelAsync(string? model)
+    {
+        await configService.SetAsync(config => config.ClaudeCodeModel = model);
+        ChoiceChanged?.Invoke();
+    }
+
     public async Task<Result<string>> AskAsync(
         AiSource route,
         Func<Task<string>> getPrompt,
@@ -211,7 +263,13 @@ class AiService(
                 return new Error(EmptyPromptError);
             try
             {
-                return await claudeService.AskClaudeCodeAsync(codePrompt, jsonSchema, CodeFolder(), withModelTools);
+                return await claudeService.AskClaudeCodeAsync(
+                    codePrompt,
+                    jsonSchema,
+                    CodeFolder(),
+                    withModelTools,
+                    await GetClaudeCodeModelAsync()
+                );
             }
             catch (Exception e) when (e.IsNotFatal())
             {
@@ -234,8 +292,13 @@ class AiService(
         return await WithApiKeyAsync(
             getPrompt,
             onStep,
-            prompt =>
-                isQuick ? claudeService.AskQuicklyAsync(prompt, jsonSchema) : claudeService.AskAsync(prompt, jsonSchema)
+            async prompt =>
+            {
+                var modelId = await GetClaudeModelIdAsync();
+                return isQuick
+                    ? await claudeService.AskQuicklyAsync(prompt, jsonSchema, modelId)
+                    : await claudeService.AskAsync(prompt, jsonSchema, modelId);
+            }
         );
     }
 
@@ -251,7 +314,8 @@ class AiService(
             AiSource.Claude => await WithApiKeyAsync(
                 getPrompt,
                 onStep,
-                prompt => claudeService.AskWithModelToolsAsync(prompt, jsonSchema)
+                async prompt =>
+                    await claudeService.AskWithModelToolsAsync(prompt, jsonSchema, await GetClaudeModelIdAsync())
             ),
             AiSource.Copilot => await AskCopilotAsync(
                 getPrompt,
@@ -386,7 +450,12 @@ class AiService(
             return new Error("The model has no folder on disk for Claude Code to change.");
         try
         {
-            var report = await claudeService.FixWithClaudeCodeAsync(fixPrompt, ClaudeCodeFixReport.JsonSchema, folder);
+            var report = await claudeService.FixWithClaudeCodeAsync(
+                fixPrompt,
+                ClaudeCodeFixReport.JsonSchema,
+                folder,
+                await GetClaudeCodeModelAsync()
+            );
             return report is string json ? ClaudeCodeFixReport.Parse(json, folder) : report.Error;
         }
         catch (Exception e) when (e.IsNotFatal())
@@ -427,5 +496,29 @@ class AiService(
             return null;
         var cut = path.TrimEnd('/', '\\').LastIndexOfAny(['/', '\\']);
         return cut > 0 ? path[..cut] : null;
+    }
+}
+
+// A list that is slow to get (it crosses processes or the network) and asked for often: kept a
+// minute, an empty one only a few seconds, since it may be empty for a moment (no key yet, Copilot
+// still starting). Callers that arrive while it is fetched share that fetch.
+sealed class CachedList<T>
+{
+    static readonly TimeSpan Ttl = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan EmptyTtl = TimeSpan.FromSeconds(5);
+    Task<T[]>? list;
+    DateTime time;
+
+    public async Task<T[]> GetAsync(Func<Task<T[]>> fetch, bool isFresh)
+    {
+        if (!isFresh && list is { } cached)
+        {
+            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? EmptyTtl : Ttl;
+            if (!cached.IsCompleted || DateTime.UtcNow - time < ttl)
+                return await cached;
+        }
+        time = DateTime.UtcNow;
+        list = fetch();
+        return await list;
     }
 }

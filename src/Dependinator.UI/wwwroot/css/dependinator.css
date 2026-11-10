@@ -514,10 +514,12 @@ body {
     min-width: 0;
 }
 
-/* The Copilot provider's model (VS Code only), under its row, in line with its name. */
+/* A provider's model (Claude's, Claude Code's, Copilot's in VS Code), under its row, in line with
+   its name; one width, whatever the picked model's name. */
 .dep-ai-settings__model {
     margin: 0 0 6px 66px;
-    max-width: 320px;
+    width: 320px;
+    max-width: calc(100% - 66px);
 }
 
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
