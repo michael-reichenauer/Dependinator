@@ -135,6 +135,38 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task Ask_ShouldCopyThePromptForAnotherAi_ThatUsesTheMcpServer()
+    {
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await Page.GetByTestId("toolbar-ask").ClickAsync();
+
+        await Page.GetByTestId("ask-question").FillAsync("Where is the start?");
+        await Page.GetByTestId("ask-menu").ClickAsync();
+        // Copilot Chat is offered in VS Code only.
+        await Expect(Page.GetByTestId("ask-in-copilot-chat")).ToHaveCountAsync(0);
+        await Page.GetByTestId("ask-copy-prompt").ClickAsync();
+
+        await Expect(Page.GetByTestId("ask-other-note")).ToContainTextAsync("The prompt is copied");
+        string copied = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.Contains("Where is the start?", copied);
+        Assert.Contains("MCP server named dependinator", copied);
+        // The question stays, to ask it in the panel too; asking clears the note.
+        await Expect(Page.GetByTestId("ask-question")).ToHaveValueAsync("Where is the start?");
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-other-note")).ToHaveCountAsync(0);
+
+        // With no question there is nothing to copy.
+        await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(1);
+        await Page.GetByTestId("ask-menu").ClickAsync();
+        await Expect(Page.GetByTestId("ask-copy-prompt")).ToBeDisabledAsync();
+    }
+
+    [E2EFact]
     public async Task Ask_ShouldOfferToMakeTheChangeAnAnswerProposes()
     {
         await Page.AddInitScriptAsync(

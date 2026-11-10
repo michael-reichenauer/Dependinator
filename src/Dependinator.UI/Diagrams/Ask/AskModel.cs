@@ -155,6 +155,24 @@ static class AskModelPrompt
         string question,
         IReadOnlyList<AskExchange> earlier,
         AskContext? context = null
+    ) => Build(model, question, earlier, context, TaskSection);
+
+    // The same question as a prompt to copy into another AI (or hand to Copilot Chat), which
+    // answers in its own view: it is told to use Dependinator's MCP server when it has it, and
+    // what to do when it has not.
+    public static string BuildForOtherAi(
+        IModel model,
+        string question,
+        IReadOnlyList<AskExchange> earlier,
+        AskContext? context = null
+    ) => Build(model, question, earlier, context, OtherAiTaskSection);
+
+    static string Build(
+        IModel model,
+        string question,
+        IReadOnlyList<AskExchange> earlier,
+        AskContext? context,
+        string taskSection
     )
     {
         var topLevel = model
@@ -187,7 +205,7 @@ static class AskModelPrompt
         if (topLevel.Count > MaxTopLevel)
             text.AppendLine($"- … and {topLevel.Count - MaxTopLevel} more");
 
-        AppendContext(text, model, context ?? AskContext.Model);
+        AppendContext(text, model, context ?? AskContext.Model, taskSection == OtherAiTaskSection);
 
         var recent = earlier.TakeLast(MaxEarlier).ToList();
         if (recent.Count > 0)
@@ -211,13 +229,13 @@ static class AskModelPrompt
             text.AppendLine().AppendLine("## The question").AppendLine();
         }
         text.AppendLine(question.Trim());
-        text.AppendLine().Append(TaskSection);
+        text.AppendLine().Append(taskSection);
         return text.ToString();
     }
 
     // The nodes the user selected for the question, each with what the model knows of it, so "it"
     // and "these" in the question are clear and the AI knows where to start looking.
-    static void AppendContext(StringBuilder text, IModel model, AskContext context)
+    static void AppendContext(StringBuilder text, IModel model, AskContext context, bool isForOtherAi = false)
     {
         var nodes = ContextNodes(model, context);
         if (nodes.Count == 0)
@@ -244,6 +262,9 @@ static class AskModelPrompt
                 $"- `{node.Name}` ({Kind(node.Type)}{title}){Described(node)}. {facts.Contents}; "
                     + $"uses {Types(facts.UsesCount)} outside it, used by {Types(facts.UsedByCount)}."
             );
+            // Without the tools the AI finds the node in the code by its file.
+            if (isForOtherAi && node.FileSpan is { } span && span.Path != "")
+                text.AppendLine($"  In the file: {DisplayPath(model, span.Path)}");
             if (!context.IsBelow)
                 continue;
             var inside = node
@@ -259,11 +280,14 @@ static class AskModelPrompt
         if (nodes.Count > MaxContextNodes)
             text.AppendLine($"- … and {nodes.Count - MaxContextNodes} more selected nodes");
         text.AppendLine();
+        // An AI outside the panel may have no tools: its task section says what to do then.
+        var look = isForOtherAi ? "Start from" : "Look";
+        var up = isForOtherAi ? ", by these names" : " up with the tools, by these names, before you answer";
         text.AppendLine(
-            isInside ? "Look these nodes and what is inside them up with the tools, by these names, before you answer."
+            isInside ? $"{look} these nodes and what is inside them{up}."
             : nodes.Any(HasInside)
-                ? "Look these nodes up with the tools, by these names, before you answer. The question is about the nodes themselves, not about each thing inside them."
-            : "Look these nodes up with the tools, by these names, before you answer."
+                ? $"{look} these nodes{up}. The question is about the nodes themselves, not about each thing inside them."
+            : $"{look} these nodes{up}."
         );
     }
 
@@ -293,14 +317,34 @@ static class AskModelPrompt
     static string Cut(string answer) =>
         answer.Length <= MaxEarlierAnswerLength ? answer : answer[..MaxEarlierAnswerLength] + " … (cut)";
 
+    // What each model tool is for, in both task sections.
+    const string ToolsGuide =
+        "search_nodes to find the nodes the question is about, get_dependencies for what a node uses and what uses "
+        + "it, find_paths for why one part depends on another, list_children to go into a node, list_cycles and "
+        + "list_rules for its problems, read_source for a node's code when the names and dependencies are not enough. "
+        + "Use only as many calls as the question needs.";
+
     static readonly string TaskSection = $"""
         ## How to answer
 
-        Find out with Dependinator's tools before you answer: search_nodes to find the nodes the question is about, get_dependencies for what a node uses and what uses it, find_paths for why one part depends on another, list_children to go into a node, list_cycles and list_rules for its problems, read_source for a node's code when the names and dependencies are not enough. Use only as many calls as the question needs.
+        Find out with Dependinator's tools before you answer: {ToolsGuide}
 
         Answer the question directly, in a few short paragraphs or a list: the answer is shown in a narrow panel beside the diagram. Write every node you mention in backticks, by its name exactly as the tools give it (such as `Dependinator.Core.Parsing.ParserService`), so the user can click it to go to the node. Under nodes, list the nodes the answer is about, at most {MaxNodes}, the most important first. If the model cannot answer the question, say so, and what would.
 
         Under change: if your answer proposes a concrete change to the code (a split, a move, a rename, removing a dependency) that a coding AI could make from your answer, name the change in one imperative sentence, such as "Move loading and saving from ModelService to a new ModelStore", and make sure the answer says enough to carry it out. Otherwise leave it empty: an answer that only explains proposes no change.
+
+        """;
+
+    // For an AI outside the panel: it may have the MCP server (Copilot Chat in VS Code, Claude Code
+    // after "Connect Claude Code"), only the code, or neither; its answer is read where it is given.
+    static readonly string OtherAiTaskSection = $"""
+        ## How to answer
+
+        Dependinator has an MCP server named dependinator with tools over this model. If you have its tools (search_nodes, get_dependencies, find_paths, list_children, list_cycles, list_rules, read_source; your tool list may show them with a prefix such as mcp__dependinator__), find out with them before you answer: {ToolsGuide} The tools answer while the diagram is open in Dependinator; if they fail, say so.
+
+        If you do not have those tools, say so first, then answer from the code if you can read it, and otherwise from what this prompt says, and say what you could not check.
+
+        Answer the question directly, in a few short paragraphs or a list. Write every node you mention in backticks, by its full name (such as `Dependinator.Core.Parsing.ParserService`). If your answer proposes a concrete change to the code (a split, a move, a rename, removing a dependency), end with that change in one imperative sentence, and do not make it before the user asks you to.
 
         """;
 }
@@ -324,6 +368,10 @@ interface IAskModelService
     // (AskChangePrompt); empty when it proposes none.
     // aboutNames names what the question was about as it was asked (the nodes may be gone since).
     string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames);
+
+    // The question as a prompt for an AI outside the panel, which uses Dependinator's MCP server
+    // when it has it ("Copy prompt", "Ask in Copilot Chat").
+    string GetPromptForOtherAi(string question, IReadOnlyList<AskExchange> earlier, AskContext context);
 
     // A text (markdown) with the names in its code spans that are nodes of the model now, as an
     // answer has them: Claude Code's summary of a change, shown with links.
@@ -372,6 +420,12 @@ class AskModelService(
     {
         using var model = modelMgr.UseModel();
         return AskModelPrompt.Build(model, question, earlier, context);
+    }
+
+    public string GetPromptForOtherAi(string question, IReadOnlyList<AskExchange> earlier, AskContext context)
+    {
+        using var model = modelMgr.UseModel();
+        return AskModelPrompt.BuildForOtherAi(model, question, earlier, context);
     }
 
     public string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames)

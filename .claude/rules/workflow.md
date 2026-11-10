@@ -119,8 +119,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   answer that proposes a change names it (`ModelAnswer.Change`, the schema's `change`) and gets
   "Do it with <default>" (`AiFixButton` with `Verb`, `ClaudeCodeFix` per answer, `AskChangePrompt`;
   ask-eval's `change` expectation, tried on the Claude Code route). Improve Comments stays its
-  own dialog. Still open: tool results carried across
-  follow-ups, more eval cases from real questions. No paste route (decided with the user:
+  own dialog. Phase 6 (Nov 10): "Copy prompt" and, in VS Code, "Ask in Copilot Chat" in the panel's
+  provider menu give the question to an AI outside the panel, which uses the MCP server itself
+  (`AskModelPrompt.BuildForOtherAi`); its answer is not brought back into the panel. Still open: tool results carried across
+  follow-ups, more eval cases from real questions. No paste-the-answer-back route (decided with the user:
   multi-turn tools).
 - **Copilot provider (roadmap idea 10), next:** phase 1 (Nov 2) asks a VS Code language model
   (`vscode.lm`, `IVsCodeModelService`, `AiSource.Copilot`) for answers; the user tried it (works

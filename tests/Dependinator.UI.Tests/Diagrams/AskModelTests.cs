@@ -231,6 +231,36 @@ public class AskModelTests
     }
 
     [Fact]
+    public void PromptForOtherAi_ShouldHoldTheQuestionAndItsNodes_AndSayToUseTheMcpServerIfThere()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        view.Update(
+            new Dependinator.Core.Parsing.Node(
+                "UI.View",
+                new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+            )
+        );
+        var context = new AskContext([view.Id], false);
+
+        var prompt = AskModelPrompt.BuildForOtherAi(model, "What uses it?", [], context);
+        var inPanel = AskModelPrompt.Build(model, "What uses it?", [], context);
+
+        Assert.Contains("What uses it?", prompt);
+        Assert.Contains("`UI.View`", prompt);
+        Assert.Contains("MCP server named dependinator", prompt);
+        Assert.Contains("If you do not have those tools", prompt);
+        // It may have no tools, so only the panel's own prompt says to use them whatever.
+        Assert.Contains("Start from these nodes, by these names.", prompt);
+        Assert.Contains("Look these nodes up with the tools", inPanel);
+        Assert.DoesNotContain("up with the tools", prompt);
+        // Without the tools it finds the node in the code by its file.
+        Assert.Contains("In the file: /src/UI/View.cs", prompt);
+        Assert.DoesNotContain("In the file:", inPanel);
+        Assert.DoesNotContain("Under change", prompt);
+    }
+
+    [Fact]
     public void ChangePrompt_ShouldBeEmpty_ForAnAnswerThatProposesNoChange()
     {
         using var model = modelMgr.UseModel();
