@@ -2,7 +2,7 @@
 # Install what building and testing Dependinator needs on a fresh Ubuntu 24.04 machine, such
 # as a Claude Code cloud session, which does not use the devcontainer:
 #
-#   - .NET SDK 10 (runtime of the net10.0 projects and CSharpier) and the .NET 11 preview SDK
+#   - .NET SDK 10 (runtime of the net10.0 projects and CSharpier) and the .NET 11 SDK
 #     pinned in global.json (exactly, like CI), in /usr/share/dotnet (like the devcontainer)
 #   - Azurite (Api.Tests start one; ./scripts/e2e -s) and Azure Functions Core Tools (-s)
 #   - Playwright browsers + their OS packages at the Microsoft.Playwright.Xunit version in

@@ -18,7 +18,7 @@ own notes, icons and hand-drawn nodes on top.
 |---|---|
 | **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for viewing synced models from anywhere and making small adjustments (with demo models to get started) |
 | **Languages it reads** | C# (`.sln` with C# projects, through Roslyn) and Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler) |
-| **Stack** | .NET 10 (built with the .NET 11 preview SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in |
+| **Stack** | .NET 10 (built with the .NET 11 SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in |
 | **Size** | About 41k lines of product code, 70% of it in the shared UI library; about 25k lines of tests |
 | **Tests** | About 900 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
 | **Releases** | Version 0.88 (beta), about 35 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
@@ -235,7 +235,7 @@ so they need regenerating when the parser or the UI changes visibly.
 | A flat item list as the parser contract | New languages (Bicep was added in one release) only produce items; layout, rendering and analysis come for free | Language-specific meaning has to fit nodes, links and a few properties |
 | Lazy layout and tiled SVG rendering | Large solutions stay responsive; only what is on screen is computed | More moving parts: layout versions, refinement, tile cache budgets |
 | Local-first models with optional sync | Works offline and without an account; nothing leaves the machine by default | Two copies to reconcile when sync is on |
-| `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Needs the .NET 11 preview SDK until it ships |
+| `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Builds with the .NET 11 SDK while the target stays net10.0 |
 | Architecture rules as tests | The layering stays true without relying on review | A new project needs a new rule |
 
 ## Where to start reading the code
@@ -256,8 +256,9 @@ so they need regenerating when the parser or the UI changes visibly.
 
 ## Risks and open topics
 
-- **Preview SDK.** The build needs the .NET 11 preview SDK for C# 15 unions; the move to the GA SDK
-  is planned in [docs/notes/NET11-UPGRADE.md](notes/NET11-UPGRADE.md).
+- **SDK ahead of the target framework.** The build needs the .NET 11 SDK for C# 15 unions while the
+  projects target net10.0 (LTS); the later move to net11.0 waits for Azure Static Web Apps, see
+  [docs/notes/NET11-UPGRADE.md](notes/NET11-UPGRADE.md).
 - **C# parsing needs a .NET SDK on the user's machine** (Bicep does not). A user without one gets
   a clear error, but it is a step to install before the first map.
 - **Clerk free tier.** The 180-day token workaround (view 6) trades some security for convenience.

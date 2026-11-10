@@ -32,7 +32,7 @@ repo in VS Code and choose "Reopen in Container", or use GitHub Codespaces.
 
 ### Prerequisites (outside the devcontainer)
 
-- **.NET SDK 11.0 preview** (pinned in `global.json`; the C# 15 union patterns
+- **.NET SDK 11.0** (pinned in `global.json`; the C# 15 union patterns
   need its compiler) plus the **.NET 10 SDK/runtime** for the `net10.0` target.
   Run the `dotnet-install.sh` line from `scripts/installdevtools`.
 - **Node.js + npm** for the VS Code extension and the SWA CLI.
