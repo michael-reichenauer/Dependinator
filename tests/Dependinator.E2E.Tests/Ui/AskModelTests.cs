@@ -173,6 +173,13 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await doIt.ClickAsync();
         await Expect(Page.GetByTestId("ask-fix-report")).ToContainTextAsync("Claude Code changed 1 file");
         await Expect(Page.GetByTestId("ask-fix-files")).ToHaveTextAsync("src/Test.cs");
+
+        // A node name in Claude Code's summary is a link to its node, as in an answer.
+        ILocator link = Page.GetByTestId("ask-fix-summary").GetByTestId("ask-node-link");
+        await Expect(link).ToHaveCountAsync(1);
+        var name = await link.InnerTextAsync();
+        await link.ClickAsync();
+        await Expect(Page.GetByTestId("breadcrumb")).ToContainTextAsync(name);
         await Expect(doIt).ToBeEnabledAsync();
     }
 }

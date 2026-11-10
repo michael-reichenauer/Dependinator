@@ -355,7 +355,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   with the provider menu of the review dialogs' fix button: Claude Code edits and reports the
   changed files, Copilot gets it in agent mode, or "Copy prompt" for another AI. The prompt
   (`AskChangePrompt`) holds the change, the question and answer, the files of the nodes and the
-  architecture rules to keep. `./scripts/ask-eval` checks whether an answer proposes a change.
+  architecture rules to keep. The node names in Claude Code's report are links like an answer's,
+  looked up after the re-parse (`ClaudeCodeFix.SummaryContent`). `./scripts/ask-eval` checks
+  whether an answer proposes a change.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

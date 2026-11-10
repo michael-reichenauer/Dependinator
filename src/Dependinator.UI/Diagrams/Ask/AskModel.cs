@@ -325,6 +325,10 @@ interface IAskModelService
     // aboutNames names what the question was about as it was asked (the nodes may be gone since).
     string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames);
 
+    // A text (markdown) with the names in its code spans that are nodes of the model now, as an
+    // answer has them: Claude Code's summary of a change, shown with links.
+    ModelAnswer WithLinks(string text);
+
     Task<Result<ModelAnswer>> AskAsync(
         string question,
         IReadOnlyList<AskExchange> earlier,
@@ -451,6 +455,8 @@ class AskModelService(
         var parsed = ModelAnswer.Parse(json, route);
         return parsed is ModelAnswer answer ? WithLinks(answer with { Question = question }) : parsed.Error;
     }
+
+    public ModelAnswer WithLinks(string text) => WithLinks(new ModelAnswer(text, []));
 
     // The names in the answer that are nodes, as the tools take them (a name, or a unique title or
     // alias): those become links.

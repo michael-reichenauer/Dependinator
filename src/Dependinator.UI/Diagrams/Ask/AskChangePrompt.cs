@@ -98,7 +98,9 @@ static class AskChangePrompt
         2. Make the change without changing behavior, and no larger than it needs to be.
         3. Update the code that refers to what you moved, split or renamed.
         4. Build and run the tests if you can run commands; if you cannot, say that this is left to do.
-        5. Summarize what you changed. Dependinator shows the new structure after its next parse.
+        5. Summarize what you changed, with the types and members you changed, moved or created in backticks by
+           their full names (`Namespace.Type`, `Namespace.Type.Member`). Dependinator shows the new structure after its
+           next parse and links those names to their nodes.
 
         """;
 }

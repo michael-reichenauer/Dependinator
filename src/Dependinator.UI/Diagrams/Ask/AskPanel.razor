@@ -134,7 +134,9 @@
                      away when Claude Code is turned off meanwhile. *@
                   <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
                                  OnStateChanged="OnChangeStateChanged" ConfirmTitle="Change the code with Claude Code?"
-                                 ConfirmYesText="Change anyway" />
+                                 ConfirmYesText="Change anyway">
+                    <SummaryContent Context="summary">@ReportSummary(entry, summary)</SummaryContent>
+                  </ClaudeCodeFix>
                 </div>
               }
             </div>
@@ -244,6 +246,11 @@
     public ClaudeCodeFix? FixPanel { get; set; }
     public string? ChangeNote { get; set; }
     public string? ChangeError { get; set; }
+
+    // Claude Code's summary of the change with the nodes it names, as of the model then (Stamp).
+    public ModelAnswer? Report { get; set; }
+    public IReadOnlyList<MarkdownBlock> ReportBlocks { get; set; } = [];
+    public int ReportStamp { get; set; }
 
     public required AiSource Route { get; init; }
 
@@ -446,8 +453,12 @@
   }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
+  // Counts the UI state changes: the model may have changed at each (a re-parse raises one).
+  int modelStamp;
+
   void OnUiStateChanged() => InvokeAsync(async () =>
   {
+    modelStamp++;
     if (viewOptions.IsAskShown)
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
@@ -642,6 +653,21 @@
       MarkdownBlockKind.NumberedList => @<ol start="@block.Start">@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ol>,
       _ => @<p>@for (var i = 0; i < block.Lines.Count; i++) { if (i > 0) { <br /> } @Line(answer, block.Lines[i]) }</p>,
     };
+
+  // Claude Code's summary of a change, its node names links like an answer's. The names are
+  // looked up again when the model may have changed: what the change created or moved is in the
+  // model only after the re-parse.
+  RenderFragment ReportSummary(Entry entry, string summary)
+  {
+    if (entry.Report?.Text != summary || entry.ReportStamp != modelStamp)
+    {
+      entry.Report = askModelService.WithLinks(summary);
+      entry.ReportBlocks = SimpleMarkdown.Parse(summary);
+      entry.ReportStamp = modelStamp;
+    }
+    var (report, blocks) = (entry.Report, entry.ReportBlocks);
+    return @<text>@foreach (var block in blocks) { @Block(report, block) }</text>;
+  }
 
   RenderFragment Line(ModelAnswer answer, IReadOnlyList<MarkdownSpan> spans) =>
     @<text>@foreach (var span in spans) { @Span(answer, span) }</text>;
