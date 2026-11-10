@@ -262,6 +262,9 @@ static class AskModelPrompt
                 $"- `{node.Name}` ({Kind(node.Type)}{title}){Described(node)}. {facts.Contents}; "
                     + $"uses {Types(facts.UsesCount)} outside it, used by {Types(facts.UsedByCount)}."
             );
+            // Without the tools the AI finds the node in the code by its file.
+            if (isForOtherAi && node.FileSpan is { } span && span.Path != "")
+                text.AppendLine($"  In the file: {DisplayPath(model, span.Path)}");
             if (!context.IsBelow)
                 continue;
             var inside = node
