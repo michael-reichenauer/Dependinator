@@ -1676,6 +1676,10 @@ button.dep-rules__node:hover {
     font-size: 0.75rem;
 }
 
+.dep-ask__other-note {
+    margin-top: 4px;
+}
+
 .dep-ask__steps {
     display: flex;
     flex-direction: column;

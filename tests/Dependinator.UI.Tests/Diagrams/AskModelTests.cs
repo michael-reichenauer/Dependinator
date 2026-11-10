@@ -231,6 +231,26 @@ public class AskModelTests
     }
 
     [Fact]
+    public void PromptForOtherAi_ShouldHoldTheQuestionAndItsNodes_AndSayToUseTheMcpServerIfThere()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        var context = new AskContext([view.Id], false);
+
+        var prompt = AskModelPrompt.BuildForOtherAi(model, "What uses it?", [], context);
+        var inPanel = AskModelPrompt.Build(model, "What uses it?", [], context);
+
+        Assert.Contains("What uses it?", prompt);
+        Assert.Contains("`UI.View`", prompt);
+        Assert.Contains("MCP server named dependinator", prompt);
+        Assert.Contains("If you do not have those tools", prompt);
+        // All but the task is the panel's own prompt, which asks for the answer's fields instead.
+        var task = prompt.IndexOf("## How to answer", StringComparison.Ordinal);
+        Assert.Equal(inPanel[..inPanel.IndexOf("## How to answer", StringComparison.Ordinal)], prompt[..task]);
+        Assert.DoesNotContain("Under change", prompt);
+    }
+
+    [Fact]
     public void ChangePrompt_ShouldBeEmpty_ForAnAnswerThatProposesNoChange()
     {
         using var model = modelMgr.UseModel();

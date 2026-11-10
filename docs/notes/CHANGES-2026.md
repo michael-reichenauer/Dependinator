@@ -358,6 +358,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   architecture rules to keep. The node names in Claude Code's report are links like an answer's,
   looked up after the re-parse (`ClaudeCodeFix.SummaryContent`). `./scripts/ask-eval` checks
   whether an answer proposes a change.
+- **Ask another AI from the panel (Nov 10).** The Ask panel's provider menu has "Copy prompt": the
+  question with its nodes and the conversation, for an AI outside the panel, told to look things
+  up with Dependinator's MCP server when it has it and to say so when it has not
+  (`AskModelPrompt.BuildForOtherAi`). In VS Code "Ask in Copilot Chat" hands the same prompt to
+  Copilot Chat in agent mode. The answer shows there, not in the panel.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

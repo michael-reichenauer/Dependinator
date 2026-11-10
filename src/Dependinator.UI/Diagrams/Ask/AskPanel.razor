@@ -214,8 +214,41 @@
                         UnableText="Cannot look things up in the model, which questions need"
                         TestId="ask" OnChoose="p => route = p" OnShowPrompt="ShowPromptAsync"
                         IsShowPromptDisabled="@string.IsNullOrWhiteSpace(question)"
-                        OnSettingsChanged="OnSettingsChangedAsync" />
+                        OnSettingsChanged="OnSettingsChangedAsync">
+          @* The question for an AI outside the panel, which looks things up with Dependinator's
+             MCP server itself and answers in its own view. *@
+          <MoreItems>
+            <MudDivider />
+            @if (CanAskInCopilotChat)
+            {
+              <MudMenuItem Icon="@AiProvider.Copilot.Icon" IconColor="Color.Secondary"
+                           Disabled="@string.IsNullOrWhiteSpace(question)" OnClick="AskInCopilotChatAsync"
+                           data-testid="ask-in-copilot-chat">
+                <div class="dep-ai-menu__item">
+                  <div class="dep-ai-menu__name">Ask in Copilot Chat</div>
+                  <div class="dep-ai-menu__detail">It answers there, with Dependinator's tools</div>
+                </div>
+              </MudMenuItem>
+            }
+            <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
+                         Disabled="@string.IsNullOrWhiteSpace(question)" OnClick="CopyPromptAsync"
+                         data-testid="ask-copy-prompt">
+              <div class="dep-ai-menu__item">
+                <div class="dep-ai-menu__name">Copy prompt</div>
+                <div class="dep-ai-menu__detail">For another AI, which can use Dependinator's MCP server</div>
+              </div>
+            </MudMenuItem>
+          </MoreItems>
+        </AiProviderMenu>
       </div>
+      @if (otherAiNote is not null)
+      {
+        <div class="dep-ai__suggest-note dep-ask__other-note" data-testid="ask-other-note">@otherAiNote</div>
+      }
+      @if (otherAiError is not null)
+      {
+        <div class="dep-ai__suggest-error dep-ask__other-note" data-testid="ask-other-error">@otherAiError</div>
+      }
     }
   </div>
 }
@@ -517,6 +550,7 @@
     var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context), Context = context };
     entries.Add(entry);
     question = "";
+    (otherAiNote, otherAiError) = (null, null);
     isExamplesShown = false;
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
@@ -589,12 +623,54 @@
   void Clear()
   {
     entries.Clear();
+    (otherAiNote, otherAiError) = (null, null);
   }
 
   Task ShowAllAsync(ModelAnswer answer) => navigationService.ShowNodesAsync([.. answer.Links.Values.Select(l => l.Id).Distinct()]);
 
   async Task CopyAsync(Entry entry, ModelAnswer answer) =>
     entry.CopyNote = await clipboardService.CopyAsync(answer.Text) ? "Copied." : "Could not copy to the clipboard.";
+
+  // What came of copying the question's prompt or handing it to Copilot Chat; gone with the next
+  // question asked.
+  string? otherAiNote;
+  string? otherAiError;
+
+  bool CanAskInCopilotChat => choice.Providers.Any(p => p.Source is AiSource.Copilot);
+
+  static string PromptCopiedNote =>
+    "The prompt is copied. Paste it into an AI that has Dependinator's MCP server, and keep this diagram open "
+    + "while it answers: "
+    + (
+      Dependinator.Core.Build.IsVsCodeExtWasm
+        ? "Copilot Chat in agent mode has it, Claude Code after the command \"Dependinator: Connect Claude Code\"."
+        : "Claude Code after \"claude mcp add --transport http dependinator http://localhost:5000/mcp\"."
+    )
+    + " An AI without it answers from the code or the prompt alone.";
+
+  const string InCopilotChatNote =
+    "The question is in Copilot Chat, in agent mode: it answers there, looking things up with Dependinator's "
+    + "tools while this diagram is open.";
+
+  string OtherAiPrompt() => askModelService.GetPromptForOtherAi(question.Trim(), Conversation(), Context);
+
+  async Task CopyPromptAsync()
+  {
+    var prompt = OtherAiPrompt();
+    var isCopied = prompt != "" && await clipboardService.CopyAsync(prompt);
+    otherAiNote = isCopied ? PromptCopiedNote : null;
+    otherAiError = isCopied ? null : prompt == "" ? NoModelError : "Could not copy to the clipboard.";
+  }
+
+  async Task AskInCopilotChatAsync()
+  {
+    var prompt = OtherAiPrompt();
+    var handed = prompt == "" ? new Error(NoModelError) : await aiService.FixWithCopilotAsync(prompt);
+    otherAiNote = handed is Error ? null : InCopilotChatNote;
+    otherAiError = handed is Error e ? e.Message : null;
+  }
+
+  const string NoModelError = "There is no model to ask about yet: open or parse one first.";
 
   async Task ShowPromptAsync()
   {
