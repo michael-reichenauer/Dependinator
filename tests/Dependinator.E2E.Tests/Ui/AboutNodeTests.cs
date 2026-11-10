@@ -13,6 +13,10 @@ public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
     [E2EFact]
     public async Task AboutNode_ShouldShowTheNode_AndAnswerAQuestionAboutIt()
     {
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
@@ -32,8 +36,13 @@ public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("ask-entry-about")).ToHaveTextAsync("About Demo.sln");
         await Expect(Page.GetByTestId("ask-answer-text")).ToContainTextAsync("About Demo.sln with everything inside.");
 
-        // "Ask another question" opens the panel for the user's own question.
+        // "Ask another question" opens the panel for the user's own question; "Copy prompt" is
+        // for the user's own AI chat.
         await App.ClickNodeMenuItemAsync("node-menu-about");
+        await Page.GetByTestId("about-node-copy-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("about-node-prompt-copied")).ToContainTextAsync("The prompt is copied");
+        string copied = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.Contains("What is this and why is it here?", copied);
         await Page.GetByTestId("about-node-ask-other").ClickAsync();
         await Expect(Page.GetByTestId("about-node-name")).ToBeHiddenAsync();
         await Expect(Page.GetByTestId("ask-panel")).ToBeVisibleAsync();
@@ -55,5 +64,17 @@ public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
         );
         await Page.GetByTestId("context-menu-about").ClickAsync();
         await Expect(Page.GetByTestId("about-node-name")).ToContainTextAsync("Externals");
+        await Page.GetByTestId("about-node-close").ClickAsync();
+        await Expect(Page.GetByTestId("about-node-name")).ToBeHiddenAsync();
+
+        // "Ask About Node" in the same menu opens the Ask panel about the node.
+        await Page.Mouse.ClickAsync(
+            box.X + box.Width / 2,
+            box.Y + box.Height / 2,
+            new() { Button = MouseButton.Right }
+        );
+        await Page.GetByTestId("context-menu-ask").ClickAsync();
+        await Expect(Page.GetByTestId("ask-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("ask-context-node")).ToContainTextAsync("Externals");
     }
 }

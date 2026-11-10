@@ -151,7 +151,7 @@
           }
           @if (contextNodes.Count > MaxChips)
           {
-            <span class="dep-ask__chip" title="@string.Join("\n", contextNodes.Skip(MaxChips).Select(n => n.LongName))"
+            <span class="dep-ask__chip dep-ask__chip--more" title="@string.Join("\n", contextNodes.Skip(MaxChips).Select(n => n.LongName))"
                   data-testid="ask-context-more">+@(contextNodes.Count - MaxChips)</span>
           }
           @if (contextNodes.Any(n => n.HasChildren))
@@ -195,8 +195,10 @@
   {
     public string Question { get; } = question;
 
-    // The nodes the question was asked about, in words; "" for the whole model.
+    // The nodes the question was asked about, in words; "" for the whole model. AboutNames has
+    // their full names, for the prompt of a follow-up.
     public string About { get; init; } = "";
+    public string AboutNames { get; init; } = "";
     public ModelAnswer? Answer { get; private set; }
 
     // The answer's text, parsed once.
@@ -219,7 +221,7 @@
 
   // The questions answered so far, which a new question follows up on, until they are cleared.
   List<AskExchange> Conversation() =>
-    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text, e.About))];
+    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text, e.AboutNames))];
 
   // A node the question is about, as its chip shows it.
   sealed record ContextNode(NodeId Id, string ShortName, string LongName, bool HasChildren);
@@ -230,6 +232,10 @@
   // with everything inside them. Kept in step with the selection while the panel is shown.
   IReadOnlyList<ContextNode> contextNodes = [];
   IReadOnlyList<NodeId> seenSelection = [];
+
+  // A node asked about from its menu or About Node that the selection did not take: it is what
+  // the question is about until the selection changes.
+  IReadOnlyList<NodeId>? requested;
   readonly HashSet<NodeId> removedFromContext = [];
   bool isBelow = true;
 
@@ -258,15 +264,39 @@
     if (!selection.SequenceEqual(seenSelection))
     {
       removedFromContext.Clear();
+      requested = null;
       seenSelection = selection;
     }
     using var model = modelMgr.UseModel();
     contextNodes =
     [
       .. AskModelPrompt
-        .ContextNodes(model, new AskContext([.. selection.Where(id => !removedFromContext.Contains(id))], isBelow))
-        .Select(n => new ContextNode(n.Id, n.ShortName, n.LongName, n.Children.Count > 0)),
+        .ContextNodes(model, new AskContext([.. (requested ?? selection).Where(id => !removedFromContext.Contains(id))], isBelow))
+        .Select(n => new ContextNode(n.Id, n.ShortName, n.LongName, AskModelPrompt.HasInside(n))),
     ];
+  }
+
+  // A request to ask about a node (AskModelService.AskAboutAsync) fills in its question; it waits
+  // while an answer is awaited, so the question is not lost.
+  void TakeRequest()
+  {
+    if (IsAsking || !viewOptions.IsAskShown || askModelService.TakeRequest() is not { } request)
+      return;
+    UpdateContext();
+    if (!seenSelection.SequenceEqual([request.NodeId]))
+    {
+      requested = [request.NodeId];
+      removedFromContext.Clear();
+      UpdateContext();
+    }
+    if (request.Question != "")
+      question = request.Question;
+  }
+
+  string AboutNames(AskContext context)
+  {
+    using var model = modelMgr.UseModel();
+    return AskModelPrompt.AboutNames(model, context);
   }
 
   void RemoveFromContext(NodeId nodeId)
@@ -352,16 +382,18 @@
     if (viewOptions.IsAskShown)
     {
       UpdateContext();
-      if (askModelService.TakePendingQuestion() is { } pending && !IsAsking)
-        question = pending;
+      TakeRequest();
     }
     // Settings › AI may change while the panel is closed (or open: then it shows
     // after the next ask), and reading it reads the config file, too much on every click.
-    if (viewOptions.IsAskShown && !wasShown)
-      await RefreshRoutesAsync();
-    if (viewOptions.IsAskShown || wasShown)
-      StateHasChanged();
+    // wasShown is set before the await: another change may arrive while the routes are read.
+    var isOpening = viewOptions.IsAskShown && !wasShown;
+    var isRendered = viewOptions.IsAskShown || wasShown;
     wasShown = viewOptions.IsAskShown;
+    if (isOpening)
+      await RefreshRoutesAsync();
+    if (isRendered)
+      StateHasChanged();
   });
 
   // Answers about another model would name its nodes, so a newly opened model starts over. The path
@@ -397,7 +429,7 @@
       return;
     var earlier = Conversation();
     var context = Context;
-    var entry = new Entry(text) { Route = route.Source, About = About };
+    var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context) };
     entries.Add(entry);
     question = "";
     isExamplesShown = false;
@@ -450,6 +482,7 @@
       entry.SetAnswer(answer);
     else
       entry.Error = result.Error.Message;
+    TakeRequest();
     StateHasChanged();
     await ScrollToEndAsync();
   }

@@ -349,7 +349,7 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   The example questions fit what is asked about, grouped as Understand, Change and Improve
   (`AskExamples`), with "More examples" and a lightbulb that shows them again later. The node menus
   have "Ask About Node …", and About Node sends its example questions to the panel instead of
-  asking in the dialog (the browser app keeps the copy-prompt route).
+  asking in the dialog, and has "Copy prompt" for one's own AI chat.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

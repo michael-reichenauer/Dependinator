@@ -1571,7 +1571,7 @@ button.dep-rules__node:hover {
     color: var(--mud-palette-text-primary);
 }
 
-.dep-ask__chip[data-testid="ask-context-more"] {
+.dep-ask__chip--more {
     padding-right: 9px;
 }
 

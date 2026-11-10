@@ -106,6 +106,9 @@ public record NodeLink(NodeId Id, string ShortName, string LongName);
 // it was asked about ("" for the whole model).
 record AskExchange(string Question, string Answer, string About = "");
 
+// A request to ask about a node, from About Node or a node's menu.
+record AskRequest(NodeId NodeId, string Question);
+
 // What a question is about: the nodes selected in the diagram, alone or with everything inside
 // them. With no nodes it is about the whole model.
 record AskContext(IReadOnlyList<NodeId> NodeIds, bool IsBelow)
@@ -204,12 +207,12 @@ static class AskModelPrompt
         if (nodes.Count == 0)
             return;
         var isOne = nodes.Count == 1;
-        var scope =
-            context.IsBelow && nodes.Any(n => n.Children.Count > 0)
-                ? isOne
-                    ? ", with everything inside it"
-                    : ", with everything inside them"
-                : "";
+        var isInside = context.IsBelow && nodes.Any(HasInside);
+        var scope = isInside
+            ? isOne
+                ? ", with everything inside it"
+                : ", with everything inside them"
+            : "";
         text.AppendLine().AppendLine("## What the question is about").AppendLine();
         text.AppendLine(
             isOne
@@ -241,10 +244,23 @@ static class AskModelPrompt
             text.AppendLine($"- … and {nodes.Count - MaxContextNodes} more selected nodes");
         text.AppendLine();
         text.AppendLine(
-            context.IsBelow
-                ? "Look these nodes and what is inside them up with the tools, by these names, before you answer."
-                : "Look these nodes up with the tools, by these names, before you answer. The question is about the nodes themselves, not about each thing inside them."
+            isInside ? "Look these nodes and what is inside them up with the tools, by these names, before you answer."
+            : nodes.Any(HasInside)
+                ? "Look these nodes up with the tools, by these names, before you answer. The question is about the nodes themselves, not about each thing inside them."
+            : "Look these nodes up with the tools, by these names, before you answer."
         );
+    }
+
+    // Whether the node has anything inside to ask about; notes and zones do not count.
+    internal static bool HasInside(Node node) => node.Children.Any(n => !NodeViewPolicy.IsAnnotation(n));
+
+    // The context's nodes by their full names, as a follow-up's prompt names what an earlier
+    // question was about.
+    internal static string AboutNames(IModel model, AskContext context)
+    {
+        var nodes = ContextNodes(model, context);
+        var names = string.Join(", ", nodes.Take(MaxContextNodes).Select(n => $"`{n.Name}`"));
+        return nodes.Count > MaxContextNodes ? $"{names} and {nodes.Count - MaxContextNodes} more" : names;
     }
 
     // The nodes of the context that are (still) in the model; notes and zones are no code.
@@ -302,8 +318,9 @@ interface IAskModelService
     // Selects the node and shows the panel with the question filled in, to ask about the node.
     Task AskAboutAsync(NodeId nodeId, string question = "");
 
-    // A question to fill in, once: the panel takes it when it is shown.
-    string? TakePendingQuestion();
+    // A node to ask about and a question to fill in ("" for none), once: the panel takes them
+    // when it is shown and no answer is awaited.
+    AskRequest? TakeRequest();
 
     void Close();
 }
@@ -322,7 +339,7 @@ class AskModelService(
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    string? pendingQuestion;
+    AskRequest? request;
 
     public string GetPrompt(string question, IReadOnlyList<AskExchange> earlier, AskContext context)
     {
@@ -451,19 +468,27 @@ class AskModelService(
 
     public async Task AskAboutAsync(NodeId nodeId, string question = "")
     {
+        // Selecting a node that is the primary of several keeps the others, so start over. The
+        // selection may refuse the node (one that fills the view, say): the panel then asks
+        // about the requested node all the same.
         if (!selectionService.SelectedNodeIds.SequenceEqual([nodeId]))
+        {
+            selectionService.Unselect();
             await selectionService.Select(nodeId);
-        pendingQuestion = question != "" ? question : null;
-        Open();
-        // Shown already: the panel takes the question on the change.
-        applicationEvents.TriggerUIStateChanged();
+        }
+        request = new AskRequest(nodeId, question);
+        // The panel takes the request on the UI state change, which opening it raises.
+        if (viewOptions.IsAskShown)
+            applicationEvents.TriggerUIStateChanged();
+        else
+            Open();
     }
 
-    public string? TakePendingQuestion()
+    public AskRequest? TakeRequest()
     {
-        var question = pendingQuestion;
-        pendingQuestion = null;
-        return question;
+        var taken = request;
+        request = null;
+        return taken;
     }
 
     public void Open()

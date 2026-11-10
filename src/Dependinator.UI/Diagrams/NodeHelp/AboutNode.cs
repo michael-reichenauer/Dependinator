@@ -62,16 +62,12 @@ interface IAboutNodeService
     // The text that asks an AI the question about the node (NodePrompt), with a type's source
     // where the host can read the files; empty when the node is gone.
     Task<string> GetPromptAsync(NodeId nodeId, string question);
-
-    // Asks Claude (or Claude Code) the question about the node, see IAiService.AskAsync.
-    Task<Result<NodeAnswer>> AskAsync(NodeId nodeId, string question, AiSource route, Action<SuggestStep> onStep);
 }
 
 [Scoped]
 class AboutNodeService(
     IModelMgr modelMgr,
     IWorkspaceFileService workspaceFileService,
-    IAiService aiService,
     IImproveCommentsService improveCommentsService,
     Ask.IAskModelService askModelService,
     IDialogService dialogService
@@ -87,14 +83,10 @@ class AboutNodeService(
             facts = NodePrompt.Facts(node);
         }
 
-        Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? ask = aiService.IsAvailable
-            ? (question, route, onStep) => AskAsync(nodeId, question, route, onStep)
-            : null;
         var parameters = new DialogParameters<AboutNodeDialog>
         {
             { d => d.Facts, facts },
             { d => d.GetPrompt, question => GetPromptAsync(nodeId, question) },
-            { d => d.Ask, ask },
             { d => d.IsAskInPanel, askModelService.IsAvailable },
             { d => d.CanImproveComments, improveCommentsService.CanImprove([nodeId]) },
         };
@@ -132,38 +124,4 @@ class AboutNodeService(
                 : "";
         }
     }
-
-    public async Task<Result<NodeAnswer>> AskAsync(
-        NodeId nodeId,
-        string question,
-        AiSource route,
-        Action<SuggestStep> onStep
-    )
-    {
-        // The e2e tests exercise the dialog without a key or network.
-        if (Dependinator.Core.Build.IsTestMode)
-        {
-            onStep(route.AskingStep());
-            await Task.Delay(TestModeAnswerDelay);
-            return new NodeAnswer($"Test mode: Claude was not asked \"{question}\".")
-            {
-                Source = route,
-                Question = question,
-            };
-        }
-
-        var json = await aiService.AskAsync(
-            route,
-            () => GetPromptAsync(nodeId, question),
-            NodeAnswer.JsonSchema,
-            onStep,
-            isQuick: true
-        );
-        if (json is not string text)
-            return json.Error;
-        var parsed = NodeAnswer.Parse(text, route);
-        return parsed is NodeAnswer answer ? answer with { Question = question } : parsed.Error;
-    }
-
-    static readonly TimeSpan TestModeAnswerDelay = TimeSpan.FromMilliseconds(800);
 }

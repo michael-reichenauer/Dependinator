@@ -597,7 +597,17 @@ else if (HasSelectedLine)
   }
 
   // Where an AI can be asked (not the standalone browser app), about nodes that are code.
-  bool CanAsk => askModelService.IsAvailable && !IsSelectedNodeZone && !IsSelectedNodeNote;
+  bool CanAsk => askModelService.IsAvailable && IsAnySelectedNodeCode;
+
+  bool IsAnySelectedNodeCode
+  {
+    get
+    {
+      using var model = modelMgr.UseModel();
+      return selectionService.SelectedNodeIds.Any(id =>
+        model.Nodes.TryGetValue(id, out var node) && !node.IsRoot && !NodeViewPolicy.IsAnnotation(node));
+    }
+  }
 
   void ShowAbout()
   {

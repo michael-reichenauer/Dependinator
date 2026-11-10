@@ -101,6 +101,32 @@ public class AskModelTests
     }
 
     [Fact]
+    public void Build_ShouldNotSpeakOfWhatIsInside_ForANodeWithNothingInside()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+
+        var prompt = AskModelPrompt.Build(model, "What is this?", [], new AskContext([view.Id], true));
+
+        Assert.Contains("asks about it (", prompt);
+        Assert.DoesNotContain(
+            "inside",
+            prompt[prompt.IndexOf("## What the question is about")..prompt.IndexOf("## The question")]
+                .Replace("Contains nothing parsed", "")
+        );
+    }
+
+    [Fact]
+    public void AboutNames_ShouldGiveTheFullNames_ForAFollowUpsPrompt()
+    {
+        using var model = modelMgr.UseModel();
+        NodeId[] ids = [NodeId.FromName("UI.View"), NodeId.FromName("Data")];
+
+        Assert.Equal("`UI.View`, `Data`", AskModelPrompt.AboutNames(model, new AskContext(ids, true)));
+        Assert.Equal("", AskModelPrompt.AboutNames(model, AskContext.Model));
+    }
+
+    [Fact]
     public void Examples_ShouldFitWhatTheQuestionIsAbout()
     {
         Assert.Contains("codebase", AskExamples.For(0)[0].Top[0]);

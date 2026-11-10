@@ -5,7 +5,8 @@
 @* About a node (AboutNodeService): what the model knows of it (its comment, what it contains, how
    many types outside it it uses and are used by it), and questions about it for an AI. Where the
    host can ask an AI, the example questions (AskExamples) and "Ask another question" close the
-   dialog for the Ask panel, which asks about the node, with follow-ups and links. In the
+   dialog for the Ask panel, which asks about the node, with follow-ups and links; "Copy prompt"
+   is for a user without an AI set up, to ask their own AI chat. In the
    standalone browser app, which cannot ask, the question ("What is this and why is it here?"
    until the user writes another) is for the user's own AI chat: copy the prompt, paste the answer
    (AiOpinion). "Improve comments" closes it for the Improve comments dialog (ImproveCommentsService). *@
@@ -45,13 +46,21 @@
                    StartIcon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" OnClick="@(() => AskInPanel(""))"
                    title="Open the Ask panel to ask your own question about this node"
                    data-testid="about-node-ask-other">Ask another question …</MudButton>
+        <MudButton Class="mt-2" Variant="Variant.Text" Size="Size.Small"
+                   StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy" OnClick="CopyPromptAsync"
+                   title="Copy a prompt about the node, with its links and its code, for your own AI chat"
+                   data-testid="about-node-copy-prompt">Copy prompt</MudButton>
+        @if (copyNote is not null)
+        {
+          <div class="dep-ai__suggest-note" data-testid="about-node-prompt-copied">@copyNote</div>
+        }
       </div>
     }
     else
     {
     <MudTextField T="string" @bind-Value="Question" Label="Your question" Immediate="true" Class="mt-3 mb-1"
                   data-testid="about-node-question" />
-    <AiOpinion TAnswer="NodeAnswer" TestId="about-node" GetPrompt="PromptAsync" Ask="AskOrNull"
+    <AiOpinion TAnswer="NodeAnswer" TestId="about-node" GetPrompt="PromptAsync"
                ParsePasted="ParsePasted" IsExpandedAtStart="true" ExpandText="Ask AI about it"
                AnswerTitle="AI answer"
                RouteText="Claude reads the node, its links and its code and answers here."
@@ -99,9 +108,6 @@
   // The prompt that asks any AI the question, to copy or show.
   [Parameter, EditorRequired] public Func<string, Task<string>> GetPrompt { get; set; } = null!;
 
-  // Asks Claude (or Claude Code) the question, telling each step; null where the host cannot ask.
-  [Parameter] public Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? Ask { get; set; }
-
   // The host can ask an AI: questions go to the Ask panel, which the service opens once this
   // dialog is closed with the question as its result ("" for the user's own).
   [Parameter] public bool IsAskInPanel { get; set; }
@@ -117,9 +123,6 @@
 
   string Question { get; set; } = NodePrompt.DefaultQuestion;
   string? copyNote;
-
-  Func<AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? AskOrNull =>
-    Ask is null ? null : (route, onStep) => Ask(QuestionText, route, onStep);
 
   string QuestionText => string.IsNullOrWhiteSpace(Question) ? NodePrompt.DefaultQuestion : Question.Trim();
 
@@ -137,6 +140,14 @@
   async Task CopyAnswerAsync(NodeAnswer answer)
   {
     copyNote = await clipboardService.CopyAsync(answer.Text) ? "Copied." : "Could not copy to the clipboard.";
+  }
+
+  // The prompt asks the default question; the user changes it in their AI chat.
+  async Task CopyPromptAsync()
+  {
+    copyNote = await clipboardService.CopyAsync(await GetPrompt(NodePrompt.DefaultQuestion))
+      ? "The prompt is copied, with the node, its links and its code. Paste it into your AI chat."
+      : "Could not copy to the clipboard.";
   }
 
   void Close() => MudDialog.Close();
