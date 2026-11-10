@@ -20,8 +20,7 @@ public class LineLabelsTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator add = Page.GetByTestId("line-labels-add");
         await Expect(add).ToHaveCountAsync(0);
 
-        await Page.GetByTestId("line-labels-show-prompt").ClickAsync();
-        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("## The lines");
+        await Expect(await App.ShowPromptAsync("line-labels")).ToContainTextAsync("## The lines");
         await Page.GetByTestId("prompt-dialog-close").ClickAsync();
 
         // In test mode the app answers for Claude: a label per line, and one for no line.
