@@ -7,8 +7,8 @@ namespace Dependinator.Claude;
 
 // Runs Claude Code in print mode (`claude -p`) for one structured answer: the prompt goes in on
 // stdin, the schema as --json-schema, and the answer comes back in the JSON result's
-// structured_output. It runs with the user's Claude login and their default model, and saves no
-// session. In the code's folder it may read and search the files there (Read, Grep, Glob), to
+// structured_output. It runs with the user's Claude login and their default model, or the one
+// picked in Settings › AI (--model), and saves no session. In the code's folder it may read and search the files there (Read, Grep, Glob), to
 // check what the prompt's excerpts leave out: no tool that changes files or runs commands, and
 // reads outside the folder need a permission that print mode cannot ask for, so they are denied.
 // Only the user's own Claude settings load (not the folder's, whose hooks could run commands), and
@@ -74,16 +74,25 @@ static class ClaudeCodeRunner
         string prompt,
         string jsonSchema,
         string? codeFolder,
-        ModelToolsAddress? modelTools = null
+        ModelToolsAddress? modelTools = null,
+        string? model = null
     )
     {
+        if (!IsModelName(model))
+            return new Error(InvalidModelError(model));
         var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
 
         var hasCodeFolder = IsFolder(codeFolder);
         if (hasCodeFolder && modelTools is null)
-            return await RunAsync(prompt, Arguments(compactSchema, Mode.ReadCode), codeFolder!, AskTimeout, default);
+            return await RunAsync(
+                prompt,
+                Arguments(compactSchema, Mode.ReadCode, model: model),
+                codeFolder!,
+                AskTimeout,
+                default
+            );
 
         // A private folder for the MCP config, and the working folder when there is no code folder.
         var folder = Result.Catch(() => Directory.CreateTempSubdirectory("dependinator-claude-"));
@@ -102,14 +111,14 @@ static class ClaudeCodeRunner
             return hasCodeFolder
                 ? await RunAsync(
                     prompt,
-                    Arguments(compactSchema, Mode.ReadCode, mcpConfig),
+                    Arguments(compactSchema, Mode.ReadCode, mcpConfig, model),
                     codeFolder!,
                     AskTimeout,
                     default
                 )
                 : await RunAsync(
                     prompt,
-                    Arguments(compactSchema, Mode.NoTools, mcpConfig),
+                    Arguments(compactSchema, Mode.NoTools, mcpConfig, model),
                     privateFolder.FullName,
                     AskTimeout,
                     default
@@ -140,16 +149,30 @@ static class ClaudeCodeRunner
         string prompt,
         string jsonSchema,
         string codeFolder,
+        string? model,
         CancellationToken ct
     )
     {
+        if (!IsModelName(model))
+            return new Error(InvalidModelError(model));
         var schema = Result.Catch(() => JsonDocument.Parse(jsonSchema).RootElement.GetRawText());
         if (schema is not string compactSchema)
             return new Error("The answer schema is not valid JSON.", schema.Error);
         if (!IsFolder(codeFolder))
             return new Error($"The code's folder was not found: {codeFolder}");
-        return await RunAsync(prompt, Arguments(compactSchema, Mode.FixCode), codeFolder, FixTimeout, ct);
+        return await RunAsync(prompt, Arguments(compactSchema, Mode.FixCode, model: model), codeFolder, FixTimeout, ct);
     }
+
+    // A model for --model: an alias ("sonnet") or a full name ("claude-opus-5-5", "opus[1m]").
+    // The name comes from a text field, and one that starts with "-" would be read as an option.
+    internal static bool IsModelName(string? model) =>
+        model is null
+        || model.Length is > 0 and <= 100
+            && char.IsAsciiLetterOrDigit(model[0])
+            && model.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '.' or '_' or ':' or '[' or ']');
+
+    static string InvalidModelError(string? model) =>
+        $"\"{model}\" is not a model name Claude Code can be given. Pick another model in Settings › AI.";
 
     static bool IsFolder(string? path) =>
         path is { Length: > 0 } && Path.IsPathFullyQualified(path) && Directory.Exists(path);
@@ -240,10 +263,18 @@ static class ClaudeCodeRunner
     // With an MCP config (only for an ask), the model tools come on top: that server alone, its
     // tools allowed without asking, and a word on them in the system prompt. Every run loads only
     // the MCP servers it is given, none of the user's own.
-    internal static IReadOnlyList<string> Arguments(string schema, Mode mode, string? mcpConfig = null)
+    // Without a model Claude Code uses its own setting.
+    internal static IReadOnlyList<string> Arguments(
+        string schema,
+        Mode mode,
+        string? mcpConfig = null,
+        string? model = null
+    )
     {
         var withModelTools = mcpConfig is not null && mode is not Mode.FixCode;
         List<string> arguments = ["-p", "--output-format", "json", "--json-schema", schema];
+        if (model is not null)
+            arguments.AddRange(["--model", model]);
         switch (mode)
         {
             case Mode.NoTools:

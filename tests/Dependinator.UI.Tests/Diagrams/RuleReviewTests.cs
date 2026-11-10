@@ -171,7 +171,7 @@ public class RuleReviewTests
         var claude = new Mock<IClaudeService>();
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
         claude
-            .Setup(c => c.AskAsync(It.Is<string>(p => p.Contains("## The rule")), RuleSuggestion.JsonSchema))
+            .Setup(c => c.AskAsync(It.Is<string>(p => p.Contains("## The rule")), RuleSuggestion.JsonSchema, null))
             .ReturnsAsync(
                 (Result<string>)
                     """{ "verdict": "Allow", "why": "Fine.", "assumptions": "None", "reasonToStore": "Ok", "change": "" }"""
@@ -179,7 +179,12 @@ public class RuleReviewTests
         var service = new RuleReviewService(
             modelMgr,
             Mock.Of<IWorkspaceFileService>(),
-            new AiService(claude.Object, Mock.Of<IVsCodeModelService>(), Mock.Of<IConfigService>(), modelMgr)
+            new AiService(
+                claude.Object,
+                Mock.Of<IVsCodeModelService>(),
+                Mock.Of<IConfigService>(c => c.GetAsync() == Task.FromResult(new Config())),
+                modelMgr
+            )
         );
         List<SuggestStep> steps = [];
 

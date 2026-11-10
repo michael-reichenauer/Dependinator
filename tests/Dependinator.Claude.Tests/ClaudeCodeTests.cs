@@ -16,7 +16,7 @@ public class ClaudeCodeTests
     ClaudeService Service() =>
         new(keys.Object)
         {
-            AskClaudeCode = (prompt, _, _, _) =>
+            AskClaudeCode = (prompt, _, _, _, _) =>
             {
                 asked.Add(prompt);
                 return Task.FromResult<Result<string>>("""{"verdict":"Accept"}""");
@@ -26,7 +26,7 @@ public class ClaudeCodeTests
     [Fact]
     public async Task AskClaudeCodeAsync_ShouldAsk_WithoutAnApiKey()
     {
-        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema, null, false));
+        var answer = AssertOk(await Service().AskClaudeCodeAsync("Hello", Schema, null, false, null));
 
         Assert.Equal("""{"verdict":"Accept"}""", answer);
         Assert.Equal(["Hello"], asked);
@@ -66,15 +66,15 @@ public class ClaudeCodeTests
         List<ModelToolsAddress?> passed = [];
         var service = new ClaudeService(keys.Object, modelTools.Object)
         {
-            AskClaudeCode = (_, _, _, address) =>
+            AskClaudeCode = (_, _, _, address, _) =>
             {
                 passed.Add(address);
                 return Task.FromResult<Result<string>>("{}");
             },
         };
 
-        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, true));
-        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, false));
+        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, true, null));
+        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, false, null));
 
         Assert.Equal([new ModelToolsAddress("http://127.0.0.1:1234/mcp", "secret"), null], passed);
     }
@@ -155,7 +155,7 @@ public class ClaudeCodeTests
         var started = new TaskCompletionSource();
         var service = new ClaudeService(keys.Object)
         {
-            FixWithClaudeCode = async (_, _, _, ct) =>
+            FixWithClaudeCode = async (_, _, _, _, ct) =>
             {
                 started.SetResult();
                 await Task.Delay(Timeout.Infinite, ct).ContinueWith(_ => { });
@@ -163,9 +163,9 @@ public class ClaudeCodeTests
             },
         };
 
-        var first = service.FixWithClaudeCodeAsync("Fix it", Schema, "/repo");
+        var first = service.FixWithClaudeCodeAsync("Fix it", Schema, "/repo", null);
         await started.Task;
-        var second = AssertError(await service.FixWithClaudeCodeAsync("Fix it too", Schema, "/repo"));
+        var second = AssertError(await service.FixWithClaudeCodeAsync("Fix it too", Schema, "/repo", null));
         Assert.True(await service.StopClaudeCodeFixAsync());
 
         Assert.StartsWith("Claude Code is already fixing", second.Message);
@@ -217,5 +217,60 @@ public class ClaudeCodeTests
         var error = AssertError(ClaudeCodeRunner.ParseOutput("", "error: unknown option '--json-schema'\n", 1));
 
         Assert.Equal("Claude Code could not answer: error: unknown option '--json-schema'", error.Message);
+    }
+
+    [Fact]
+    public void Arguments_ShouldNameThePickedModel_AndNoneWithoutAPick()
+    {
+        var picked = ClaudeCodeRunner.Arguments(Schema, ClaudeCodeRunner.Mode.ReadCode, model: "sonnet").ToList();
+        var automatic = ClaudeCodeRunner.Arguments(Schema, ClaudeCodeRunner.Mode.ReadCode);
+
+        Assert.Equal("sonnet", picked[picked.IndexOf("--model") + 1]);
+        Assert.DoesNotContain("--model", automatic);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("opus")]
+    [InlineData("claude-opus-5-5")]
+    [InlineData("opus[1m]")]
+    public void IsModelName_ShouldAcceptAnAliasOrAFullName(string? model)
+    {
+        Assert.True(ClaudeCodeRunner.IsModelName(model));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("--dangerously-skip-permissions")]
+    [InlineData("opus --tools Bash")]
+    public void IsModelName_ShouldRejectWhatCouldBeReadAsAnOption(string model)
+    {
+        Assert.False(ClaudeCodeRunner.IsModelName(model));
+    }
+
+    [Fact]
+    public async Task AskAsync_ShouldNotStartClaudeCode_WithAnInvalidModelName()
+    {
+        var error = AssertError(await ClaudeCodeRunner.AskAsync("Hello", Schema, null, null, "--tools"));
+
+        Assert.Contains("is not a model name", error.Message);
+    }
+
+    [Fact]
+    public async Task AskClaudeCodeAsync_ShouldPassThePickedModel()
+    {
+        string? asked = "none";
+        var service = new ClaudeService(keys.Object)
+        {
+            AskClaudeCode = (_, _, _, _, model) =>
+            {
+                asked = model;
+                return Task.FromResult<Result<string>>("{}");
+            },
+        };
+
+        AssertOk(await service.AskClaudeCodeAsync("Hello", Schema, null, false, "opus"));
+
+        Assert.Equal("opus", asked);
     }
 }
