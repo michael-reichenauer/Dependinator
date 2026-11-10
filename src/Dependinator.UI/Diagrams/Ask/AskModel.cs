@@ -4,7 +4,9 @@ using System.Text.Json.Serialization;
 using Dependinator.Core.Claude;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.NodeHelp;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
@@ -100,12 +102,24 @@ public record AnswerNode(string Name, string Why);
 // UI.App.AppBar"), so the panel shows the node's short name in the text and its long one in lists.
 public record NodeLink(NodeId Id, string ShortName, string LongName);
 
-// An earlier question in the panel's conversation and its answer's text.
-record AskExchange(string Question, string Answer);
+// An earlier question in the panel's conversation and its answer's text; About names the nodes
+// it was asked about ("" for the whole model).
+record AskExchange(string Question, string Answer, string About = "");
+
+// A request to ask about a node, from About Node or a node's menu.
+record AskRequest(NodeId NodeId, string Question);
+
+// What a question is about: the nodes selected in the diagram, alone or with everything inside
+// them. With no nodes it is about the whole model.
+record AskContext(IReadOnlyList<NodeId> NodeIds, bool IsBelow)
+{
+    public static readonly AskContext Model = new([], false);
+}
 
 // The prompt that asks an AI a question about the model open in the diagram. It holds only an
-// overview (the model's size and top level); the AI finds the rest with Dependinator's tools,
-// which answer on the model as it is now, and reads the code where it can.
+// overview (the model's size and top level) and the nodes the question is about, when the user
+// selected some; the AI finds the rest with Dependinator's tools, which answer on the model as it
+// is now, and reads the code where it can.
 static class AskModelPrompt
 {
     internal const int MaxNodes = 12;
@@ -116,7 +130,16 @@ static class AskModelPrompt
     internal const int MaxEarlier = 3;
     internal const int MaxEarlierAnswerLength = 2000;
 
-    public static string Build(IModel model, string question, IReadOnlyList<AskExchange> earlier)
+    // The children listed of each node the question is about, when it is asked with what is inside.
+    internal const int MaxContextNodes = 12;
+    internal const int MaxInside = 30;
+
+    public static string Build(
+        IModel model,
+        string question,
+        IReadOnlyList<AskExchange> earlier,
+        AskContext? context = null
+    )
     {
         var topLevel = model
             .Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n))
@@ -148,6 +171,8 @@ static class AskModelPrompt
         if (topLevel.Count > MaxTopLevel)
             text.AppendLine($"- … and {topLevel.Count - MaxTopLevel} more");
 
+        AppendContext(text, model, context ?? AskContext.Model);
+
         var recent = earlier.TakeLast(MaxEarlier).ToList();
         if (recent.Count > 0)
         {
@@ -159,7 +184,8 @@ static class AskModelPrompt
             }
             foreach (var exchange in recent)
             {
-                text.AppendLine($"**Question:** {exchange.Question.Trim()}").AppendLine();
+                var about = exchange.About != "" ? $" (about {exchange.About})" : "";
+                text.AppendLine($"**Question{about}:** {exchange.Question.Trim()}").AppendLine();
                 text.AppendLine($"**Answer:** {Cut(exchange.Answer.Trim())}").AppendLine();
             }
             text.AppendLine("## The question (it may follow up on the conversation above)").AppendLine();
@@ -172,6 +198,81 @@ static class AskModelPrompt
         text.AppendLine().Append(TaskSection);
         return text.ToString();
     }
+
+    // The nodes the user selected for the question, each with what the model knows of it, so "it"
+    // and "these" in the question are clear and the AI knows where to start looking.
+    static void AppendContext(StringBuilder text, IModel model, AskContext context)
+    {
+        var nodes = ContextNodes(model, context);
+        if (nodes.Count == 0)
+            return;
+        var isOne = nodes.Count == 1;
+        var isInside = context.IsBelow && nodes.Any(HasInside);
+        var scope = isInside
+            ? isOne
+                ? ", with everything inside it"
+                : ", with everything inside them"
+            : "";
+        text.AppendLine().AppendLine("## What the question is about").AppendLine();
+        text.AppendLine(
+            isOne
+                ? $"The user selected this node in the diagram and asks about it{scope} (\"it\" and \"this\" in the question mean the node):"
+                : $"The user selected these {nodes.Count} nodes in the diagram and asks about them{scope} (\"they\" and \"these\" in the question mean the nodes):"
+        );
+        text.AppendLine();
+        foreach (var node in nodes.Take(MaxContextNodes))
+        {
+            var facts = NodePrompt.Facts(node);
+            var title = node.LongName != node.Name ? $", titled \"{node.LongName}\"" : "";
+            text.AppendLine(
+                $"- `{node.Name}` ({Kind(node.Type)}{title}){Described(node)}. {facts.Contents}; "
+                    + $"uses {Types(facts.UsesCount)} outside it, used by {Types(facts.UsedByCount)}."
+            );
+            if (!context.IsBelow)
+                continue;
+            var inside = node
+                .Children.Where(n => !NodeViewPolicy.IsAnnotation(n))
+                .OrderBy(n => n.Name, StringComparer.Ordinal)
+                .ToList();
+            if (inside.Count == 0)
+                continue;
+            var names = string.Join(", ", inside.Take(MaxInside).Select(n => $"`{n.ShortName}`"));
+            var more = inside.Count > MaxInside ? $", … and {inside.Count - MaxInside} more" : "";
+            text.AppendLine($"  Directly inside: {names}{more}");
+        }
+        if (nodes.Count > MaxContextNodes)
+            text.AppendLine($"- … and {nodes.Count - MaxContextNodes} more selected nodes");
+        text.AppendLine();
+        text.AppendLine(
+            isInside ? "Look these nodes and what is inside them up with the tools, by these names, before you answer."
+            : nodes.Any(HasInside)
+                ? "Look these nodes up with the tools, by these names, before you answer. The question is about the nodes themselves, not about each thing inside them."
+            : "Look these nodes up with the tools, by these names, before you answer."
+        );
+    }
+
+    // Whether the node has anything inside to ask about; notes and zones do not count.
+    internal static bool HasInside(Node node) => node.Children.Any(n => !NodeViewPolicy.IsAnnotation(n));
+
+    // The context's nodes by their full names, as a follow-up's prompt names what an earlier
+    // question was about.
+    internal static string AboutNames(IModel model, AskContext context)
+    {
+        var nodes = ContextNodes(model, context);
+        var names = string.Join(", ", nodes.Take(MaxContextNodes).Select(n => $"`{n.Name}`"));
+        return nodes.Count > MaxContextNodes ? $"{names} and {nodes.Count - MaxContextNodes} more" : names;
+    }
+
+    // The nodes of the context that are (still) in the model; notes and zones are no code.
+    internal static List<Node> ContextNodes(IModel model, AskContext context) =>
+        [
+            .. context
+                .NodeIds.Select(id => model.Nodes.GetValueOrDefault(id))
+                .OfType<Node>()
+                .Where(n => !n.IsRoot && !NodeViewPolicy.IsAnnotation(n)),
+        ];
+
+    static string Types(int count) => count == 1 ? "1 type" : $"{count} types";
 
     static string Cut(string answer) =>
         answer.Length <= MaxEarlierAnswerLength ? answer : answer[..MaxEarlierAnswerLength] + " … (cut)";
@@ -199,16 +300,27 @@ interface IAskModelService
     bool IsAvailable { get; }
 
     // The prompt for the question, a follow-up on the earlier ones; empty when there is no model.
-    string GetPrompt(string question, IReadOnlyList<AskExchange> earlier);
+    string GetPrompt(string question, IReadOnlyList<AskExchange> earlier, AskContext context);
 
     Task<Result<ModelAnswer>> AskAsync(
         string question,
         IReadOnlyList<AskExchange> earlier,
+        AskContext context,
         AiSource route,
         Action<SuggestStep> onStep
     );
 
     void Toggle();
+
+    // Shows the panel (if it is not shown), to ask about the selected nodes.
+    void Open();
+
+    // Selects the node and shows the panel with the question filled in, to ask about the node.
+    Task AskAboutAsync(NodeId nodeId, string question = "");
+
+    // A node to ask about and a question to fill in ("" for none), once: the panel takes them
+    // when it is shown and no answer is awaited.
+    AskRequest? TakeRequest();
 
     void Close();
 }
@@ -221,20 +333,24 @@ class AskModelService(
     IViewOptions viewOptions,
     IPathFinderService pathFinderService,
     IApplicationEvents applicationEvents,
-    IModelQueries modelQueries
+    IModelQueries modelQueries,
+    ISelectionService selectionService
 ) : IAskModelService
 {
     public bool IsAvailable => aiService.IsAvailable;
 
-    public string GetPrompt(string question, IReadOnlyList<AskExchange> earlier)
+    AskRequest? request;
+
+    public string GetPrompt(string question, IReadOnlyList<AskExchange> earlier, AskContext context)
     {
         using var model = modelMgr.UseModel();
-        return AskModelPrompt.Build(model, question, earlier);
+        return AskModelPrompt.Build(model, question, earlier, context);
     }
 
     public async Task<Result<ModelAnswer>> AskAsync(
         string question,
         IReadOnlyList<AskExchange> earlier,
+        AskContext context,
         AiSource route,
         Action<SuggestStep> onStep
     )
@@ -248,11 +364,11 @@ class AskModelService(
             await lookups.GetModelAsync();
             await lookups.SearchNodesAsync(question);
             await Task.Delay(TestModeAnswerDelay);
-            return WithLinks(TestModeAnswer(route, earlier.Count) with { Question = question });
+            return WithLinks(TestModeAnswer(route, earlier.Count, context) with { Question = question });
         }
 
         // AiService's own error for an empty prompt is about a review dialog.
-        var prompt = GetPrompt(question, earlier);
+        var prompt = GetPrompt(question, earlier, context);
         if (prompt == "")
             return new Error("There is no model to ask about yet: open or parse one first.");
         Task<string> GetPromptAsync() => Task.FromResult(prompt);
@@ -347,6 +463,38 @@ class AskModelService(
             Close();
             return;
         }
+        Open();
+    }
+
+    public async Task AskAboutAsync(NodeId nodeId, string question = "")
+    {
+        // Selecting a node that is the primary of several keeps the others, so start over. The
+        // selection may refuse the node (one that fills the view, say): the panel then asks
+        // about the requested node all the same.
+        if (!selectionService.SelectedNodeIds.SequenceEqual([nodeId]))
+        {
+            selectionService.Unselect();
+            await selectionService.Select(nodeId);
+        }
+        request = new AskRequest(nodeId, question);
+        // The panel takes the request on the UI state change, which opening it raises.
+        if (viewOptions.IsAskShown)
+            applicationEvents.TriggerUIStateChanged();
+        else
+            Open();
+    }
+
+    public AskRequest? TakeRequest()
+    {
+        var taken = request;
+        request = null;
+        return taken;
+    }
+
+    public void Open()
+    {
+        if (viewOptions.IsAskShown)
+            return;
         // The analysis panels share the top-right corner; their highlighted lines are baked into
         // the tiles.
         if (viewOptions.IsCyclesShown || viewOptions.IsRulesShown)
@@ -369,12 +517,20 @@ class AskModelService(
 
     // Names the first two top-level nodes, one twice (in the text and in the nodes), and a node
     // that is not in the model, which stays plain code.
-    ModelAnswer TestModeAnswer(AiSource route, int earlierCount)
+    ModelAnswer TestModeAnswer(AiSource route, int earlierCount, AskContext context)
     {
         var followUp = earlierCount > 0 ? $" A follow-up, after {earlierCount} answered." : "";
         List<Node> top;
         using (var model = modelMgr.UseModel())
+        {
             top = [.. model.Root.Children.Where(n => !NodeViewPolicy.IsAnnotation(n)).OrderBy(n => n.Name).Take(2)];
+            var about = AskModelPrompt.ContextNodes(model, context);
+            if (about.Count > 0)
+            {
+                var inside = context.IsBelow ? " with everything inside" : "";
+                followUp += $" About {string.Join(", ", about.Select(n => n.ShortName))}{inside}.";
+            }
+        }
         var names = top.Select(n => n.Name).ToList();
         var text = names.Count switch
         {

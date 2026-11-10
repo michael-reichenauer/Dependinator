@@ -25,6 +25,13 @@
                          OnClick="contextMenuService.ShowAboutAsync" data-testid="context-menu-about">
               About Node …
             </MudListItem>
+            @if (contextMenuService.CanAsk)
+            {
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.AskAboutAsync" data-testid="context-menu-ask">
+                Ask About Node …
+              </MudListItem>
+            }
             <MudListItem T="string" Icon="@Icons.Icon.ReferencesIcon" IconColor="Color.Secondary"
                          OnClick="contextMenuService.ShowReferencesAsync" data-testid="context-menu-references">
               Show References

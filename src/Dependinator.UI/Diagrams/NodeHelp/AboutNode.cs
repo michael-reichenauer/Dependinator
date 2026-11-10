@@ -51,8 +51,9 @@ public record NodeAnswer(string Text) : IAiAnswer
 }
 
 // "About Node": a dialog with what the model knows of a node (its comment, what it contains, how
-// many types it uses and are used by it), and a question about it to ask Claude, Claude Code or
-// the user's AI chat (AboutNodeDialog). Reached from the node toolbar menu and the node's
+// many types it uses and are used by it), and questions about it: where the host can ask an AI
+// they go to the Ask panel (IAskModelService.AskAboutAsync), elsewhere the prompt is for the
+// user's AI chat (AboutNodeDialog). Reached from the node toolbar menu and the node's
 // right-click menu. Not for annotations (notes and zones).
 interface IAboutNodeService
 {
@@ -61,17 +62,14 @@ interface IAboutNodeService
     // The text that asks an AI the question about the node (NodePrompt), with a type's source
     // where the host can read the files; empty when the node is gone.
     Task<string> GetPromptAsync(NodeId nodeId, string question);
-
-    // Asks Claude (or Claude Code) the question about the node, see IAiService.AskAsync.
-    Task<Result<NodeAnswer>> AskAsync(NodeId nodeId, string question, AiSource route, Action<SuggestStep> onStep);
 }
 
 [Scoped]
 class AboutNodeService(
     IModelMgr modelMgr,
     IWorkspaceFileService workspaceFileService,
-    IAiService aiService,
     IImproveCommentsService improveCommentsService,
+    Ask.IAskModelService askModelService,
     IDialogService dialogService
 ) : IAboutNodeService
 {
@@ -85,14 +83,11 @@ class AboutNodeService(
             facts = NodePrompt.Facts(node);
         }
 
-        Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? ask = aiService.IsAvailable
-            ? (question, route, onStep) => AskAsync(nodeId, question, route, onStep)
-            : null;
         var parameters = new DialogParameters<AboutNodeDialog>
         {
             { d => d.Facts, facts },
             { d => d.GetPrompt, question => GetPromptAsync(nodeId, question) },
-            { d => d.Ask, ask },
+            { d => d.IsAskInPanel, askModelService.IsAvailable },
             { d => d.CanImproveComments, improveCommentsService.CanImprove([nodeId]) },
         };
         var options = new DialogOptions
@@ -102,8 +97,11 @@ class AboutNodeService(
             FullWidth = true,
         };
         var dialog = await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
-        if (await dialog.Result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
             await improveCommentsService.ShowAsync([nodeId]);
+        else if (result is { Canceled: false, Data: AboutNodeDialog.AskInPanelResult inPanel })
+            await askModelService.AskAboutAsync(nodeId, inPanel.Question);
     }
 
     public async Task<string> GetPromptAsync(NodeId nodeId, string question)
@@ -126,38 +124,4 @@ class AboutNodeService(
                 : "";
         }
     }
-
-    public async Task<Result<NodeAnswer>> AskAsync(
-        NodeId nodeId,
-        string question,
-        AiSource route,
-        Action<SuggestStep> onStep
-    )
-    {
-        // The e2e tests exercise the dialog without a key or network.
-        if (Dependinator.Core.Build.IsTestMode)
-        {
-            onStep(route.AskingStep());
-            await Task.Delay(TestModeAnswerDelay);
-            return new NodeAnswer($"Test mode: Claude was not asked \"{question}\".")
-            {
-                Source = route,
-                Question = question,
-            };
-        }
-
-        var json = await aiService.AskAsync(
-            route,
-            () => GetPromptAsync(nodeId, question),
-            NodeAnswer.JsonSchema,
-            onStep,
-            isQuick: true
-        );
-        if (json is not string text)
-            return json.Error;
-        var parsed = NodeAnswer.Parse(text, route);
-        return parsed is NodeAnswer answer ? answer with { Question = question } : parsed.Error;
-    }
-
-    static readonly TimeSpan TestModeAnswerDelay = TimeSpan.FromMilliseconds(800);
 }
