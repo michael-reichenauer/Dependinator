@@ -55,6 +55,19 @@ public class SolutionDescriptionReaderTests
     }
 
     [Fact]
+    public void ExtractFirstParagraph_KeepsALineThatStartsWithInlineHtml()
+    {
+        var markdown = """
+            Foo is a library that
+            <b>parses</b> things.
+            """;
+
+        var result = SolutionDescriptionReader.ExtractFirstParagraph(markdown);
+
+        Assert.Equal("Foo is a library that <b>parses</b> things.", result);
+    }
+
+    [Fact]
     public void ExtractFirstParagraph_SkipsBadgesAndHtmlPreamble()
     {
         var markdown = """

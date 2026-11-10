@@ -154,12 +154,40 @@ public class TooltipServiceTests
         {
             var service = AddNode(model, "App.Service", model.Root);
             member = AddNode(model, "App.Service.Run", service, NodeType.MethodMember);
-            member.Signature = "(int count, string name): Task<int>";
+            member.Signature = "(Dictionary<string, int> map, (int X, int Y) pos): Task<int>";
         }
 
         Assert.Equal(
-            "Task&lt;int&gt;&nbsp;<b>Run</b>(<wbr>int&nbsp;count, string&nbsp;name)",
+            "Task&lt;int&gt;&nbsp;<b>Run</b>(<wbr>Dictionary&lt;string,&nbsp;int&gt;&nbsp;map, (int&nbsp;X,&nbsp;int&nbsp;Y)&nbsp;pos)",
             TooltipService.DeclarationHtml(member)
+        );
+    }
+
+    [Fact]
+    public void DeclarationHtml_ShouldNameAnEnumMember_AndGiveAFinalizerNoReturnType()
+    {
+        Node value,
+            finalizer;
+        using (var model = modelMgr.UseModel())
+        {
+            var kind = AddNode(model, "App.Kind", model.Root, NodeType.EnumType);
+            value = AddNode(model, "App.Kind.First", kind, NodeType.FieldMember);
+            value.Signature = ": Kind";
+            var service = AddNode(model, "App.Service", model.Root);
+            finalizer = AddNode(model, "App.Service.~Service", service, NodeType.MethodMember);
+            finalizer.Signature = "()";
+        }
+
+        Assert.Equal("<b>First</b>", TooltipService.DeclarationHtml(value));
+        Assert.Equal("<b>~Service</b>()", TooltipService.DeclarationHtml(finalizer));
+    }
+
+    [Fact]
+    public void Flow_ShouldKeepListItemsOnTheirOwnLines()
+    {
+        Assert.Equal(
+            "Steps:\n- parse the\u0020files\n- build",
+            TooltipService.Flow("Steps:\n- parse the\n  files\n- build")
         );
     }
 

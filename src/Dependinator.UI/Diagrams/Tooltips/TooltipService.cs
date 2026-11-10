@@ -145,7 +145,7 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
             html.Append("<div class=\"dep-tt-sec\">");
             foreach (var (source, target) in links.Take(ShownLinks))
                 html.Append(
-                    $"<div class=\"dep-tt-link\"><code>{HttpUtility.HtmlEncode(source)}</code><span>→ {HttpUtility.HtmlEncode(target)}</span></div>"
+                    $"<div class=\"dep-tt-link\"><code>{HttpUtility.HtmlEncode(source)}</code><span>→&nbsp;{HttpUtility.HtmlEncode(target)}</span></div>"
                 );
             if (links.Count > ShownLinks)
                 html.Append($"<div class=\"dep-tt-more\">+ {links.Count - ShownLinks} more</div>");
@@ -178,6 +178,10 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         var signature = node.Signature ?? "";
         var name = $"<b>{node.HtmlShortName}</b>";
 
+        // An enum's member is declared by its name alone
+        if (node.Parent.Type == Parsing.NodeType.EnumType)
+            return name;
+
         if (signature.StartsWith(": "))
         {
             var type = Code(signature[2..]);
@@ -203,7 +207,8 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
             if (end > 0 && rest == "" && signature[0] == '(')
             {
                 var parameters = ParametersHtml(signature);
-                return node.Type == Parsing.NodeType.ConstructorMember
+                // A constructor or finalizer ("~Type") has no return type
+                return node.Type == Parsing.NodeType.ConstructorMember || node.ShortName.StartsWith('~')
                     ? $"{name}{parameters}"
                     : $"void&nbsp;{name}{parameters}";
             }
@@ -213,11 +218,30 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
     }
 
     // A long declaration wraps like formatted code: after the opening bracket and between the
-    // parameters, never between a type and its name.
-    static string ParametersHtml(string parameters) =>
-        parameters.Length <= 2
-            ? HttpUtility.HtmlEncode(parameters)
-            : $"{parameters[0]}<wbr>{Code(parameters[1..]).Replace(",&nbsp;", ", ")}";
+    // parameters, never between a type and its name or inside a generic or tuple type.
+    static string ParametersHtml(string parameters)
+    {
+        if (parameters.Length <= 2)
+            return HttpUtility.HtmlEncode(parameters);
+
+        var html = new StringBuilder($"{parameters[0]}<wbr>");
+        var depth = 0;
+        var start = 1;
+        for (var i = 1; i < parameters.Length; i++)
+        {
+            var c = parameters[i];
+            if (c is '(' or '[' or '<')
+                depth++;
+            else if (c is ')' or ']' or '>')
+                depth--;
+            else if (c == ',' && depth == 0 && i + 1 < parameters.Length && parameters[i + 1] == ' ')
+            {
+                html.Append(Code(parameters[start..(i + 1)])).Append(' ');
+                start = i + 2;
+            }
+        }
+        return html.Append(Code(parameters[start..])).ToString();
+    }
 
     static string Code(string text) => HttpUtility.HtmlEncode(text).Replace(" ", "&nbsp;");
 
@@ -374,11 +398,24 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
     static string Plural(int count, string word) => count == 1 ? word : word + "s";
 
     // A code comment's line breaks are those of the source file, so its lines flow together
-    // here; a blank line still starts a new paragraph. (What the user wrote keeps its lines.)
-    static string Flow(string text)
+    // here; a blank line still starts a new paragraph and a list item its own line. (What the
+    // user wrote keeps its lines.)
+    internal static string Flow(string text)
     {
-        text = ParagraphBreaks().Replace(text.Replace("\r", "").Trim(), "\u0001");
-        return string.Join(' ', text.Split('\n', StringSplitOptions.TrimEntries)).Replace("\u0001", "\n\n");
+        var paragraphs = ParagraphBreaks()
+            .Split(text.Replace("\r", "").Trim())
+            .Select(paragraph =>
+            {
+                var flowed = new StringBuilder();
+                foreach (var line in paragraph.Split('\n', StringSplitOptions.TrimEntries))
+                {
+                    if (flowed.Length > 0)
+                        flowed.Append(ListItem().IsMatch(line) ? '\n' : ' ');
+                    flowed.Append(line);
+                }
+                return flowed.ToString();
+            });
+        return string.Join("\n\n", paragraphs);
     }
 
     static string Shorten(string text)
@@ -392,4 +429,7 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
 
     [GeneratedRegex(@"\n\s*\n")]
     private static partial Regex ParagraphBreaks();
+
+    [GeneratedRegex(@"^([-*•]|\d+[.)])\s")]
+    private static partial Regex ListItem();
 }

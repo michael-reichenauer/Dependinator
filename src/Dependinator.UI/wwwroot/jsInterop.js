@@ -556,7 +556,6 @@ export function initTooltips(elementId, dotNetRef, token) {
   card.hidden = true;
 
   let hoverId = null;
-  let hoverGroup = null;
   let timer = null;
   let request = 0;
   let pointer = { x: 0, y: 0 };
@@ -587,7 +586,7 @@ export function initTooltips(elementId, dotNetRef, token) {
     return Math.max(rect.width, rect.height) > tooltipOpenContainerMaxSize;
   }
 
-  async function show(id, group) {
+  async function show(id) {
     timer = null;
     const thisRequest = ++request;
     let html = null;
@@ -597,7 +596,9 @@ export function initTooltips(elementId, dotNetRef, token) {
       return; // The circuit or the component is gone
     }
     if (thisRequest !== request || hoverId !== id || !html) return;
-    if (isLargeOpenContainer(group)) return; // Zoomed in while the mouse rested
+    // Zoomed in while the mouse rested (the tiles are then drawn anew, so the group is too)
+    const group = [...svg.querySelectorAll("g.hoverable[id], g.hoverableedit[id]")].find((g) => g.id === id);
+    if (!group || isLargeOpenContainer(group)) return;
     card.innerHTML = html;
     card.hidden = false;
     place();
@@ -612,8 +613,7 @@ export function initTooltips(elementId, dotNetRef, token) {
     hide();
     if (isLargeOpenContainer(group)) return;
     hoverId = id;
-    hoverGroup = group;
-    timer = setTimeout(() => show(id, group), tooltipDelayMs);
+    timer = setTimeout(() => show(id), tooltipDelayMs);
   }
 
   function onMove(event) {
@@ -624,8 +624,7 @@ export function initTooltips(elementId, dotNetRef, token) {
     if (timer) {
       clearTimeout(timer);
       const id = hoverId;
-      const group = hoverGroup;
-      timer = setTimeout(() => show(id, group), tooltipDelayMs);
+      timer = setTimeout(() => show(id), tooltipDelayMs);
     }
   }
 
