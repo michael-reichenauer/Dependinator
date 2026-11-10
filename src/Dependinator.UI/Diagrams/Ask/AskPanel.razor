@@ -682,12 +682,22 @@
     isHandingToCopilotChat = true;
     (otherAiNote, otherAiError) = (null, null);
     StateHasChanged();
+    var askedPath = modelPath;
     try
     {
       var prompt = OtherAiPrompt();
       var handed = prompt == "" ? new Error(NoModelError) : await aiService.FixWithCopilotAsync(prompt);
+      // Another model opened meanwhile: the note would be about the earlier one.
+      if (modelPath != askedPath)
+        return;
       otherAiNote = handed is Error ? null : InCopilotChatNote;
       otherAiError = handed is Error e ? e.Message : null;
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      // Nothing awaits this (see AskInCopilotChat), so a failure must show here.
+      if (modelPath == askedPath)
+        otherAiError = $"Could not ask in Copilot Chat: {e.Message}";
     }
     finally
     {
