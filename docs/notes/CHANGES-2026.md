@@ -343,6 +343,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
   API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
   is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
+- **Pick the Claude model (Nov 10).** Settings › AI has a Model picker under Claude and under
+  Claude Code, like Copilot's. Claude's lists the models the API key can ask, live from Anthropic's
+  Models API (`IClaudeService.GetModelsAsync`), so a new model needs no release; "Automatic" keeps
+  Opus 5.5 for reviews and Sonnet 5.5 for questions and the Ask panel, and a picked model answers
+  everything. Claude Code's offers its aliases (fable, opus, sonnet, haiku) or a typed model name,
+  passed as `claude --model`; "Automatic" leaves it to Claude Code's own setting. The Ask panel's
+  cost is priced by the model that answered (`ClaudeModels`), and unknown for one without a price.
 - **Ask about the selected nodes (Nov 10).** The Ask panel follows the selection: chips above the
   question name the selected nodes, "with everything inside" or alone, and the prompt tells the AI
   what "it" and "these" mean (`AskContext`); without chips the question is about the whole model.

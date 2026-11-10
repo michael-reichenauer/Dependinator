@@ -1,12 +1,14 @@
 @using MudBlazor
+@using Dependinator.Core.Claude
 @using Dependinator.Core.VsCodeModels
 @inject IAiService aiService
 @inject IApplicationEvents applicationEvents
 @inject IJSInterop jsInterop
+@implements IDisposable
 
 @* The AI section of the Settings dialog (Settings › AI): the AI the app asks by default (AiChoice),
    the experimental Claude Code route, turned on only after a warning, since it uses the user's
-   Claude login, and in VS Code the model the Copilot provider asks (VS Code's language models). Every place that asks uses the default, and its menu (▾) asks another provider once.
+   Claude login, the model each of Claude's routes asks (the API key's models, Claude Code's --model), and in VS Code the model the Copilot provider asks (VS Code's language models). Every place that asks uses the default, and its menu (▾) asks another provider once.
    Changes are saved at once. *@
 <div id="@SectionId" data-testid="settings-ai-section">
     <div class="dep-about__text">
@@ -35,6 +37,43 @@
                          data-testid="ai-settings-use-claude-code" data-checked="@(isClaudeCodeOn ? "true" : "false")" />
             }
           </div>
+          @if (provider == AiProvider.Claude && isOffered)
+          {
+            <div class="dep-ai-settings__model" data-testid="ai-settings-claude-model-row" data-value="@(claudeModelId ?? "")">
+              <MudSelect T="string" Value="@(claudeModelId ?? "")" ValueChanged="SetClaudeModelAsync" Dense="true"
+                         Margin="Margin.Dense" Variant="Variant.Outlined" Label="Model"
+                         HelperText="@ClaudeModelsHint" data-testid="ai-settings-claude-model">
+                <MudSelectItem T="string" Value="@("")">@ClaudeAutomaticText</MudSelectItem>
+                @foreach (var model in ClaudeModelItems)
+                {
+                  <MudSelectItem T="string" Value="@model.Id">@model.Name</MudSelectItem>
+                }
+              </MudSelect>
+            </div>
+          }
+          @if (provider == AiProvider.ClaudeCode && isClaudeCodeOn)
+          {
+            <div class="dep-ai-settings__model" data-testid="ai-settings-claude-code-model-row" data-value="@(claudeCodeModel ?? "")">
+              <MudSelect T="string" Value="@ClaudeCodeModelPick" ValueChanged="PickClaudeCodeModelAsync" Dense="true"
+                         Margin="Margin.Dense" Variant="Variant.Outlined" Label="Model"
+                         data-testid="ai-settings-claude-code-model">
+                <MudSelectItem T="string" Value="@("")">@ClaudeCodeAutomaticText</MudSelectItem>
+                @foreach (var alias in ClaudeCodeAliases)
+                {
+                  <MudSelectItem T="string" Value="@alias.Model">@alias.Name</MudSelectItem>
+                }
+                <MudSelectItem T="string" Value="@OtherModel">Another model …</MudSelectItem>
+              </MudSelect>
+              @if (isOtherClaudeCodeModel)
+              {
+                <MudTextField T="string" Value="@(claudeCodeModel ?? "")" ValueChanged="SetOtherClaudeCodeModelAsync"
+                              Error="@(claudeCodeModelError != "")" ErrorText="@claudeCodeModelError"
+                              Margin="Margin.Dense" Variant="Variant.Outlined" Label="Model name" Class="mt-2"
+                              HelperText="A full model name, such as claude-opus-5-5"
+                              data-testid="ai-settings-claude-code-model-name" />
+              }
+            </div>
+          }
           @if (provider == AiProvider.Copilot && isOffered)
           {
             <div class="dep-ai-settings__model">
@@ -91,8 +130,49 @@
   bool isConfirmingClaudeCode;
   VsCodeModel[] copilotModels = [];
   string? copilotModelId;
+  ClaudeModel[] claudeModels = [];
+  string? claudeModelId;
+  string? claudeCodeModel;
+  bool isOtherClaudeCodeModel;
+  string claudeCodeModelError = "";
+  bool isDisposed;
 
-  protected override Task OnInitializedAsync() => RefreshAsync();
+  // Claude Code's names for the latest model of each kind; it has no command that lists its models.
+  static readonly (string Model, string Name)[] ClaudeCodeAliases =
+  [
+    ("fable", "Fable (latest)"),
+    ("opus", "Opus (latest)"),
+    ("sonnet", "Sonnet (latest)"),
+    ("haiku", "Haiku (latest)"),
+  ];
+
+  // The select's value for a model that is no alias: typed in the field below it.
+  const string OtherModel = "other";
+
+  const string ClaudeAutomaticText = "Automatic: Opus or Sonnet, by task";
+  const string ClaudeCodeAutomaticText = "Automatic: Claude Code's own setting";
+
+  protected override async Task OnInitializedAsync()
+  {
+    // Listed afresh: Copilot may have started or signed in since.
+    copilotModels = await aiService.GetCopilotModelsAsync(isFresh: true);
+    await RefreshAsync();
+    isOtherClaudeCodeModel = claudeCodeModel is { } model && ClaudeCodeAliases.All(a => a.Model != model);
+    // Claude's models come over the network: the section shows first, the list when it arrives.
+    _ = LoadClaudeModelsAsync();
+  }
+
+  async Task LoadClaudeModelsAsync()
+  {
+    claudeModels = await aiService.GetClaudeModelsAsync(isFresh: true);
+    isClaudeModelsLoaded = true;
+    if (!isDisposed)
+      await InvokeAsync(StateHasChanged);
+  }
+
+  bool isClaudeModelsLoaded;
+
+  public void Dispose() => isDisposed = true;
 
   protected override async Task OnAfterRenderAsync(bool firstRender)
   {
@@ -104,14 +184,59 @@
 
   async Task RefreshAsync()
   {
-    // Listed afresh (the choice then uses this list): Copilot may have started or signed in since.
-    copilotModels = await aiService.GetCopilotModelsAsync(isFresh: true);
+    copilotModels = await aiService.GetCopilotModelsAsync();
     choice = await aiService.GetChoiceAsync();
     isClaudeCodeOn = choice.Providers.Contains(AiProvider.ClaudeCode);
     // A picked model VS Code no longer offers shows as the automatic choice, which the extension
     // then asks instead.
     var modelId = await aiService.GetCopilotModelIdAsync();
     copilotModelId = copilotModels.Any(m => m.Id == modelId) ? modelId : null;
+
+    claudeModelId = await aiService.GetClaudeModelIdAsync();
+    claudeCodeModel = await aiService.GetClaudeCodeModelAsync();
+  }
+
+  // The listed models, and the picked one when the list lacks it (no key yet, the list could not
+  // be fetched, or Anthropic retired the model: an ask then says so), so the pick stays visible.
+  IEnumerable<ClaudeModel> ClaudeModelItems =>
+    claudeModelId is { } id && claudeModels.All(m => m.Id != id) ? [.. claudeModels, new ClaudeModel(id, id)] : claudeModels;
+
+  // A picked model answers everything; an empty list has more than one cause (no key yet, a key
+  // Claude did not accept, no network), which an ask then tells apart.
+  string ClaudeModelsHint =>
+    claudeModelId is not null ? "Used for everything the app asks Claude"
+    : isClaudeModelsLoaded && claudeModels.Length == 0 ? "No models to list: they show once Claude can be reached with an API key"
+    : "";
+
+  string ClaudeCodeModelPick => isOtherClaudeCodeModel ? OtherModel : claudeCodeModel ?? "";
+
+  async Task SetClaudeModelAsync(string modelId)
+  {
+    await aiService.SetClaudeModelAsync(modelId == "" ? null : modelId);
+    await ChangedAsync();
+  }
+
+  // Picking "Another model …" shows the name field; nothing is saved until a name is typed.
+  async Task PickClaudeCodeModelAsync(string model)
+  {
+    isOtherClaudeCodeModel = model == OtherModel;
+    claudeCodeModelError = "";
+    await aiService.SetClaudeCodeModelAsync(model is "" or OtherModel ? null : model);
+    await ChangedAsync();
+  }
+
+  async Task SetOtherClaudeCodeModelAsync(string model)
+  {
+    model = model.Trim();
+    // What the host would refuse (ClaudeCodeRunner.IsModelName) is not saved.
+    claudeCodeModelError =
+      model.StartsWith('-') || model.Length > 300 || model.Any(c => char.IsWhiteSpace(c) || char.IsControl(c))
+        ? "A model name has no spaces and does not start with -"
+        : "";
+    if (claudeCodeModelError != "")
+      return;
+    await aiService.SetClaudeCodeModelAsync(model == "" ? null : model);
+    await ChangedAsync();
   }
 
   async Task SetDefaultAsync(AiSource? source)
