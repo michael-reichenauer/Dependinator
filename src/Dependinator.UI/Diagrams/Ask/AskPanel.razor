@@ -283,12 +283,11 @@
     if (IsAsking || !viewOptions.IsAskShown || askModelService.TakeRequest() is not { } request)
       return;
     UpdateContext();
+    // A chip removed earlier is asked about again.
+    removedFromContext.Clear();
     if (!seenSelection.SequenceEqual([request.NodeId]))
-    {
       requested = [request.NodeId];
-      removedFromContext.Clear();
-      UpdateContext();
-    }
+    UpdateContext();
     if (request.Question != "")
       question = request.Question;
   }
