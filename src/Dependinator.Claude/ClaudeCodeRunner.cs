@@ -163,13 +163,14 @@ static class ClaudeCodeRunner
         return await RunAsync(prompt, Arguments(compactSchema, Mode.FixCode, model: model), codeFolder, FixTimeout, ct);
     }
 
-    // A model for --model: an alias ("sonnet") or a full name ("claude-opus-5-5", "opus[1m]").
-    // The name comes from a text field, and one that starts with "-" would be read as an option.
+    // A model for --model: an alias ("sonnet"), a full name ("claude-opus-5-5", "opus[1m]") or
+    // what a cloud provider calls it (an ARN, "claude-opus-4-5@20251101"). The name comes from a
+    // text field: one that starts with "-" would be read as an option, and none has spaces.
     internal static bool IsModelName(string? model) =>
         model is null
-        || model.Length is > 0 and <= 100
-            && char.IsAsciiLetterOrDigit(model[0])
-            && model.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '.' or '_' or ':' or '[' or ']');
+        || model.Length is > 0 and <= 300
+            && model[0] != '-'
+            && !model.Any(c => char.IsWhiteSpace(c) || char.IsControl(c));
 
     static string InvalidModelError(string? model) =>
         $"\"{model}\" is not a model name Claude Code can be given. Pick another model in Settings › AI.";

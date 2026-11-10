@@ -234,6 +234,8 @@ public class ClaudeCodeTests
     [InlineData("opus")]
     [InlineData("claude-opus-5-5")]
     [InlineData("opus[1m]")]
+    [InlineData("claude-opus-4-5@20251101")]
+    [InlineData("arn:aws:bedrock:us-east-1:123456789012:inference-profile/us.anthropic.claude-opus-5-5")]
     public void IsModelName_ShouldAcceptAnAliasOrAFullName(string? model)
     {
         Assert.True(ClaudeCodeRunner.IsModelName(model));

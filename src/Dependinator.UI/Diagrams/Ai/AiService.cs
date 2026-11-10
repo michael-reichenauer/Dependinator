@@ -169,25 +169,10 @@ class AiService(
 
     // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI
     // needs it, so it is kept a minute (an empty one a few seconds: Copilot may be starting).
-    static readonly TimeSpan CopilotModelsTtl = TimeSpan.FromMinutes(1);
-    static readonly TimeSpan NoCopilotModelsTtl = TimeSpan.FromSeconds(5);
-    Task<VsCodeModel[]>? copilotModels;
-    DateTime copilotModelsTime;
+    readonly CachedList<VsCodeModel> copilotModels = new();
 
-    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false)
-    {
-        if (!Dependinator.Core.Build.IsVsCodeExtWasm)
-            return [];
-        if (!isFresh && copilotModels is { } cached)
-        {
-            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
-            if (!cached.IsCompleted || DateTime.UtcNow - copilotModelsTime < ttl)
-                return await cached;
-        }
-        copilotModelsTime = DateTime.UtcNow;
-        copilotModels = ListCopilotModelsAsync();
-        return await copilotModels;
-    }
+    public async Task<VsCodeModel[]> GetCopilotModelsAsync(bool isFresh = false) =>
+        Dependinator.Core.Build.IsVsCodeExtWasm ? await copilotModels.GetAsync(ListCopilotModelsAsync, isFresh) : [];
 
     async Task<VsCodeModel[]> ListCopilotModelsAsync()
     {
@@ -211,8 +196,7 @@ class AiService(
     }
 
     // Kept like the Copilot list; an empty one (no key yet, or the list failed) only a few seconds.
-    Task<ClaudeModel[]>? claudeModels;
-    DateTime claudeModelsTime;
+    readonly CachedList<ClaudeModel> claudeModels = new();
 
     // What the e2e tests pick from, where no key is set.
     static readonly ClaudeModel[] TestModeClaudeModels =
@@ -221,27 +205,18 @@ class AiService(
         new("claude-sonnet-5-5", "Claude Sonnet 5.5"),
     ];
 
-    public async Task<ClaudeModel[]> GetClaudeModelsAsync(bool isFresh = false)
-    {
-        if (!IsAvailable)
-            return [];
-        if (!isFresh && claudeModels is { } cached)
-        {
-            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? NoCopilotModelsTtl : CopilotModelsTtl;
-            if (!cached.IsCompleted || DateTime.UtcNow - claudeModelsTime < ttl)
-                return await cached;
-        }
-        claudeModelsTime = DateTime.UtcNow;
-        claudeModels = ListClaudeModelsAsync();
-        return await claudeModels;
-    }
+    public async Task<ClaudeModel[]> GetClaudeModelsAsync(bool isFresh = false) =>
+        IsAvailable ? await claudeModels.GetAsync(ListClaudeModelsAsync, isFresh) : [];
 
     async Task<ClaudeModel[]> ListClaudeModelsAsync()
     {
         try
         {
-            if (await claudeService.GetApiKeyStateAsync() is not ClaudeApiKeyState.Set)
-                return Dependinator.Core.Build.IsTestMode ? TestModeClaudeModels : [];
+            var keyState = await claudeService.GetApiKeyStateAsync();
+            if (keyState is ClaudeApiKeyState.Missing && Dependinator.Core.Build.IsTestMode)
+                return TestModeClaudeModels;
+            if (keyState is not ClaudeApiKeyState.Set)
+                return [];
             var models = await claudeService.GetModelsAsync();
             if (models is ClaudeModel[] listed)
                 return listed;
@@ -518,5 +493,29 @@ class AiService(
             return null;
         var cut = path.TrimEnd('/', '\\').LastIndexOfAny(['/', '\\']);
         return cut > 0 ? path[..cut] : null;
+    }
+}
+
+// A list that is slow to get (it crosses processes or the network) and asked for often: kept a
+// minute, an empty one only a few seconds, since it may be empty for a moment (no key yet, Copilot
+// still starting). Callers that arrive while it is fetched share that fetch.
+sealed class CachedList<T>
+{
+    static readonly TimeSpan Ttl = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan EmptyTtl = TimeSpan.FromSeconds(5);
+    Task<T[]>? list;
+    DateTime time;
+
+    public async Task<T[]> GetAsync(Func<Task<T[]>> fetch, bool isFresh)
+    {
+        if (!isFresh && list is { } cached)
+        {
+            var ttl = cached.IsCompleted && cached.Result.Length == 0 ? EmptyTtl : Ttl;
+            if (!cached.IsCompleted || DateTime.UtcNow - time < ttl)
+                return await cached;
+        }
+        time = DateTime.UtcNow;
+        list = fetch();
+        return await list;
     }
 }

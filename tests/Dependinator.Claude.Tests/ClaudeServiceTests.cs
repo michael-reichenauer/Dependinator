@@ -232,6 +232,26 @@ public class ClaudeServiceTests
     }
 
     [Fact]
+    public async Task AskAsync_ShouldNameThePickedModel_WhenClaudeCannotAnswerWithIt()
+    {
+        using var api = new FakeAnthropicApi(
+            HttpStatusCode.BadRequest,
+            """{ "type": "error", "error": { "type": "invalid_request_error", "message": "Not available here." } }"""
+        );
+        keys.Setup(k => k.GetApiKeyAsync()).ReturnsAsync("sk-ant-test");
+        var service = new ClaudeService(keys.Object) { BaseUrl = api.Url };
+
+        var picked = AssertError(await service.AskAsync("Hello", Schema, "claude-fable-5-2"));
+        var automatic = AssertError(await service.AskAsync("Hello", Schema, null));
+
+        Assert.Equal(
+            "Claude could not answer with the model \"claude-fable-5-2\" picked in Settings › AI: Not available here.",
+            picked.Message
+        );
+        Assert.Equal("Claude could not answer: Not available here.", automatic.Message);
+    }
+
+    [Fact]
     public async Task GetModelsAsync_ShouldListTheModelsThatCanAnswerTheWayTheAppAsks()
     {
         const string Can = """

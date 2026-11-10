@@ -68,14 +68,14 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
     }
 
     public Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? modelId) =>
-        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Thorough);
+        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Thorough, Picked(modelId));
 
     public Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema, string? modelId) =>
-        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Quick);
+        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Quick, Picked(modelId));
 
     static string? Picked(string? modelId) => string.IsNullOrWhiteSpace(modelId) ? null : modelId.Trim();
 
-    async Task<Result<string>> SendAsync(string prompt, string jsonSchema, string model)
+    async Task<Result<string>> SendAsync(string prompt, string jsonSchema, string model, string? pickedModel)
     {
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
@@ -119,7 +119,7 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
                 );
                 return text.Trim() == "" ? new Error("Claude gave an empty answer. Please try again.") : text;
             },
-            model
+            pickedModel
         );
     }
 
@@ -139,7 +139,7 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
             return await CallClaudeAsync(
                 key,
                 client => ModelToolsAgent.AskAsync(client, prompt, schemaProperties, tools, model),
-                model
+                Picked(modelId)
             );
     }
 
@@ -152,11 +152,12 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
             : new Error("This host serves no model tools for Claude to look things up with.");
 
     // Runs requests to Claude with the key, and turns the API's errors into what the user can do.
-    // model is the one asked, named when Claude does not know it.
+    // pickedModel is the model the user picked in Settings › AI, if any: an error that may come
+    // from the pick (a model the key cannot ask, or cannot ask this way) names it and the setting.
     async Task<Result<T>> CallClaudeAsync<T>(
         string key,
         Func<AnthropicClient, Task<Result<T>>> call,
-        string? model = null
+        string? pickedModel = null
     )
         where T : notnull
     {
@@ -184,10 +185,17 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
                 e
             );
         }
-        catch (AnthropicNotFoundException e) when (model is not null)
+        catch (AnthropicNotFoundException e) when (pickedModel is not null)
         {
             return new Error(
-                $"Claude has no model \"{model}\" for this API key. Pick another model in Settings › AI.",
+                $"Claude has no model \"{pickedModel}\" for this API key. Pick another model in Settings › AI.",
+                e
+            );
+        }
+        catch (AnthropicApiException e) when (pickedModel is not null)
+        {
+            return new Error(
+                $"Claude could not answer with the model \"{pickedModel}\" picked in Settings › AI: {ApiMessage(e)}",
                 e
             );
         }
