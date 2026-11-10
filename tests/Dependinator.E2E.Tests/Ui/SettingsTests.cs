@@ -90,6 +90,62 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await CloseCycleReviewAsync();
     }
 
+    // Settings › AI: each of Claude's routes has a model picker (the API key's models, in test
+    // mode a fixed list; Claude Code's aliases or a typed name), and the picks are kept.
+    [E2EFact]
+    public async Task AiSettings_ShouldKeepTheModelsPickedForClaudeAndClaudeCode()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.OpenSettingsAsync();
+        ILocator claudeModel = Page.GetByTestId("ai-settings-claude-model-row");
+        ILocator codeModel = Page.GetByTestId("ai-settings-claude-code-model-row");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "");
+        await Expect(claudeModel).ToContainTextAsync("Automatic");
+        // Claude Code's model shows only once the route is on.
+        await Expect(codeModel).ToHaveCountAsync(0);
+
+        await PickModelAsync(claudeModel, "Claude Sonnet 5.5");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "claude-sonnet-5-5");
+        await App.CloseSettingsAsync();
+
+        await App.SetAiSettingsAsync(useClaudeCode: true);
+        await App.OpenSettingsAsync();
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "claude-sonnet-5-5");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "");
+        await PickModelAsync(codeModel, "Opus (latest)");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "opus");
+
+        // Another model is typed by name.
+        ILocator name = Page.GetByTestId("ai-settings-claude-code-model-name");
+        await Expect(name).ToHaveCountAsync(0);
+        await PickModelAsync(codeModel, "Another model");
+        await App.FillReliablyAsync(name, "claude-opus-5-5");
+        await name.PressAsync("Tab");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "claude-opus-5-5");
+        await App.CloseSettingsAsync();
+
+        await App.OpenSettingsAsync();
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "claude-opus-5-5");
+        await Expect(name).ToHaveValueAsync("claude-opus-5-5");
+
+        // Back to the defaults, for the tests that share the app's settings.
+        await PickModelAsync(codeModel, "Automatic");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "");
+        await PickModelAsync(claudeModel, "Automatic");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "");
+        await Page.GetByTestId("ai-settings-use-claude-code").ClickAsync();
+        await Expect(codeModel).ToHaveCountAsync(0);
+        await App.CloseSettingsAsync();
+    }
+
+    // Opens a model select and clicks the item with the text.
+    async Task PickModelAsync(ILocator modelRow, string itemText)
+    {
+        await modelRow.Locator(".mud-select").First.ClickAsync();
+        await Page.Locator(".mud-popover-open .mud-list-item").Filter(new() { HasTextString = itemText }).ClickAsync();
+    }
+
     // Opens the review dialog of a cycle, its AI section open: without a default the providers wait
     // behind a row that opens them, with one the default's button shows at once.
     async Task OpenCycleReviewAsync(bool isChoosing)

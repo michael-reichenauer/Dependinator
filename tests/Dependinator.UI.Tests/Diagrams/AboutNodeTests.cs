@@ -152,12 +152,12 @@ public class AboutNodeTests
         var claude = new Mock<IClaudeService>();
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
         claude
-            .Setup(c => c.AskQuicklyAsync("the prompt", NodeAnswer.JsonSchema))
+            .Setup(c => c.AskQuicklyAsync("the prompt", NodeAnswer.JsonSchema, null))
             .ReturnsAsync((Result<string>)"""{ "answer": "It parses." }""");
         var ai = new AiService(
             claude.Object,
             Mock.Of<IVsCodeModelService>(),
-            Mock.Of<IConfigService>(),
+            Mock.Of<IConfigService>(c => c.GetAsync() == Task.FromResult(new Config())),
             Mock.Of<IModelMgr>()
         );
 
@@ -172,6 +172,6 @@ public class AboutNodeTests
         );
 
         Assert.Equal("It parses.", AssertOk(NodeAnswer.Parse(json)).Text);
-        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
     }
 }
