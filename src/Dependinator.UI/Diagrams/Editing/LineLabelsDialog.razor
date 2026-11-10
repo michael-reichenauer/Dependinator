@@ -1,0 +1,153 @@
+@using Dependinator.UI.Diagrams.Ai
+@using Dependinator.UI.Modeling.Models
+@using MudBlazor
+@inject ILineLabelsService lineLabelsService
+@inject IAiService aiService
+
+@* Suggest Line Labels (LineLabelsService): an AI labels the unlabeled lines of a container, or of
+   the whole model, in one answer (AiOpinion, open at once since asking is what the dialog is
+   for). The user unticks the labels they do not want; the answer's "Add labels" adds the rest as one step,
+   with their descriptions only when asked for (they crowd a diagram of close lines). Nothing is
+   saved before that. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">Suggest line labels</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-panel__hint" data-testid="line-labels-intro" data-total="@TotalCount">@Intro</div>
+    <AiOpinion TAnswer="LineLabelsSuggestion" TestId="line-labels" GetPrompt="GetPrompt" Ask="Ask"
+               ParsePasted="ParsePasted" IsExpandedAtStart="true"
+               IsVerdictCompared="false" ExpandText="Suggest labels with AI" AnswerTitle="Suggested labels"
+               AnswersTitle="Suggested labels"
+               RouteText="Claude reads the lines, their links and their code and suggests the labels here."
+               AskTitle="Ask Claude to suggest labels for these lines"
+               CopyTitle="Copy a prompt with the lines, their links and their code"
+               PromptCopiedText="The prompt is copied, with the lines, their links and their code.">
+      <AnswerContent Context="s">
+        <div class="dep-ai__suggestion" data-testid="line-labels-answer">
+          <div class="dep-line-labels__head">
+            <span class="dep-ai__suggestion-verdict">@($"{s.Source.Name()} suggests {s.Verdict}")</span>
+            <MudSpacer />
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => SetAll(s, true)"
+                       data-testid="line-labels-all">All</MudButton>
+            <MudButton Size="Size.Small" Variant="Variant.Text" OnClick="() => SetAll(s, false)"
+                       data-testid="line-labels-none">None</MudButton>
+          </div>
+          <div class="dep-line-labels__list">
+            @foreach (var label in s.Labels)
+            {
+              var item = label;
+              <label class="dep-line-labels__item" title="@item.LongName" data-testid="line-labels-item">
+                <input type="checkbox" checked="@IsTicked(s, item)" @onchange="e => Tick(s, item, e.Value is true)"
+                       data-testid="line-labels-tick" />
+                <span class="dep-line-labels__text">
+                  <span class="dep-line-labels__line">
+                    @item.SourceName <strong data-testid="line-labels-label">@item.Label</strong> @item.TargetName
+                  </span>
+                  @if (item.Description != "")
+                  {
+                    <span class="dep-ai__suggestion-note @(withDescriptions ? "" : "dep-line-labels__off")">@item.Description</span>
+                  }
+                </span>
+              </label>
+            }
+          </div>
+          @if (s.LeftOutCount > 0)
+          {
+            <div class="dep-ai__suggestion-note" data-testid="line-labels-left-out">@LeftOutText(s)</div>
+          }
+          <div class="dep-line-labels__add">
+            <label class="dep-line-labels__option" title="The smaller text under each label. It tells more, and takes room where lines are close.">
+              <input type="checkbox" @bind="withDescriptions" data-testid="line-labels-descriptions" />
+              Add the descriptions too
+            </label>
+            <MudSpacer />
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small" Disabled="@(TickedCount(s) == 0)"
+                       OnClick="() => Add(s)" data-testid="line-labels-add">@AddText(s)</MudButton>
+          </div>
+        </div>
+      </AnswerContent>
+    </AiOpinion>
+  </DialogContent>
+  <DialogActions>
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="line-labels-cancel">Cancel</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  // The lines asked about, in the order the prompt numbers them.
+  [Parameter] public IReadOnlyList<LineId> LineIds { get; set; } = [];
+
+  // All unlabeled lines in the scope; more than LineIds when the question was cut.
+  [Parameter] public int TotalCount { get; set; }
+
+  // The container whose lines are labeled; "" for the whole model.
+  [Parameter] public string ScopeName { get; set; } = "";
+
+  // Off at first: in a diagram of close lines the descriptions run into each other.
+  bool withDescriptions;
+
+  // Per answer, the labels the user unticked (by line number).
+  readonly Dictionary<LineLabelsSuggestion, HashSet<int>> unticked = new(ReferenceEqualityComparer.Instance);
+
+  Func<AiSource, Action<SuggestStep>, Task<Result<LineLabelsSuggestion>>>? Ask =>
+    aiService.IsAvailable ? (route, onStep) => lineLabelsService.AskAsync(LineIds, route, onStep) : null;
+
+  Task<string> GetPrompt() => lineLabelsService.GetPromptAsync(LineIds);
+
+  Result<LineLabelsSuggestion> ParsePasted(string text) => lineLabelsService.ParsePasted(LineIds, text);
+
+  string Intro
+  {
+    get
+    {
+      var where = ScopeName == "" ? "in the model" : $"inside {ScopeName}";
+      var lines = LineIds.Count == 1 ? "the 1 line" : $"the {LineIds.Count} lines";
+      var cut = TotalCount > LineIds.Count
+        ? $" ({TotalCount} have none: the outer levels and the lines with most links come first; ask again for the rest.)"
+        : "";
+      return $"An AI suggests labels for {lines} without a label {where}, in one consistent style.{cut} "
+        + "Untick the ones you do not want. One undo removes them all.";
+    }
+  }
+
+  int TickedCount(LineLabelsSuggestion s) => s.Labels.Count(l => IsTicked(s, l));
+
+  string AddText(LineLabelsSuggestion s) => TickedCount(s) == 1 ? "Add 1 label" : $"Add {TickedCount(s)} labels";
+
+  bool IsTicked(LineLabelsSuggestion suggestion, SuggestedLineLabel label) =>
+    !(unticked.TryGetValue(suggestion, out var numbers) && numbers.Contains(label.Number));
+
+  void Tick(LineLabelsSuggestion suggestion, SuggestedLineLabel label, bool isTicked)
+  {
+    if (!unticked.TryGetValue(suggestion, out var numbers))
+      unticked[suggestion] = numbers = [];
+    if (isTicked)
+      numbers.Remove(label.Number);
+    else
+      numbers.Add(label.Number);
+  }
+
+  void SetAll(LineLabelsSuggestion suggestion, bool isTicked) =>
+    unticked[suggestion] = isTicked ? [] : [.. suggestion.Labels.Select(l => l.Number)];
+
+  // The button is part of the answer, so only an answer the user sees can be added.
+  void Add(LineLabelsSuggestion shown)
+  {
+    IReadOnlyList<SuggestedLineLabel> labels =
+    [
+      .. shown.Labels.Where(l => IsTicked(shown, l)).Select(l => withDescriptions ? l : l with { Description = "" }),
+    ];
+    MudDialog.Close(DialogResult.Ok(labels));
+  }
+
+  void Cancel() => MudDialog.Cancel();
+
+  static string LeftOutText(LineLabelsSuggestion s) =>
+    s.LeftOutCount == 1
+      ? $"1 label {s.Source.Name()} gave was left out: it is for no line in the list, or for a line labeled twice."
+      : $"{s.LeftOutCount} labels {s.Source.Name()} gave were left out: they are for no line in the list, or for lines labeled twice.";
+}

@@ -20,8 +20,7 @@ public class TourTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator panel = Page.GetByTestId("tour-panel");
         await Expect(panel).ToBeVisibleAsync();
 
-        await Page.GetByTestId("tour-show-prompt").ClickAsync();
-        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("A guided tour of a codebase");
+        await Expect(await App.ShowPromptAsync("tour")).ToContainTextAsync("A guided tour of a codebase");
         await Page.GetByTestId("prompt-dialog-close").ClickAsync();
 
         await Page.GetByTestId("tour-suggest").ClickAsync();

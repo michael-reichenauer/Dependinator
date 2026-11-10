@@ -16,6 +16,7 @@ static class PromptParts
     const int MaxTargetMembers = 8;
     const int MaxDescriptionLength = 300;
     const int MaxSourceLines = 400;
+    const int MaxOtherLabels = 15;
 
     // A type's span, and the declaration lines of its members that make the links.
     internal static SourceUnit SourceOf(IGrouping<Node, Link> linksOfType)
@@ -236,6 +237,26 @@ static class PromptParts
             NodeType.Resource => "resource",
             _ => "group",
         };
+
+    // The labels lines already have (but the given line's own), so a suggestion matches their style.
+    internal static void AppendOtherLabels(StringBuilder text, IModel model, string heading, Line? except = null)
+    {
+        var others = model
+            .Lines.Values.Where(l => l != except && l.Label is not null)
+            .OrderBy(l => l.Source.LongName, StringComparer.Ordinal)
+            .ThenBy(l => l.Target.LongName, StringComparer.Ordinal)
+            .ToList();
+        if (others.Count == 0)
+            return;
+        text.AppendLine().AppendLine($"## {heading}").AppendLine();
+        foreach (var other in others.Take(MaxOtherLabels))
+        {
+            var description = other.LabelDescription is { } d ? $" ({d})" : "";
+            text.AppendLine($"- {other.Source.DisplayName} \"{other.Label}\"{description} {other.Target.DisplayName}");
+        }
+        if (others.Count > MaxOtherLabels)
+            text.AppendLine($"- … and {others.Count - MaxOtherLabels} more");
+    }
 
     // The web host and the VS Code extension see the workspace files; the standalone browser
     // app has none.

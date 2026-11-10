@@ -26,6 +26,7 @@ interface IContextMenuService
     ContextMenuTarget Target { get; }
     string TargetName { get; }
     bool IsTargetManualNode { get; }
+    bool IsTargetContainer { get; }
     bool CanShowTargetSource { get; }
     event Action? StateChanged;
 
@@ -56,6 +57,10 @@ interface IContextMenuService
 
     // Node: the user's display name for it.
     Task EditAliasAsync();
+
+    // Node (a container) or canvas: an AI's labels for the unlabeled lines inside it, or in the
+    // whole model.
+    Task SuggestLineLabelsAsync();
 }
 
 [Scoped]
@@ -63,6 +68,7 @@ class ContextMenuService(
     INoteService noteService,
     IZoneService zoneService,
     ILineLabelService lineLabelService,
+    ILineLabelsService lineLabelsService,
     INodeAliasService nodeAliasService,
     IManualEditService manualEditService,
     ISelectionService selectionService,
@@ -83,6 +89,7 @@ class ContextMenuService(
     public ContextMenuTarget Target { get; private set; } = ContextMenuTarget.Canvas;
     public string TargetName { get; private set; } = "";
     public bool IsTargetManualNode { get; private set; }
+    public bool IsTargetContainer { get; private set; }
     public bool CanShowTargetSource { get; private set; }
     public event Action? StateChanged;
 
@@ -105,6 +112,7 @@ class ContextMenuService(
         Target = ContextMenuTarget.Canvas;
         TargetName = "";
         IsTargetManualNode = false;
+        IsTargetContainer = false;
         CanShowTargetSource = false;
 
         using var model = modelMgr.UseModel();
@@ -115,6 +123,7 @@ class ContextMenuService(
             Target = ContextMenuTarget.Node;
             TargetName = node.DisplayName;
             IsTargetManualNode = node.IsManual;
+            IsTargetContainer = node.Children.Any(c => !c.Type.IsMember && !NodeViewPolicy.IsAnnotation(c));
             CanShowTargetSource = Build.IsVsCodeExtWasm && node.FileSpanOrParentSpan is not null;
             return;
         }
@@ -237,6 +246,12 @@ class ContextMenuService(
         if (!await SelectTargetAsync())
             return;
         await nodeAliasService.EditAliasAsync(targetId.NodeId);
+    }
+
+    public async Task SuggestLineLabelsAsync()
+    {
+        Close();
+        await lineLabelsService.SuggestLabelsAsync(Target == ContextMenuTarget.Node ? targetId.NodeId : null);
     }
 
     // The label dialog acts on the selected line, so select first (as the toolbar would have).

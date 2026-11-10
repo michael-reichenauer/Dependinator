@@ -1790,3 +1790,60 @@ button.dep-rules__node:hover {
     background: var(--dep-tt-err-bg);
     color: var(--dep-tt-err);
 }
+
+/* Suggest Line Labels (LineLabelsDialog.razor): the suggested labels as a list to tick. */
+.dep-line-labels__head {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+
+.dep-line-labels__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.dep-line-labels__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.dep-line-labels__item input {
+    margin-top: 4px;
+    flex: none;
+}
+
+.dep-line-labels__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dep-line-labels__line strong {
+    color: var(--mud-palette-primary);
+}
+
+.dep-line-labels__off {
+    opacity: 0.55;
+}
+
+.dep-line-labels__add {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.dep-line-labels__option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}

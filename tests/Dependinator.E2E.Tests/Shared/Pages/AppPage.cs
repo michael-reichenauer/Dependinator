@@ -500,6 +500,17 @@ public sealed class AppPage
         }
     }
 
+    // Open an AI section's "Show prompt" dialog (AiOpinion; testId is the section's prefix, "tour")
+    // and wait for its text. The section re-renders once its providers are loaded, and a click
+    // landing in that render is dropped without a trace (a CI flake in TourTests, Nov 2026), so
+    // click again until the dialog is there.
+    public async Task<ILocator> ShowPromptAsync(string testId)
+    {
+        ILocator text = page.GetByTestId("prompt-dialog-text");
+        await RepeatUntilVisibleAsync(() => page.GetByTestId($"{testId}-show-prompt").ClickAsync(), text);
+        return text;
+    }
+
     // Clear the selection with Escape and verify it took (the node toolbar goes away). Waits for
     // the selection first: a navigation (NavigationService.ShowNodeAsync) selects its node only
     // after the pan/zoom animation, so an Escape pressed before that cancels nothing and the
