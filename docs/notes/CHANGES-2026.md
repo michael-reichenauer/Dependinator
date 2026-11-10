@@ -33,7 +33,7 @@ project works.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
-  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
+  line labels (one line, or all lines of a container at once), Suggest rules that remembers what was dismissed, with a reason on every rule,
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines.
@@ -388,6 +388,15 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and the labels on other lines, for a matching style), with up to three other labels to pick
   from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
   at once, else "Use suggestion" fills them; nothing is saved before Save.
+- **AI labels for many lines at once (Nov 10).** Suggest Line Labels … (Edit menu and the canvas
+  menu for the whole model, a container's menu for the lines inside it; edit mode) asks any AI
+  provider for the labels of up to 40 unlabeled lines in one question, so they share a style
+  (`LineLabelsPrompt`: lines between siblings, outer levels and most links first, not to
+  Externals, rows or configuration plumbing; the ends with their comments, each line numbered
+  with its links, the code that makes most of them). The answer (`LineLabelsSuggestion`, a
+  chat's "<number>. <label> | <description>" lines read back) is a list to tick in
+  `LineLabelsDialog`; the ticked labels are added as one undo step (`LineLabelsCommand`), their
+  descriptions only when asked for. The first part of roadmap idea 8, tried on the Bicep webshop.
 - **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
   section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
   Variables, Resources, Outputs), public members first, flowed into as many columns as the box

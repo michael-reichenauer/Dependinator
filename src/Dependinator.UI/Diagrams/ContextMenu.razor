@@ -55,6 +55,15 @@
                            OnClick="contextMenuService.EditAliasAsync" data-testid="context-menu-alias">
                 Display Name …
               </MudListItem>
+              @if (contextMenuService.IsTargetContainer)
+              {
+                <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" IconColor="Color.Secondary"
+                             OnClick="contextMenuService.SuggestLineLabelsAsync"
+                             title="An AI suggests labels for the lines inside this node; you pick the ones to add."
+                             data-testid="context-menu-suggest-line-labels">
+                  Suggest Line Labels …
+                </MudListItem>
+              }
             }
             @if (viewOptions.IsEditingEnabled && contextMenuService.IsTargetManualNode)
             {
@@ -113,6 +122,12 @@
               <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.SelectAll" IconColor="Color.Secondary"
                            OnClick="AddZone" data-testid="context-menu-add-zone">
                 Add Zone Here
+              </MudListItem>
+              <MudListItem T="string" Icon="@MudBlazor.Icons.Material.Outlined.AutoAwesome" IconColor="Color.Secondary"
+                           OnClick="contextMenuService.SuggestLineLabelsAsync"
+                           title="An AI suggests labels for the lines without one; you pick the ones to add."
+                           data-testid="context-menu-suggest-line-labels">
+                Suggest Line Labels …
               </MudListItem>
               <MudDivider />
             }
