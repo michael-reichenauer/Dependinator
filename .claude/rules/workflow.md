@@ -115,10 +115,11 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   last 3 exchanges in the prompt), the `read_source` tool, `./scripts/ask-eval` (run it after a
   prompt or tool change). Phase 4 (Nov 10, Michael picked "the Ask panel is the one place"): the
   panel asks about the selected nodes (`AskContext`, chips, "with everything inside"), examples per
-  context (`AskExamples`), About Node and the node menus lead into it. Next: an answer that
-  proposes a change gets "Do it with <default>" (the `AiFixButton` pattern: Claude Code edits,
-  Copilot agent hand-off, Copy refactoring prompt; the answer schema gets an optional proposed
-  change). Improve Comments stays its own dialog. Still open: tool results carried across
+  context (`AskExamples`), About Node and the node menus lead into it. Phase 5 (Nov 10): an
+  answer that proposes a change names it (`ModelAnswer.Change`, the schema's `change`) and gets
+  "Do it with <default>" (`AiFixButton` with `Verb`, `ClaudeCodeFix` per answer, `AskChangePrompt`;
+  ask-eval's `change` expectation, tried on the Claude Code route). Improve Comments stays its
+  own dialog. Still open: tool results carried across
   follow-ups, more eval cases from real questions. No paste route (decided with the user:
   multi-turn tools).
 - **Copilot provider (roadmap idea 10), next:** phase 1 (Nov 2) asks a VS Code language model

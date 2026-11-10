@@ -25,6 +25,11 @@ public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAns
 
     public string Verdict => "Answer";
 
+    // The change to the code the answer proposes, in one sentence ("Move loading and saving from
+    // ModelService to a new ModelStore"); "" when it proposes none. The panel offers to have an
+    // AI make it (AskChangePrompt).
+    public string Change { get; init; } = "";
+
     public IReadOnlyDictionary<string, NodeLink> Links { get; init; } = new Dictionary<string, NodeLink>();
 
     // For Claude with the API key: the tool calls the answer took, and its cost in US dollars.
@@ -52,9 +57,13 @@ public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAns
                 "required": ["name", "why"],
                 "additionalProperties": false
               }
+            },
+            "change": {
+              "type": "string",
+              "description": "If the answer proposes a concrete change to the code, the change in one imperative sentence; otherwise an empty string."
             }
           },
-          "required": ["answer", "nodes"],
+          "required": ["answer", "nodes", "change"],
           "additionalProperties": false
         }
         """;
@@ -74,7 +83,7 @@ public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAns
                 .DistinctBy(n => n.Name)
                 .Take(AskModelPrompt.MaxNodes),
         ];
-        return new ModelAnswer(answer.Text.Trim(), nodes) { Source = source };
+        return new ModelAnswer(answer.Text.Trim(), nodes) { Source = source, Change = Line(answer.Change) };
     }
 
     // The names the answer gives: its code spans (which may name a node), and its nodes.
@@ -91,7 +100,14 @@ public record ModelAnswer(string Text, IReadOnlyList<AnswerNode> Nodes) : IAiAns
 
     public NodeLink? LinkOf(string name) => Links.GetValueOrDefault(name.Trim());
 
-    record Answer([property: JsonPropertyName("answer")] string? Text, List<AnswerItem>? Nodes);
+    // The proposed change on one line; "none" and the like mean there is none.
+    static string Line(string? change)
+    {
+        var line = string.Join(" ", (change ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return line.TrimEnd('.').ToLowerInvariant() is "none" or "n/a" or "no change" ? "" : line;
+    }
+
+    record Answer([property: JsonPropertyName("answer")] string? Text, List<AnswerItem>? Nodes, string? Change);
 
     record AnswerItem(string? Name, string? Why);
 }
@@ -284,6 +300,8 @@ static class AskModelPrompt
 
         Answer the question directly, in a few short paragraphs or a list: the answer is shown in a narrow panel beside the diagram. Write every node you mention in backticks, by its name exactly as the tools give it (such as `Dependinator.Core.Parsing.ParserService`), so the user can click it to go to the node. Under nodes, list the nodes the answer is about, at most {MaxNodes}, the most important first. If the model cannot answer the question, say so, and what would.
 
+        Under change: if your answer proposes a concrete change to the code (a split, a move, a rename, removing a dependency) that a coding AI could make from your answer, name the change in one imperative sentence, such as "Move loading and saving from ModelService to a new ModelStore", and make sure the answer says enough to carry it out. Otherwise leave it empty: an answer that only explains proposes no change.
+
         """;
 }
 
@@ -301,6 +319,10 @@ interface IAskModelService
 
     // The prompt for the question, a follow-up on the earlier ones; empty when there is no model.
     string GetPrompt(string question, IReadOnlyList<AskExchange> earlier, AskContext context);
+
+    // The prompt that asks an AI that can change the code to make the change the answer proposes
+    // (AskChangePrompt); empty when it proposes none.
+    string GetChangePrompt(ModelAnswer answer, AskContext context);
 
     Task<Result<ModelAnswer>> AskAsync(
         string question,
@@ -347,6 +369,12 @@ class AskModelService(
         return AskModelPrompt.Build(model, question, earlier, context);
     }
 
+    public string GetChangePrompt(ModelAnswer answer, AskContext context)
+    {
+        using var model = modelMgr.UseModel();
+        return AskChangePrompt.Build(model, answer, context);
+    }
+
     public async Task<Result<ModelAnswer>> AskAsync(
         string question,
         IReadOnlyList<AskExchange> earlier,
@@ -364,7 +392,15 @@ class AskModelService(
             await lookups.GetModelAsync();
             await lookups.SearchNodesAsync(question);
             await Task.Delay(TestModeAnswerDelay);
-            return WithLinks(TestModeAnswer(route, earlier.Count, context) with { Question = question });
+            // A question about a split gets an answer that proposes a change.
+            var change = question.Contains("split", StringComparison.OrdinalIgnoreCase) ? "Test mode: split it." : "";
+            return WithLinks(
+                TestModeAnswer(route, earlier.Count, context) with
+                {
+                    Question = question,
+                    Change = change,
+                }
+            );
         }
 
         // AiService's own error for an empty prompt is about a review dialog.

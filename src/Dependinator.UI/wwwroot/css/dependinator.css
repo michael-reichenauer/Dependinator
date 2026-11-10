@@ -1550,6 +1550,13 @@ button.dep-rules__node:hover {
     font-weight: 600;
 }
 
+/* The change an answer proposes, with the button that has an AI make it. */
+.dep-ask__change {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
 /* What the question is about: a chip per selected node, and "with everything inside". */
 .dep-ask__context {
     display: flex;

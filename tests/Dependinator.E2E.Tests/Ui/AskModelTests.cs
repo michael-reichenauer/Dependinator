@@ -133,4 +133,46 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(2);
         await Expect(Page.GetByTestId("ask-entry-about")).ToHaveCountAsync(1);
     }
+
+    [E2EFact]
+    public async Task Ask_ShouldOfferToMakeTheChangeAnAnswerProposes()
+    {
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.SetAiSettingsAsync(useClaudeCode: true, defaultProvider: "code");
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+        await App.ClickNodeMenuItemAsync("node-menu-ask");
+
+        // An answer that only explains offers no change.
+        await Page.GetByTestId("ask-question").FillAsync("What is this?");
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(1);
+        await Expect(Page.GetByTestId("ask-change")).ToHaveCountAsync(0);
+
+        // One that proposes a change (in test mode: a question about a split) offers to make it.
+        await Page.GetByTestId("ask-question").FillAsync("Should it be split?");
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-change-text")).ToHaveTextAsync("Test mode: split it.");
+        ILocator doIt = Page.GetByTestId("ask-fix-claude-code");
+        await Expect(doIt).ToHaveTextAsync("Do it with Claude Code");
+
+        // The prompt for another AI holds the change, the question and what it was about.
+        await Page.GetByTestId("ask-fix-menu").ClickAsync();
+        await Page.GetByTestId("ask-copy-fix").ClickAsync();
+        await Expect(Page.GetByTestId("ask-change-note")).ToContainTextAsync("The prompt is copied");
+        string copied = await Page.EvaluateAsync<string>("() => window.__copiedText");
+        Assert.Contains("Test mode: split it.", copied);
+        Assert.Contains("Should it be split?", copied);
+        Assert.Contains("Demo.sln", copied);
+
+        // Claude Code makes the change and reports the files it changed.
+        await doIt.ClickAsync();
+        await Expect(Page.GetByTestId("ask-fix-report")).ToContainTextAsync("Claude Code changed 1 file");
+        await Expect(Page.GetByTestId("ask-fix-files")).ToHaveTextAsync("src/Test.cs");
+        await Expect(doIt).ToBeEnabledAsync();
+    }
 }

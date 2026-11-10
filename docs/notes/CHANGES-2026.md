@@ -350,6 +350,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   (`AskExamples`), with "More examples" and a lightbulb that shows them again later. The node menus
   have "Ask About Node …", and About Node sends its example questions to the panel instead of
   asking in the dialog, and has "Copy prompt" for one's own AI chat.
+- **From an answer to the change (Nov 10).** An Ask answer that proposes a change to the code (a
+  split, a move, removing a dependency) names it, and the panel offers "Do it with Claude Code"
+  with the provider menu of the review dialogs' fix button: Claude Code edits and reports the
+  changed files, Copilot gets it in agent mode, or "Copy prompt" for another AI. The prompt
+  (`AskChangePrompt`) holds the change, the question and answer, the files of the nodes and the
+  architecture rules to keep. `./scripts/ask-eval` checks whether an answer proposes a change.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

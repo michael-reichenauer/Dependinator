@@ -108,6 +108,36 @@
                   <span class="dep-ai__suggest-note">@note</span>
                 }
               </div>
+              @* An answer that proposes a change to the code offers to have it made: one button for
+                 the AI that makes it and the provider menu beside it, as in the review dialogs
+                 (AiFixButton), with a prompt that holds the change, the answer and where to look
+                 (AskChangePrompt). Claude Code's run and report show here (ClaudeCodeFix). *@
+              @if (answer.Change != "")
+              {
+                <div class="dep-ask__change" data-testid="ask-change">
+                  <div><b>Proposed change:</b> <span data-testid="ask-change-text">@answer.Change</span></div>
+                  <div class="dep-ai__fix-actions">
+                    <AiFixButton TestId="ask" Verb="Do it" CopyText="Copy prompt" CanRunClaudeCode="canFixWithClaudeCode"
+                                 IsRunning="IsChanging" OnClaudeCode="() => entry.FixPanel!.StartAsync()"
+                                 OnCopilot="() => ChangeWithCopilotAsync(entry, answer)"
+                                 OnCopy="() => CopyChangePromptAsync(entry, answer)" />
+                  </div>
+                  @if (entry.ChangeNote is { } changeNote)
+                  {
+                    <div class="dep-ai__suggest-note" data-testid="ask-change-note">@changeNote</div>
+                  }
+                  @if (entry.ChangeError is { } changeError)
+                  {
+                    <div class="dep-ai__suggest-error" data-testid="ask-change-error">@changeError</div>
+                  }
+                  @if (canFixWithClaudeCode)
+                  {
+                    <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
+                                   OnStateChanged="StateHasChanged" ConfirmTitle="Change the code with Claude Code?"
+                                   ConfirmYesText="Change anyway" />
+                  }
+                </div>
+              }
             </div>
           }
           else if (entry.Error is { } error)
@@ -208,6 +238,13 @@
 
     public string? Error { get; set; }
     public string? CopyNote { get; set; }
+
+    // What the question was about, for the prompt that asks for the answer's proposed change;
+    // Claude Code's run of it, and what came of handing it to Copilot or copying it.
+    public AskContext Context { get; init; } = AskContext.Model;
+    public ClaudeCodeFix? FixPanel { get; set; }
+    public string? ChangeNote { get; set; }
+    public string? ChangeError { get; set; }
 
     public required AiSource Route { get; init; }
 
@@ -341,6 +378,36 @@
   AiProvider? route;
 
   static readonly AiChoice NoChoice = new([], null);
+
+  // Claude Code can change the code here (the route is on and the model has a folder), read when
+  // the panel opens; one change runs at a time.
+  bool canFixWithClaudeCode;
+
+  bool IsChanging => entries.Any(e => e.FixPanel?.IsRunning == true);
+
+  string ChangePrompt(Entry entry, ModelAnswer answer) => askModelService.GetChangePrompt(answer, entry.Context);
+
+  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
+  const string ChangePromptCopiedNote =
+    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
+    + "is made, re-parse to see the new structure.";
+
+  async Task CopyChangePromptAsync(Entry entry, ModelAnswer answer)
+  {
+    var isCopied = await clipboardService.CopyAsync(ChangePrompt(entry, answer));
+    entry.ChangeNote = isCopied ? ChangePromptCopiedNote : null;
+    entry.ChangeError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // Copilot Chat makes the change in its own view: the panel only says so.
+  async Task ChangeWithCopilotAsync(Entry entry, ModelAnswer answer)
+  {
+    entry.ChangeNote = null;
+    entry.ChangeError = null;
+    var handed = await aiService.FixWithCopilotAsync(ChangePrompt(entry, answer));
+    entry.ChangeNote = handed is Error ? null : AiService.CopilotFixNote;
+    entry.ChangeError = handed is Error e ? e.Message : null;
+  }
   bool wasShown;
 
   // The model the questions are about ("" until a model is loaded), null before the panel opened.
@@ -411,6 +478,7 @@
   async Task RefreshRoutesAsync()
   {
     choice = askModelService.IsAvailable ? await aiService.GetChoiceAsync() : NoChoice;
+    canFixWithClaudeCode = askModelService.IsAvailable && await aiService.CanFixWithClaudeCodeAsync();
     if (route is null || !choice.Providers.Contains(route))
       route = choice.DefaultFor(AiCapability.ModelTools);
   }
@@ -428,7 +496,7 @@
       return;
     var earlier = Conversation();
     var context = Context;
-    var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context) };
+    var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context), Context = context };
     entries.Add(entry);
     question = "";
     isExamplesShown = false;
