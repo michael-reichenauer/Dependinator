@@ -39,7 +39,10 @@ public class LineLabelsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(add).ToBeDisabledAsync();
         await items.Nth(0).GetByTestId("line-labels-tick").CheckAsync();
         await Expect(add).ToHaveTextAsync("Add 1 label");
+        // Wait for All to land: until then the second box is still unticked, and unticking it
+        // would do nothing.
         await Page.GetByTestId("line-labels-all").ClickAsync();
+        await Expect(add).ToHaveTextAsync($"Add {count} labels");
         await items.Nth(1).GetByTestId("line-labels-tick").UncheckAsync();
         await Expect(add).ToHaveTextAsync($"Add {count - 1} labels");
         await Page.GetByTestId("line-labels-descriptions").CheckAsync();
