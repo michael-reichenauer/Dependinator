@@ -341,7 +341,8 @@ static class MemberCardSvg
             hoverClass,
             innerRect,
             NodeSvg.TitleName(node),
-            isOpen: true
+            isOpen: true,
+            headerHeight: MemberCard.CardHeaderHeight * childrenZoom
         );
         var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
         var textZoom = TextZoom(parentZoom);

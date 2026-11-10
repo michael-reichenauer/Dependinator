@@ -105,7 +105,7 @@ static class NodeSvg
               {childrenContent}
             </svg>
             <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" data-tip-label="{elementId}" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
             {descriptionSvg}
             {selectedOverlay}
             {ManualMarkerSvg(
@@ -269,7 +269,8 @@ static class NodeSvg
         string htmlName,
         string extraContent = "",
         bool isLinePreview = false,
-        bool isOpen = false
+        bool isOpen = false,
+        double headerHeight = 0
     )
     {
         // data-line-preview marks the nodes whose lines the hover preview lights (linePreview in
@@ -278,7 +279,15 @@ static class NodeSvg
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
         // data-open marks an open container (or open type card): once it is large on screen the
         // user looks at what is inside it, and it gets no hover card (initTooltips).
-        var openAttribute = isOpen ? " data-open=\"1\"" : "";
+        // data-header-height is an open type card's header strip, which keeps the hover card.
+        var openAttribute =
+            !isOpen ? ""
+            : headerHeight > 0
+                ? string.Create(
+                    CultureInfo.InvariantCulture,
+                    $" data-open=\"1\" data-header-height=\"{headerHeight:0.##}\""
+                )
+            : " data-open=\"1\"";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""

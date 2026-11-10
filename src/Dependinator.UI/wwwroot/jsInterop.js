@@ -533,6 +533,7 @@ const tooltipOffset = 14;
 // An open container larger than this on screen (px, its longer side) gets no card: the user is
 // then looking at its children, and the container is under the pointer wherever it rests.
 const tooltipOpenContainerMaxSize = 400;
+const tooltipCanvasId = "canvas"; // The pointer is over no item
 
 let tooltipCleanup = null;
 let tooltipOwner = null;
@@ -557,6 +558,8 @@ export function initTooltips(elementId, dotNetRef, token) {
 
   let hoverId = null;
   let timer = null;
+  let rearm = false; // The last rest showed nothing: the next one is looked at again
+  let shown = null; // What the visible card is for
   let request = 0;
   let pointer = { x: 0, y: 0 };
 
@@ -564,6 +567,8 @@ export function initTooltips(elementId, dotNetRef, token) {
     clearTimeout(timer);
     timer = null;
     hoverId = null;
+    rearm = false;
+    shown = null;
     request++;
     card.hidden = true;
   }
@@ -586,32 +591,71 @@ export function initTooltips(elementId, dotNetRef, token) {
     return Math.max(rect.width, rect.height) > tooltipOpenContainerMaxSize;
   }
 
+  // An open type card's header strip (data-header-height, in the units of the group's rect).
+  function isOnHeader(group) {
+    const headerHeight = Number(group.dataset.headerHeight);
+    const rect = group.querySelector("rect");
+    const height = rect?.height.baseVal.value;
+    if (!headerHeight || !height) return false;
+    const box = rect.getBoundingClientRect();
+    return pointer.y <= box.top + (headerHeight * box.height) / height;
+  }
+
+  // The open container whose name label is under the pointer. The label is no pointer target
+  // (clicks pass through it), so it is found by where it is.
+  function labelIdAtPointer() {
+    for (const label of svg.querySelectorAll("text[data-tip-label]")) {
+      const box = label.getBoundingClientRect();
+      if (pointer.x >= box.left && pointer.x <= box.right && pointer.y >= box.top && pointer.y <= box.bottom)
+        return label.dataset.tipLabel;
+    }
+    return null;
+  }
+
+  // What the card shows where the pointer rests: an open container's name stands for the
+  // container, then the item under the pointer. A large open container counts only on its
+  // header: elsewhere the user is looking at its children. Null for no card.
+  function restTarget(id) {
+    const labelId = labelIdAtPointer();
+    if (labelId) return { id: labelId, isPlaceBound: true };
+    if (id === tooltipCanvasId) return null;
+    // Found anew: the tiles, and so the group, are drawn again after a zoom.
+    const group = [...svg.querySelectorAll("g.hoverable[id], g.hoverableedit[id]")].find((g) => g.id === id);
+    if (!group) return null;
+    if (!isLargeOpenContainer(group)) return { id, isPlaceBound: false };
+    return isOnHeader(group) ? { id, isPlaceBound: true } : null;
+  }
+
   async function show(id) {
     timer = null;
+    const target = restTarget(id);
+    if (!target) {
+      // Nothing here, but the next rest may be on a header or a name.
+      rearm = true;
+      return;
+    }
     const thisRequest = ++request;
     let html = null;
     try {
-      html = await dotNetRef.invokeMethodAsync("GetTooltipHtml", id);
+      html = await dotNetRef.invokeMethodAsync("GetTooltipHtml", target.id);
     } catch {
       return; // The circuit or the component is gone
     }
     if (thisRequest !== request || hoverId !== id || !html) return;
-    // Zoomed in while the mouse rested (the tiles are then drawn anew, so the group is too)
-    const group = [...svg.querySelectorAll("g.hoverable[id], g.hoverableedit[id]")].find((g) => g.id === id);
-    if (!group || isLargeOpenContainer(group)) return;
+    if (restTarget(id)?.id !== target.id) return; // Zoomed or moved while it was fetched
     card.innerHTML = html;
     card.hidden = false;
+    shown = target;
     place();
   }
 
   function onOver(event) {
     if (event.pointerType !== "mouse" || event.buttons !== 0) return hide();
     const group = event.target.closest?.("g.hoverable[id], g.hoverableedit[id]");
-    const id = group?.id;
-    if (!id || !(id.endsWith(".n") || id.endsWith(".l"))) return hide();
+    // Off every item a container's name may still be under the pointer.
+    const id = group?.id && (group.id.endsWith(".n") || group.id.endsWith(".l")) ? group.id : tooltipCanvasId;
     if (id === hoverId) return;
     hide();
-    if (isLargeOpenContainer(group)) return;
     hoverId = id;
     timer = setTimeout(() => show(id), tooltipDelayMs);
   }
@@ -619,10 +663,19 @@ export function initTooltips(elementId, dotNetRef, token) {
   function onMove(event) {
     pointer = { x: event.clientX, y: event.clientY };
     if (event.buttons !== 0) return hide();
+    // A card for a header or a name goes when the pointer leaves that place, though it is
+    // still over the same item.
+    if (!card.hidden && shown?.isPlaceBound && restTarget(hoverId)?.id !== shown.id) {
+      card.hidden = true;
+      shown = null;
+      request++;
+      rearm = true;
+    }
     // The card waits until the mouse rests, not merely stays on one item (a large container
     // is under the pointer most of the time while zoomed in).
-    if (timer) {
+    if (timer || rearm) {
       clearTimeout(timer);
+      rearm = false;
       const id = hoverId;
       timer = setTimeout(() => show(id), tooltipDelayMs);
     }
