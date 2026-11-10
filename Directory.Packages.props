@@ -39,7 +39,7 @@
              Dependabot (.github/dependabot.yml): bump it deliberately and build. -->
         <PackageVersion Include="Azure.Bicep.Core" Version="0.49.2" />
         <!-- Anthropic's official C# SDK, for asking Claude with the user's own API key (src/Dependinator.Claude). -->
-        <PackageVersion Include="Anthropic" Version="13.6.0" />
+        <PackageVersion Include="Anthropic" Version="13.7.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.9.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.9.0" />
