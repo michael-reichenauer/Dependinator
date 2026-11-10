@@ -1523,6 +1523,86 @@ button.dep-rules__node:hover {
     border-color: var(--mud-palette-primary);
 }
 
+.dep-ask__examples-title {
+    margin-top: 4px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.dep-ask__examples-more {
+    margin-top: 2px;
+}
+
+.dep-ask__about {
+    margin-bottom: 4px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-about__ask {
+    margin-top: 14px;
+}
+
+.dep-about__ask-title {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* What the question is about: a chip per selected node, and "with everything inside". */
+.dep-ask__context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-ask__chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 150px;
+    padding: 1px 4px 1px 9px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-ask__chip[data-testid="ask-context-more"] {
+    padding-right: 9px;
+}
+
+.dep-ask__chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-ask__chip-remove {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+}
+
+.dep-ask__chip-remove:hover {
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-ask__below {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
 .dep-ask__question {
     font-weight: 600;
     white-space: pre-line;

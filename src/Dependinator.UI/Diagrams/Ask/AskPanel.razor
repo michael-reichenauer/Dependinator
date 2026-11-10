@@ -1,4 +1,5 @@
 @using Dependinator.UI.Diagrams.Ai
+@using Dependinator.UI.Modeling.Models
 @inject IAskModelService askModelService
 @inject IAiService aiService
 @inject IViewOptions viewOptions
@@ -9,10 +10,13 @@
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IJSInterop jsInterop
 @inject IModelQueries modelQueries
+@inject Interaction.ISelectionService selectionService
 @implements IDisposable
 
-@* Ask (AskModelService): questions about the open model for an AI, on the right like the other
-   panels so the diagram stays in view. Claude (the user's API key) or Claude Code finds the answer
+@* Ask (AskModelService): questions for an AI about the open model, or about the nodes selected in
+   the diagram (the chips above the question, alone or with everything inside them), on the right
+   like the other panels so the diagram stays in view. Example questions fit what is asked about
+   (AskExamples); the lightbulb shows them again later. Claude (the user's API key) or Claude Code finds the answer
    with Dependinator's model tools and writes node names in backticks; each name that is a node
    becomes a link that goes to it, and the answer lists the nodes it is about. While it works, each
    lookup it makes shows as a line (IModelQueries.Asked), kept behind a toggle with the answer, which
@@ -24,7 +28,7 @@
        data-testid="ask-panel">
     <div class="dep-panel__header">
       <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" Size="Size.Small" />
-      <span class="dep-panel__title">Ask About the Model</span>
+      <span class="dep-panel__title">Ask</span>
       <MudSpacer />
       @if (entries.Count > 0 && !IsAsking)
       {
@@ -38,22 +42,21 @@
       @if (entries.Count == 0)
       {
         <div class="dep-panel__hint" data-testid="ask-intro">
-          Ask anything about the model: where something is handled, what depends on what, what a change would
-          touch. Claude looks it up with Dependinator's tools, and the nodes in its answer are links to the
-          diagram. Ask follow-ups: Claude sees the conversation until you clear it.
+          Ask about the whole model, or select nodes in the diagram to ask about them: what something is, what
+          depends on what, what a change would touch. The AI looks it up with Dependinator's tools, and the
+          nodes in its answer are links to the diagram. Ask follow-ups: it sees the conversation until you
+          clear it.
         </div>
-        <div class="dep-ask__examples">
-          @foreach (var example in Examples)
-          {
-            <button type="button" class="dep-ask__example" @onclick="() => question = example"
-                    data-testid="ask-example">@example</button>
-          }
-        </div>
+        @ExamplesView()
       }
       @foreach (var entry in entries)
       {
         <div class="dep-ask__entry" data-testid="ask-entry">
           <div class="dep-ask__question" data-testid="ask-entry-question">@entry.Question</div>
+          @if (entry.About != "")
+          {
+            <div class="dep-ask__about" data-testid="ask-entry-about">About @entry.About</div>
+          }
           @if (entry.Answer is { } answer)
           {
             <div class="dep-ai__suggestion dep-ask__answer" data-testid="ask-answer">
@@ -123,12 +126,50 @@
           }
         </div>
       }
+      @if (entries.Count > 0 && isExamplesShown && route is not null)
+      {
+        @ExamplesView()
+      }
     </div>
 
     @if (route is not null)
     {
+      @* What the question is about: the nodes selected in the diagram, which the chips follow. A
+         chip's × leaves its node out until the selection changes; with no chips the question is
+         about the whole model. *@
+      @if (contextNodes.Count > 0)
+      {
+        <div class="dep-ask__context" data-testid="ask-context">
+          <span>About:</span>
+          @foreach (var node in contextNodes.Take(MaxChips))
+          {
+            <span class="dep-ask__chip" title="@node.LongName" data-testid="ask-context-node">
+              <span class="dep-ask__chip-name">@node.ShortName</span>
+              <button type="button" class="dep-ask__chip-remove" title="Do not ask about this node"
+                      @onclick="() => RemoveFromContext(node.Id)" data-testid="ask-context-remove">×</button>
+            </span>
+          }
+          @if (contextNodes.Count > MaxChips)
+          {
+            <span class="dep-ask__chip" title="@string.Join("\n", contextNodes.Skip(MaxChips).Select(n => n.LongName))"
+                  data-testid="ask-context-more">+@(contextNodes.Count - MaxChips)</span>
+          }
+          @if (contextNodes.Any(n => n.HasChildren))
+          {
+            <label class="dep-ask__below" title="Ask about the nodes with everything inside them, or about the nodes themselves">
+              <input type="checkbox" checked="@isBelow" @onchange="e => isBelow = e.Value is true"
+                     data-testid="ask-context-below" />
+              with everything inside
+            </label>
+          }
+        </div>
+      }
       <div class="dep-ask__input">
-        <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="Ask a question about the model"
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Lightbulb" Size="Size.Small"
+                       Color="@(isExamplesShown && entries.Count > 0 ? Color.Primary : Color.Default)"
+                       title="Example questions" Disabled="@(entries.Count == 0)"
+                       OnClick="ToggleExamplesAsync" data-testid="ask-examples-toggle" />
+        <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="@Placeholder"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
                       OnKeyDown="OnKeyDownAsync" Disabled="IsAsking" data-testid="ask-question" />
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Send" Color="Color.Primary" Size="Size.Small"
@@ -153,6 +194,9 @@
   sealed class Entry(string question)
   {
     public string Question { get; } = question;
+
+    // The nodes the question was asked about, in words; "" for the whole model.
+    public string About { get; init; } = "";
     public ModelAnswer? Answer { get; private set; }
 
     // The answer's text, parsed once.
@@ -175,14 +219,92 @@
 
   // The questions answered so far, which a new question follows up on, until they are cleared.
   List<AskExchange> Conversation() =>
-    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text))];
+    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text, e.About))];
 
-  static readonly string[] Examples =
-  [
-    "What are the main parts of this codebase, and how do they depend on each other?",
-    "Which parts are the most central, used by the most others?",
-    "What would be affected if I changed the most used type?",
-  ];
+  // A node the question is about, as its chip shows it.
+  sealed record ContextNode(NodeId Id, string ShortName, string LongName, bool HasChildren);
+
+  const int MaxChips = 2;
+
+  // The selected nodes the question is about (not the ones removed with their chip), and whether
+  // with everything inside them. Kept in step with the selection while the panel is shown.
+  IReadOnlyList<ContextNode> contextNodes = [];
+  IReadOnlyList<NodeId> seenSelection = [];
+  readonly HashSet<NodeId> removedFromContext = [];
+  bool isBelow = true;
+
+  // The examples are shown until the first question, then on the lightbulb.
+  bool isExamplesShown;
+  bool isMoreExamplesShown;
+
+  AskContext Context => new([.. contextNodes.Select(n => n.Id)], isBelow);
+
+  string About =>
+    contextNodes.Count switch
+    {
+      0 => "",
+      1 => contextNodes[0].ShortName,
+      _ => $"the {contextNodes.Count} selected nodes",
+    };
+
+  string Placeholder =>
+    entries.Count > 0 && contextNodes.Count == 0 ? "Ask a follow-up, or another question"
+    : contextNodes.Count == 0 ? "Ask a question about the model"
+    : $"Ask about {About}";
+
+  void UpdateContext()
+  {
+    IReadOnlyList<NodeId> selection = [.. selectionService.SelectedNodeIds];
+    if (!selection.SequenceEqual(seenSelection))
+    {
+      removedFromContext.Clear();
+      seenSelection = selection;
+    }
+    using var model = modelMgr.UseModel();
+    contextNodes =
+    [
+      .. AskModelPrompt
+        .ContextNodes(model, new AskContext([.. selection.Where(id => !removedFromContext.Contains(id))], isBelow))
+        .Select(n => new ContextNode(n.Id, n.ShortName, n.LongName, n.Children.Count > 0)),
+    ];
+  }
+
+  void RemoveFromContext(NodeId nodeId)
+  {
+    removedFromContext.Add(nodeId);
+    UpdateContext();
+  }
+
+  async Task ToggleExamplesAsync()
+  {
+    isExamplesShown = !isExamplesShown;
+    if (isExamplesShown)
+      await ScrollToEndAsync();
+  }
+
+  void UseExample(string example)
+  {
+    question = example;
+    isExamplesShown = false;
+    isMoreExamplesShown = false;
+  }
+
+  // The examples for what the question is about, under their headings; the rest on "More examples".
+  RenderFragment ExamplesView() =>
+    @<div class="dep-ask__examples" data-testid="ask-examples">
+      @foreach (var group in AskExamples.For(contextNodes.Count))
+      {
+        <div class="dep-ask__examples-title">@group.Title</div>
+        @foreach (var example in isMoreExamplesShown ? group.Top.Concat(group.More) : group.Top)
+        {
+          <button type="button" class="dep-ask__example" @onclick="() => UseExample(example)"
+                  data-testid="ask-example">@example</button>
+        }
+      }
+      <button type="button" class="dep-ask__steps-toggle dep-ask__examples-more"
+              @onclick="() => isMoreExamplesShown = !isMoreExamplesShown"
+              data-testid="ask-examples-more">@(isMoreExamplesShown ? "Fewer examples" : "More examples")</button>
+    </div>;
 
   readonly List<Entry> entries = [];
   string question = "";
@@ -227,6 +349,12 @@
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
+    if (viewOptions.IsAskShown)
+    {
+      UpdateContext();
+      if (askModelService.TakePendingQuestion() is { } pending && !IsAsking)
+        question = pending;
+    }
     // Settings › AI may change while the panel is closed (or open: then it shows
     // after the next ask), and reading it reads the config file, too much on every click.
     if (viewOptions.IsAskShown && !wasShown)
@@ -268,9 +396,11 @@
     if (text == "" || IsAsking || route is null)
       return;
     var earlier = Conversation();
-    var entry = new Entry(text) { Route = route.Source };
+    var context = Context;
+    var entry = new Entry(text) { Route = route.Source, About = About };
     entries.Add(entry);
     question = "";
+    isExamplesShown = false;
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
     await ScrollToEndAsync();
@@ -283,7 +413,7 @@
     Result<ModelAnswer> result;
     try
     {
-      result = await askModelService.AskAsync(text, earlier, entry.Route, step => _ = InvokeAsync(() =>
+      result = await askModelService.AskAsync(text, earlier, context, entry.Route, step => _ = InvokeAsync(() =>
       {
         entry.Step = step;
         StateHasChanged();
@@ -350,7 +480,7 @@
 
   async Task ShowPromptAsync()
   {
-    var prompt = askModelService.GetPrompt(question.Trim(), Conversation());
+    var prompt = askModelService.GetPrompt(question.Trim(), Conversation(), Context);
     if (prompt != "")
       await PromptDialog.ShowAsync(dialogService, prompt);
   }

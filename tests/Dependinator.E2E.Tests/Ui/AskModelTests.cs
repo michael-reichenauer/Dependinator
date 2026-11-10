@@ -9,7 +9,8 @@ namespace Dependinator.E2E.Tests.Ui;
 // through the model queries): the panel opens from the toolbar beside the diagram, closes the other
 // analysis panels, answers a question with node names that go to their node, leaves a name that is
 // not a node as plain code, shows what the answer cost and the lookups it made, asks the provider
-// picked from the chip below the question, and keeps the answers while it is closed.
+// picked from the chip below the question, and keeps the answers while it is closed. With nodes
+// selected the question is about them, and the examples fit what is asked about.
 public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -81,5 +82,55 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Page.GetByTestId("ask-clear").ClickAsync();
         await Expect(Page.GetByTestId("ask-entry")).ToHaveCountAsync(0);
+    }
+
+    [E2EFact]
+    public async Task Ask_ShouldBeAboutTheSelectedNodes_WithExamplesThatFit()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+
+        // Nothing selected: the question is about the model. "More examples" shows the rest.
+        await Page.GetByTestId("toolbar-ask").ClickAsync();
+        await Expect(Page.GetByTestId("ask-context")).ToHaveCountAsync(0);
+        int count = await Page.GetByTestId("ask-example").CountAsync();
+        await Page.GetByTestId("ask-examples-more").ClickAsync();
+        await Expect(Page.GetByTestId("ask-example")).Not.ToHaveCountAsync(count);
+        await Page.GetByTestId("ask-close").ClickAsync();
+
+        // A selected node is what the question is about, from its menu; the examples fit it.
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+        await App.ClickNodeMenuItemAsync("node-menu-ask");
+        await Expect(Page.GetByTestId("ask-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("ask-context-node"))
+            .ToHaveTextAsync(new System.Text.RegularExpressions.Regex("Demo.sln"));
+        await Expect(Page.GetByTestId("ask-example").First).ToHaveTextAsync("What is this and why is it here?");
+        await Page.GetByTestId("ask-example").First.ClickAsync();
+        await Page.GetByTestId("ask-menu").ClickAsync();
+        await Page.GetByTestId("ask-show-prompt").ClickAsync();
+        await Expect(Page.GetByTestId("prompt-dialog-text"))
+            .ToContainTextAsync("asks about it, with everything inside it");
+        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
+
+        // Without what is inside, the answer is about the node alone.
+        await Page.GetByTestId("ask-context-below").UncheckAsync();
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-entry-about")).ToHaveTextAsync("About Demo.sln");
+        await Expect(Page.GetByTestId("ask-answer-text")).ToContainTextAsync("About Demo.sln.");
+
+        // The lightbulb shows the examples again, for a follow-up.
+        await Expect(Page.GetByTestId("ask-example")).ToHaveCountAsync(0);
+        await Page.GetByTestId("ask-examples-toggle").ClickAsync();
+        await Expect(Page.GetByTestId("ask-example").First).ToBeVisibleAsync();
+        await Page.GetByTestId("ask-examples-toggle").ClickAsync();
+        await Expect(Page.GetByTestId("ask-example")).ToHaveCountAsync(0);
+
+        // Removing the chip asks about the whole model again.
+        await Page.GetByTestId("ask-context-remove").ClickAsync();
+        await Expect(Page.GetByTestId("ask-context")).ToHaveCountAsync(0);
+        await Page.GetByTestId("ask-question").FillAsync("And the model?");
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-answer")).ToHaveCountAsync(2);
+        await Expect(Page.GetByTestId("ask-entry-about")).ToHaveCountAsync(1);
     }
 }

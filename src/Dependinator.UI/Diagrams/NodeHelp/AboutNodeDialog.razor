@@ -3,11 +3,12 @@
 @inject IClipboardService clipboardService
 
 @* About a node (AboutNodeService): what the model knows of it (its comment, what it contains, how
-   many types outside it it uses and are used by it), and a question about it, "What is this and
-   why is it here?" until the user writes another, for Claude, Claude Code or the user's AI chat
-   (AiOpinion, open at once since asking is what the dialog is for). The answer is shown, not
-   saved: it can be copied. Each answer is kept while the dialog is open, so questions can be
-   compared. "Improve comments" closes it for the Improve comments dialog (ImproveCommentsService). *@
+   many types outside it it uses and are used by it), and questions about it for an AI. Where the
+   host can ask an AI, the example questions (AskExamples) and "Ask another question" close the
+   dialog for the Ask panel, which asks about the node, with follow-ups and links. In the
+   standalone browser app, which cannot ask, the question ("What is this and why is it here?"
+   until the user writes another) is for the user's own AI chat: copy the prompt, paste the answer
+   (AiOpinion). "Improve comments" closes it for the Improve comments dialog (ImproveCommentsService). *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">About @Facts.Kind</MudText>
@@ -29,6 +30,25 @@
     <div class="dep-about__facts" data-testid="about-node-facts">
       @Facts.Contents · uses @TypesText(Facts.UsesCount) · used by @TypesText(Facts.UsedByCount)
     </div>
+    @if (IsAskInPanel)
+    {
+      <div class="dep-about__ask" data-testid="about-node-ask">
+        <div class="dep-about__ask-title">Ask AI about it</div>
+        <div class="dep-ask__examples">
+          @foreach (var example in Examples)
+          {
+            <button type="button" class="dep-ask__example" @onclick="() => AskInPanel(example)"
+                    data-testid="about-node-example">@example</button>
+          }
+        </div>
+        <MudButton Class="dep-ai-ask mt-2" Variant="Variant.Text" Size="Size.Small"
+                   StartIcon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" OnClick="@(() => AskInPanel(""))"
+                   title="Open the Ask panel to ask your own question about this node"
+                   data-testid="about-node-ask-other">Ask another question …</MudButton>
+      </div>
+    }
+    else
+    {
     <MudTextField T="string" @bind-Value="Question" Label="Your question" Immediate="true" Class="mt-3 mb-1"
                   data-testid="about-node-question" />
     <AiOpinion TAnswer="NodeAnswer" TestId="about-node" GetPrompt="PromptAsync" Ask="AskOrNull"
@@ -57,6 +77,7 @@
         </div>
       </AnswerContent>
     </AiOpinion>
+    }
   </DialogContent>
   <DialogActions>
     @if (CanImproveComments)
@@ -80,6 +101,16 @@
 
   // Asks Claude (or Claude Code) the question, telling each step; null where the host cannot ask.
   [Parameter] public Func<string, AiSource, Action<SuggestStep>, Task<Result<NodeAnswer>>>? Ask { get; set; }
+
+  // The host can ask an AI: questions go to the Ask panel, which the service opens once this
+  // dialog is closed with the question as its result ("" for the user's own).
+  [Parameter] public bool IsAskInPanel { get; set; }
+
+  static readonly IReadOnlyList<string> Examples = [.. Dependinator.UI.Diagrams.Ask.AskExamples.For(1).SelectMany(g => g.Top)];
+
+  void AskInPanel(string question) => MudDialog.Close(DialogResult.Ok(new AskInPanelResult(question)));
+
+  public record AskInPanelResult(string Question);
 
   // The node, or something inside it, has a comment the parser reads.
   [Parameter] public bool CanImproveComments { get; set; }

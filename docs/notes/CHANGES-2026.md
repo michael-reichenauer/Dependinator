@@ -343,6 +343,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
   API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
   is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
+- **Ask about the selected nodes (Nov 10).** The Ask panel follows the selection: chips above the
+  question name the selected nodes, "with everything inside" or alone, and the prompt tells the AI
+  what "it" and "these" mean (`AskContext`); without chips the question is about the whole model.
+  The example questions fit what is asked about, grouped as Understand, Change and Improve
+  (`AskExamples`), with "More examples" and a lightbulb that shows them again later. The node menus
+  have "Ask About Node …", and About Node sends its example questions to the panel instead of
+  asking in the dialog (the browser app keeps the copy-prompt route).
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

@@ -40,6 +40,10 @@ interface IContextMenuService
 
     // Node and line: analysis and navigation on the right-clicked item.
     Task ShowAboutAsync();
+
+    // Whether an AI can be asked about the target node (not in the standalone browser app).
+    bool CanAsk { get; }
+    Task AskAboutAsync();
     Task ShowReferencesAsync();
     Task ShowDependenciesAsync();
     Task ZoomToAsync();
@@ -70,6 +74,7 @@ class ContextMenuService(
     INavigationService navigationService,
     IShareLinkService shareLinkService,
     IAboutNodeService aboutNodeService,
+    Ask.IAskModelService askModelService,
     IModelMgr modelMgr,
     IApplicationEvents applicationEvents
 ) : IContextMenuService
@@ -151,6 +156,16 @@ class ContextMenuService(
     {
         Close();
         _ = zoneService.PlaceZoneAtAsync(pendingEvent);
+    }
+
+    public bool CanAsk => askModelService.IsAvailable && Target == ContextMenuTarget.Node;
+
+    public async Task AskAboutAsync()
+    {
+        Close();
+        if (Target != ContextMenuTarget.Node)
+            return;
+        await askModelService.AskAboutAsync(targetId.NodeId);
     }
 
     public async Task ShowAboutAsync()

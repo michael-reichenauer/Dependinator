@@ -51,8 +51,9 @@ public record NodeAnswer(string Text) : IAiAnswer
 }
 
 // "About Node": a dialog with what the model knows of a node (its comment, what it contains, how
-// many types it uses and are used by it), and a question about it to ask Claude, Claude Code or
-// the user's AI chat (AboutNodeDialog). Reached from the node toolbar menu and the node's
+// many types it uses and are used by it), and questions about it: where the host can ask an AI
+// they go to the Ask panel (IAskModelService.AskAboutAsync), elsewhere the prompt is for the
+// user's AI chat (AboutNodeDialog). Reached from the node toolbar menu and the node's
 // right-click menu. Not for annotations (notes and zones).
 interface IAboutNodeService
 {
@@ -72,6 +73,7 @@ class AboutNodeService(
     IWorkspaceFileService workspaceFileService,
     IAiService aiService,
     IImproveCommentsService improveCommentsService,
+    Ask.IAskModelService askModelService,
     IDialogService dialogService
 ) : IAboutNodeService
 {
@@ -93,6 +95,7 @@ class AboutNodeService(
             { d => d.Facts, facts },
             { d => d.GetPrompt, question => GetPromptAsync(nodeId, question) },
             { d => d.Ask, ask },
+            { d => d.IsAskInPanel, askModelService.IsAvailable },
             { d => d.CanImproveComments, improveCommentsService.CanImprove([nodeId]) },
         };
         var options = new DialogOptions
@@ -102,8 +105,11 @@ class AboutNodeService(
             FullWidth = true,
         };
         var dialog = await dialogService.ShowAsync<AboutNodeDialog>(null, parameters, options);
-        if (await dialog.Result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: AboutNodeDialog.ImproveCommentsResult })
             await improveCommentsService.ShowAsync([nodeId]);
+        else if (result is { Canceled: false, Data: AboutNodeDialog.AskInPanelResult inPanel })
+            await askModelService.AskAboutAsync(nodeId, inPanel.Question);
     }
 
     public async Task<string> GetPromptAsync(NodeId nodeId, string question)

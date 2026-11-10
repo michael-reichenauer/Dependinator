@@ -6,17 +6,13 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // Exercises "About Node" through the browser: open it from the node menu and the right-click
-// menu, see what the model knows of the node, show the prompt with a question of the user's own,
-// and get an answer (in test mode the app answers for Claude) to copy.
+// menu, see what the model knows of the node, and take one of its example questions, or the
+// user's own, to the Ask panel, which asks it about the node (in test mode the app answers).
 public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
     public async Task AboutNode_ShouldShowTheNode_AndAnswerAQuestionAboutIt()
     {
-        await Page.AddInitScriptAsync(
-            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
-                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
-        );
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
@@ -25,22 +21,23 @@ public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("about-node-name")).ToContainTextAsync("Demo.sln");
         await Expect(Page.GetByTestId("about-node-facts")).ToContainTextAsync("used by");
 
-        ILocator question = Page.GetByTestId("about-node-question");
-        await App.FillReliablyAsync(question, "Where does parsing start?");
-        await Page.GetByTestId("about-node-show-prompt").ClickAsync();
-        await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("Where does parsing start?");
-        await Page.GetByTestId("prompt-dialog-close").ClickAsync();
-
-        await Page.GetByTestId("about-node-suggest").ClickAsync();
-        ILocator answer = Page.GetByTestId("about-node-answer");
-        await Expect(answer).ToContainTextAsync("Where does parsing start?");
-        await Page.GetByTestId("about-node-copy-answer").ClickAsync();
-        await Expect(Page.GetByTestId("about-node-copied")).ToHaveTextAsync("Copied.");
-        string copied = await Page.EvaluateAsync<string>("() => window.__copiedText");
-        Assert.StartsWith("Test mode", copied);
-
-        await Page.GetByTestId("about-node-close").ClickAsync();
+        // An example question closes the dialog for the Ask panel, which asks it about the node.
+        await Expect(Page.GetByTestId("about-node-example").First).ToHaveTextAsync("What is this and why is it here?");
+        await Page.GetByTestId("about-node-example").First.ClickAsync();
         await Expect(Page.GetByTestId("about-node-name")).ToBeHiddenAsync();
+        await Expect(Page.GetByTestId("ask-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("ask-context-node")).ToContainTextAsync("Demo.sln");
+        await Expect(Page.GetByTestId("ask-question")).ToHaveValueAsync("What is this and why is it here?");
+        await Page.GetByTestId("ask-send").ClickAsync();
+        await Expect(Page.GetByTestId("ask-entry-about")).ToHaveTextAsync("About Demo.sln");
+        await Expect(Page.GetByTestId("ask-answer-text")).ToContainTextAsync("About Demo.sln with everything inside.");
+
+        // "Ask another question" opens the panel for the user's own question.
+        await App.ClickNodeMenuItemAsync("node-menu-about");
+        await Page.GetByTestId("about-node-ask-other").ClickAsync();
+        await Expect(Page.GetByTestId("about-node-name")).ToBeHiddenAsync();
+        await Expect(Page.GetByTestId("ask-panel")).ToBeVisibleAsync();
+        await Expect(Page.GetByTestId("ask-question")).ToHaveValueAsync("");
     }
 
     [E2EFact]
