@@ -230,7 +230,9 @@
     model = model.Trim();
     // What the host would refuse (ClaudeCodeRunner.IsModelName) is not saved.
     claudeCodeModelError =
-      model.StartsWith('-') || model.Any(char.IsWhiteSpace) ? "A model name has no spaces and does not start with -" : "";
+      model.StartsWith('-') || model.Length > 300 || model.Any(c => char.IsWhiteSpace(c) || char.IsControl(c))
+        ? "A model name has no spaces and does not start with -"
+        : "";
     if (claudeCodeModelError != "")
       return;
     await aiService.SetClaudeCodeModelAsync(model == "" ? null : model);

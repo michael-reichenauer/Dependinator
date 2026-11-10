@@ -192,7 +192,8 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
                 e
             );
         }
-        catch (AnthropicApiException e) when (pickedModel is not null)
+        catch (AnthropicApiException e)
+            when (pickedModel is not null && e is AnthropicBadRequestException or AnthropicForbiddenException)
         {
             return new Error(
                 $"Claude could not answer with the model \"{pickedModel}\" picked in Settings › AI: {ApiMessage(e)}",
