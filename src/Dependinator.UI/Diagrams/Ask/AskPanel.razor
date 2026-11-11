@@ -251,6 +251,13 @@
         <div class="dep-ai__suggest-error dep-ask__other-note" data-testid="ask-other-error">@otherAiError</div>
       }
     }
+    else if (isReadingRoutes)
+    {
+      <div class="dep-ai__suggest-pending dep-ask__other-note" data-testid="ask-reading-routes">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        <span>Finding the AI to ask ...</span>
+      </div>
+    }
   </div>
 }
 
@@ -509,10 +516,40 @@
     var isRendered = viewOptions.IsAskShown || wasShown;
     wasShown = viewOptions.IsAskShown;
     if (isOpening)
-      await RefreshRoutesAsync();
+    {
+      // Shown at once, with the providers as last read (or a progress line the first time): in
+      // VS Code reading them asks the extension for Copilot's models, which took seconds on the
+      // first open, and a panel that shows nothing meanwhile looks like a click that missed.
+      isReadingRoutes = true;
+      StateHasChanged();
+      await ReadRoutesAsync();
+      isReadingRoutes = false;
+    }
+    else if (!isRoutesPreRead && askModelService.IsAvailable && modelMgr.WithModel(m => m.Path) != "")
+    {
+      // Read ahead once a model is loaded, so the first open has them.
+      isRoutesPreRead = true;
+      _ = ReadRoutesAsync();
+    }
     if (isRendered)
       StateHasChanged();
   });
+
+  // The providers are being read as the panel opens; it shows a progress line until the first read.
+  bool isReadingRoutes;
+  bool isRoutesPreRead;
+
+  async Task ReadRoutesAsync()
+  {
+    try
+    {
+      await RefreshRoutesAsync();
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Reading the Ask routes failed", e.Message);
+    }
+  }
 
   // Answers about another model would name its nodes, so a newly opened model starts over. The path
   // is "" while a model loads, which is not another model (the same one may be reloading).
