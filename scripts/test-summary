@@ -70,7 +70,8 @@ def main():
         if lines:
             print("\n  ```")
             for line in lines[:MAX_MESSAGE_LINES]:
-                print(f"  {line[:300]}")
+                # A fence inside the message would end the code block early.
+                print("  " + line[:300].replace("```", "'''"))
             print("  ```")
     print()
 

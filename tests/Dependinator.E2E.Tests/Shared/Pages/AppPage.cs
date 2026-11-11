@@ -316,36 +316,44 @@ public sealed class AppPage
     // Click a button until what it opens shows. Blazor Server drops a click whose element is
     // re-rendered before the server handles it (a panel still loading its AI providers, say),
     // and Playwright reports that click as successful, so it surfaced only as a dialog that
-    // never opened (TourTests "Show prompt", CI Nov 2026).
-    public Task ClickUntilVisibleAsync(ILocator button, ILocator expected) => OpenMenuAsync(button, expected);
+    // never opened (TourTests "Show prompt", CI Nov 2026). A click that was handled but slow to
+    // show is not repeated: each attempt looks for the result first.
+    public Task ClickUntilVisibleAsync(ILocator button, ILocator expected) =>
+        RepeatUntilVisibleAsync(
+            async () =>
+            {
+                if (!await expected.First.IsVisibleAsync())
+                    await button.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+            },
+            expected.First
+        );
 
-    // Click a button that closes its own dialog until it is gone, for the same reason. A
-    // handled click closes the dialog, so there is nothing left to click twice.
+    // Press a key on an element until its effect shows, for the same reason: a keystroke whose
+    // element re-renders before the server handles it is dropped (AskModelTests' Enter left the
+    // question in its field, CI Nov 2026).
+    public Task PressUntilVisibleAsync(ILocator target, string key, ILocator expected) =>
+        RepeatUntilVisibleAsync(
+            async () =>
+            {
+                if (!await expected.First.IsVisibleAsync())
+                    await target.PressAsync(key, new() { Timeout = MenuAttemptTimeout });
+            },
+            expected.First
+        );
+
+    // Click a button that closes its own dialog until it is gone, for the same reason. A later
+    // attempt clicks only while the button is still there, so a click that was handled but slow
+    // to close the dialog is not repeated on a button that is going away.
     public async Task ClickUntilGoneAsync(ILocator button)
     {
         for (int attempt = 1; ; attempt++)
         {
-            await button.ClickAsync(new() { Timeout = MenuAttemptTimeout });
-            try
-            {
-                await button.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout });
+            if (attempt > 1 && !await button.IsVisibleAsync())
                 return;
-            }
-            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
-        }
-    }
-
-    // Press a key on an element until its effect shows, for the same reason: a keystroke whose
-    // element re-renders before the server handles it is dropped (AskModelTests' Enter left the
-    // question in its field, CI Nov 2026). Only for a key that does nothing the second time.
-    public async Task PressUntilVisibleAsync(ILocator target, string key, ILocator expected)
-    {
-        for (int attempt = 1; ; attempt++)
-        {
-            await target.PressAsync(key, new() { Timeout = MenuAttemptTimeout });
             try
             {
-                await expected.First.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                await button.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+                await button.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout });
                 return;
             }
             catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
@@ -1180,6 +1188,8 @@ public sealed class AppPage
     {
         SearchDialog search = await OpenSearchViaHotkeyAsync();
         await search.NavigateToAsync(fullName);
+        // Proves the selection only when nothing was selected before, as in every caller so far:
+        // the navigation clears the selection first, but a toolbar still showing passes at once.
         await Expect(NodeToolbarMenu).ToBeVisibleAsync();
     }
 
