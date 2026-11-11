@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.91.453241] - 2026-11-11
+
 ### New
 
 - The Ask panel asks about the selected nodes: chips name them, with or without everything inside them, and with no selection the question is about the whole model. **Ask About Node** in the node menu and the right-click menu opens it for a node
