@@ -35,6 +35,11 @@ paths:
   Take spans with `Locations.GetSourceSpan` (never `GetLineSpan()`): it follows `#line` to the
   `.razor` line for `@code` members, and maps the class itself to the whole `.razor` file named by
   the generated file's `#pragma checksum`. Without it Show Source Code did nothing (Oct 29).
+- **Language version:** the parser compiles with its own Roslyn package, which can be older than
+  the user's SDK. A `LangVersion` it does not know ("15" with Roslyn 5.9) silently became its
+  default, and every union was a false "feature is in Preview" compile error that no fix cleared
+  (Nov 11, after the move to `LangVersion` 15). `Compiler.WithUsableLanguageVersion` compiles such
+  projects with `LanguageVersion.Preview`; `CompilerTests` guards it on Dependinator.Mcp.
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.
