@@ -313,12 +313,56 @@ public sealed class AppPage
         }
     }
 
+    // Click a button until what it opens shows. Blazor Server drops a click whose element is
+    // re-rendered before the server handles it (a panel still loading its AI providers, say),
+    // and Playwright reports that click as successful, so it surfaced only as a dialog that
+    // never opened (TourTests "Show prompt", CI Nov 2026).
+    public Task ClickUntilVisibleAsync(ILocator button, ILocator expected) => OpenMenuAsync(button, expected);
+
+    // Click a button that closes its own dialog until it is gone, for the same reason. A
+    // handled click closes the dialog, so there is nothing left to click twice.
+    public async Task ClickUntilGoneAsync(ILocator button)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await button.ClickAsync(new() { Timeout = MenuAttemptTimeout });
+            try
+            {
+                await button.WaitForAsync(new() { State = WaitForSelectorState.Hidden, Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
+    // Press a key on an element until its effect shows, for the same reason: a keystroke whose
+    // element re-renders before the server handles it is dropped (AskModelTests' Enter left the
+    // question in its field, CI Nov 2026). Only for a key that does nothing the second time.
+    public async Task PressUntilVisibleAsync(ILocator target, string key, ILocator expected)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            await target.PressAsync(key, new() { Timeout = MenuAttemptTimeout });
+            try
+            {
+                await expected.First.WaitForAsync(new() { Timeout = MenuAttemptTimeout });
+                return;
+            }
+            catch (Exception e) when (IsRetryable(e) && attempt < MenuAttempts) { }
+        }
+    }
+
     // Dismiss any half-open popover and park the pointer off the toolbar before clicking again:
     // a popover still fading out swallows the next click, and a lingering tooltip popover can
     // cover the activator entirely.
+    //
+    // Escape only when a menu or dialog owns the keyboard: with none open the canvas gets the
+    // key and clears the selection, which takes the node toolbar away, so every further attempt
+    // to open a node menu waited for a toolbar that was gone (a CI flake).
     async Task ResetPopoversAsync()
     {
-        await page.Keyboard.PressAsync("Escape");
+        if (await KeyboardOwners.CountAsync() > 0)
+            await page.Keyboard.PressAsync("Escape");
         await page.Mouse.MoveAsync(0, 0);
     }
 
@@ -1128,11 +1172,15 @@ public sealed class AppPage
         page.Locator(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list");
 
     // Navigate to a node by its exact full name through the search dialog (which closes on
-    // Enter and selects the node once the pan/zoom animation lands).
+    // Enter and selects the node once the pan/zoom animation lands). Waits for that selection:
+    // a test that went on before it landed had its own selection replaced by the navigation's a
+    // moment later, so its node menu acted on the wrong node, or its menu click was swallowed
+    // by the toolbar's re-render (the most common CI flake of Oct-Nov 2026, HiddenNodesTests).
     public async Task NavigateToNodeAsync(string fullName)
     {
         SearchDialog search = await OpenSearchViaHotkeyAsync();
         await search.NavigateToAsync(fullName);
+        await Expect(NodeToolbarMenu).ToBeVisibleAsync();
     }
 
     // Stub Clerk sign-in without the real Clerk (E2ETestBase keeps it away): stub window.Clerk
