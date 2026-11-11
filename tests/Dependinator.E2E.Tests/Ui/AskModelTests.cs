@@ -36,8 +36,13 @@ public class AskModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("prompt-dialog-text")).ToContainTextAsync("main parts");
         await Page.GetByTestId("prompt-dialog-close").ClickAsync();
 
+        // Enter asks and empties the field, so a second Enter after a dropped one is safe.
         await Page.GetByTestId("ask-question").FillAsync("Where is the start?");
-        await Page.GetByTestId("ask-question").PressAsync("Enter");
+        await App.PressUntilVisibleAsync(
+            Page.GetByTestId("ask-question"),
+            "Enter",
+            Page.GetByTestId("ask-entry-question")
+        );
         await Expect(Page.GetByTestId("ask-entry-question")).ToHaveTextAsync("Where is the start?");
         await Expect(Page.GetByTestId("ask-answer-text")).ToContainTextAsync("Test mode");
         await Expect(Page.GetByTestId("ask-answer-node")).ToHaveCountAsync(2);

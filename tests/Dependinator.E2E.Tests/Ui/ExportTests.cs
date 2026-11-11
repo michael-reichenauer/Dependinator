@@ -33,8 +33,14 @@ public class ExportTests(ITestOutputHelper output) : E2ETestBase(output)
         await (await App.OpenSubMenuItemAsync("menu-export", "menu-export-view")).ClickAsync();
         await Expect(App.Dialog).ToBeVisibleAsync();
         await Page.GetByTestId("export-format-png").ClickAsync();
+        // Picking PNG re-renders the dialog with the scale choice. An Export click sent before
+        // that render landed was dropped, and no download came (WebKit, twice in one release
+        // gate, Nov 2026): wait for the render, and click until the dialog closes.
+        await Expect(Page.GetByTestId("export-scale")).ToBeVisibleAsync();
 
-        IDownload download = await Page.RunAndWaitForDownloadAsync(() => Page.GetByTestId("export-ok").ClickAsync());
+        IDownload download = await Page.RunAndWaitForDownloadAsync(() =>
+            App.ClickUntilGoneAsync(Page.GetByTestId("export-ok"))
+        );
 
         Assert.EndsWith(".png", download.SuggestedFilename);
         byte[] bytes = await ReadDownloadBytesAsync(download);

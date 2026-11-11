@@ -20,7 +20,7 @@ jobs:
   # would fail on a missing token; their tests still run in the Build workflow.
   build_and_deploy_job:
     if: github.actor != 'dependabot[bot]' && github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Build and Deploy Job
     permissions:
       contents: read
@@ -68,7 +68,7 @@ jobs:
 
   close_pull_request_job:
     if: github.actor != 'dependabot[bot]' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Close Pull Request Job
     permissions: {} # only the Azure deployment token is used here
     steps:

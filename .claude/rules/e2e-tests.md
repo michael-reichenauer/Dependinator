@@ -66,6 +66,20 @@ page objects). Each rule below comes from a real CI or local failure.
   Click a checkbox-style item with `ToggleSubMenuItemAsync`: it lets the clicked menu close before
   reading the state back. Reopening right after the click found the fading popover's item, then
   polled it after it vanished under a closed menu (ThemeTests and LineDimTests, Oct 23 2026).
+- Blazor Server drops a click or key press whose element re-renders before the server handles
+  it, and Playwright reports it as done. After a step that re-renders its surroundings (a panel
+  loading its AI providers, a radio that adds a field, a dialog closing), use
+  `App.ClickUntilVisibleAsync`, `App.ClickUntilGoneAsync` or `App.PressUntilVisibleAsync`, and
+  wait for the re-render first when there is something to see (Ask, Tour and PNG export flakes,
+  Nov 2026).
+- A retry must not press Escape with no menu or dialog open: the canvas takes it and clears the
+  selection, and every further attempt waits for a node toolbar that is gone
+  (`ResetPopoversAsync` checks `KeyboardOwners`). `App.NavigateToNodeAsync` returns only after
+  the navigation selected its node; before that, a test's own selection was replaced a moment
+  later. Together these were a third of the CI flakes of Oct 28-Nov 11 2026 (HiddenNodesTests).
+- CI writes the failed tests and their messages to the run's summary page
+  (`scripts/test-summary`), e2e ones with "passed on the re-run (flaky)". Job logs download in a
+  cloud session with `gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`.
 - Before a reload that must find an edit, `App.WaitForSavedAsync()` (the app's
   `data-save-pending` mark), never a sleep: a model write took 2 s on a loaded one-core runner.
   Pan, zoom and resize save only the small view record (`<model path>.view`), not the model.

@@ -22,7 +22,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # A fixed image, like every job here: ubuntu-latest moved to 26.04 unannounced in Nov 2026
+    # and broke the release gate (e2e.yml). Move all workflows to a new image together, on purpose.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       # The Release workflow passes what it releases: a sha, and for a release the git bundle with
@@ -63,4 +65,10 @@ jobs:
         run: npm install -g azurite
 
       - name: Test
-        run: dotnet test Dependinator.sln
+        run: dotnet test Dependinator.sln --logger trx --results-directory "$RUNNER_TEMP/test-results"
+
+      # The failed tests and their messages on the run's summary page, so finding the cause
+      # needs no log reading.
+      - name: Summarize failed tests
+        if: failure()
+        run: ./scripts/test-summary "Unit tests" "$RUNNER_TEMP"/test-results/*.trx >> "$GITHUB_STEP_SUMMARY"

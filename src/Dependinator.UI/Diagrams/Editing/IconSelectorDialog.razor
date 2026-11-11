@@ -3,7 +3,11 @@
 @implements IDisposable
 @inject INodeEditService nodeEditService
 
-<MudDialog Class="icon-dialog" ContentClass="pa-2" Style="margin-top:-29px;">
+@* DefaultFocus FirstChild: MudBlazor's focus trap focuses the dialog element itself by default,
+   after a browser round trip of its own. On a slow browser that can land after this dialog's
+   fallback focus (OnAfterRenderAsync) and take the focus from the field, so typing and Escape
+   go nowhere (the likely cause of a Firefox e2e flake, Nov 2026). Now the trap focuses the field too. *@
+<MudDialog Class="icon-dialog" ContentClass="pa-2" Style="margin-top:-29px;" DefaultFocus="DefaultFocus.FirstChild">
   <DialogContent>
     <MudTextField @ref="textField" T="string" Value="@query" ValueChanged="OnQueryChanged" Immediate="true"
                   Autofocus="true" Placeholder="Search icons…" Variant="Variant.Outlined" Margin="Margin.Dense"
