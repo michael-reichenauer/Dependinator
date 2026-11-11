@@ -213,7 +213,7 @@
       <div class="dep-ask__meta">
         <AiProviderMenu Choice="choice" Current="route" IsChip="true" Need="AiCapability.ModelTools"
                         UnableText="Cannot look things up in the model, which questions need"
-                        TestId="ask" OnChoose="p => route = p" OnShowPrompt="ShowPromptAsync"
+                        TestId="ask" OnChoose="PickRoute" OnShowPrompt="ShowPromptAsync"
                         IsShowPromptDisabled="@string.IsNullOrWhiteSpace(question)"
                         OnSettingsChanged="OnSettingsChangedAsync">
           @* The question for an AI outside the panel, which looks things up with Dependinator's
@@ -250,6 +250,13 @@
       {
         <div class="dep-ai__suggest-error dep-ask__other-note" data-testid="ask-other-error">@otherAiError</div>
       }
+    }
+    else if (IsReadingRoutes)
+    {
+      <div class="dep-ai__suggest-pending dep-ask__other-note" data-testid="ask-reading-routes">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        <span>Finding the AI to ask ...</span>
+      </div>
     }
   </div>
 }
@@ -482,7 +489,7 @@
     var oldDefault = choice.Default;
     await RefreshRoutesAsync();
     if (choice.Default != oldDefault)
-      route = choice.DefaultFor(AiCapability.ModelTools);
+      (route, isRoutePicked) = (choice.DefaultFor(AiCapability.ModelTools), false);
     StateHasChanged();
   }
 
@@ -509,10 +516,49 @@
     var isRendered = viewOptions.IsAskShown || wasShown;
     wasShown = viewOptions.IsAskShown;
     if (isOpening)
-      await RefreshRoutesAsync();
+    {
+      // Shown at once, with the providers as last read (or a progress line the first time): in
+      // VS Code reading them asks the extension for Copilot's models, which took seconds on the
+      // first open, and a panel that shows nothing meanwhile looks like a click that missed.
+      routeReads++;
+      StateHasChanged();
+      await ReadRoutesAsync();
+      routeReads--;
+    }
+    else if (!isRoutesPreRead && askModelService.IsAvailable && modelMgr.WithModel(m => m.Path) != "")
+    {
+      // Read ahead once a model is loaded, so the first open has them.
+      isRoutesPreRead = true;
+      _ = PreReadRoutesAsync();
+    }
     if (isRendered)
       StateHasChanged();
   });
+
+  // The providers are being read as the panel opens; it shows a progress line until the first read.
+  // Counted: the panel may be closed and opened again while a read is on its way.
+  int routeReads;
+  bool IsReadingRoutes => routeReads > 0;
+  bool isRoutesPreRead;
+
+  async Task PreReadRoutesAsync()
+  {
+    await ReadRoutesAsync();
+    if (viewOptions.IsAskShown)
+      StateHasChanged();
+  }
+
+  async Task ReadRoutesAsync()
+  {
+    try
+    {
+      await RefreshRoutesAsync();
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Reading the Ask routes failed", e.Message);
+    }
+  }
 
   // Answers about another model would name its nodes, so a newly opened model starts over. The path
   // is "" while a model loads, which is not another model (the same one may be reloading).
@@ -534,9 +580,17 @@
   {
     choice = askModelService.IsAvailable ? await aiService.GetChoiceAsync() : NoChoice;
     canFixWithClaudeCode = askModelService.IsAvailable && await aiService.CanFixWithClaudeCodeAsync();
-    if (route is null || !choice.Providers.Contains(route))
+    isRoutePicked = isRoutePicked && route is not null && choice.Providers.Contains(route);
+    if (!isRoutePicked)
       route = choice.DefaultFor(AiCapability.ModelTools);
   }
+
+  // The user switched to the route in the chip's menu. Any other route just follows the default:
+  // a read while Copilot is still starting offers no Copilot yet, and what stood in for it then
+  // must not stay once Copilot is there.
+  bool isRoutePicked;
+
+  void PickRoute(AiProvider provider) => (route, isRoutePicked) = (provider, true);
 
   async Task OnKeyDownAsync(KeyboardEventArgs e)
   {
