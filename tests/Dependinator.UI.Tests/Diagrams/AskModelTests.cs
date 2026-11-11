@@ -60,6 +60,85 @@ public class AskModelTests
     }
 
     [Fact]
+    public void Build_ShouldSayWhatTheQuestionIsAbout_WithWhatIsInsideTheSelectedNode()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = model.Nodes[NodeId.FromName("UI")];
+
+        var prompt = AskModelPrompt.Build(model, "What is this?", [], new AskContext([ui.Id], true)).Replace("\r", "");
+
+        Assert.Contains("## What the question is about\n\nThe user selected this node", prompt);
+        Assert.Contains("asks about it, with everything inside it", prompt);
+        Assert.Contains("- `UI` (project", prompt);
+        Assert.Contains("Contains 1 type; uses 0 types outside it, used by 0 types.", prompt);
+        Assert.Contains("  Directly inside: `View`", prompt);
+        Assert.True(prompt.IndexOf("## What the question is about") < prompt.IndexOf("## The question\n"));
+    }
+
+    [Fact]
+    public void Build_ShouldNameSeveralSelectedNodes_AndLeaveOutWhatIsInside_WhenNotAsked()
+    {
+        using var model = modelMgr.UseModel();
+        NodeId[] ids = [NodeId.FromName("UI"), NodeId.FromName("Data"), NodeId.FromName("Gone")];
+
+        var prompt = AskModelPrompt.Build(model, "How do these work together?", [], new AskContext(ids, false));
+
+        Assert.Contains("The user selected these 2 nodes in the diagram and asks about them (", prompt);
+        Assert.Contains("- `Data` (project", prompt);
+        Assert.DoesNotContain("Directly inside", prompt);
+        Assert.Contains("not about each thing inside them", prompt);
+    }
+
+    [Fact]
+    public void Build_ShouldSayWhatAnEarlierQuestionWasAbout()
+    {
+        using var model = modelMgr.UseModel();
+
+        var prompt = AskModelPrompt.Build(model, "And then?", [new("What is this?", "A view.", "View")]);
+
+        Assert.Contains("**Question (about View):** What is this?", prompt);
+        Assert.DoesNotContain("## What the question is about", prompt);
+    }
+
+    [Fact]
+    public void Build_ShouldNotSpeakOfWhatIsInside_ForANodeWithNothingInside()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+
+        var prompt = AskModelPrompt.Build(model, "What is this?", [], new AskContext([view.Id], true));
+
+        Assert.Contains("asks about it (", prompt);
+        Assert.DoesNotContain(
+            "inside",
+            prompt[prompt.IndexOf("## What the question is about")..prompt.IndexOf("## The question")]
+                .Replace("Contains nothing parsed", "")
+        );
+    }
+
+    [Fact]
+    public void AboutNames_ShouldGiveTheFullNames_ForAFollowUpsPrompt()
+    {
+        using var model = modelMgr.UseModel();
+        NodeId[] ids = [NodeId.FromName("UI.View"), NodeId.FromName("Data")];
+
+        Assert.Equal("`UI.View`, `Data`", AskModelPrompt.AboutNames(model, new AskContext(ids, true)));
+        Assert.Equal("", AskModelPrompt.AboutNames(model, AskContext.Model));
+    }
+
+    [Fact]
+    public void Examples_ShouldFitWhatTheQuestionIsAbout()
+    {
+        Assert.Contains("codebase", AskExamples.For(0)[0].Top[0]);
+        Assert.Equal("What is this and why is it here?", AskExamples.For(1)[0].Top[0]);
+        Assert.Contains("these", AskExamples.For(3)[0].Top[0]);
+        Assert.All(
+            new[] { 0, 1, 2 }.SelectMany(AskExamples.For),
+            g => Assert.True(g.Top.Count > 0 && g.More.Count > 0)
+        );
+    }
+
+    [Fact]
     public void Build_ShouldBeEmpty_WithoutAModel()
     {
         using var model = new ModelMgr(new StateMgr()).UseModel();
@@ -81,6 +160,112 @@ public class AskModelTests
         Assert.Equal([new AnswerNode("UI.View", "the view")], answer.Nodes);
         Assert.Equal(AiSource.ClaudeCode, answer.Source);
         Assert.Equal(["UI.View", "Data"], answer.Names());
+    }
+
+    [Fact]
+    public void Parse_ShouldReadTheProposedChange_OnOneLine_OrNone()
+    {
+        var with = AssertOk(
+            ModelAnswer.Parse("""{"answer":"Split it.","nodes":[],"change":" Split View\n into two. "}""")
+        );
+        var none = AssertOk(ModelAnswer.Parse("""{"answer":"It is a view.","nodes":[],"change":"None."}"""));
+        var missing = AssertOk(ModelAnswer.Parse("""{"answer":"It is a view.","nodes":[]}"""));
+
+        Assert.Equal("Split View into two.", with.Change);
+        Assert.Equal("", none.Change);
+        Assert.Equal("", missing.Change);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldHoldTheChange_TheAnswer_TheFilesAndTheRules()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        view.Update(
+            new Dependinator.Core.Parsing.Node(
+                "UI.View",
+                new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+            )
+        );
+        model.AddRule(new ArchitectureRule("Data", "UI"));
+        var answer = new ModelAnswer("Split `UI.View` in two.", [])
+        {
+            Question = "Should it be split?",
+            Change = "Split View into a view and a model.",
+            Links = new Dictionary<string, NodeLink> { ["UI.View"] = new(view.Id, "View", "UI.View") },
+        };
+
+        var prompt = AskChangePrompt
+            .Build(model, answer, new AskContext([view.Id], true), "`UI.View`")
+            .Replace("\r", "");
+
+        Assert.Contains("## The change\n\nSplit View into a view and a model.\n", prompt);
+        Assert.Contains("**Question (about `UI.View`):** Should it be split?", prompt);
+        Assert.Contains("**Answer:** Split `UI.View` in two.", prompt);
+        Assert.Contains("- `UI.View`: /src/UI/View.cs", prompt);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(prompt, "View.cs"));
+        Assert.Contains("## Architecture rules to keep", prompt);
+        Assert.Contains("Build and run the tests if you can run commands", prompt);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldListTheFilesInsideAnAskedContainer_ThatHasNoFileOfItsOwn()
+    {
+        using var model = modelMgr.UseModel();
+        var ui = model.Nodes[NodeId.FromName("UI")];
+        model
+            .Nodes[NodeId.FromName("UI.View")]
+            .Update(
+                new Dependinator.Core.Parsing.Node(
+                    "UI.View",
+                    new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+                )
+            );
+        var answer = new ModelAnswer("Split it.", []) { Question = "Split?", Change = "Split UI." };
+
+        var inside = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], true), "`UI`");
+        var alone = AskChangePrompt.Build(model, answer, new AskContext([ui.Id], false), "`UI`");
+
+        Assert.Contains("- `UI.View`: /src/UI/View.cs", inside);
+        Assert.DoesNotContain("View.cs", alone);
+    }
+
+    [Fact]
+    public void PromptForOtherAi_ShouldHoldTheQuestionAndItsNodes_AndSayToUseTheMcpServerIfThere()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        view.Update(
+            new Dependinator.Core.Parsing.Node(
+                "UI.View",
+                new NodeProperties { FileSpan = new FileSpan("/src/UI/View.cs", 1, 9) }
+            )
+        );
+        var context = new AskContext([view.Id], false);
+
+        var prompt = AskModelPrompt.BuildForOtherAi(model, "What uses it?", [], context);
+        var inPanel = AskModelPrompt.Build(model, "What uses it?", [], context);
+
+        Assert.Contains("What uses it?", prompt);
+        Assert.Contains("`UI.View`", prompt);
+        Assert.Contains("MCP server named dependinator", prompt);
+        Assert.Contains("If you do not have those tools", prompt);
+        // It may have no tools, so only the panel's own prompt says to use them whatever.
+        Assert.Contains("Start from these nodes, by these names.", prompt);
+        Assert.Contains("Look these nodes up with the tools", inPanel);
+        Assert.DoesNotContain("up with the tools", prompt);
+        // Without the tools it finds the node in the code by its file.
+        Assert.Contains("In the file: /src/UI/View.cs", prompt);
+        Assert.DoesNotContain("In the file:", inPanel);
+        Assert.DoesNotContain("Under change", prompt);
+    }
+
+    [Fact]
+    public void ChangePrompt_ShouldBeEmpty_ForAnAnswerThatProposesNoChange()
+    {
+        using var model = modelMgr.UseModel();
+
+        Assert.Equal("", AskChangePrompt.Build(model, new ModelAnswer("It is a view.", []), AskContext.Model, ""));
     }
 
     [Fact]

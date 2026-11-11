@@ -152,6 +152,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `data-name` stays for the e2e locators): the card is built only when the mouse rests on an item
   (`TooltipService`, `initTooltips` in jsInterop.js). Chosen over a larger card with top
   dependencies and the source file.
+  Nov 10: the card reads like code. "Interface in Namespace" instead of a dot, a member as it is
+  declared (`Task<Rect?> SelectAreaAsync(AreaSelectionPurpose purpose)`, the name in bold, wrapping
+  between parameters; `param name type` in Bicep), code comments flow instead of keeping the source
+  file's line breaks, and an open container larger than 400 px on screen gets no card (`data-open`),
+  since the user is then looking at its children; resting on its name, or on an open type card's
+  header (`data-tip-label`, `data-header-height`), still shows it.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
@@ -337,6 +343,33 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
   API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
   is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
+- **Pick the Claude model (Nov 10).** Settings › AI has a Model picker under Claude and under
+  Claude Code, like Copilot's. Claude's lists the models the API key can ask, live from Anthropic's
+  Models API (`IClaudeService.GetModelsAsync`), so a new model needs no release; "Automatic" keeps
+  Opus 5.5 for reviews and Sonnet 5.5 for questions and the Ask panel, and a picked model answers
+  everything. Claude Code's offers its aliases (fable, opus, sonnet, haiku) or a typed model name,
+  passed as `claude --model`; "Automatic" leaves it to Claude Code's own setting. The Ask panel's
+  cost is priced by the model that answered (`ClaudeModels`), and unknown for one without a price.
+- **Ask about the selected nodes (Nov 10).** The Ask panel follows the selection: chips above the
+  question name the selected nodes, "with everything inside" or alone, and the prompt tells the AI
+  what "it" and "these" mean (`AskContext`); without chips the question is about the whole model.
+  The example questions fit what is asked about, grouped as Understand, Change and Improve
+  (`AskExamples`), with "More examples" and a lightbulb that shows them again later. The node menus
+  have "Ask About Node …", and About Node sends its example questions to the panel instead of
+  asking in the dialog, and has "Copy prompt" for one's own AI chat.
+- **From an answer to the change (Nov 10).** An Ask answer that proposes a change to the code (a
+  split, a move, removing a dependency) names it, and the panel offers "Do it with Claude Code"
+  with the provider menu of the review dialogs' fix button: Claude Code edits and reports the
+  changed files, Copilot gets it in agent mode, or "Copy prompt" for another AI. The prompt
+  (`AskChangePrompt`) holds the change, the question and answer, the files of the nodes and the
+  architecture rules to keep. The node names in Claude Code's report are links like an answer's,
+  looked up after the re-parse (`ClaudeCodeFix.SummaryContent`). `./scripts/ask-eval` checks
+  whether an answer proposes a change.
+- **Ask another AI from the panel (Nov 10).** The Ask panel's provider menu has "Copy prompt": the
+  question with its nodes and the conversation, for an AI outside the panel, told to look things
+  up with Dependinator's MCP server when it has it and to say so when it has not
+  (`AskModelPrompt.BuildForOtherAi`). In VS Code "Ask in Copilot Chat" hands the same prompt to
+  Copilot Chat in agent mode. The answer shows there, not in the panel.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
@@ -506,8 +539,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `Navigation`, `Tours`, `Ask`, `NodeHelp`), and `Interaction` was split into input and `Editing`.
 - **Architecture tests (Jun 22).** NetArchTest enforces `Hosts → UI → Core → Shared`.
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
-  types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. The GA follow-up is in
-  [NET11-UPGRADE.md](NET11-UPGRADE.md).
+  types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. On Nov 10, the day .NET 11
+  shipped, the build moved to the GA SDK (`LangVersion` 15, no preview). The projects stay on
+  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md).
 - **Packages.** MudBlazor 9.5 (May). `./scripts/updatepackages` also handles npm packages (Jun).
 
 ## Testing, CI/CD and releases

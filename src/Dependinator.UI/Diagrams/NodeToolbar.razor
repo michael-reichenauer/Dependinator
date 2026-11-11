@@ -44,6 +44,15 @@ else if (HasSelectedLine)
             About Node …
           </MudMenuItem>
         }
+        @if (CanAsk)
+        {
+          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer"
+                       OnClick="askModelService.Open"
+                       title="Ask an AI about the selected nodes: what they are, what a change would touch, how to improve them."
+                       data-testid="node-menu-ask">
+            @(IsMultiSelected ? "Ask About Nodes …" : "Ask About Node …")
+          </MudMenuItem>
+        }
         @if (!IsSelectedNodeZone && CanImproveComments)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.EditNote"
@@ -374,6 +383,9 @@ else if (HasSelectedLine)
   IAboutNodeService aboutNodeService { get; set; } = null!;
 
   [Inject]
+  Ask.IAskModelService askModelService { get; set; } = null!;
+
+  [Inject]
   IImproveCommentsService improveCommentsService { get; set; } = null!;
 
   [Inject]
@@ -582,6 +594,19 @@ else if (HasSelectedLine)
   {
     if (TryGetSelectedNodeId(out var nodeId))
       zoneService.EditZoneAsync(nodeId).RunInBackground();
+  }
+
+  // Where an AI can be asked (not the standalone browser app), about nodes that are code.
+  bool CanAsk => askModelService.IsAvailable && IsAnySelectedNodeCode;
+
+  bool IsAnySelectedNodeCode
+  {
+    get
+    {
+      using var model = modelMgr.UseModel();
+      return selectionService.SelectedNodeIds.Any(id =>
+        model.Nodes.TryGetValue(id, out var node) && !node.IsRoot && !NodeViewPolicy.IsAnnotation(node));
+    }
   }
 
   void ShowAbout()

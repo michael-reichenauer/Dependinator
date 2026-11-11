@@ -195,8 +195,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.Line(DragCancelIcon, DragCanvasIcon)).ToHaveCountAsync(1);
     }
 
-    // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's visible
-    // dot and returns the press point. The handle's invisible touch ellipse bridges from the
+    // Hovers the node until its drag-to-link handle is revealed (after a short delay), then moves
+    // onto the handle's visible dot and returns the press point. The handle's invisible touch ellipse bridges from the
     // icon edge to the dot, so the handle stays hover-revealed (and pointer-events enabled)
     // while the cursor travels there.
     async Task<(float X, float Y)> HoverLinkHandleAsync(string nodeLabel)
@@ -205,6 +205,7 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.MoveAsync(nodeBox.X + nodeBox.Width / 2, nodeBox.Y + nodeBox.Height / 2);
 
         ILocator handleDot = App.Node(nodeLabel).Locator("g.linkhandle circle");
+        await Expect(handleDot).ToBeVisibleAsync();
         LocatorBoundingBoxResult handleBox =
             await handleDot.BoundingBoxAsync() ?? throw new InvalidOperationException("Link handle is not rendered.");
 

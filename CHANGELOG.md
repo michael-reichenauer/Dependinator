@@ -9,6 +9,29 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.91.453241] - 2026-11-11
+
+### New
+
+- The Ask panel asks about the selected nodes: chips name them, with or without everything inside them, and with no selection the question is about the whole model. **Ask About Node** in the node menu and the right-click menu opens it for a node
+- Example questions in the Ask panel fit what is asked about, grouped as Understand, Change and Improve, with **More examples** and a lightbulb that shows them again
+- An Ask answer that proposes a change to the code (a split, a move, removing a dependency) offers to make it with Claude Code, with Copilot in VS Code, or as a prompt to copy for another AI
+- The Ask panel's AI menu has **Copy prompt**, the question with its selected nodes and the conversation for an AI outside the panel, and in VS Code **Ask in Copilot Chat**
+- **Settings › AI** has a model picker for Claude, listing the models your API key can ask, and one for Claude Code; Automatic keeps the choice Dependinator makes
+
+### Improved
+
+- The card shown when resting the mouse on a type or member reads like code: "Interface in Namespace", and a member as it is declared with its name in bold; code comments flow in the card instead of keeping the source file's line breaks
+- A zoomed-in open container no longer shows a card when the mouse rests inside it, only on its name or on an open type's header
+- The "+" handle for adding and linking nodes now appears only after the pointer has rested on a node for half a second, as a grey outline that turns blue when pointed at
+- The cost of an Ask answer is priced by the model that answered
+- The Ask panel opens at once the first time too; in VS Code it used to wait a few seconds for the list of AI providers
+
+### Fixed
+
+- Long names in a line's card no longer wrap one character per line
+- A solution on C# 15 no longer shows false "feature is in Preview" compile errors in the problem indicator
+
 ## [v0.90.450284] - 2026-11-09
 
 ### Improved

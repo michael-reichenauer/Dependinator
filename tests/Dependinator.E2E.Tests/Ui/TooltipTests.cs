@@ -34,6 +34,6 @@ public class TooltipTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.MoveAsync(box.X + box.Width / 2 - 2, box.Y + box.Height / 2);
         await Page.Mouse.MoveAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
         await Expect(Card).ToBeVisibleAsync();
-        await Expect(Card).ToContainTextAsync("Method · Demo.UI.Main");
+        await Expect(Card).ToContainTextAsync("Method in Demo.UI.Main");
     }
 }

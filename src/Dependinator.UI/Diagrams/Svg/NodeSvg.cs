@@ -77,7 +77,7 @@ static class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node));
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), isOpen: true);
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -105,7 +105,7 @@ static class NodeSvg
               {childrenContent}
             </svg>
             <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" data-tip-label="{elementId}" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
             {descriptionSvg}
             {selectedOverlay}
             {ManualMarkerSvg(
@@ -268,17 +268,30 @@ static class NodeSvg
         Rect geometry,
         string htmlName,
         string extraContent = "",
-        bool isLinePreview = false
+        bool isLinePreview = false,
+        bool isOpen = false,
+        double headerHeight = 0
     )
     {
         // data-line-preview marks the nodes whose lines the hover preview lights (linePreview in
         // jsInterop.js): icons and member rows. Not open containers, which the pointer is
         // always over when zoomed in, so they would keep the preview on.
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
+        // data-open marks an open container (or open type card): once it is large on screen the
+        // user looks at what is inside it, and it gets no hover card (initTooltips).
+        // data-header-height is an open type card's header strip, which keeps the hover card.
+        var openAttribute =
+            !isOpen ? ""
+            : headerHeight > 0
+                ? string.Create(
+                    CultureInfo.InvariantCulture,
+                    $" data-open=\"1\" data-header-height=\"{headerHeight:0.##}\""
+                )
+            : " data-open=\"1\"";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}>
+                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}{openAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                   {extraContent}
                 </g>

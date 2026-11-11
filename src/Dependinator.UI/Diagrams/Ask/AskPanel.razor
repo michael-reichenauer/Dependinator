@@ -1,4 +1,5 @@
 @using Dependinator.UI.Diagrams.Ai
+@using Dependinator.UI.Modeling.Models
 @inject IAskModelService askModelService
 @inject IAiService aiService
 @inject IViewOptions viewOptions
@@ -9,10 +10,14 @@
 @inject Modeling.Models.IModelMgr modelMgr
 @inject IJSInterop jsInterop
 @inject IModelQueries modelQueries
+@inject Interaction.ISelectionService selectionService
+@inject Dependinator.Core.ModelQueries.IModelToolsServer modelToolsServer
 @implements IDisposable
 
-@* Ask (AskModelService): questions about the open model for an AI, on the right like the other
-   panels so the diagram stays in view. Claude (the user's API key) or Claude Code finds the answer
+@* Ask (AskModelService): questions for an AI about the open model, or about the nodes selected in
+   the diagram (the chips above the question, alone or with everything inside them), on the right
+   like the other panels so the diagram stays in view. Example questions fit what is asked about
+   (AskExamples); the lightbulb shows them again later. Claude (the user's API key) or Claude Code finds the answer
    with Dependinator's model tools and writes node names in backticks; each name that is a node
    becomes a link that goes to it, and the answer lists the nodes it is about. While it works, each
    lookup it makes shows as a line (IModelQueries.Asked), kept behind a toggle with the answer, which
@@ -24,9 +29,9 @@
        data-testid="ask-panel">
     <div class="dep-panel__header">
       <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.QuestionAnswer" Size="Size.Small" />
-      <span class="dep-panel__title">Ask About the Model</span>
+      <span class="dep-panel__title">Ask</span>
       <MudSpacer />
-      @if (entries.Count > 0 && !IsAsking)
+      @if (entries.Count > 0 && !IsAsking && !IsChanging)
       {
         <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.DeleteSweep" Size="Size.Small" title="Clear the conversation, so the next question starts a new one"
                        OnClick="Clear" data-testid="ask-clear" />
@@ -38,22 +43,21 @@
       @if (entries.Count == 0)
       {
         <div class="dep-panel__hint" data-testid="ask-intro">
-          Ask anything about the model: where something is handled, what depends on what, what a change would
-          touch. Claude looks it up with Dependinator's tools, and the nodes in its answer are links to the
-          diagram. Ask follow-ups: Claude sees the conversation until you clear it.
+          Ask about the whole model, or select nodes in the diagram to ask about them: what something is, what
+          depends on what, what a change would touch. The AI looks it up with Dependinator's tools, and the
+          nodes in its answer are links to the diagram. Ask follow-ups: it sees the conversation until you
+          clear it.
         </div>
-        <div class="dep-ask__examples">
-          @foreach (var example in Examples)
-          {
-            <button type="button" class="dep-ask__example" @onclick="() => question = example"
-                    data-testid="ask-example">@example</button>
-          }
-        </div>
+        @ExamplesView()
       }
       @foreach (var entry in entries)
       {
         <div class="dep-ask__entry" data-testid="ask-entry">
           <div class="dep-ask__question" data-testid="ask-entry-question">@entry.Question</div>
+          @if (entry.About != "")
+          {
+            <div class="dep-ask__about" data-testid="ask-entry-about">About @entry.About</div>
+          }
           @if (entry.Answer is { } answer)
           {
             <div class="dep-ai__suggestion dep-ask__answer" data-testid="ask-answer">
@@ -105,6 +109,37 @@
                   <span class="dep-ai__suggest-note">@note</span>
                 }
               </div>
+              @* An answer that proposes a change to the code offers to have it made: one button for
+                 the AI that makes it and the provider menu beside it, as in the review dialogs
+                 (AiFixButton), with a prompt that holds the change, the answer and where to look
+                 (AskChangePrompt). Claude Code's run and report show here (ClaudeCodeFix). *@
+              @if (answer.Change != "")
+              {
+                <div class="dep-ask__change" data-testid="ask-change">
+                  <div><b>Proposed change:</b> <span data-testid="ask-change-text">@answer.Change</span></div>
+                  <div class="dep-ai__fix-actions">
+                    <AiFixButton TestId="ask" Verb="Do it" CopyText="Copy prompt" CanRunClaudeCode="canFixWithClaudeCode"
+                                 IsRunning="IsChanging" OnClaudeCode="() => entry.FixPanel?.StartAsync() ?? Task.CompletedTask"
+                                 OnCopilot="() => ChangeWithCopilotAsync(entry, answer)"
+                                 OnCopy="() => CopyChangePromptAsync(entry, answer)" />
+                  </div>
+                  @if (entry.ChangeNote is { } changeNote)
+                  {
+                    <div class="dep-ai__suggest-note" data-testid="ask-change-note">@changeNote</div>
+                  }
+                  @if (entry.ChangeError is { } changeError)
+                  {
+                    <div class="dep-ai__suggest-error" data-testid="ask-change-error">@changeError</div>
+                  }
+                  @* Always there (it shows nothing until a run): a run or its report must not go
+                     away when Claude Code is turned off meanwhile. *@
+                  <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
+                                 OnStateChanged="OnChangeStateChanged" ConfirmTitle="Change the code with Claude Code?"
+                                 ConfirmYesText="Change anyway">
+                    <SummaryContent Context="summary">@ReportSummary(entry, summary)</SummaryContent>
+                  </ClaudeCodeFix>
+                </div>
+              }
             </div>
           }
           else if (entry.Error is { } error)
@@ -123,12 +158,50 @@
           }
         </div>
       }
+      @if (entries.Count > 0 && isExamplesShown && route is not null)
+      {
+        @ExamplesView()
+      }
     </div>
 
     @if (route is not null)
     {
+      @* What the question is about: the nodes selected in the diagram, which the chips follow. A
+         chip's × leaves its node out until the selection changes; with no chips the question is
+         about the whole model. *@
+      @if (contextNodes.Count > 0)
+      {
+        <div class="dep-ask__context" data-testid="ask-context">
+          <span>About:</span>
+          @foreach (var node in contextNodes.Take(MaxChips))
+          {
+            <span class="dep-ask__chip" title="@node.LongName" data-testid="ask-context-node">
+              <span class="dep-ask__chip-name">@node.ShortName</span>
+              <button type="button" class="dep-ask__chip-remove" title="Do not ask about this node"
+                      @onclick="() => RemoveFromContext(node.Id)" data-testid="ask-context-remove">×</button>
+            </span>
+          }
+          @if (contextNodes.Count > MaxChips)
+          {
+            <span class="dep-ask__chip dep-ask__chip--more" title="@string.Join("\n", contextNodes.Skip(MaxChips).Select(n => n.LongName))"
+                  data-testid="ask-context-more">+@(contextNodes.Count - MaxChips)</span>
+          }
+          @if (contextNodes.Any(n => n.HasChildren))
+          {
+            <label class="dep-ask__below" title="Ask about the nodes with everything inside them, or about the nodes themselves">
+              <input type="checkbox" checked="@isBelow" @onchange="e => isBelow = e.Value is true"
+                     data-testid="ask-context-below" />
+              with everything inside
+            </label>
+          }
+        </div>
+      }
       <div class="dep-ask__input">
-        <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="Ask a question about the model"
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Lightbulb" Size="Size.Small"
+                       Color="@(isExamplesShown && entries.Count > 0 ? Color.Primary : Color.Default)"
+                       title="Example questions" Disabled="@(entries.Count == 0)"
+                       OnClick="ToggleExamplesAsync" data-testid="ask-examples-toggle" />
+        <MudTextField T="string" @bind-Value="question" Immediate="true" Placeholder="@Placeholder"
                       Variant="Variant.Outlined" Margin="Margin.Dense"
                       OnKeyDown="OnKeyDownAsync" Disabled="IsAsking" data-testid="ask-question" />
         <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Send" Color="Color.Primary" Size="Size.Small"
@@ -140,9 +213,49 @@
       <div class="dep-ask__meta">
         <AiProviderMenu Choice="choice" Current="route" IsChip="true" Need="AiCapability.ModelTools"
                         UnableText="Cannot look things up in the model, which questions need"
-                        TestId="ask" OnChoose="p => route = p" OnShowPrompt="ShowPromptAsync"
+                        TestId="ask" OnChoose="PickRoute" OnShowPrompt="ShowPromptAsync"
                         IsShowPromptDisabled="@string.IsNullOrWhiteSpace(question)"
-                        OnSettingsChanged="OnSettingsChangedAsync" />
+                        OnSettingsChanged="OnSettingsChangedAsync">
+          @* The question for an AI outside the panel, which looks things up with Dependinator's
+             MCP server itself and answers in its own view. *@
+          <MoreItems>
+            <MudDivider />
+            @if (CanAskInCopilotChat)
+            {
+              <MudMenuItem Icon="@AiProvider.Copilot.Icon" IconColor="Color.Secondary"
+                           Disabled="@(isHandingToCopilotChat || string.IsNullOrWhiteSpace(question))" OnClick="AskInCopilotChat"
+                           data-testid="ask-in-copilot-chat">
+                <div class="dep-ai-menu__item">
+                  <div class="dep-ai-menu__name">Ask in Copilot Chat</div>
+                  <div class="dep-ai-menu__detail">It answers there, with Dependinator's tools</div>
+                </div>
+              </MudMenuItem>
+            }
+            <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
+                         Disabled="@string.IsNullOrWhiteSpace(question)" OnClick="CopyPromptAsync"
+                         data-testid="ask-copy-prompt">
+              <div class="dep-ai-menu__item">
+                <div class="dep-ai-menu__name">Copy prompt</div>
+                <div class="dep-ai-menu__detail">For another AI, which can use Dependinator's MCP server</div>
+              </div>
+            </MudMenuItem>
+          </MoreItems>
+        </AiProviderMenu>
+      </div>
+      @if (otherAiNote is not null)
+      {
+        <div class="dep-ai__suggest-note dep-ask__other-note" data-testid="ask-other-note">@otherAiNote</div>
+      }
+      @if (otherAiError is not null)
+      {
+        <div class="dep-ai__suggest-error dep-ask__other-note" data-testid="ask-other-error">@otherAiError</div>
+      }
+    }
+    else if (IsReadingRoutes)
+    {
+      <div class="dep-ai__suggest-pending dep-ask__other-note" data-testid="ask-reading-routes">
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+        <span>Finding the AI to ask ...</span>
       </div>
     }
   </div>
@@ -153,6 +266,11 @@
   sealed class Entry(string question)
   {
     public string Question { get; } = question;
+
+    // The nodes the question was asked about, in words; "" for the whole model. AboutNames has
+    // their full names, for the prompt of a follow-up.
+    public string About { get; init; } = "";
+    public string AboutNames { get; init; } = "";
     public ModelAnswer? Answer { get; private set; }
 
     // The answer's text, parsed once.
@@ -162,6 +280,18 @@
 
     public string? Error { get; set; }
     public string? CopyNote { get; set; }
+
+    // What the question was about, for the prompt that asks for the answer's proposed change;
+    // Claude Code's run of it, and what came of handing it to Copilot or copying it.
+    public AskContext Context { get; init; } = AskContext.Model;
+    public ClaudeCodeFix? FixPanel { get; set; }
+    public string? ChangeNote { get; set; }
+    public string? ChangeError { get; set; }
+
+    // Claude Code's summary of the change with the nodes it names, as of the model then (Stamp).
+    public ModelAnswer? Report { get; set; }
+    public IReadOnlyList<MarkdownBlock> ReportBlocks { get; set; } = [];
+    public int ReportStamp { get; set; }
 
     public required AiSource Route { get; init; }
 
@@ -175,14 +305,119 @@
 
   // The questions answered so far, which a new question follows up on, until they are cleared.
   List<AskExchange> Conversation() =>
-    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text))];
+    [.. entries.Where(e => e.Answer is not null).Select(e => new AskExchange(e.Question, e.Answer!.Text, e.AboutNames))];
 
-  static readonly string[] Examples =
-  [
-    "What are the main parts of this codebase, and how do they depend on each other?",
-    "Which parts are the most central, used by the most others?",
-    "What would be affected if I changed the most used type?",
-  ];
+  // A node the question is about, as its chip shows it.
+  sealed record ContextNode(NodeId Id, string ShortName, string LongName, bool HasChildren);
+
+  const int MaxChips = 2;
+
+  // The selected nodes the question is about (not the ones removed with their chip), and whether
+  // with everything inside them. Kept in step with the selection while the panel is shown.
+  IReadOnlyList<ContextNode> contextNodes = [];
+  IReadOnlyList<NodeId> seenSelection = [];
+
+  // A node asked about from its menu or About Node that the selection did not take: it is what
+  // the question is about until the selection changes.
+  IReadOnlyList<NodeId>? requested;
+  readonly HashSet<NodeId> removedFromContext = [];
+  bool isBelow = true;
+
+  // The examples are shown until the first question, then on the lightbulb.
+  bool isExamplesShown;
+  bool isMoreExamplesShown;
+
+  AskContext Context => new([.. contextNodes.Select(n => n.Id)], isBelow);
+
+  string About =>
+    contextNodes.Count switch
+    {
+      0 => "",
+      1 => contextNodes[0].ShortName,
+      _ => $"the {contextNodes.Count} selected nodes",
+    };
+
+  string Placeholder =>
+    entries.Count > 0 && contextNodes.Count == 0 ? "Ask a follow-up, or another question"
+    : contextNodes.Count == 0 ? "Ask a question about the model"
+    : $"Ask about {About}";
+
+  void UpdateContext()
+  {
+    IReadOnlyList<NodeId> selection = [.. selectionService.SelectedNodeIds];
+    if (!selection.SequenceEqual(seenSelection))
+    {
+      removedFromContext.Clear();
+      requested = null;
+      seenSelection = selection;
+    }
+    using var model = modelMgr.UseModel();
+    contextNodes =
+    [
+      .. AskModelPrompt
+        .ContextNodes(model, new AskContext([.. (requested ?? selection).Where(id => !removedFromContext.Contains(id))], isBelow))
+        .Select(n => new ContextNode(n.Id, n.ShortName, n.LongName, AskModelPrompt.HasInside(n))),
+    ];
+  }
+
+  // A request to ask about a node (AskModelService.AskAboutAsync) fills in its question; it waits
+  // while an answer is awaited, so the question is not lost.
+  void TakeRequest()
+  {
+    if (IsAsking || !viewOptions.IsAskShown || askModelService.TakeRequest() is not { } request)
+      return;
+    UpdateContext();
+    // A chip removed earlier is asked about again.
+    removedFromContext.Clear();
+    if (!seenSelection.SequenceEqual([request.NodeId]))
+      requested = [request.NodeId];
+    UpdateContext();
+    if (request.Question != "")
+      question = request.Question;
+  }
+
+  string AboutNames(AskContext context)
+  {
+    using var model = modelMgr.UseModel();
+    return AskModelPrompt.AboutNames(model, context);
+  }
+
+  void RemoveFromContext(NodeId nodeId)
+  {
+    removedFromContext.Add(nodeId);
+    UpdateContext();
+  }
+
+  async Task ToggleExamplesAsync()
+  {
+    isExamplesShown = !isExamplesShown;
+    if (isExamplesShown)
+      await ScrollToEndAsync();
+  }
+
+  void UseExample(string example)
+  {
+    question = example;
+    isExamplesShown = false;
+    isMoreExamplesShown = false;
+  }
+
+  // The examples for what the question is about, under their headings; the rest on "More examples".
+  RenderFragment ExamplesView() =>
+    @<div class="dep-ask__examples" data-testid="ask-examples">
+      @foreach (var group in AskExamples.For(contextNodes.Count))
+      {
+        <div class="dep-ask__examples-title">@group.Title</div>
+        @foreach (var example in isMoreExamplesShown ? group.Top.Concat(group.More) : group.Top)
+        {
+          <button type="button" class="dep-ask__example" @onclick="() => UseExample(example)"
+                  data-testid="ask-example">@example</button>
+        }
+      }
+      <button type="button" class="dep-ask__steps-toggle dep-ask__examples-more"
+              @onclick="() => isMoreExamplesShown = !isMoreExamplesShown"
+              data-testid="ask-examples-more">@(isMoreExamplesShown ? "Fewer examples" : "More examples")</button>
+    </div>;
 
   readonly List<Entry> entries = [];
   string question = "";
@@ -190,6 +425,44 @@
   AiProvider? route;
 
   static readonly AiChoice NoChoice = new([], null);
+
+  // Claude Code can change the code here (the route is on and the model has a folder), read when
+  // the panel opens; one change runs at a time.
+  bool canFixWithClaudeCode;
+
+  bool IsChanging => entries.Any(e => e.FixPanel?.IsRunning == true);
+
+  string ChangePrompt(Entry entry, ModelAnswer answer) =>
+    askModelService.GetChangePrompt(answer, entry.Context, entry.AboutNames);
+
+  // A run started or ended, or the model changed after one: nothing to draw while the panel is hidden.
+  void OnChangeStateChanged()
+  {
+    if (viewOptions.IsAskShown)
+      StateHasChanged();
+  }
+
+  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
+  const string ChangePromptCopiedNote =
+    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
+    + "is made, re-parse to see the new structure.";
+
+  async Task CopyChangePromptAsync(Entry entry, ModelAnswer answer)
+  {
+    var isCopied = await clipboardService.CopyAsync(ChangePrompt(entry, answer));
+    entry.ChangeNote = isCopied ? ChangePromptCopiedNote : null;
+    entry.ChangeError = isCopied ? null : "Could not copy to the clipboard.";
+  }
+
+  // Copilot Chat makes the change in its own view: the panel only says so.
+  async Task ChangeWithCopilotAsync(Entry entry, ModelAnswer answer)
+  {
+    entry.ChangeNote = null;
+    entry.ChangeError = null;
+    var handed = await aiService.FixWithCopilotAsync(ChangePrompt(entry, answer));
+    entry.ChangeNote = handed is Error ? null : AiService.CopilotFixNote;
+    entry.ChangeError = handed is Error e ? e.Message : null;
+  }
   bool wasShown;
 
   // The model the questions are about ("" until a model is loaded), null before the panel opened.
@@ -216,25 +489,76 @@
     var oldDefault = choice.Default;
     await RefreshRoutesAsync();
     if (choice.Default != oldDefault)
-      route = choice.DefaultFor(AiCapability.ModelTools);
+      (route, isRoutePicked) = (choice.DefaultFor(AiCapability.ModelTools), false);
     StateHasChanged();
   }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
+  // Counts the UI state changes: the model may have changed at each (a re-parse raises one).
+  int modelStamp;
+
   void OnUiStateChanged() => InvokeAsync(async () =>
   {
+    modelStamp++;
     if (viewOptions.IsAskShown)
       modelPath ??= modelMgr.WithModel(m => m.Path);
     if (modelPath is not null)
       ForgetAnswersForAnotherModel();
+    if (viewOptions.IsAskShown)
+    {
+      UpdateContext();
+      TakeRequest();
+    }
     // Settings › AI may change while the panel is closed (or open: then it shows
     // after the next ask), and reading it reads the config file, too much on every click.
-    if (viewOptions.IsAskShown && !wasShown)
-      await RefreshRoutesAsync();
-    if (viewOptions.IsAskShown || wasShown)
-      StateHasChanged();
+    // wasShown is set before the await: another change may arrive while the routes are read.
+    var isOpening = viewOptions.IsAskShown && !wasShown;
+    var isRendered = viewOptions.IsAskShown || wasShown;
     wasShown = viewOptions.IsAskShown;
+    if (isOpening)
+    {
+      // Shown at once, with the providers as last read (or a progress line the first time): in
+      // VS Code reading them asks the extension for Copilot's models, which took seconds on the
+      // first open, and a panel that shows nothing meanwhile looks like a click that missed.
+      routeReads++;
+      StateHasChanged();
+      await ReadRoutesAsync();
+      routeReads--;
+    }
+    else if (!isRoutesPreRead && askModelService.IsAvailable && modelMgr.WithModel(m => m.Path) != "")
+    {
+      // Read ahead once a model is loaded, so the first open has them.
+      isRoutesPreRead = true;
+      _ = PreReadRoutesAsync();
+    }
+    if (isRendered)
+      StateHasChanged();
   });
+
+  // The providers are being read as the panel opens; it shows a progress line until the first read.
+  // Counted: the panel may be closed and opened again while a read is on its way.
+  int routeReads;
+  bool IsReadingRoutes => routeReads > 0;
+  bool isRoutesPreRead;
+
+  async Task PreReadRoutesAsync()
+  {
+    await ReadRoutesAsync();
+    if (viewOptions.IsAskShown)
+      StateHasChanged();
+  }
+
+  async Task ReadRoutesAsync()
+  {
+    try
+    {
+      await RefreshRoutesAsync();
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Reading the Ask routes failed", e.Message);
+    }
+  }
 
   // Answers about another model would name its nodes, so a newly opened model starts over. The path
   // is "" while a model loads, which is not another model (the same one may be reloading).
@@ -244,7 +568,10 @@
     if (path == "" || path == modelPath)
       return;
     if (modelPath != "")
+    {
       entries.Clear();
+      (otherAiNote, otherAiError) = (null, null);
+    }
     modelPath = path;
   }
 
@@ -252,9 +579,18 @@
   async Task RefreshRoutesAsync()
   {
     choice = askModelService.IsAvailable ? await aiService.GetChoiceAsync() : NoChoice;
-    if (route is null || !choice.Providers.Contains(route))
+    canFixWithClaudeCode = askModelService.IsAvailable && await aiService.CanFixWithClaudeCodeAsync();
+    isRoutePicked = isRoutePicked && route is not null && choice.Providers.Contains(route);
+    if (!isRoutePicked)
       route = choice.DefaultFor(AiCapability.ModelTools);
   }
+
+  // The user switched to the route in the chip's menu. Any other route just follows the default:
+  // a read while Copilot is still starting offers no Copilot yet, and what stood in for it then
+  // must not stay once Copilot is there.
+  bool isRoutePicked;
+
+  void PickRoute(AiProvider provider) => (route, isRoutePicked) = (provider, true);
 
   async Task OnKeyDownAsync(KeyboardEventArgs e)
   {
@@ -268,9 +604,12 @@
     if (text == "" || IsAsking || route is null)
       return;
     var earlier = Conversation();
-    var entry = new Entry(text) { Route = route.Source };
+    var context = Context;
+    var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context), Context = context };
     entries.Add(entry);
     question = "";
+    (otherAiNote, otherAiError) = (null, null);
+    isExamplesShown = false;
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
     await ScrollToEndAsync();
@@ -283,7 +622,7 @@
     Result<ModelAnswer> result;
     try
     {
-      result = await askModelService.AskAsync(text, earlier, entry.Route, step => _ = InvokeAsync(() =>
+      result = await askModelService.AskAsync(text, earlier, context, entry.Route, step => _ = InvokeAsync(() =>
       {
         entry.Step = step;
         StateHasChanged();
@@ -320,6 +659,7 @@
       entry.SetAnswer(answer);
     else
       entry.Error = result.Error.Message;
+    TakeRequest();
     StateHasChanged();
     await ScrollToEndAsync();
   }
@@ -341,6 +681,7 @@
   void Clear()
   {
     entries.Clear();
+    (otherAiNote, otherAiError) = (null, null);
   }
 
   Task ShowAllAsync(ModelAnswer answer) => navigationService.ShowNodesAsync([.. answer.Links.Values.Select(l => l.Id).Distinct()]);
@@ -348,9 +689,82 @@
   async Task CopyAsync(Entry entry, ModelAnswer answer) =>
     entry.CopyNote = await clipboardService.CopyAsync(answer.Text) ? "Copied." : "Could not copy to the clipboard.";
 
+  // What came of copying the question's prompt or handing it to Copilot Chat; gone with the next
+  // question asked.
+  string? otherAiNote;
+  string? otherAiError;
+
+  bool CanAskInCopilotChat => choice.Providers.Any(p => p.Source is AiSource.Copilot);
+
+  // The dev host says how to connect Claude Code to the address it published its MCP server at.
+  string PromptCopiedNote =>
+    "The prompt is copied. Paste it into an AI that is connected to Dependinator's MCP server, and keep this "
+    + "diagram open while it answers: "
+    + (
+      Dependinator.Core.Build.IsVsCodeExtWasm
+        ? "Copilot Chat in agent mode, or Claude Code after the command \"Dependinator: Connect Claude Code\"."
+      : modelToolsServer.Address is { Token: null } address
+        ? $"Claude Code after \"claude mcp add --transport http dependinator {address.Url}\"."
+      : "Claude Code, say."
+    )
+    + " An AI without it answers from the code or the prompt alone.";
+
+  const string InCopilotChatNote =
+    "The question is in Copilot Chat, in agent mode: it answers there, and can look things up with Dependinator's "
+    + "tools while this diagram is open.";
+
+  bool isHandingToCopilotChat;
+
+  string OtherAiPrompt() => askModelService.GetPromptForOtherAi(question.Trim(), Conversation(), Context);
+
+  async Task CopyPromptAsync()
+  {
+    var prompt = OtherAiPrompt();
+    var isCopied = prompt != "" && await clipboardService.CopyAsync(prompt);
+    otherAiNote = isCopied ? PromptCopiedNote : null;
+    otherAiError = isCopied ? null : prompt == "" ? NoModelError : "Could not copy to the clipboard.";
+  }
+
+  // Not awaited: the menu closes only once the item's handler returns, and the hand-off takes
+  // seconds (the extension waits for the chat view to settle).
+  void AskInCopilotChat() => _ = InvokeAsync(AskInCopilotChatAsync);
+
+  async Task AskInCopilotChatAsync()
+  {
+    if (isHandingToCopilotChat)
+      return;
+    isHandingToCopilotChat = true;
+    (otherAiNote, otherAiError) = (null, null);
+    StateHasChanged();
+    var askedPath = modelPath;
+    try
+    {
+      var prompt = OtherAiPrompt();
+      var handed = prompt == "" ? new Error(NoModelError) : await aiService.FixWithCopilotAsync(prompt);
+      // Another model opened meanwhile: the note would be about the earlier one.
+      if (modelPath != askedPath)
+        return;
+      otherAiNote = handed is Error ? null : InCopilotChatNote;
+      otherAiError = handed is Error e ? e.Message : null;
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      // Nothing awaits this (see AskInCopilotChat), so a failure must show here.
+      if (modelPath == askedPath)
+        otherAiError = $"Could not ask in Copilot Chat: {e.Message}";
+    }
+    finally
+    {
+      isHandingToCopilotChat = false;
+      StateHasChanged();
+    }
+  }
+
+  const string NoModelError = "There is no model to ask about yet: open or parse one first.";
+
   async Task ShowPromptAsync()
   {
-    var prompt = askModelService.GetPrompt(question.Trim(), Conversation());
+    var prompt = askModelService.GetPrompt(question.Trim(), Conversation(), Context);
     if (prompt != "")
       await PromptDialog.ShowAsync(dialogService, prompt);
   }
@@ -405,6 +819,21 @@
       MarkdownBlockKind.NumberedList => @<ol start="@block.Start">@foreach (var line in block.Lines) { <li>@Line(answer, line)</li> }</ol>,
       _ => @<p>@for (var i = 0; i < block.Lines.Count; i++) { if (i > 0) { <br /> } @Line(answer, block.Lines[i]) }</p>,
     };
+
+  // Claude Code's summary of a change, its node names links like an answer's. The names are
+  // looked up again when the model may have changed: what the change created or moved is in the
+  // model only after the re-parse.
+  RenderFragment ReportSummary(Entry entry, string summary)
+  {
+    if (entry.Report?.Text != summary || entry.ReportStamp != modelStamp)
+    {
+      entry.Report = askModelService.WithLinks(summary);
+      entry.ReportBlocks = SimpleMarkdown.Parse(summary);
+      entry.ReportStamp = modelStamp;
+    }
+    var (report, blocks) = (entry.Report, entry.ReportBlocks);
+    return @<text>@foreach (var block in blocks) { @Block(report, block) }</text>;
+  }
 
   RenderFragment Line(ModelAnswer answer, IReadOnlyList<MarkdownSpan> spans) =>
     @<text>@foreach (var span in spans) { @Span(answer, span) }</text>;

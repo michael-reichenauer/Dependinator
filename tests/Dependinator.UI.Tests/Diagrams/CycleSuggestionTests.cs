@@ -174,7 +174,13 @@ public class CycleSuggestionTests
     {
         claude
             .Setup(c =>
-                c.AskClaudeCodeAsync("the prompt", CycleSuggestion.JsonSchema, Path.GetDirectoryName(ModelPath), false)
+                c.AskClaudeCodeAsync(
+                    "the prompt",
+                    CycleSuggestion.JsonSchema,
+                    Path.GetDirectoryName(ModelPath),
+                    false,
+                    null
+                )
             )
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
@@ -184,7 +190,7 @@ public class CycleSuggestionTests
         Assert.Equal(AiSource.ClaudeCode, suggestion.Source);
         Assert.Equal([SuggestStep.AskingClaudeCode], steps);
         claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
-        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]
@@ -200,7 +206,7 @@ public class CycleSuggestionTests
         Assert.Equal(AiSource.Copilot, suggestion.Source);
         Assert.Equal([SuggestStep.AskingCopilot], steps);
         claude.Verify(c => c.GetApiKeyStateAsync(), Times.Never);
-        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]
@@ -220,7 +226,7 @@ public class CycleSuggestionTests
     {
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
         claude
-            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
+            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema, null))
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
         var suggestion = AssertOk(await SuggestAsync());
@@ -231,12 +237,43 @@ public class CycleSuggestionTests
     }
 
     [Fact]
+    public async Task SuggestAsync_ShouldAskTheClaudeModelPickedInSettings()
+    {
+        config.Setup(c => c.GetAsync()).ReturnsAsync(new Config { ClaudeModelId = "claude-fable-5-2" });
+        claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
+        claude
+            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema, "claude-fable-5-2"))
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        AssertOk(await SuggestAsync());
+    }
+
+    [Fact]
+    public async Task SuggestAsync_ShouldStartClaudeCodeWithTheModelPickedInSettings()
+    {
+        config.Setup(c => c.GetAsync()).ReturnsAsync(new Config { ClaudeCodeModel = "opus" });
+        claude
+            .Setup(c =>
+                c.AskClaudeCodeAsync(
+                    "the prompt",
+                    CycleSuggestion.JsonSchema,
+                    Path.GetDirectoryName(ModelPath),
+                    false,
+                    "opus"
+                )
+            )
+            .ReturnsAsync((Result<string>)AcceptAnswer);
+
+        AssertOk(await SuggestAsync(AiSource.ClaudeCode));
+    }
+
+    [Fact]
     public async Task SuggestAsync_ShouldAskForAKeyFirst_WhenNoneIsSet_AndSayWhileWaiting()
     {
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Missing);
         claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
         claude
-            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
+            .Setup(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema, null))
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
         AssertOk(await SuggestAsync());
@@ -253,7 +290,7 @@ public class CycleSuggestionTests
         var error = AssertError(await SuggestAsync());
 
         Assert.Equal("No Claude API key was entered.", error.Message);
-        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        claude.Verify(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
     }
 
     [Fact]
@@ -266,7 +303,7 @@ public class CycleSuggestionTests
             .ReturnsAsync(ClaudeApiKeyState.Rejected);
         claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
         claude
-            .SetupSequence(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema))
+            .SetupSequence(c => c.AskAsync("the prompt", CycleSuggestion.JsonSchema, null))
             .ReturnsAsync((Result<string>)new Error("Claude did not accept the API key."))
             .ReturnsAsync((Result<string>)AcceptAnswer);
 
@@ -282,7 +319,7 @@ public class CycleSuggestionTests
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Rejected);
         claude.Setup(c => c.AskUserForApiKeyAsync()).ReturnsAsync(Result.Ok);
         claude
-            .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()))
             .ReturnsAsync((Result<string>)new Error("Claude did not accept the API key."));
 
         var error = AssertError(await SuggestAsync());
@@ -296,7 +333,7 @@ public class CycleSuggestionTests
     {
         claude.Setup(c => c.GetApiKeyStateAsync()).ReturnsAsync(ClaudeApiKeyState.Set);
         claude
-            .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()))
             .ReturnsAsync((Result<string>)new Error("Could not reach Claude."));
 
         var error = AssertError(await SuggestAsync());

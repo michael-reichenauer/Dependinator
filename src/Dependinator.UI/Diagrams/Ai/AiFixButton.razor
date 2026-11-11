@@ -20,20 +20,20 @@
     <MudButton Variant="Variant.Text" Class="dep-ai-ask dep-ai__ask-claude" StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh"
                Disabled="@(IsBusy || !isChoiceRead)" OnClick="OnClaudeCode"
                title="Claude Code makes the change in the model's folder now (experimental)"
-               data-testid="@($"{TestId}-fix-claude-code")">Fix with Claude Code</MudButton>
+               data-testid="@($"{TestId}-fix-claude-code")">@Verb with Claude Code</MudButton>
   }
   else if (Runner?.Source is AiSource.Copilot)
   {
     <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@AiProvider.Copilot.Icon"
                Disabled="@(IsBusy || !isChoiceRead)" OnClick="FixWithCopilotAsync"
                title="Copilot Chat makes the change in agent mode; you keep or undo each edit there"
-               data-testid="@($"{TestId}-fix-copilot")">Fix with Copilot</MudButton>
+               data-testid="@($"{TestId}-fix-copilot")">@Verb with Copilot</MudButton>
   }
   else
   {
     <MudButton Variant="Variant.Text" Class="dep-ai-ask" StartIcon="@MudBlazor.Icons.Material.Outlined.ContentCopy"
                title="Copy a prompt that asks an AI that can change the code (Claude Code, say) to make the change"
-               OnClick="OnCopy" data-testid="@($"{TestId}-copy-fix")">Copy fix prompt</MudButton>
+               OnClick="OnCopy" data-testid="@($"{TestId}-copy-fix")">@CopyText</MudButton>
   }
   @if (aiService.IsAvailable)
   {
@@ -46,7 +46,7 @@
           <MudMenuItem Icon="@MudBlazor.Icons.Material.Outlined.ContentCopy" IconColor="Color.Secondary"
                        OnClick="OnCopy" data-testid="@($"{TestId}-copy-fix")">
             <div class="dep-ai-menu__item">
-              <div class="dep-ai-menu__name">Copy fix prompt</div>
+              <div class="dep-ai-menu__name">@CopyText</div>
               <div class="dep-ai-menu__detail">For another AI that can change the code</div>
             </div>
           </MudMenuItem>
@@ -60,6 +60,11 @@
   // The test id prefix: "<prefix>-fix-claude-code", "<prefix>-fix-copilot", "<prefix>-copy-fix",
   // and the menu's "<prefix>-fix-menu" and "<prefix>-fix-with-<provider id>".
   [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+  // The words on the buttons: "Fix with Claude Code" and "Copy fix prompt" in the review dialogs,
+  // "Do it with Claude Code" and "Copy prompt" under an Ask answer.
+  [Parameter] public string Verb { get; set; } = "Fix";
+  [Parameter] public string CopyText { get; set; } = "Copy fix prompt";
 
   // Whether Claude Code can make the change here: the route is on and the model has a folder.
   [Parameter] public bool CanRunClaudeCode { get; set; }
@@ -82,9 +87,22 @@
   AiProvider? Runner =>
     choice.DefaultFor(AiCapability.EditCode) ?? (!isChoiceRead && CanRunClaudeCode ? AiProvider.ClaudeCode : null);
 
+  bool couldRunClaudeCode;
+
   protected override async Task OnInitializedAsync()
   {
     aiService.ChoiceChanged += OnChoiceChanged;
+    couldRunClaudeCode = CanRunClaudeCode;
+    await RefreshChoiceAsync();
+  }
+
+  // Where the button outlives a settings change (the Ask panel), whether Claude Code can run may
+  // change after the choice was read with the old value.
+  protected override async Task OnParametersSetAsync()
+  {
+    if (!isChoiceRead || couldRunClaudeCode == CanRunClaudeCode)
+      return;
+    couldRunClaudeCode = CanRunClaudeCode;
     await RefreshChoiceAsync();
   }
 

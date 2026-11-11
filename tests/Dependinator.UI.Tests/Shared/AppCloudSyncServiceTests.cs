@@ -293,13 +293,12 @@ public class AppCloudSyncServiceTests
         );
 
         // Past the deadline the loop stops at its next iteration without queuing another check;
-        // one check whose delay was already running may still land, so let it before snapshotting.
+        // one check whose delay was already running may still land. On a loaded CI machine it
+        // landed more than 100 ms later, after a fixed wait had taken its snapshot (4 calls
+        // instead of 3, Nov 2026). So wait for the checks to go quiet instead: a loop that never
+        // stopped would keep checking every 20 ms and never be quiet for ten intervals.
         currentUtc += timings.MaxIdleRefreshDuration + TimeSpan.FromMilliseconds(1);
-        await Task.Delay(100);
-        int callsAfterIdleWindow = context.Counters.ListCalls;
-
-        await Task.Delay(100);
-        Assert.Equal(callsAfterIdleWindow, context.Counters.ListCalls);
+        await WaitUntilQuietAsync(() => context.Counters.ListCalls, quietMilliseconds: 200);
     }
 
     [Fact]
@@ -614,6 +613,28 @@ public class AppCloudSyncServiceTests
             await Task.Delay(10);
 
         Assert.True(predicate());
+    }
+
+    // Waits until the value has not changed for quietMilliseconds, and fails if it never does.
+    static async Task WaitUntilQuietAsync(Func<int> value, int quietMilliseconds, int timeoutMilliseconds = 5000)
+    {
+        var total = System.Diagnostics.Stopwatch.StartNew();
+        var quiet = System.Diagnostics.Stopwatch.StartNew();
+        int last = value();
+        while (quiet.ElapsedMilliseconds < quietMilliseconds)
+        {
+            Assert.True(
+                total.ElapsedMilliseconds < timeoutMilliseconds,
+                $"The value kept changing for {timeoutMilliseconds} ms (now {last})."
+            );
+            await Task.Delay(10);
+            int current = value();
+            if (current != last)
+            {
+                last = current;
+                quiet.Restart();
+            }
+        }
     }
 
     static CloudModelMetadata CreateCloudModelMetadata(string modelPath, ModelDto modelDto)

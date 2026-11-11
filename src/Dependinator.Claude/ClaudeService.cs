@@ -3,24 +3,24 @@ using Anthropic;
 using Anthropic.Exceptions;
 using Anthropic.Models.Beta;
 using Anthropic.Models.Beta.Messages;
+using Anthropic.Models.Models;
 using Dependinator.Core.Claude;
 using Dependinator.Core.ModelQueries;
 
 namespace Dependinator.Claude;
 
 // Sends a prompt to Claude with the user's own API key and returns the answer as JSON matching a
-// schema (structured output, so the caller can rely on its shape). Claude Opus 5.5 at medium
-// effort: an answer takes seconds to a minute and costs a few cents; a plain question
-// (AskQuicklyAsync) goes to Claude Sonnet 5.5, at half the price and faster. A request a safety
-// classifier declines is retried server-side on the model Anthropic recommends for that case
-// (fallbacks "default"), so a false positive does not end in a refusal. A key Claude did not
+// schema (structured output, so the caller can rely on its shape). The model is the one the user
+// picked in Settings › AI, or without a pick Claude Opus 5.5 at medium effort (an answer takes
+// seconds to a minute and costs a few cents) and, for a plain question (AskQuicklyAsync), Claude
+// Sonnet 5.5, at half the price and faster (ClaudeModels). A request a safety classifier declines
+// is retried server-side on the model Anthropic recommends for that case (fallbacks "default",
+// on the models that have it), so a false positive does not end in a refusal. A key Claude did not
 // accept is remembered, so the UI can ask for a new one rather than send it again. The experimental
 // local route runs Claude Code instead (ClaudeCodeRunner).
 [Singleton]
 class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? modelToolsServer = null) : IClaudeService
 {
-    const string Model = "claude-opus-5-5";
-    const string QuickModel = "claude-sonnet-5-5";
     const int MaxTokens = 16000;
 
     string? rejectedApiKey;
@@ -47,12 +47,35 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
             : e;
     }
 
-    public Task<Result<string>> AskAsync(string prompt, string jsonSchema) => SendAsync(prompt, jsonSchema, Model);
+    public async Task<Result<ClaudeModel[]>> GetModelsAsync()
+    {
+        if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
+            return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
+        return await CallClaudeAsync<ClaudeModel[]>(
+            key,
+            async client =>
+            {
+                List<ClaudeModel> models = [];
+                var page = await client.Models.List(new ModelListParams { Limit = 100 });
+                await foreach (var model in page.Paginate())
+                {
+                    if (ClaudeModels.CanAnswer(model))
+                        models.Add(new ClaudeModel(model.ID, model.DisplayName));
+                }
+                return models.ToArray();
+            }
+        );
+    }
 
-    public Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema) =>
-        SendAsync(prompt, jsonSchema, QuickModel);
+    public Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? modelId) =>
+        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Thorough, Picked(modelId));
 
-    async Task<Result<string>> SendAsync(string prompt, string jsonSchema, string model)
+    public Task<Result<string>> AskQuicklyAsync(string prompt, string jsonSchema, string? modelId) =>
+        SendAsync(prompt, jsonSchema, Picked(modelId) ?? ClaudeModels.Quick, Picked(modelId));
+
+    static string? Picked(string? modelId) => string.IsNullOrWhiteSpace(modelId) ? null : modelId.Trim();
+
+    async Task<Result<string>> SendAsync(string prompt, string jsonSchema, string model, string? pickedModel)
     {
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
@@ -65,19 +88,19 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
             async client =>
             {
                 var response = await client.Beta.Messages.Create(
-                    new MessageCreateParams
-                    {
-                        Model = model,
-                        MaxTokens = MaxTokens,
-                        Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
-                        Fallbacks = new Default(),
-                        OutputConfig = new BetaOutputConfig
+                    ClaudeModels.WithFallback(
+                        new MessageCreateParams
                         {
-                            Effort = Effort.Medium,
-                            Format = new BetaJsonOutputFormat { Schema = schemaProperties },
-                        },
-                        Messages = [new BetaUserMessageParam { Content = prompt }],
-                    }
+                            Model = model,
+                            MaxTokens = MaxTokens,
+                            OutputConfig = new BetaOutputConfig
+                            {
+                                Effort = Effort.Medium,
+                                Format = new BetaJsonOutputFormat { Schema = schemaProperties },
+                            },
+                            Messages = [new BetaUserMessageParam { Content = prompt }],
+                        }
+                    )
                 );
                 Log.Info(
                     "Claude answered",
@@ -95,12 +118,14 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
                     response.Content.Select(b => b.Value).OfType<BetaTextBlock>().Select(t => t.Text)
                 );
                 return text.Trim() == "" ? new Error("Claude gave an empty answer. Please try again.") : text;
-            }
+            },
+            pickedModel
         );
     }
 
-    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema)
+    public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(string prompt, string jsonSchema, string? modelId)
     {
+        var model = Picked(modelId) ?? ClaudeModels.Quick;
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
         var schema = Result.Catch(() => JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonSchema)!);
@@ -113,7 +138,8 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
         await using (tools)
             return await CallClaudeAsync(
                 key,
-                client => ModelToolsAgent.AskAsync(client, prompt, schemaProperties, tools)
+                client => ModelToolsAgent.AskAsync(client, prompt, schemaProperties, tools, model),
+                Picked(modelId)
             );
     }
 
@@ -126,7 +152,13 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
             : new Error("This host serves no model tools for Claude to look things up with.");
 
     // Runs requests to Claude with the key, and turns the API's errors into what the user can do.
-    async Task<Result<T>> CallClaudeAsync<T>(string key, Func<AnthropicClient, Task<Result<T>>> call)
+    // pickedModel is the model the user picked in Settings › AI, if any: an error that may come
+    // from the pick (a model the key cannot ask, or cannot ask this way) names it and the setting.
+    async Task<Result<T>> CallClaudeAsync<T>(
+        string key,
+        Func<AnthropicClient, Task<Result<T>>> call,
+        string? pickedModel = null
+    )
         where T : notnull
     {
         try
@@ -153,6 +185,21 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
                 e
             );
         }
+        catch (AnthropicNotFoundException e) when (pickedModel is not null)
+        {
+            return new Error(
+                $"Claude has no model \"{pickedModel}\" for this API key. Pick another model in Settings › AI.",
+                e
+            );
+        }
+        catch (AnthropicApiException e)
+            when (pickedModel is not null && e is AnthropicBadRequestException or AnthropicForbiddenException)
+        {
+            return new Error(
+                $"Claude could not answer with the model \"{pickedModel}\" picked in Settings › AI: {ApiMessage(e)}",
+                e
+            );
+        }
         catch (AnthropicApiException e)
         {
             return new Error($"Claude could not answer: {ApiMessage(e)}", e);
@@ -168,28 +215,48 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
         string prompt,
         string jsonSchema,
         string? codeFolder,
-        bool withModelTools
+        bool withModelTools,
+        string? model
     ) =>
         (AskClaudeCode ?? ClaudeCodeRunner.AskAsync)(
             prompt,
             jsonSchema,
             codeFolder,
-            withModelTools ? modelToolsServer?.Address : null
+            withModelTools ? modelToolsServer?.Address : null,
+            Picked(model)
         );
 
     // Runs Claude Code; tests replace it.
-    internal Func<string, string, string?, ModelToolsAddress?, Task<Result<string>>>? AskClaudeCode { get; init; }
+    internal Func<
+        string,
+        string,
+        string?,
+        ModelToolsAddress?,
+        string?,
+        Task<Result<string>>
+    >? AskClaudeCode { get; init; }
 
     CancellationTokenSource? runningFix;
 
-    public async Task<Result<string>> FixWithClaudeCodeAsync(string prompt, string jsonSchema, string codeFolder)
+    public async Task<Result<string>> FixWithClaudeCodeAsync(
+        string prompt,
+        string jsonSchema,
+        string codeFolder,
+        string? model
+    )
     {
         using var stop = new CancellationTokenSource();
         if (Interlocked.CompareExchange(ref runningFix, stop, null) is not null)
             return new Error("Claude Code is already fixing something. Wait for it, or stop it first.");
         try
         {
-            return await (FixWithClaudeCode ?? ClaudeCodeRunner.FixAsync)(prompt, jsonSchema, codeFolder, stop.Token);
+            return await (FixWithClaudeCode ?? ClaudeCodeRunner.FixAsync)(
+                prompt,
+                jsonSchema,
+                codeFolder,
+                Picked(model),
+                stop.Token
+            );
         }
         finally
         {
@@ -206,7 +273,14 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
     }
 
     // Runs Claude Code to fix; tests replace it.
-    internal Func<string, string, string, CancellationToken, Task<Result<string>>>? FixWithClaudeCode { get; init; }
+    internal Func<
+        string,
+        string,
+        string,
+        string?,
+        CancellationToken,
+        Task<Result<string>>
+    >? FixWithClaudeCode { get; init; }
 
     public Task<Result<int>> CountUncommittedChangesAsync(string codeFolder) =>
         GitStatus.CountUncommittedChangesAsync(codeFolder);

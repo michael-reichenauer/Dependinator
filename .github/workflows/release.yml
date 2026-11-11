@@ -44,7 +44,7 @@ concurrency:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: ${{ inputs.kind == 'release' && 'Release' || 'Preview' }}${{ !inputs.publish && ' (dry run)' || '' }}
     timeout-minutes: 10
     outputs:
@@ -244,7 +244,7 @@ jobs:
   # The web app (Wasm) and the cloud sync API (Functions), as deployed to Azure Static Web Apps
   build-site:
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -317,7 +317,7 @@ jobs:
   # The VS Code extension, one package per platform, as published to the Marketplace
   build-vsix:
     needs: prepare
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -440,7 +440,7 @@ jobs:
   # a version it has, and a GitHub release that exists is left as it is.
   publish:
     needs: [prepare, unit-tests, e2e, build-site, build-vsix]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     name: ${{ inputs.publish && 'Publish' || 'Show what would be published' }}
     env:
