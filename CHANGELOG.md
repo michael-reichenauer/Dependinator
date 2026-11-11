@@ -23,10 +23,12 @@ with the next official release.
 - A zoomed-in open container no longer shows a card when the mouse rests inside it, only on its name or on an open type's header
 - The "+" handle for adding and linking nodes now appears only after the pointer has rested on a node for half a second, as a grey outline that turns blue when pointed at
 - The cost of an Ask answer is priced by the model that answered
+- The Ask panel opens at once the first time too; in VS Code it used to wait a few seconds for the list of AI providers
 
 ### Fixed
 
 - Long names in a line's card no longer wrap one character per line
+- A solution on C# 15 no longer shows false "feature is in Preview" compile errors in the problem indicator
 
 ## [v0.90.450284] - 2026-11-09
 
