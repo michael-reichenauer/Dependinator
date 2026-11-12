@@ -16,9 +16,11 @@ export function child(parentName: string, name: string): string {
     return `${parentName}.${name}`;
 }
 
-// The model's root: the package name without its scope, or the project's folder name.
+// The model's root: the project's folder name, which is also the name the model is listed by
+// (as a solution's root is named after its file); the package name only for a project at the
+// root of a drive.
 export function rootName(packageName: string | undefined, projectDir: string): string {
-    const name = packageName?.split("/").pop() || path.basename(projectDir) || "project";
+    const name = path.basename(projectDir) || packageName?.split("/").pop() || "project";
     return encodePart(name);
 }
 

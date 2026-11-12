@@ -14,19 +14,19 @@ public class ExtensionProjectTests
             await TypeScriptFixture.Parser().ParseAsync(Root.ExtensionConfigPath, SolutionParseOptions.Default)
         );
 
-        // Named after the package ("dependinator"), its files under src
-        Assert.Equal(NodeType.Solution, items.Node("dependinator").Properties.Type);
-        var activate = items.Node("dependinator.src.extension*ts.activate");
+        // Named after its folder, like the model, not after the package ("dependinator")
+        Assert.Equal(NodeType.Solution, items.Node("DependinatorVsCode").Properties.Type);
+        var activate = items.Node("DependinatorVsCode.src.extension*ts.activate");
         Assert.Equal(NodeType.FunctionMember, activate.Properties.Type);
         Assert.Null(activate.Properties.IsPrivate);
 
         // extension.ts starts the language server, which logs
         Assert.Contains(items.Links(), l =>
-            l.Source.StartsWith("dependinator.src.extension*ts.")
-            && l.Target == "dependinator.src.languageServer*ts.startLanguageServer"
+            l.Source.StartsWith("DependinatorVsCode.src.extension*ts.")
+            && l.Target == "DependinatorVsCode.src.languageServer*ts.startLanguageServer"
         );
         Assert.True(
-            items.HasLink("dependinator.src.languageServer*ts.startLanguageServer", "dependinator.src.logger*ts.log")
+            items.HasLink("DependinatorVsCode.src.languageServer*ts.startLanguageServer", "DependinatorVsCode.src.logger*ts.log")
         );
         Assert.True(items.Nodes().Count() > 100, $"Only {items.Nodes().Count()} nodes");
         Assert.True(items.Links().Count() > 150, $"Only {items.Links().Count()} links");

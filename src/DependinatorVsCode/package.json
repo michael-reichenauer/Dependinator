@@ -1,7 +1,7 @@
 {
     "name": "dependinator",
     "displayName": "Dependinator",
-    "description": "Dependinator visualizes the structure and dependencies of C#/.NET code and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
+    "description": "Dependinator visualizes the structure and dependencies of C#/.NET code, TypeScript and JavaScript projects, and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
     "version": "0.92.0",
     "publisher": "michaelreichenauer",
     "license": "MIT",
@@ -23,6 +23,8 @@
         "diagram",
         "C#",
         ".NET",
+        "TypeScript",
+        "JavaScript",
         "Bicep",
         "Azure",
         "infrastructure"

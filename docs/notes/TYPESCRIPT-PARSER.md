@@ -85,7 +85,7 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
 
 | TypeScript / JavaScript | Node | Name |
 |---|---|---|
-| project | `Solution`, described by the package's `description`, its file span the entry file | the package name without its scope, else the folder: `shop` |
+| project | `Solution`, described by the package's `description`, its file span the entry file | the project's folder, as the model is listed (a solution's root is named after its file): `shop` |
 | folder | `Folder` | `shop.src.lib` |
 | source file | `SourceFile`, described by its top comment | `shop.src.cart*ts` (shown as `cart.ts`) |
 | function, arrow function or function expression in a `const` | `FunctionMember` row of its file | `shop.src.main*ts.start` |
@@ -167,8 +167,9 @@ names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
   declares them, which can differ from the one imported.
 - The demo models have no TypeScript model, and the browser app cannot open one unless it was
   parsed in VS Code and synced.
-- `Helper/package.json` is not covered by Dependabot (the npm ecosystem is not configured); the
-  nightly package task does not look at it either. Bump TypeScript by hand, with the tests.
+- `Helper/package.json` is covered by Dependabot (`.github/dependabot.yml`: weekly, minor and
+  patch grouped, TypeScript's major version ignored until the native compiler's API is stable)
+  and by the nightly package task. The unit tests parse the samples with the bumped compiler.
 - A project whose source is under `build` or `out` and that has no config file is not found (the
   folders are skipped when a `package.json` project's files are collected).
 - With auto refresh off, the extension does not learn of a manual re-parse, so switching auto

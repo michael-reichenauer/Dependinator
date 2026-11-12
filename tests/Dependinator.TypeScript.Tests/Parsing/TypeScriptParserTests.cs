@@ -68,8 +68,9 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
     }
 
     [Fact]
-    public void Root_ShouldBeThePackage_WithoutItsScope()
+    public void Root_ShouldBeNamedAfterTheFolder_AndDescribedByThePackage()
     {
+        // The folder "shop", as the model is listed, not the package "@demo/web-shop"
         var root = Items.Node("shop");
 
         Assert.Equal(NodeType.Solution, root.Properties.Type);

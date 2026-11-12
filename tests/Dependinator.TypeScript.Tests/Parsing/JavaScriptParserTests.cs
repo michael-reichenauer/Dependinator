@@ -14,7 +14,7 @@ public class JavaScriptParserTests(TypeScriptFixture fixture)
     IReadOnlyList<Item> Items => fixture.Tool;
 
     [Fact]
-    public void Root_ShouldBeThePackage_DescribedAsJavaScript()
+    public void Root_ShouldBeNamedAfterTheFolder_DescribedAsJavaScript()
     {
         var root = Items.Node("tool");
 
