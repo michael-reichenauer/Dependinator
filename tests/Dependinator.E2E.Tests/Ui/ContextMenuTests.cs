@@ -54,8 +54,8 @@ public class ContextMenuTests(ITestOutputHelper output) : E2ETestBase(output)
     // for the context menu to appear.
     async Task OpenContextMenuAsync()
     {
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         await Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 130, new() { Button = MouseButton.Right });
         await Expect(Page.GetByTestId("canvas-context-menu")).ToBeVisibleAsync();
     }

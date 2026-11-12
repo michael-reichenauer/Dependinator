@@ -174,10 +174,8 @@ public class LayeredLayoutTests
         AddChild(model, parent, "A");
         AddChild(model, parent, "B");
 
-        var arranged = LayeredLayout.TryArrange(
-            parent,
-            new LayoutMetrics(100, 100, 70, 70, 1.0),
-            _ => NodeLayout.DefaultSize
+        var arranged = LayeredLayout.TryArrange(parent, new LayoutMetrics(100, 100, 70, 70, 1.0), _ =>
+            NodeLayout.DefaultSize
         );
 
         Assert.False(arranged);
@@ -490,10 +488,8 @@ public class LayeredLayoutTests
     static void Arrange(ModelNode parent, Dictionary<string, double> sides)
     {
         var metrics = new LayoutMetrics(100, 100, 70, 70, 1.0);
-        var arranged = LayeredLayout.TryArrange(
-            parent,
-            metrics,
-            node => sides.TryGetValue(node.Name, out var side) ? new Size(side, side) : NodeLayout.DefaultSize
+        var arranged = LayeredLayout.TryArrange(parent, metrics, node =>
+            sides.TryGetValue(node.Name, out var side) ? new Size(side, side) : NodeLayout.DefaultSize
         );
         Assert.True(arranged);
     }

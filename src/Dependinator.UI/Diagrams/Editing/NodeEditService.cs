@@ -147,17 +147,13 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         Apply(nodeIds, node => SizeCommand(node, -SizeDiff));
 
     public void SetNodeIconColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName) =>
-        Apply(
-            nodeIds,
-            node =>
-                node.CustomIconColor == colorName ? null : new NodeEditCommand(node.Id) { IconColor = colorName ?? "" }
+        Apply(nodeIds, node =>
+            node.CustomIconColor == colorName ? null : new NodeEditCommand(node.Id) { IconColor = colorName ?? "" }
         );
 
     public void SetNodeColor(IReadOnlyCollection<NodeId> nodeIds, string? colorName) =>
-        Apply(
-            nodeIds,
-            node =>
-                node.CustomColor == colorName ? null : new NodeEditCommand(node.Id) { CustomColor = colorName ?? "" }
+        Apply(nodeIds, node =>
+            node.CustomColor == colorName ? null : new NodeEditCommand(node.Id) { CustomColor = colorName ?? "" }
         );
 
     static NodeEditCommand? SizeCommand(Node node, double diff)

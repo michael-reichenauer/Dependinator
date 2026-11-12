@@ -57,11 +57,8 @@ public class MemberSummarySvgTests
         Add(type, "Alpha", NodeType.ClassType, isPrivate: true);
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = MemberCardSvg.GetMemberSummarySvg(
-            type,
-            new Rect(0, 0, 180, 300),
-            1,
-            isRowShown: n => n.ShortName != "Hidden"
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 300), 1, isRowShown: n =>
+            n.ShortName != "Hidden"
         );
 
         Assert.True(
@@ -76,11 +73,8 @@ public class MemberSummarySvgTests
         var type = TypeWithRows();
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = MemberCardSvg.GetMemberSummarySvg(
-            type,
-            new Rect(0, 0, 180, 106),
-            1,
-            isRowShown: n => n.ShortName != "Hidden"
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 106), 1, isRowShown: n =>
+            n.ShortName != "Hidden"
         );
 
         Assert.Contains("1 nested type<", svg);

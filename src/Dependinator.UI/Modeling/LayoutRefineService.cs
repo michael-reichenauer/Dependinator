@@ -209,11 +209,10 @@ class LayoutRefineService(
     // Captures the container (under the model lock): its children keep their current sizes.
     internal static RefineJob? Begin(IModel model, Node container)
     {
-        var snapshot = LayoutSnapshot.Capture(
-            container,
-            NodeLayout.MetricsFor(container),
-            child => new Size(child.Boundary.Width, child.Boundary.Height)
-        );
+        var snapshot = LayoutSnapshot.Capture(container, NodeLayout.MetricsFor(container), child => new Size(
+            child.Boundary.Width,
+            child.Boundary.Height
+        ));
         if (snapshot is null || LayeredEngine.Prepare(snapshot.Graph) is not { } plan)
         {
             container.IsChildrenLayoutRefinePending = false;

@@ -63,9 +63,8 @@ public class LayoutRefineServiceTests
         Assert.False(container.IsChildrenLayoutRefinePending);
         Assert.NotEqual(before, children.Select(child => child.Boundary).ToList());
         Assert.True(NodeLayout.Generation > generation);
-        Assert.All(
-            children,
-            child => Assert.Equal(new Size(100, 100), new Size(child.Boundary.Width, child.Boundary.Height))
+        Assert.All(children, child =>
+            Assert.Equal(new Size(100, 100), new Size(child.Boundary.Width, child.Boundary.Height))
         );
     }
 

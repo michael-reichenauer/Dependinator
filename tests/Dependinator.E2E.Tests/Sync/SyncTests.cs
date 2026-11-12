@@ -82,12 +82,10 @@ public class SyncTests : E2ETestBase, IClassFixture<SeededSyncModel>
         CloudModelList? list = await client.GetFromJsonAsync<CloudModelList>("/api/models");
 
         Assert.NotNull(list);
-        Assert.Contains(
-            list.Models,
-            m =>
-                m.ModelKey == SeededSyncModel.ModelKey
-                && m.NormalizedPath == SeededSyncModel.ModelPath
-                && m.ContentHash == SeededSyncModel.ContentHash
+        Assert.Contains(list.Models, m =>
+            m.ModelKey == SeededSyncModel.ModelKey
+            && m.NormalizedPath == SeededSyncModel.ModelPath
+            && m.ContentHash == SeededSyncModel.ContentHash
         );
     }
 

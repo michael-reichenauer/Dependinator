@@ -109,9 +109,8 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task AppMenu_ShouldOpenChangeLogFromWhatsNew()
     {
         // Stub GitHub, so the test needs no network.
-        await Context.RouteAsync(
-            "https://github.com/**",
-            route => route.FulfillAsync(new() { Body = "<title>Change Log</title>", ContentType = "text/html" })
+        await Context.RouteAsync("https://github.com/**", route =>
+            route.FulfillAsync(new() { Body = "<title>Change Log</title>", ContentType = "text/html" })
         );
         await App.GotoMainPageAsync();
 
@@ -126,9 +125,8 @@ public class AppSmokeTests(ITestOutputHelper output) : E2ETestBase(output)
     public async Task AppMenu_ShouldOpenPrefilledBugReport()
     {
         // Stub GitHub, so the test needs no network and no sign-in redirect changes the url.
-        await Context.RouteAsync(
-            "https://github.com/**",
-            route => route.FulfillAsync(new() { Body = "<title>New issue</title>", ContentType = "text/html" })
+        await Context.RouteAsync("https://github.com/**", route =>
+            route.FulfillAsync(new() { Body = "<title>New issue</title>", ContentType = "text/html" })
         );
         await App.GotoMainPageAsync();
 

@@ -477,10 +477,8 @@ public sealed class AppPage
     {
         string expected = isChecked ? "true" : "false";
         ILocator item = MenuItem(testId);
-        await ExpectSubMenuAsync(
-            parentTestIds,
-            testId,
-            timeout => Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
+        await ExpectSubMenuAsync(parentTestIds, testId, timeout =>
+            Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
         );
 
         // Close the submenus level by level (a nested one first, then the parent's), so the

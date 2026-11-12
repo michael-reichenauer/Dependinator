@@ -29,15 +29,12 @@ public class NodeLayoutTests
         NodeLayout.AdjustChildren(parent);
 
         Assert.False(parent.IsChildrenLayoutRequired);
-        Assert.All(
-            parent.Children,
-            child =>
-            {
-                Assert.Equal(NodeLayout.DefaultSize.Width, child.Boundary.Width);
-                Assert.Equal(NodeLayout.DefaultSize.Height, child.Boundary.Height);
-                AssertGridAligned(child.Boundary);
-            }
-        );
+        Assert.All(parent.Children, child =>
+        {
+            Assert.Equal(NodeLayout.DefaultSize.Width, child.Boundary.Width);
+            Assert.Equal(NodeLayout.DefaultSize.Height, child.Boundary.Height);
+            AssertGridAligned(child.Boundary);
+        });
         Assert.InRange(parent.ContainerZoom, 0.0001, 1.0);
 
         var displayedBounds = GetDisplayedBounds(parent);

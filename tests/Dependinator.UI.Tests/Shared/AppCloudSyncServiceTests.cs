@@ -234,13 +234,8 @@ public class AppCloudSyncServiceTests
         // The clock is controlled by the test so the throttle window cannot expire behind its
         // back on a slow machine; refreshes still run on real (short) timers.
         DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        SutContext context = CreateSutContext(
-            modelPath,
-            localModel,
-            syncState,
-            [cloudModel],
-            timings,
-            () => currentUtc
+        SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings, () =>
+            currentUtc
         );
 
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -275,13 +270,8 @@ public class AppCloudSyncServiceTests
         // cannot expire until the test moves the clock, while the checks themselves still run on
         // real (short) timers.
         DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        SutContext context = CreateSutContext(
-            modelPath,
-            syncedModel,
-            syncState,
-            [cloudModel],
-            timings,
-            () => currentUtc
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings, () =>
+            currentUtc
         );
 
         int listCallsAfterInitialize = context.Counters.ListCalls;

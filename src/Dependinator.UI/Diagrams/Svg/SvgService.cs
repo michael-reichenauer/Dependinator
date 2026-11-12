@@ -147,12 +147,7 @@ class SvgService : ISvgService
         var bounds = new Rect(0, 0, canvasRect.Width / zoom, canvasRect.Height / zoom);
         // Exports never show edit chrome (handles), selection or cycle-pick dimming or problem badges, whatever
         // the current state.
-        var flags = Flags with
-        {
-            IsEditing = false,
-            DimUnrelated = false,
-            SelectedCycleLines = null,
-        };
+        var flags = Flags with { IsEditing = false, DimUnrelated = false, SelectedCycleLines = null };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
         return NodeTreeSvg.RenderRootContent(model, zoom, context);
     }

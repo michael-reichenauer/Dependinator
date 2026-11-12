@@ -755,27 +755,24 @@ class NodeLayout
                 )
         );
 
-        Sorter.Sort(
-            children,
-            (c1, c2) =>
-            {
-                var r1 = relations[c1];
-                var r2 = relations[c2];
+        Sorter.Sort(children, (c1, c2) =>
+        {
+            var r1 = relations[c1];
+            var r2 = relations[c2];
 
-                var c1ToC2 = r1.SiblingTargets.Contains(c2);
-                var c2ToC1 = r2.SiblingTargets.Contains(c1);
-                if (c1ToC2 != c2ToC1)
-                    return c1ToC2 ? -1 : 1;
+            var c1ToC2 = r1.SiblingTargets.Contains(c2);
+            var c2ToC1 = r2.SiblingTargets.Contains(c1);
+            if (c1ToC2 != c2ToC1)
+                return c1ToC2 ? -1 : 1;
 
-                if (r1.HasLineFromParent != r2.HasLineFromParent)
-                    return r1.HasLineFromParent ? -1 : 1;
+            if (r1.HasLineFromParent != r2.HasLineFromParent)
+                return r1.HasLineFromParent ? -1 : 1;
 
-                if (r1.HasLineToParent != r2.HasLineToParent)
-                    return r1.HasLineToParent ? -1 : 1;
+            if (r1.HasLineToParent != r2.HasLineToParent)
+                return r1.HasLineToParent ? -1 : 1;
 
-                return 0;
-            }
-        );
+            return 0;
+        });
     }
 
     // Most used/using members first, then by member kind, so the most relevant members end up

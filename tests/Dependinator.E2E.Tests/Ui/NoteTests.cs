@@ -61,8 +61,8 @@ public class NoteTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByText("Click on the diagram to place the note.")).ToBeVisibleAsync();
 
         // Click an empty area (bottom-left) to drop the note there.
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         ILocator idInput = Page.GetByTestId("note-id");
         await App.RepeatUntilVisibleAsync(() => Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 130), idInput);
 
