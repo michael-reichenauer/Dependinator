@@ -21,10 +21,8 @@ public sealed class TimeLimitedModelQueriesTests
     [Fact]
     public async Task GetModelAsync_ShouldNotAsk_WhenTheOtherSideIsNotConnected()
     {
-        var limited = new TimeLimitedModelQueries(
-            queries.Object,
-            TimeSpan.FromMinutes(1),
-            () => Task.FromResult(false)
+        var limited = new TimeLimitedModelQueries(queries.Object, TimeSpan.FromMinutes(1), () =>
+            Task.FromResult(false)
         );
 
         var result = await limited.GetModelAsync();

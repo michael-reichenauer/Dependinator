@@ -34,8 +34,7 @@ public class MinimapTests(ITestOutputHelper output) : E2ETestBase(output)
         Assert.True(before > 0, $"The frame should sit inside the map after zooming in, but x was {before}.");
 
         // Clicking near the left edge of the minimap centers the view there, so the frame moves left.
-        LocatorBoundingBoxResult box =
-            await minimap.Locator("svg.dep-minimap__svg").BoundingBoxAsync()
+        LocatorBoundingBoxResult box = await minimap.Locator("svg.dep-minimap__svg").BoundingBoxAsync()
             ?? throw new InvalidOperationException("No minimap svg");
         await Page.Mouse.ClickAsync(box.X + 12, box.Y + box.Height / 2);
         double after = before;

@@ -42,8 +42,8 @@ class ModelBuilder(string entryPath)
     public IReadOnlyList<Item> Build(SemanticModel model)
     {
         var rootName = Names.GetRootName(entryPath);
-        var description =
-            DescriptionHelper.TryGetFromSemanticModel(model) ?? $"Bicep deployment, target scope {model.TargetScope}";
+        var description = DescriptionHelper.TryGetFromSemanticModel(model)
+            ?? $"Bicep deployment, target scope {model.TargetScope}";
         AddNode(
             rootName,
             NodeType.Solution,
@@ -300,8 +300,7 @@ class ModelBuilder(string entryPath)
             return;
         }
 
-        var description =
-            DescriptionHelper.TryGetFromDecorator(model, declaration)
+        var description = DescriptionHelper.TryGetFromDecorator(model, declaration)
             ?? DescriptionHelper.TryGetFromSemanticModel(moduleModel)
             ?? $"module {pathText}{markerText}";
         AddNode(moduleName, NodeType.Module, description, span, iconName: MetadataIcon(moduleModel));
@@ -332,15 +331,14 @@ class ModelBuilder(string entryPath)
         var children = nodeTypes
             .Where(kv => kv.Key.StartsWith(prefix) && !kv.Key.AsSpan(prefix.Length).Contains('.'))
             .ToList();
-        var principal =
-            children
-                .Where(c => c.Value is NodeType.Resource or NodeType.ResourceMember)
-                .OrderBy(c => c.Value == NodeType.Resource ? 0 : 1)
-                .ThenByDescending(c => links.Count(l => l.Target == c.Key))
-                .ThenByDescending(c => nodeTypes.Keys.Count(k => k.StartsWith(c.Key + ".")))
-                .ThenBy(c => nodeIndex[c.Key])
-                .Select(c => c.Key)
-                .FirstOrDefault()
+        var principal = children
+            .Where(c => c.Value is NodeType.Resource or NodeType.ResourceMember)
+            .OrderBy(c => c.Value == NodeType.Resource ? 0 : 1)
+            .ThenByDescending(c => links.Count(l => l.Target == c.Key))
+            .ThenByDescending(c => nodeTypes.Keys.Count(k => k.StartsWith(c.Key + ".")))
+            .ThenBy(c => nodeIndex[c.Key])
+            .Select(c => c.Key)
+            .FirstOrDefault()
             ?? children
                 .Where(c => c.Value == NodeType.Module)
                 .OrderBy(c => nodeIndex[c.Key])

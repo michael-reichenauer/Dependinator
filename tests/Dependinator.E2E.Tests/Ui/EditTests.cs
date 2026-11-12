@@ -43,15 +43,11 @@ public class EditTests(ITestOutputHelper output) : E2ETestBase(output)
     // whole: right after the undo click the closing menu can still look open, and the reopened
     // submenu then vanishes under the assertion.
     Task ExpectUndoRedoAsync(bool canUndo, bool canRedo) =>
-        App.ExpectSubMenuAsync(
-            "menu-edit",
-            "menu-undo",
-            async timeout =>
-            {
-                await ExpectEnabled(App.MenuItem("menu-undo"), canUndo, timeout);
-                await ExpectEnabled(App.MenuItem("menu-redo"), canRedo, timeout);
-            }
-        );
+        App.ExpectSubMenuAsync("menu-edit", "menu-undo", async timeout =>
+        {
+            await ExpectEnabled(App.MenuItem("menu-undo"), canUndo, timeout);
+            await ExpectEnabled(App.MenuItem("menu-redo"), canRedo, timeout);
+        });
 
     Task ExpectEnabled(ILocator item, bool enabled, float timeout) =>
         enabled

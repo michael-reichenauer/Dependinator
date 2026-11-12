@@ -100,10 +100,7 @@ public class NodeEditServiceGroupTests
         var step = NodeGrid.SnapSize / rootZoom; // One grid step in screen pixels at this zoom
 
         // A lands on the grid, B does not (it started one grid step off).
-        b.Boundary = b.Boundary with
-        {
-            X = b.Boundary.X + NodeGrid.SnapSize / 2,
-        };
+        b.Boundary = b.Boundary with { X = b.Boundary.X + NodeGrid.SnapSize / 2 };
         service.MoveSelectedNodes(new PointerEvent { MovementX = step, MovementY = 0 }, zoom: 1, [a.Id, b.Id]);
         service.SnapSelectedNodesToGrid([a.Id, b.Id]);
 

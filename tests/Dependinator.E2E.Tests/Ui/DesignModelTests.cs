@@ -57,8 +57,8 @@ public class DesignModelTests(ITestOutputHelper output) : E2ETestBase(output)
     // Double-clicks an empty area of the canvas and picks an icon in the selector dialog.
     async Task AddManualNodeAsync(string iconName)
     {
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
 
         await App.RepeatUntilVisibleAsync(
             () => Page.Mouse.DblClickAsync(box.X + box.Width / 2, box.Y + box.Height / 2),

@@ -442,20 +442,16 @@ class ManualEditService(
     // snackbar's Undo reverts this deletion, and only while it is still the latest edit.
     void ShowUndoSnackbar(string message, Command command)
     {
-        snackbar.Add(
-            message,
-            Severity.Normal,
-            config =>
+        snackbar.Add(message, Severity.Normal, config =>
+        {
+            config.Action = "Undo";
+            config.ActionColor = Color.Primary;
+            config.OnClick = async _ =>
             {
-                config.Action = "Undo";
-                config.ActionColor = Color.Primary;
-                config.OnClick = async _ =>
-                {
-                    if (!await commandService.UndoIfLatest(command))
-                        snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
-                };
-            }
-        );
+                if (!await commandService.UndoIfLatest(command))
+                    snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
+            };
+        });
     }
 
     public void DeleteManualLine(LineId lineId)

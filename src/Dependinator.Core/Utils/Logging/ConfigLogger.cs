@@ -101,9 +101,9 @@ public static class ConfigLogger
     // log lines show paths relative to the src/ folder. Update if this file moves.
     static void SetPrefixLength([CallerFilePath] string sourceFilePath = "")
     {
-        string rootPath =
-            Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(sourceFilePath))))
-            ?? "";
+        string rootPath = Path.GetDirectoryName(
+            Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(sourceFilePath)))
+        ) ?? "";
         prefixLength = rootPath.Length + 1;
     }
 

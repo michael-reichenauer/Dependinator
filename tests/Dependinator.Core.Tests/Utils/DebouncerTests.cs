@@ -33,10 +33,8 @@ public class DebouncerTests
         // test robust against Task.Delay jitter on loaded CI runners.
         while (stopwatch.Elapsed < TimeSpan.FromMilliseconds(1500) && !invokedAt.Task.IsCompleted)
         {
-            debouncer.Debounce(
-                TimeSpan.FromMilliseconds(300),
-                TimeSpan.FromMilliseconds(600),
-                () => invokedAt.TrySetResult(stopwatch.Elapsed)
+            debouncer.Debounce(TimeSpan.FromMilliseconds(300), TimeSpan.FromMilliseconds(600), () =>
+                invokedAt.TrySetResult(stopwatch.Elapsed)
             );
 
             await Task.Delay(50);

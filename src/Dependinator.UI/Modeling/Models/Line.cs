@@ -25,8 +25,7 @@ class Line : IItem
     {
         Source = source;
         Target = target;
-        Id =
-            id
+        Id = id
             ?? (
                 isDirect ? LineId.FromDirect(source.Name, target.Name)
                 : isInheritance ? LineId.FromInheritance(source.Name, target.Name)

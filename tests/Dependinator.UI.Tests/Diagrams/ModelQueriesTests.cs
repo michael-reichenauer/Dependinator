@@ -334,8 +334,8 @@ public class ModelQueriesTests
     Node AddMember(string name, int line, string path = "/repo/src/Repo.cs")
     {
         using var model = modelMgr.UseModel();
-        var member =
-            model.Nodes.GetValueOrDefault(NodeId.FromName(name)) ?? AddNode(model, name, repo, NodeType.MethodMember);
+        var member = model.Nodes.GetValueOrDefault(NodeId.FromName(name))
+            ?? AddNode(model, name, repo, NodeType.MethodMember);
         member.Update(new ParsedNode(name, new() { FileSpan = new FileSpan(path, line, line) }));
         return member;
     }

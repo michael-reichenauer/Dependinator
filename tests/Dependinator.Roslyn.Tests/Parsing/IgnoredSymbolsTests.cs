@@ -25,9 +25,8 @@ public class IgnoredSymbolsTests(RoslynFixture fixture)
             .ParseType(fixture.Type<AnonymousTypeUser>(), fixture.Compilation, fixture.ModelName)
             .ToList();
 
-        Assert.DoesNotContain(
-            items,
-            item => item.Link is { } link && link.Target.Contains("anonymous", StringComparison.OrdinalIgnoreCase)
+        Assert.DoesNotContain(items, item =>
+            item.Link is { } link && link.Target.Contains("anonymous", StringComparison.OrdinalIgnoreCase)
         );
     }
 
@@ -49,9 +48,8 @@ public class IgnoredSymbolsTests(RoslynFixture fixture)
 
         var items = TypeParser.ParseType(type, compilation, "Sample").ToList();
 
-        Assert.DoesNotContain(
-            items,
-            item => item.Link is { } link && (link.Target.EndsWith(".") || link.Target.EndsWith(".var"))
+        Assert.DoesNotContain(items, item =>
+            item.Link is { } link && (link.Target.EndsWith(".") || link.Target.EndsWith(".var"))
         );
     }
 
@@ -85,9 +83,8 @@ public class IgnoredSymbolsTests(RoslynFixture fixture)
 
         List<Item> items = NamespaceParser.ParseNamespaces(compilation, "Sample").ToList();
 
-        Assert.DoesNotContain(
-            items,
-            item => item.Node is { } node && (node.Name.Contains("__Blazor") || node.Name.Contains("Microsoft"))
+        Assert.DoesNotContain(items, item =>
+            item.Node is { } node && (node.Name.Contains("__Blazor") || node.Name.Contains("Microsoft"))
         );
         Assert.Contains(items, item => item.Node is { } node && node.Name == "Sample.Sample.Real");
     }

@@ -217,14 +217,12 @@ public class ModelTests
 
         var lines = model.SerializeToDto().Lines;
 
-        Assert.Contains(
-            lines,
-            l =>
-                l.LineId == kept.Value
-                && l.Label == "uses"
-                && l.LabelDescription == "to the API"
-                && l.Source == "A"
-                && l.Target == "B"
+        Assert.Contains(lines, l =>
+            l.LineId == kept.Value
+            && l.Label == "uses"
+            && l.LabelDescription == "to the API"
+            && l.Source == "A"
+            && l.Target == "B"
         );
         Assert.Contains(lines, l => l.LineId == "legacy" && l.Label == "legacy");
         Assert.DoesNotContain(lines, l => l.LineId == dropped.Value);

@@ -16,8 +16,8 @@ public class E2ETestBase : PageTest
     // Listen(IPAddress.Loopback, 5000)). With "localhost" this client can resolve to ::1
     // and get "connection refused" even though the app is up. The ./scripts/e2e script overrides
     // this via E2E_BASE_URL, but keep the default consistent for manual ./scripts/watch runs.
-    protected static readonly string BaseUrl =
-        Environment.GetEnvironmentVariable("E2E_BASE_URL") ?? "http://127.0.0.1:5000";
+    protected static readonly string BaseUrl = Environment.GetEnvironmentVariable("E2E_BASE_URL")
+        ?? "http://127.0.0.1:5000";
 
     // Playwright's default Expect timeout is 5s, which flakes on slow CI runners: navigation
     // after clicking a search result animates pan/zoom over re-rendered tiles and (on the
@@ -117,9 +117,8 @@ public class E2ETestBase : PageTest
     private static async Task KeepOffTheInternetAsync(IBrowserContext context)
     {
         await context.RouteAsync("**/*.clerk.accounts.dev/**", route => route.AbortAsync());
-        await context.RouteAsync(
-            "https://fonts.googleapis.com/**",
-            route => route.FulfillAsync(new() { ContentType = "text/css", Body = "" })
+        await context.RouteAsync("https://fonts.googleapis.com/**", route =>
+            route.FulfillAsync(new() { ContentType = "text/css", Body = "" })
         );
         await context.RouteAsync("https://fonts.gstatic.com/**", route => route.AbortAsync());
         // Only when no stub is there yet: Playwright leaves the order of context and page init

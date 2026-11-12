@@ -83,11 +83,8 @@ static class NodeTreeSvg
 
         var privateToggleSvg =
             memberCardSvg.Length > 0
-                ? MemberCardSvg.GetPrivateToggleSvg(
-                    node,
-                    childrenCanvasOffset,
-                    childrenZoom,
-                    row => IsRowShown(row, context)
+                ? MemberCardSvg.GetPrivateToggleSvg(node, childrenCanvasOffset, childrenZoom, row =>
+                    IsRowShown(row, context)
                 )
                 : "";
 

@@ -283,23 +283,17 @@ class AiService(
             return toolsAnswer is ToolsAnswer answer ? answer.Json : toolsAnswer.Error;
         }
         if (route is AiSource.Copilot)
-            return await AskCopilotAsync(
-                getPrompt,
-                onStep,
-                (prompt, modelId) => vsCodeModelService.AskAsync(prompt, jsonSchema, modelId)
+            return await AskCopilotAsync(getPrompt, onStep, (prompt, modelId) =>
+                vsCodeModelService.AskAsync(prompt, jsonSchema, modelId)
             );
 
-        return await WithApiKeyAsync(
-            getPrompt,
-            onStep,
-            async prompt =>
-            {
-                var modelId = await GetClaudeModelIdAsync();
-                return isQuick
-                    ? await claudeService.AskQuicklyAsync(prompt, jsonSchema, modelId)
-                    : await claudeService.AskAsync(prompt, jsonSchema, modelId);
-            }
-        );
+        return await WithApiKeyAsync(getPrompt, onStep, async prompt =>
+        {
+            var modelId = await GetClaudeModelIdAsync();
+            return isQuick
+                ? await claudeService.AskQuicklyAsync(prompt, jsonSchema, modelId)
+                : await claudeService.AskAsync(prompt, jsonSchema, modelId);
+        });
     }
 
     public async Task<Result<ToolsAnswer>> AskWithModelToolsAsync(
@@ -311,16 +305,11 @@ class AiService(
     {
         return route switch
         {
-            AiSource.Claude => await WithApiKeyAsync(
-                getPrompt,
-                onStep,
-                async prompt =>
-                    await claudeService.AskWithModelToolsAsync(prompt, jsonSchema, await GetClaudeModelIdAsync())
+            AiSource.Claude => await WithApiKeyAsync(getPrompt, onStep, async prompt =>
+                await claudeService.AskWithModelToolsAsync(prompt, jsonSchema, await GetClaudeModelIdAsync())
             ),
-            AiSource.Copilot => await AskCopilotAsync(
-                getPrompt,
-                onStep,
-                (prompt, modelId) => vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId)
+            AiSource.Copilot => await AskCopilotAsync(getPrompt, onStep, (prompt, modelId) =>
+                vsCodeModelService.AskWithModelToolsAsync(prompt, jsonSchema, modelId)
             ),
             _ => new Error($"{route.Name()} cannot look things up with the model tools here."),
         };

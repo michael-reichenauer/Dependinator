@@ -99,9 +99,8 @@ public class SvgServiceDeepZoomTests
             .Select(v => double.Parse(v, CultureInfo.InvariantCulture))
             .ToList();
 
-        Assert.All(
-            viewportCoordinates,
-            c => Assert.True(Math.Abs(c) < FloatSafeCoordinate, $"Viewport coordinate {c} exceeds float-safe magnitude")
+        Assert.All(viewportCoordinates, c =>
+            Assert.True(Math.Abs(c) < FloatSafeCoordinate, $"Viewport coordinate {c} exceeds float-safe magnitude")
         );
     }
 }

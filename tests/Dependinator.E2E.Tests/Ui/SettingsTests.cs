@@ -207,8 +207,8 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
     // repeated until the node size actually changes.
     async Task ExpectWheelDownToZoomAsync(bool zoomIn)
     {
-        LocatorBoundingBoxResult canvas =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult canvas = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         // The demo nodes sit at the canvas center; a quarter in from the top-left is empty
         // canvas, so no node toolbar pops up under the pointer and takes the wheel event.
         await Page.Mouse.MoveAsync(canvas.X + canvas.Width / 4, canvas.Y + canvas.Height / 4);
@@ -256,8 +256,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 
     async Task<float> RootNodeWidthAsync()
     {
-        LocatorBoundingBoxResult box =
-            await App.Node("Demo.sln").First.BoundingBoxAsync()
+        LocatorBoundingBoxResult box = await App.Node("Demo.sln").First.BoundingBoxAsync()
             ?? throw new InvalidOperationException("Root node is not rendered.");
         return box.Width;
     }

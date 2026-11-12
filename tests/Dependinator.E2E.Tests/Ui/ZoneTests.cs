@@ -20,8 +20,8 @@ public class ZoneTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByText("Click on the diagram to place the zone's top-left corner.")).ToBeVisibleAsync();
 
         // Click an empty area (bottom-left) to put the zone's corner there.
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         ILocator labelInput = Page.GetByTestId("zone-label");
         await App.RepeatUntilVisibleAsync(
             () => Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 250),
@@ -48,8 +48,8 @@ public class ZoneTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         await Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 250, new() { Button = MouseButton.Right });
         await Expect(Page.GetByTestId("canvas-context-menu")).ToBeVisibleAsync();
         await Page.GetByTestId("context-menu-add-zone").ClickAsync();
@@ -63,8 +63,8 @@ public class ZoneTests(ITestOutputHelper output) : E2ETestBase(output)
         // The point is taken from the zone's rectangle, where the label sits in the top-left
         // corner: WebKit reports a wrong bounding box for the label <text> (offset by its own
         // x/y inside the nested tile <svg>), so a click at its center lands on empty canvas.
-        LocatorBoundingBoxResult zone =
-            await App.Node("Data").BoundingBoxAsync() ?? throw new InvalidOperationException("Zone not rendered.");
+        LocatorBoundingBoxResult zone = await App.Node("Data").BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Zone not rendered.");
         await App.RepeatUntilVisibleAsync(
             () => Page.Mouse.ClickAsync(zone.X + 12, zone.Y + 8),
             Page.GetByTestId("node-edit-zone")
