@@ -9,6 +9,26 @@ with the next official release.
 
 ## [Unreleased]
 
+### New
+
+- TypeScript and JavaScript projects open as models: a project (a `tsconfig.json`, a `jsconfig.json`, or a `package.json` for plain JavaScript) is found in the workspace and listed by its folder name, like solutions and Bicep deployments. It is drawn as folders and files with their classes, interfaces, enums and types, and each file's functions and variables as rows on its card; lines follow what the TypeScript compiler resolves, through imports, path aliases and re-exports to the member that is used, and to the packages under Externals
+- A monorepo's solution-style `tsconfig.json` is one model of all the projects it references
+- In VS Code a TypeScript or JavaScript project needs nothing installed, and its diagram refreshes when a script file is saved; test files are left out unless **Settings › Include test files** is on
+
+### Changed
+
+- In VS Code the Models menu lists only the workspace's models, each with its folder when there are several, the open one checked and synced ones marked; **Other Models …** (was **Manage Models …**) opens the Models dialog for cloud, design and demo models and models of other folders
+- A model that is not one of the workspace's is a visit in VS Code: the menu names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and a button back to the workspace model used last
+- All children of a node now open as containers at the same zoom while zooming in, instead of the bigger ones first; a bigger node is a bigger icon until then, and only a node resized by hand far beyond the layout's sizes opens by its own size on screen
+
+### Improved
+
+- The Models dialog lists the built-in demo models
+
+### Fixed
+
+- The menu button's tooltip no longer stays up after its menu, or a dialog opened from it, closes
+
 ## [v0.91.453241] - 2026-11-11
 
 ### New
