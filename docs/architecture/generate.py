@@ -191,26 +191,31 @@ d.box("api", 690, 320, 220, 125, "Cloud sync API", [
     "one folder per user",
     "at most 10 MB per user"], icon="Azure-Functions")
 
-d.node("src", 1180, 182, "Solution", "Workspace source", ".sln + C# projects,\n.bicep entry files + local modules")
-d.node("clerk", 1180, 382, "Authentication", "Clerk", "hosted sign-in, issues the\nJWTs the API checks")
-d.node("claude", 1180, 582, "Api", "Anthropic Claude API", "optional, with the user's own key")
+d.node("src", 1180, 145, "Solution", "Workspace source", ".sln + C# projects,\n.bicep entry files + local modules")
+d.node("agents", 1180, 290, "Communication", "AI agents", "Copilot, Claude Code: they ask about\nthe open model (MCP, localhost)")
+d.node("clerk", 1180, 435, "Authentication", "Clerk", "hosted sign-in, issues the\nJWTs the API checks")
+d.node("claude", 1180, 582, "Api", "AI providers", "optional, the user's pick: the Claude API\n(own key), Claude Code, Copilot's models\nin VS Code, or any AI chat (view 8)")
 
 d.edge("developer", "vscode", "Dependinator: Open", ACCENT, label_dy=-8)
 d.edge("visitor", "web", "HTTPS", ACCENT, label_dy=-8)
 d.edge("contributor", "dev", "browser", ACCENT, label_dy=-8)
-d.edge("vscode.r", "src", "reads and parses the workspace", ACCENT, label_at=0.45, label_dy=-8)
+d.port("vscode.src", 620, 145)
+d.edge("vscode.src", "src", "reads and parses the workspace", ACCENT, label_at=0.35, label_dy=-8)
+d.port("vscode.mcp", 620, 190)
+d.edge("agents", "vscode.mcp", "MCP server: questions about the open model", ASYNC, dashed=True, via=[(1010, 290), (1010, 190)], label_at=0.8, label_dy=-6)
 d.port("vscode.sync", 560, 245)
 d.edge("vscode.sync", "api.t", "optional sync", ASYNC, dashed=True, via=[(560, 280), (800, 280)], label_at=0.62, label_dy=-6)
 d.edge("web.r", "api.l", "sync", ASYNC, dashed=True, label_dy=-8)
-d.edge("api.r", "clerk", "validates sign-in tokens", label_at=0.68, label_dy=-8)
+d.port("api.clerk", 910, 435)
+d.edge("api.clerk", "clerk", "validates sign-in tokens", label_at=0.6, label_dy=-8)
 d.port("vscode.ai", 620, 225); d.port("claude.in", 1152, 565)
-d.edge("vscode.ai", "claude.in", "\"Ask Claude\" about a cycle", via=[(965, 225), (965, 565)], label_at=0.2, label_dy=-6)
+d.edge("vscode.ai", "claude.in", "AI features, when the user asks", via=[(965, 225), (965, 565)], label_at=0.2, label_dy=-6)
 d.port("dev.ai", 620, 600); d.port("claude.in2", 1152, 600)
-d.edge("dev.ai", "claude.in2", "\"Ask Claude\" (dev host)", label_at=0.45, label_dy=-6)
-d.note(40, 735, ["Solid blue: how people reach the product and how it reads code. Dashed brown: the optional cloud sync.",
+d.edge("dev.ai", "claude.in2", "AI features (dev host)", label_at=0.45, label_dy=-6)
+d.note(40, 735, ["Solid blue: how people reach the product and how it reads code. Dashed brown: the optional cloud sync, and AI agents asking about the model.",
                  "Parsing runs locally, in VS Code or the dev host. Cloud sync stores the drawn model (nodes, links, layout, notes), never source files;",
-                 "asking Claude about a cycle sends a prompt with the code excerpts involved, with the user's own API key."], size=11)
-write("1-context.svg", d, "Context view of Dependinator: developers use the VS Code extension, which parses their workspace; the same users view and adjust their synced models on dependinator.com from any device; contributors use the Blazor Server dev host. The VS Code extension and the web app can sync models through a small Azure Functions API with Blob Storage that validates Clerk sign-in tokens; the VS Code extension and the dev host call the Claude API, optionally, with the user's own key.")
+                 "the AI features send a prompt with the code excerpts involved to the AI the user picked. Through the MCP server, AI agents ask about the open model and can read a node's source."], size=11)
+write("1-context.svg", d, "Context view of Dependinator: developers use the VS Code extension, which parses their workspace; the same users view and adjust their synced models on dependinator.com from any device; contributors use the Blazor Server dev host. The VS Code extension and the web app can sync models through a small Azure Functions API with Blob Storage that validates Clerk sign-in tokens; the VS Code extension and the dev host ask an AI provider the user picked (the Claude API with the user's own key, Claude Code, Copilot's models in VS Code, or any AI chat), optionally; AI agents such as Copilot and Claude Code ask about the open model through Dependinator's MCP server on localhost.")
 
 # ------------------------------------------------------------------------------------------
 # 2. Hosts view: where the code runs
@@ -222,7 +227,7 @@ d.box("ext", 50, 110, 460, 145, "Extension host · TypeScript", [
     "    auto refresh on file changes, open a node's source",
     "languageServer.ts: starts the bundled server (server/<rid>/)",
     "cloudSyncAuth.ts, claudeApiKey.ts: sign-in, secret storage",
-    "languageModels.ts: asks VS Code's models (vscode.lm)"], icon="Utility")
+    "languageModels.ts, mcpServer.ts: VS Code's models, the MCP server"], icon="Utility")
 d.box("webview", 50, 310, 220, 140, "Webview", [
     "**Blazor WebAssembly",
     "Dependinator.Wasm, .UI, .Core",
@@ -231,11 +236,11 @@ d.box("webview", 50, 310, 220, 140, "Webview", [
 d.box("lsp", 290, 310, 220, 140, "Language server", [
     "**.NET, self-contained",
     "Dependinator.Lsp + Core,",
-    "Roslyn, Bicep, Claude",
+    "Roslyn, Bicep, Claude, Mcp",
     "OmniSharp LSP over stdio"], icon="Parsing")
 d.node("idb1", 160, 565, "Database", "IndexedDB", "model cache,\nin the webview")
 d.node("ws", 400, 565, "Solution", "Workspace folders", ".sln, .bicep, sources;\nMSBuild needs a .NET SDK")
-d.port("ext.b1", 160, 235); d.port("ext.b2", 400, 235)
+d.port("ext.b1", 160, 255); d.port("ext.b2", 400, 255)
 d.edge("ext.b1", "webview.t", "postMessage", ASYNC, dashed=True, both=True, label_dx=6, anchor="start", label_dy=4)
 d.edge("ext.b2", "lsp.t", "LSP, stdio", ASYNC, dashed=True, both=True, label_dx=6, anchor="start", label_dy=4)
 d.edge("lsp.b", "ws", "MSBuild, Roslyn,\nBicep compiler", ACCENT, label_dx=6, anchor="start", label_dy=-4)
@@ -261,7 +266,7 @@ d.edge("func.l1", "clerk2", "signing keys\n(JWKS)", dashed=True, via=[(820, 375)
 d.group(1080, 60, 400, 620, "Development", "the dev container and ./scripts")
 d.box("webhost", 1110, 110, 340, 140, "Blazor Server · localhost:5000", [
     "Dependinator.Web + UI + Core, with Roslyn,",
-    "Bicep and Claude in the same process",
+    "Bicep, Claude and Mcp in the same process",
     "the UI runs on the server (SignalR circuit)",
     "parses this repository; the e2e test target"], icon="Testing", tint=ACCENT)
 d.node("funclocal", 1200, 360, "Azure-Functions", "Functions host", "func start, src/Api")
@@ -283,29 +288,30 @@ d = Diagram(1440, 900, "Dependinator code structure view")
 d.group(30, 60, 1110, 150, "Hosts", "thin: wire up services and start")
 d.box("h-web", 60, 100, 190, 90, "Dependinator.Web", ["Blazor Server dev host", "0.2k lines"])
 d.box("h-wasm", 270, 100, 190, 90, "Dependinator.Wasm", ["WebAssembly app", "0.1k lines"])
-d.box("h-lsp", 480, 100, 190, 90, "Dependinator.Lsp", ["language server", "0.5k lines"])
+d.box("h-lsp", 480, 100, 190, 90, "Dependinator.Lsp", ["language server", "1.0k lines"])
 d.box("h-api", 690, 100, 190, 90, "Api", ["Azure Functions", "0.7k lines"])
-d.box("h-ext", 900, 100, 220, 90, "DependinatorVsCode", ["TypeScript, npm, not in the .sln", "1.3k lines"], dashed=True)
+d.box("h-ext", 900, 100, 220, 90, "DependinatorVsCode", ["TypeScript, npm, not in the .sln", "1.9k lines"], dashed=True)
 
-d.group(30, 240, 1110, 170, "Dependinator.UI · 28.7k lines", "Blazor + MudBlazor, shared by every host")
-d.box("u-app", 60, 285, 240, 110, "App/", ["app bar and menus, model list,", "dialogs, breadcrumb, progress,", "problem indicator, cloud sync button"])
-d.box("u-diag", 320, 285, 300, 110, "Diagrams/", ["canvas, SVG rendering and tiles, pan/zoom", "and editing gestures, dependency explorer,", "cycles, rules, paths, search, export, icons"], tint=ACCENT)
+d.group(30, 240, 1110, 170, "Dependinator.UI · 41.5k lines", "Blazor + MudBlazor, shared by every host")
+d.box("u-app", 60, 285, 240, 110, "App/", ["app bar and menus, model list,", "Settings dialog, breadcrumb, progress,", "problem indicator, cloud sync button"])
+d.box("u-diag", 320, 285, 300, 110, "Diagrams/", ["canvas, SVG rendering and tiles, pan/zoom", "and editing gestures, dependency explorer,", "cycles, rules, paths, search, export, icons,", "AI help: reviews, Ask, tours (view 8)"], tint=ACCENT)
 d.box("u-model", 640, 285, 230, 110, "Modeling/", ["Model (nodes, links, lines),", "layout engine, undoable commands,", "persisted DTOs"], tint=ACCENT)
 d.box("u-shared", 890, 285, 230, 110, "Shared/", ["IndexedDB, cloud sync, VS Code", "bridge, navigation, share links,", "events, themes, keyboard"])
 
 d.group(30, 440, 1110, 140, "Parsers and integrations", "each plugs into Core")
-d.box("p-roslyn", 60, 480, 190, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.8k lines"], icon="Parsing")
+d.box("p-roslyn", 60, 480, 190, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.9k lines"], icon="Parsing")
 d.box("p-bicep", 270, 480, 190, 85, "Dependinator.Bicep", ["Bicep: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
-d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Anthropic SDK: reviews, Ask", "0.9k lines"], icon="Api")
-d.box("p-mcp", 690, 480, 190, 85, "Dependinator.Mcp", ["MCP server: model tools", "0.3k lines"], icon="Api")
+d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Claude API and Claude Code", "1.1k lines"], icon="Api")
+d.box("p-mcp", 690, 480, 190, 85, "Dependinator.Mcp", ["MCP server: model tools", "0.4k lines"], icon="Api")
 d.box("p-refl", 900, 480, 220, 85, "Dependinator.Reflection", ["assemblies (Mono.Cecil), 2.5k", "inactive, no host uses it"], dashed=True)
 
-d.group(30, 610, 1110, 150, "Dependinator.Core · 3.5k lines", "no UI framework, no parser library")
-d.box("c-parse", 60, 655, 200, 90, "Parsing/", ["IParserService [Rpc],", "ISourceParser, Item types"], tint=ACCENT)
-d.box("c-rpc", 280, 655, 200, 90, "Rpc/", ["JsonRpcService ([Rpc]", "interfaces, StreamJsonRpc)"])
-d.box("c-sync", 500, 655, 180, 90, "CloudSync/", ["HTTP client for the", "sync API"])
-d.box("c-shared", 700, 655, 200, 90, "Shared/", ["workspace files, model", "paths, demo models"])
-d.box("c-utils", 920, 655, 200, 90, "Utils/", ["Result / Error unions,", "logging, timing"])
+d.group(30, 610, 1110, 150, "Dependinator.Core · 3.8k lines", "no UI framework, no parser library, no AI SDK")
+d.box("c-parse", 60, 655, 170, 90, "Parsing/", ["IParserService [Rpc],", "ISourceParser, Item types"], tint=ACCENT)
+d.box("c-rpc", 238, 655, 170, 90, "Rpc/", ["JsonRpcService ([Rpc]", "interfaces, StreamJsonRpc)"])
+d.box("c-sync", 416, 655, 170, 90, "CloudSync/", ["HTTP client for the", "sync API"])
+d.box("c-ai", 594, 655, 170, 90, "AI and MCP contracts", ["[Rpc] IClaudeService,", "IVsCodeModelService,", "IModelQueryService"])
+d.box("c-shared", 772, 655, 170, 90, "Shared/", ["workspace files, model", "paths, demo models"])
+d.box("c-utils", 950, 655, 170, 90, "Utils/", ["Result / Error unions,", "logging, timing"])
 
 d.group(30, 790, 1110, 85, "Shared · 0.1k lines", "DTOs used by the client and the API")
 d.box("s-dto", 600, 812, 520, 45, "CloudSyncContracts, BlobNameSanitizer")
@@ -315,34 +321,34 @@ d.edge("web-down", "app-top", None)
 d.port("wasm-down", 365, 190); d.port("diag-top", 365, 285)
 d.edge("wasm-down", "diag-top", None)
 d.port("lsp-down", 630, 190); d.port("claude-top", 630, 480)
-d.edge("lsp-down", "claude-top", "Lsp: Core + parsers", label_at=0.81, label_dx=6, anchor="start", label_dy=4)
+d.edge("lsp-down", "claude-top", "Lsp: Core, parsers, Claude, Mcp", label_at=0.81, label_dx=6, anchor="start", label_dy=4)
 d.port("model-down", 850, 395); d.port("cshared-top", 890, 655)
 d.edge("model-down", "cshared-top", "UI → Core", via=[(850, 422), (890, 422)], label_at=0.5, label_dx=6, anchor="start", label_dy=-6)
 d.edge("h-api.b", "s-dto.r", "Api: Shared only", via=[(785, 225), (1160, 225), (1160, 835)], label_at=0.652, label_dx=-6, anchor="end", label_dy=4)
 for x in (155, 365, 575, 785):
     d.port(f"p{x}a", x, 565); d.port(f"p{x}b", x, 655)
     d.edge(f"p{x}a", f"p{x}b", None)
-d.note(161, 600, ["parsers → Core"], size=10.5)
+d.note(161, 600, ["parsers and integrations → Core"], size=10.5)
 d.port("refl-a", 1020, 565); d.port("refl-b", 1020, 655)
 d.edge("refl-a", "refl-b", None, dashed=True)
 d.port("core-a", 1060, 745); d.port("core-b", 1060, 812)
 d.edge("core-a", "core-b", None)
 d.note(1066, 784, ["Core → Shared"], size=10.5)
 
-d.group(1180, 60, 240, 815, "Tests · 25k lines", "tests/, xUnit + Moq + Verify")
+d.group(1180, 60, 240, 815, "Tests · 33k lines", "tests/, xUnit + Moq + Verify")
 d.note(1194, 120, ["**Unit tests (dotnet test)",
-                   "UI.Tests · 15.1k",
-                   "Roslyn.Tests · 1.6k",
+                   "UI.Tests · 19.8k",
+                   "Roslyn.Tests · 1.8k",
                    "Core.Tests · 1.4k",
                    "Api.Tests · 1.0k",
+                   "Claude.Tests · 0.9k",
                    "Bicep.Tests · 0.7k",
+                   "Lsp.Tests · 0.7k",
                    "Reflection.Tests · 0.5k",
-                   "Lsp.Tests · 0.4k",
-                   "Claude.Tests · 0.2k",
-                   "Mcp.Tests · 0.2k",
+                   "Mcp.Tests · 0.4k",
                    "",
                    "**UI tests (./scripts/e2e)",
-                   "E2E.Tests · 4.4k",
+                   "E2E.Tests · 6.2k",
                    "Playwright against the dev",
                    "host: Chromium, Firefox and",
                    "WebKit, plus cloud sync",
@@ -362,7 +368,7 @@ d.note(1194, 120, ["**Unit tests (dotnet test)",
                    "· the MCP SDK stays out of",
                    "  Core and UI",
                    "· Shared uses nothing of ours"], size=11)
-write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep, Claude and Mcp libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
+write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep, Claude and Mcp libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, the AI and MCP contracts, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
 
 # ------------------------------------------------------------------------------------------
 # 4. Runtime view: from source code to a picture on the screen
@@ -385,15 +391,15 @@ d.divider(655, 70, 440, [])
 d.group(680, 60, 800, 380, "2 · Model", "Dependinator.UI, in the webview or the browser tab")
 d.node("ms", 770, 240, "Utility", "ModelService", "opens the cached model first,\nadds items in batches of 100")
 d.node("ss", 965, 240, "Namespace", "StructureService", "nodes by dotted name,\nparents, links, line funnels")
-d.node("model", 1160, 240, "Assembly", "Model", "node tree, links, lines,\nlayout, notes, rules")
-d.node("idb", 1390, 160, "Database", "IndexedDB", "a ModelDto per model path,\nsaved after edits (debounced)")
+d.node("model", 1160, 240, "Assembly", "Model", "node tree, links, lines, layout,\nnotes, rules, decisions")
+d.node("idb", 1390, 160, "Database", "IndexedDB", "a ModelDto per model path,\nsaved after edits (debounced);\nthe view as its own record")
 d.node("cloud", 1390, 350, "Blob-Storage", "Cloud sync", "optional (view 6)")
 d.edge("items", "ms", "IParserService [Rpc]:\nJSON-RPC in VS Code,\na local call elsewhere", ACCENT, label_dy=-34)
 d.edge("ms", "ss", None, ACCENT)
 d.edge("ss", "model", None, ACCENT)
 d.port("idb.l1", 1362, 170)
 d.edge("model", "idb.l1", "ModelDto", via=[(1260, 240), (1260, 170)], label_at=0.8, label_dy=-6)
-d.port("idb.b1", 1390, 222)
+d.port("idb.b1", 1390, 236)
 d.edge("idb.b1", "cloud", "push / pull", ASYNC, dashed=True, both=True, label_dx=6, anchor="start")
 d.port("idb.t1", 1390, 132)
 d.edge("idb.t1", "ms", "the cached model, opened first", dashed=True, via=[(1390, 110), (770, 110)], label_at=0.5, label_dy=-5)
@@ -415,22 +421,23 @@ d.note(1200, 690, ["Edits and analysis results show", "in the next render of the
 d.group(20, 750, 1460, 190, "Features that read or change the same model", "Diagrams/ and Modeling/Commands/")
 feats = [("explorer", "Search", "Dependency explorer", "what a node uses,\nand what uses it"),
          ("cycles", "Analytics", "Cycles", "strongly connected sets of\nsiblings; accept or fix"),
-         ("rules", "Security", "Architecture rules", "\"X must not depend on Y\",\nviolations highlighted"),
+         ("rules", "Security", "Architecture rules", "must not use, only X may use Y,\nlayers, independent, no cycles"),
          ("paths", "Network", "Path finder", "why does A depend on B:\nshortest chains"),
          ("problems", "Logging", "Problem indicator", "compile errors, open cycles,\nbroken rules"),
          ("search", "Search", "Search, share links", "fuzzy node search, links\nto a node or a view"),
-         ("commands", "Utility", "CommandService", "every edit is a command:\nundo / redo, then saved")]
+         ("commands", "Utility", "CommandService", "every edit is a command:\nundo / redo, then saved"),
+         ("ai", "Api", "AI help", "reviews, Ask, tours, rule\nsuggestions (view 8)")]
 for i, (key, icon, label, sub) in enumerate(feats):
-    d.node(key, 120 + i * 205, 835, icon, label, sub, size=36)
-write("4-runtime.svg", d, "Runtime view of Dependinator: a parser (Roslyn for C#, the Bicep compiler for Bicep, or a pre-parsed demo file) turns source into a flat list of items; across the IParserService RPC boundary ModelService and StructureService build the model of nodes, links and lines, which is cached in IndexedDB and optionally synced; the layout engine, RepLineService and SvgService turn it into cached SVG tiles on the canvas; the explorer, cycles, rules, path finder, problem indicator, search and undoable commands work on the same model.")
+    d.node(key, 110 + i * 183, 835, icon, label, sub, size=36)
+write("4-runtime.svg", d, "Runtime view of Dependinator: a parser (Roslyn for C#, the Bicep compiler for Bicep, or a pre-parsed demo file) turns source into a flat list of items; across the IParserService RPC boundary ModelService and StructureService build the model of nodes, links and lines, which is cached in IndexedDB and optionally synced; the layout engine, RepLineService and SvgService turn it into cached SVG tiles on the canvas; the explorer, cycles, rules, path finder, problem indicator, search, undoable commands and the AI help work on the same model.")
 
 # ------------------------------------------------------------------------------------------
 # 5. VS Code integration view: how the webview, the extension and the server talk
 # ------------------------------------------------------------------------------------------
-d = Diagram(1440, 790, "Dependinator VS Code integration view")
-d.group(20, 60, 380, 700, "Webview", "Blazor WebAssembly: Dependinator.Wasm + UI")
+d = Diagram(1440, 910, "Dependinator VS Code integration view")
+d.group(20, 60, 380, 830, "Webview", "Blazor WebAssembly: Dependinator.Wasm + UI")
 d.box("ui", 50, 110, 320, 110, "UI services", [
-    "ModelService, cloud sync, Claude prompts,", "workspace model list: they call [Rpc]", "interfaces (IParserService, ...) as proxies"], icon="View", tint=ACCENT)
+    "ModelService, cloud sync, AI features,", "workspace model list: they call [Rpc]", "interfaces (IParserService, ...) as proxies,", "and answer one: IModelQueryService"], icon="View", tint=ACCENT)
 d.box("rpc1", 50, 270, 320, 110, "JsonRpcService (Core)", [
     "StreamJsonRpc + System.Text.Json;", "gzip from 64 KB, chunks of at most 1 MB,", "base64 for the string-only transports"], icon="Communication")
 d.box("bridge", 50, 430, 320, 90, "VsCodeMessageService", [
@@ -441,7 +448,7 @@ d.box("sendrecv", 50, 570, 320, 160, "VsCodeSend / ReceiveService", [
 d.edge("ui.b", "rpc1.t", None, ACCENT, both=True)
 d.edge("rpc1.b", "bridge.t", None, ACCENT, both=True)
 
-d.group(540, 60, 380, 700, "Extension host", "TypeScript, Node.js")
+d.group(540, 60, 380, 830, "Extension host", "TypeScript, Node.js")
 d.box("ls", 570, 110, 320, 100, "languageServer.ts", [
     "starts server/<rid>/Dependinator.Lsp", "(dotnet run in development);", "restarted if it crashes"], icon="Configuration")
 d.box("ext", 570, 330, 320, 195, "extension.ts", [
@@ -449,16 +456,30 @@ d.box("ext", 570, 330, 320, 195, "extension.ts", [
     "holds UI messages until ui/lspReady", "opens files at a node's source",
     "follows the active editor (debounced)", "file watcher → ui/refresh", "status bar: parsing / idle",
     "commands: Open, Search, Refresh, ..."], icon="Utility")
-d.box("secrets", 570, 610, 320, 110, "VS Code SecretStorage", [
-    "Clerk access token (cloudSyncAuth.ts)", "Claude API key (claudeApiKey.ts)", "never stored in the UI"], icon="Security")
+d.box("secrets", 570, 760, 320, 110, "VS Code SecretStorage", [
+    "Clerk access token (cloudSyncAuth.ts)", "Claude API key (claudeApiKey.ts)", "MCP server token (mcpServer.ts)", "never stored in the UI"], icon="Security")
+d.box("aiext", 570, 610, 320, 110, "mcpServer.ts, languageModels.ts", [
+    "registers the MCP server for Copilot and", "Claude Code once it reports its URL",
+    "runs one turn of a VS Code model (vscode.lm),", "opens Copilot Chat with a fix prompt"], icon="Api")
 
-d.group(1040, 60, 380, 700, "Language server", "Dependinator.Lsp, .NET, OmniSharp")
+d.group(1040, 60, 380, 830, "Language server", "Dependinator.Lsp, .NET, OmniSharp")
 d.box("lmh", 1070, 110, 320, 100, "LspMessageHandler", ["notification lsp/message in,", "notification ui/message out"], icon="Messaging")
 d.box("rpc2", 1070, 260, 320, 90, "JsonRpcService (Core)", ["the same transport class as the UI"], icon="Communication")
 d.box("targets", 1070, 400, 320, 190, "[Rpc] targets", [
     "IParserService → Roslyn or Bicep parser", "IWorkspaceFileService: the workspace's", "  .sln files and Bicep entry points,", "  source text for excerpts",
-    "ICloudSyncRpcService → sync API (HTTP)", "IClaudeService → Anthropic API", "IVsCodeModelService → the extension"], icon="Parsing", tint=ACCENT)
-d.box("wfs", 1070, 640, 320, 90, "WorkspaceFolderService", ["workspace folders from initialize", "and folder-change notifications"], icon="Files")
+    "ICloudSyncRpcService → sync API (HTTP)", "IClaudeService → Anthropic API, Claude Code", "IVsCodeModelService → the extension",
+    "and one proxy: IModelQueryService → the UI"], icon="Parsing", tint=ACCENT)
+d.box("mcp", 1070, 640, 320, 110, "MCP server (Dependinator.Mcp)", [
+    "Streamable HTTP on a loopback port, with", "a bearer token; for Copilot, Claude Code", "and the app's own AI features (view 8).",
+    "Its tools ask the open diagram"], icon="Api")
+d.box("wfs", 1070, 790, 320, 80, "WorkspaceFolderService", ["workspace folders from initialize", "and folder-change notifications"], icon="Files")
+d.edge("mcp.t", "targets.b", "IModelQueryService", ASYNC, dashed=True, label_dx=6, anchor="start", label_dy=4)
+d.port("targets.l2", 1070, 530); d.port("aiext.r2", 890, 665)
+d.edge("targets.l2", "aiext.r2", "dependinator/lm/*: models,\na turn, open chat", ASYNC, dashed=True, via=[(965, 530), (965, 665)], label_at=0.45, label_dy=0, label_dx=-6, anchor="end")
+d.note(50, 795, ["**MCP tools → the open diagram",
+                 "A tool call reaches the UI as an [Rpc] call, through",
+                 "the same tunnel in the other direction. A closed",
+                 "webview never answers, so the call has a time limit."], size=11)
 d.edge("lmh.b", "rpc2.t", None, ACCENT, both=True)
 d.edge("rpc2.b", "targets.t", None, ACCENT, both=True)
 
@@ -471,9 +492,9 @@ d.edge("ls.r1", "lmh.l1", "spawns", ASYNC, dashed=True, label_dy=-6)
 d.port("ext.r1", 890, 420); d.port("lmh.l2", 1070, 185)
 d.edge("ext.r1", "lmh.l2", "LSP notifications\nover stdio", ACCENT, both=True, via=[(980, 420), (980, 185)], label_at=0.6, label_dx=-6, anchor="end")
 d.edge("ext.t", "ls.b", "starts", label_dx=6, anchor="start", label_dy=4)
-d.port("targets.l1", 1070, 560); d.port("secrets.r1", 890, 665)
-d.edge("targets.l1", "secrets.r1", "asks for the token or\nthe key, per request", ASYNC, dashed=True, via=[(1000, 560), (1000, 665)], label_at=0.667, label_dy=-20, label_dx=-8, anchor="end")
-write("5-vscode.svg", d, "VS Code integration view: the UI in the webview calls [Rpc] interfaces through Core's JsonRpcService, whose messages go via postMessage to the extension host, which relays them as LSP notifications over stdio to the language server, where another JsonRpcService dispatches them to the parser, workspace file, cloud sync and Claude services. The extension also sends editor, refresh and search messages to the UI, starts the server, and keeps the Clerk token and Claude key in VS Code's secret storage.")
+d.port("targets.l1", 1070, 560); d.port("secrets.r1", 890, 815)
+d.edge("targets.l1", "secrets.r1", "asks for the token or\nthe key, per request", ASYNC, dashed=True, via=[(1005, 560), (1005, 815)], label_at=0.6, label_dy=4, label_dx=-6, anchor="end")
+write("5-vscode.svg", d, "VS Code integration view: the UI in the webview calls [Rpc] interfaces through Core's JsonRpcService, whose messages go via postMessage to the extension host, which relays them as LSP notifications over stdio to the language server, where another JsonRpcService dispatches them to the parser, workspace file, cloud sync, Claude and VS Code model services. The language server also runs the MCP server, whose tools ask the open diagram through the same tunnel in the other direction (IModelQueryService, answered by the UI). The extension also sends editor, refresh and search messages to the UI, starts the server, registers the MCP server for Copilot and Claude Code, runs VS Code's language models for the server, and keeps the Clerk token, the Claude key and the MCP token in VS Code's secret storage.")
 
 # ------------------------------------------------------------------------------------------
 # 6. Cloud sync and identity view
@@ -535,7 +556,7 @@ d.node("site", 1000, 305, "Static-Web-Apps", "dependinator.com", "previews: the 
 d.box("vsx", 1100, 220, 310, 175, "GitHub release v<version>", [
     "tagged on what was built:", "main's merge, or dev for a preview", "(a pre-release)",
     "the .vsix packages as assets", "and the notes from CHANGELOG.md"], icon="Files")
-d.node("market", 1255, 500, "Cloud", "VS Code Marketplace", "releases only")
+d.node("market", 1255, 500, "Cloud", "VS Code Marketplace", "releases; previews go to its\npre-release track")
 d.port("devb.l1", 330, 125); d.port("devb.l2", 330, 285)
 d.edge("feature.r", "devb.l1", "PR, merge", ACCENT, label_dy=-8)
 d.edge("dependabot.r", "devb.l2", "PR", label_dy=-8)
@@ -547,6 +568,64 @@ d.port("vsx.l1", 1100, 305)
 d.edge("site", "vsx.l1", "then", ACCENT, label_dy=-8)
 d.edge("vsx.b", "market", None, ACCENT)
 d.note(30, 595, ["**Quality gate",
-                 "About 900 unit tests and a Playwright suite of 4.4k lines run on every push (build.yml calls unit-tests.yml and e2e.yml), and the Release workflow runs them all before it publishes;",
+                 "About 1,200 unit tests and a Playwright suite of 6.2k lines run on every push (build.yml calls unit-tests.yml and e2e.yml), and the Release workflow runs them all before it publishes;",
                  "Playwright traces are uploaded when an e2e test fails. CSharpier formatting is checked during the build, and the architecture tests guard the layering."], size=11)
-write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and Dependabot PRs merge into dev, whose pushes only run the tests; the Release workflow, run by hand on dev, runs the full gate and builds the site and a .vsix per platform, and then a preview deploys the pre-release site and a GitHub pre-release, while a release merges dev into main, deploys dependinator.com and publishes the VS Code Marketplace and a GitHub release.")
+write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and Dependabot PRs merge into dev, whose pushes only run the tests; the Release workflow, run by hand on dev, runs the full gate and builds the site and a .vsix per platform, and then a preview deploys the pre-release site, the Marketplace's pre-release track and a GitHub pre-release, while a release merges dev into main, deploys dependinator.com and publishes the VS Code Marketplace and a GitHub release.")
+
+# ------------------------------------------------------------------------------------------
+# 8. AI features view: how a feature asks an AI, and how an AI asks about the model
+# ------------------------------------------------------------------------------------------
+d = Diagram(1440, 900, "Dependinator AI features view")
+d.group(20, 60, 380, 780, "Dependinator.UI", "the same in every host")
+d.box("feat", 45, 105, 330, 130, "Features that ask", [
+    "review a cycle or a broken rule, Suggest rules,", "the Ask panel, About Node, Improve Comments,", "the codebase tour, line labels",
+    "each builds a prompt and the JSON schema", "of its answer"], icon="View", tint=ACCENT)
+d.box("aisvc", 45, 300, 330, 125, "IAiService (Diagrams/Ai)", [
+    "AiProvider.All: who can answer, look things up", "with the model tools, or edit code",
+    "the providers this host has and the user's", "default and models (Settings › AI, Config)"], icon="Configuration")
+d.note(57, 490, ["**What the app keeps to itself",
+                 "· prompts: one builder per feature, with shared",
+                 "  parts and source excerpts (PromptParts)",
+                 "· checks: suggested rules are checked again,",
+                 "  tour stops must be nodes, names become links",
+                 "· decisions: nothing is accepted, allowed or",
+                 "  added to the model until the user says so"], size=11)
+d.box("mq", 45, 680, 330, 130, "ModelQueries (Diagrams/Ai)", [
+    "answers IModelQueryService on the open", "diagram: the model's outline, a node's children",
+    "and dependencies, paths, cycles, rules, a check", "of a rule that is not saved, a node's source"], icon="Search", tint=ACCENT)
+d.edge("feat.b", "aisvc.t", "AskAsync(route, prompt, schema)", ACCENT, label_dx=6, anchor="start", label_dy=4)
+
+d.group(560, 200, 380, 640, "Language server (VS Code) or dev host", "never in the browser app, which has no key and no files")
+d.box("claude", 585, 250, 330, 105, "ClaudeService (Dependinator.Claude)", [
+    "Anthropic SDK, structured output", "ModelToolsAgent: its own tool loop, 15 turns", "the key: VS Code secrets or ANTHROPIC_API_KEY"], icon="Api")
+d.box("cc", 585, 385, 330, 105, "ClaudeCodeRunner (Dependinator.Claude)", [
+    "runs claude -p in the model's folder with", "read-only tools; a fix adds Edit and Write", "experimental, off until turned on in Settings"], icon="Utility")
+d.box("cop", 585, 520, 330, 105, "LspVsCodeModelService (VS Code only)", [
+    "forwards each request to the extension", "VsCodeToolsAgent: the tool loop, one turn", "of the model per request"], icon="Messaging")
+d.box("mcp", 585, 690, 330, 120, "MCP server (Dependinator.Mcp)", [
+    "9 read-only tools (ModelTools) over HTTP:", "a loopback port and a token in VS Code,", "/mcp in the dev host",
+    "the tool loops above are its clients too"], icon="Api", tint=ACCENT)
+
+d.group(1080, 60, 340, 780, "Outside Dependinator", "the user's own accounts")
+d.node("chat", 1250, 130, "Communication", "Any AI chat", "claude.ai or another: answers only")
+d.node("api", 1250, 290, "Api", "Anthropic Claude API", "the user's key; a few cents\nper answer, shown in the Ask panel")
+d.node("cli", 1250, 425, "Utility", "Claude Code", "the user's CLI and Claude login;\nreads the code, edits it for a fix")
+d.node("lm", 1250, 560, "View", "VS Code language models", "Copilot's, asked by the extension\n(vscode.lm); a fix opens Copilot Chat")
+d.node("agents", 1250, 735, "Network", "AI agents", "Copilot and Claude Code as\nMCP clients, asked by the user\nor started by the app")
+
+d.port("feat.r1", 375, 130)
+d.edge("feat.r1", "chat", "\"Use your AI chat\": the user copies the prompt and pastes the answer back", ASYNC, dashed=True, label_at=0.5, label_dy=-7)
+d.port("aisvc.r1", 375, 340); d.port("aisvc.r3", 375, 394)
+d.edge("aisvc.r1", "claude.l", "IClaudeService [Rpc]", ACCENT, via=[(510, 340), (510, 302.5)], label_at=0.16, label_dy=-6)
+d.edge("aisvc.r1", "cc.l", None, ACCENT, via=[(510, 340), (510, 437.5)])
+d.edge("aisvc.r3", "cop.l", "IVsCodeModelService [Rpc]", ACCENT, via=[(455, 394), (455, 572.5)], label_at=0.66, label_dy=22, label_dx=28, anchor="middle")
+d.port("claude.r1", 915, 290); d.port("cc.r1", 915, 425); d.port("cop.r1", 915, 560)
+d.edge("claude.r1", "api", "HTTPS", ACCENT, label_dy=-7)
+d.edge("cc.r1", "cli", "starts the process", ACCENT, label_dy=-7)
+d.edge("cop.r1", "lm", "dependinator/lm/*", ACCENT, label_dy=-7)
+d.port("mcp.r1", 915, 735); d.port("mcp.l1", 585, 745)
+d.edge("agents", "mcp.r1", "MCP, Streamable HTTP", ASYNC, dashed=True, label_dy=-7)
+d.edge("mcp.l1", "mq.r", "IModelQueryService [Rpc]", ASYNC, dashed=True, label_dy=-7)
+d.note(30, 866, ["Solid blue: a feature asks an AI; every route gets the same prompt and returns the same JSON answer, so a feature does not know which AI answered. Dashed brown: an AI looks things up in the open model.",
+                 "The [Rpc] calls are plain calls in the dev host and cross the JSON-RPC tunnel in VS Code (view 5). The standalone browser app has only the AI chat route."], size=11)
+write("8-ai.svg", d, "AI features view of Dependinator: the features that ask an AI (cycle and rule reviews, Suggest rules, the Ask panel, About Node, Improve Comments, the codebase tour, line labels) build a prompt and a JSON schema and go through the UI's IAiService, which knows the providers and the user's default. The Claude API route and the Claude Code route are behind the IClaudeService RPC interface, implemented by Dependinator.Claude in the language server or the dev host; the Copilot route is behind IVsCodeModelService, which the language server forwards to the VS Code extension and its language models; the AI chat route is copy and paste. In the other direction, the MCP server in Dependinator.Mcp gives AI agents, Claude Code runs and the app's own tool loops nine read-only tools, which ask the open diagram through the IModelQueryService RPC interface that the UI's ModelQueries answers.")
