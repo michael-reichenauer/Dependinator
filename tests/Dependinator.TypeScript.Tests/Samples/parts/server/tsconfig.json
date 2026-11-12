@@ -10,7 +10,7 @@
         "strict": true,
         "composite": true,
         "paths": {
-            "*": ["./types/*"]
+            "*": ["./types/*", "../node_modules/*"]
         }
     },
     "include": ["src"]

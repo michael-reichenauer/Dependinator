@@ -130,7 +130,8 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   installed package (`import "pkg/dist/site.css"`) is a plain link to the package, and a path
   alias (the config's `paths`, or the bundlers' `@/x`, `~/x`, `#x`) is no package at all. A
   catch-all `"*": ["src/*"]` is an alias only for what is in one of its places (`components/x`
-  with a folder `src/components`), since it matches every package's name too. An alias that only the bundler's config knows and that looks like a package
+  with a folder `src/components`; a place in `node_modules` does not count), since it matches
+  every package's name too. An alias that only the bundler's config knows and that looks like a package
   (`@components/Button`) cannot be told from a missing one: it is reported, and the message says
   that such an alias belongs in the config's `paths`.
 - A project's sole folder chain (`src`) is a pass-through in the diagram, like the namespaces

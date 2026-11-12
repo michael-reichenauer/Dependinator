@@ -799,7 +799,9 @@ export class ModelBuilder {
         const options = this.program.getCompilerOptions();
         const baseDir = options.baseUrl ?? (options as { pathsBasePath?: string }).pathsBasePath ?? this.project.projectDir;
         const first = specifier.split("/")[0];
-        return (options.paths?.["*"] ?? []).some(place => {
+        // (A place in node_modules has the installed packages, which are no aliases)
+        const places = (options.paths?.["*"] ?? []).filter(place => !place.split(/[\\/]/).includes("node_modules"));
+        return places.some(place => {
             const target = path.resolve(baseDir, place.replace("*", first));
             return fs.existsSync(target) || SourceExtensions.some(extension => fs.existsSync(target + extension));
         });

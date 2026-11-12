@@ -81,7 +81,7 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
     [Fact]
     public void CatchAllPath_ShouldBeAnAlias_OnlyForWhatIsInItsPlaces()
     {
-        // "paths": { "*": ["./types/*"] } matches every module. "path", which the made-up Node
+        // "paths": { "*": ["./types/*", "../node_modules/*"] } matches every module. "path", which the made-up Node
         // types do not declare, is still one of Node's modules
         Assert.True(Items.HasLink("parts.server.src.api*ts", "node.path"));
 
@@ -90,6 +90,9 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
         Assert.True(Items.HasLink(Ping, "parts.server.types.shapes.square*ts.area"));
         Assert.DoesNotContain(Items.Links(), l => l.Target.StartsWith("shapes"));
         Assert.DoesNotContain(Items, i => i.Problem?.Message.Contains("shapes") == true);
+
+        // The other place is node_modules: a package in it is a package, not an alias
+        Assert.True(Items.HasLink("parts.server.src.api*ts", "tiny-css"));
     }
 
     [Fact]

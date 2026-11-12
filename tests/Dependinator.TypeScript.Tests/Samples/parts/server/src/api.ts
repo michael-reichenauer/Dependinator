@@ -5,6 +5,7 @@ import { shared } from "@acme/core";
 import { stamp } from "@acme/util";
 import { area } from "shapes/square";
 import { gone } from "shapes/gone";
+import "tiny-css/dist/tiny.css";
 
 export function ping(): string {
     const text = readFileSync(join(process.env.HOME ?? "", "ping.txt"), "utf8");
