@@ -127,9 +127,9 @@ static class MemberCardSvg
         Func<Node, bool>? isRowShown = null
     )
     {
-        // Sizes for a 180 px card: it shows from about 200 px (NodeViewPolicy), and its text stops
-        // growing soon after, near the size the rows have when the full card replaces it, so
-        // growing it reveals more rows instead.
+        // Sizes for a 180 px card: it shows from 120 px (the smallest type) to 360 px (the largest;
+        // NodeViewPolicy.OpenSize), and its text stops growing at about 230 px, near the size the
+        // rows have when the full card replaces it, so growing it reveals more rows instead.
         var u = Math.Min(rect.Width / 180, 1.3);
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
         var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);

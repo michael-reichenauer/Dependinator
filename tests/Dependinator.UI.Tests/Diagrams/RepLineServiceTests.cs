@@ -632,9 +632,10 @@ public class RepLineServiceTests
     [Fact]
     public void Sync_NodeResizedAtSameZoom_ShouldResolveRepsAgain()
     {
-        // Whether a node opens depends on its size (NodeViewPolicy), so a resize (or a layout)
-        // at an unchanged zoom can open it: the layout generation makes Sync re-check instead
-        // of skipping the unchanged zoom.
+        // Whether a node opens can depend on its size (NodeViewPolicy: a node resized far beyond
+        // the layout's sizes opens by its size on screen), so a resize (or a layout) at an
+        // unchanged zoom can open it: the layout generation makes Sync re-check instead of
+        // skipping the unchanged zoom.
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
         var parentB = AddNode(model, "ParentB", model.Root);
@@ -647,7 +648,7 @@ public class RepLineServiceTests
         RepLineService.Sync(model, IconZoom);
         Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
 
-        new NodeEditCommand(parentA.Id) { Boundary = new Rect(0, 0, 300, 300) }.Execute(model);
+        new NodeEditCommand(parentA.Id) { Boundary = new Rect(0, 0, 500, 500) }.Execute(model);
         RepLineService.Sync(model, IconZoom);
 
         Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);

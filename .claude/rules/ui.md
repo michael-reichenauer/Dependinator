@@ -67,6 +67,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `NodeViewPolicy.MaxFramedNodeSize`, because tiles render up to 1.3x the view zoom.
 - `NodeViewPolicy.EffectiveZoom` treats `Rect.None` as size 100 (many tests build nodes without a
   boundary).
+- Siblings open as containers at the same zoom (`NodeViewPolicy.OpenSize`: a node stops being an
+  icon at `MinContainerZoom`, whatever its size, so the layout's sizes open at 120 to 360 px on
+  screen). Only a node resized by hand outside 50 to 200 units opens by its own size on screen
+  (at 100 or 400 px), so a resize can still open a node at an unchanged zoom. The node's own
+  chrome (background fade, zoomed past) still follows its size on screen.
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
   `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.

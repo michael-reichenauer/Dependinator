@@ -85,6 +85,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
   to hide it again later. Since Oct 30 the switch is in Settings › AI, with the default provider. Keep it out of the README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
+- All children of a node open as containers at the same zoom (Nov 12, Michael). Opening each node
+  by its own size on screen (Oct 14 to Nov 12) left icons beside open containers over a 3x zoom
+  range, which looked odd and surprising. Not a setting: a design choice, not a preference.
 
 ## Ideas waiting for a session
 

@@ -106,18 +106,44 @@ public class NodeViewPolicyTests
         Assert.Equal(expected, NodeViewPolicy.IsShowIcon(DefaultNode(), zoom));
     }
 
-    [Fact]
-    public void IsShowIcon_LargeNode_ShouldOpenAtLowerZoom()
+    // Siblings open together: every size the layout gives a node (NodeSizing.SideSteps) opens at
+    // the zoom a default-size node does, so a container's children are all icons or all open.
+    [Theory]
+    [InlineData(60)]
+    [InlineData(100)]
+    [InlineData(140)]
+    [InlineData(180)]
+    public void IsShowIcon_LayoutSizes_ShouldOpenAtTheSameZoom(double side)
     {
-        // A node twice the reference size opens when it is as large on screen as a default node
-        // opening, i.e. at half the zoom; a small node stays an icon a little longer.
-        var large = NodeOfSize(200);
-        var small = NodeOfSize(60);
+        var node = NodeOfSize(side);
 
-        Assert.True(NodeViewPolicy.IsShowIcon(large, 1.0));
-        Assert.False(NodeViewPolicy.IsShowIcon(large, 1.01));
-        Assert.True(NodeViewPolicy.IsShowIcon(small, 3.0));
-        Assert.False(NodeViewPolicy.IsShowIcon(small, 3.4));
+        Assert.True(NodeViewPolicy.IsShowIcon(node, 2.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(node, 2.01));
+        Assert.False(NodeViewPolicy.IsPastIcon(node, 2.0));
+        Assert.True(NodeViewPolicy.IsPastIcon(node, 2.01));
+    }
+
+    [Fact]
+    public void IsShowIcon_NodeResizedFarBeyondTheLayoutSizes_ShouldOpenByItsSizeOnScreen()
+    {
+        // A node enlarged by hand opens at the latest when it is 400 pixels on screen, instead of
+        // staying an ever larger icon; a node shrunk by hand opens once it is 100 pixels.
+        var huge = NodeOfSize(400);
+        var tiny = NodeOfSize(25);
+
+        Assert.True(NodeViewPolicy.IsShowIcon(huge, 1.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(huge, 1.01));
+        Assert.True(NodeViewPolicy.IsShowIcon(tiny, 4.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(tiny, 4.01));
+    }
+
+    [Fact]
+    public void IsShowIcon_NonSquareNode_ShouldOpenByItsShorterSide()
+    {
+        var wide = new ModelNode("Node", null!) { Type = NodeType.ClassType, Boundary = new Rect(0, 0, 600, 100) };
+
+        Assert.True(NodeViewPolicy.IsShowIcon(wide, 2.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(wide, 2.01));
     }
 
     [Fact]
