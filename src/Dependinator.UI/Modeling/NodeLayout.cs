@@ -797,7 +797,7 @@ class NodeLayout
         {
             NodeType.ConstructorMember => 0,
             NodeType.PropertyMember => 1,
-            NodeType.MethodMember => 2,
+            NodeType.MethodMember or NodeType.FunctionMember => 2,
             NodeType.EventMember => 3,
             NodeType.FieldMember => 4,
             NodeType.ResourceMember => 5,

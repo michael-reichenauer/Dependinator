@@ -103,13 +103,23 @@ async function waitForLspReady(): Promise<void> {
     await lspReadyPromise;
 }
 
-/** True for documents the model is parsed from: C# sources and Bicep files. */
+const scriptLanguageIds = ["typescript", "typescriptreact", "javascript", "javascriptreact"];
+const scriptFileNames = ["tsconfig.json", "jsconfig.json", "package.json"];
+
+/** True for a file of a TypeScript or JavaScript project: a source file, or the file that defines the project. */
+function isScriptFile(path: string): boolean {
+    const lowerPath = path.toLowerCase();
+    const fileName = lowerPath.substring(lowerPath.lastIndexOf("/") + 1);
+    return /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(fileName) || scriptFileNames.includes(fileName);
+}
+
+/** True for documents the model is parsed from: C# sources, Bicep files, and TypeScript and JavaScript files. */
 function isSourceDocument(document: vscode.TextDocument): boolean {
-    if (document.languageId === "csharp" || document.languageId === "bicep")
+    if (document.languageId === "csharp" || document.languageId === "bicep" || scriptLanguageIds.includes(document.languageId))
         return true;
 
     const fileName = document.fileName.toLowerCase();
-    return fileName.endsWith(".cs") || fileName.endsWith(".bicep");
+    return fileName.endsWith(".cs") || fileName.endsWith(".bicep") || isScriptFile(document.uri.path);
 }
 
 function getDocumentPath(document: vscode.TextDocument): string | undefined {
@@ -144,9 +154,14 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
 // parse→change→parse loops since design-time builds can write under obj/.
 const autoRefreshIgnoredSegments = ["/obj/", "/bin/", "/node_modules/", "/.git/"];
 
+// What a TypeScript or JavaScript project builds, which is not its source.
+const scriptOutputSegments = ["/dist/", "/out/", "/build/", "/coverage/", "/wwwroot/"];
+
 function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
     const path = uri.path.toLowerCase();
-    return !autoRefreshIgnoredSegments.some(segment => path.includes(segment));
+    if (autoRefreshIgnoredSegments.some(segment => path.includes(segment)))
+        return false;
+    return !isScriptFile(path) || !scriptOutputSegments.some(segment => path.includes(segment));
 }
 
 /**
@@ -156,9 +171,20 @@ function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
  * Returns the disposables owning the watcher, its pending debounce timer and the config listener.
  */
 function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
-    const watcher = vscode.workspace.createFileSystemWatcher("**/*.{cs,csproj,sln,bicep,bicepparam}");
+    const watcher = vscode.workspace.createFileSystemWatcher(
+        "**/{*.cs,*.csproj,*.sln,*.bicep,*.bicepparam,*.ts,*.tsx,*.mts,*.cts,*.js,*.jsx,*.mjs,*.cjs,tsconfig.json,jsconfig.json,package.json}"
+    );
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
     let hasUnrefreshedChanges = false;
+    // The kinds of the changed files, sent with the message: "script" for a TypeScript or
+    // JavaScript project's files and "code" for the others. The UI ignores a change of the kind
+    // its model is not parsed from: a JavaScript build must not re-parse a C# solution.
+    const changedKinds = new Set<string>();
+    const takeChangedKinds = (): string => {
+        const kinds = [...changedKinds].join(",");
+        changedKinds.clear();
+        return kinds;
+    };
 
     // Read config at use time so toggling the setting needs no reload.
     const config = () => vscode.workspace.getConfiguration("dependinator.autoRefresh");
@@ -166,12 +192,13 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     const refresh = (): void => {
         hasUnrefreshedChanges = false;
         logger.log("Source files changed, refreshing diagram");
-        panel.webview.postMessage({ type: "ui/refresh", message: "" });
+        panel.webview.postMessage({ type: "ui/refresh", message: takeChangedKinds() });
     };
 
     const onFileEvent = (uri: vscode.Uri): void => {
         if (!isAutoRefreshRelevant(uri))
             return;
+        changedKinds.add(isScriptFile(uri.path) ? "script" : "code");
 
         const delaySeconds = Math.max(1, config().get<number>("delaySeconds", 3));
         if (pendingTimer)
@@ -183,8 +210,9 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
                 return;
             }
             // Manual mode: only mark the diagram as out of date (a dot on the Re-parse button).
+            // The kinds stay until the refresh, which sends them
             hasUnrefreshedChanges = true;
-            panel.webview.postMessage({ type: "ui/sourceChanged", message: "" });
+            panel.webview.postMessage({ type: "ui/sourceChanged", message: [...changedKinds].join(",") });
         }, delaySeconds * 1000);
     };
 

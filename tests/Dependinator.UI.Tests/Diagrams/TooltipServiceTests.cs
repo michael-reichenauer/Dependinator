@@ -12,6 +12,7 @@ using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
+using ParsedNode = Dependinator.Core.Parsing.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -144,6 +145,62 @@ public class TooltipServiceTests
         // Without where it may wrap: after "(", not at the non-breaking spaces
         var html = TooltipService.DeclarationHtml(member).Replace("<wbr>", "").Replace("&nbsp;", " ");
         Assert.Equal(expected, WebUtility.HtmlDecode(html));
+    }
+
+    // TypeScript and JavaScript declare the type last, as the member's row shows it.
+    [Theory]
+    [InlineData(
+        nameof(NodeType.FunctionMember),
+        "(port?: number): Promise<void>",
+        "<b>start</b>(port?: number): Promise<void>"
+    )]
+    [InlineData(nameof(NodeType.MethodMember), "(...ids: string[])", "<b>start</b>(...ids: string[])")]
+    [InlineData(nameof(NodeType.VariableMember), ": number", "<b>start</b>: number")]
+    [InlineData(nameof(NodeType.PropertyMember), "?: string", "<b>start</b>?: string")]
+    [InlineData(nameof(NodeType.FunctionMember), "", "<b>start</b>")]
+    public void DeclarationHtml_ShouldReadLikeTypeScript_ForAMemberOfAScriptFile(
+        string type,
+        string signature,
+        string expected
+    )
+    {
+        Node member;
+        using (var model = modelMgr.UseModel())
+        {
+            var file = AddNode(model, "app.src.main*ts", model.Root, NodeType.SourceFile);
+            member = AddNode(model, "app.src.main*ts.start", file, Enum.Parse<NodeType>(type));
+            member.Update(
+                new ParsedNode(
+                    member.Name,
+                    new() { Signature = signature, FileSpan = new FileSpan("/repo/app/src/main.ts", 3, 9) }
+                )
+            );
+        }
+
+        var html = TooltipService.DeclarationHtml(member).Replace("<wbr>", "").Replace("&nbsp;", " ");
+        Assert.Equal(expected, WebUtility.HtmlDecode(html));
+    }
+
+    [Fact]
+    public void GetHtml_ShouldNameAScriptProjectItsFilesAndFunctions()
+    {
+        Node project,
+            file,
+            start;
+        using (var model = modelMgr.UseModel())
+        {
+            project = AddNode(model, "app", model.Root, NodeType.Solution);
+            project.Update(new ParsedNode("app", new() { FileSpan = new FileSpan("/repo/app/tsconfig.json", 0, 0) }));
+            var src = AddNode(model, "app.src", project, NodeType.Parent);
+            file = AddNode(model, "app.src.main*ts", src, NodeType.SourceFile);
+            start = AddNode(model, "app.src.main*ts.start", file, NodeType.FunctionMember);
+        }
+
+        var service = NewService();
+
+        Assert.Contains("TypeScript project", Html(service, NodeElement(project)));
+        Assert.Contains("File in src", Html(service, NodeElement(file)));
+        Assert.Contains("Function in src.main.ts", Html(service, NodeElement(start))?.Replace("<wbr>", ""));
     }
 
     [Fact]

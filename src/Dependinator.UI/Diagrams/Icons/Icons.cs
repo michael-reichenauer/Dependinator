@@ -45,6 +45,9 @@ static class Icon
         { Parsing.NodeType.VariableMember, "Field" },
         { Parsing.NodeType.OutputMember, "Event" },
         { Parsing.NodeType.ResourceMember, "Cloud" },
+        // Source files and their free functions (TypeScript, JavaScript)
+        { Parsing.NodeType.SourceFile, "Files" },
+        { Parsing.NodeType.FunctionMember, "Function" },
     };
 
     // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".

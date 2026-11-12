@@ -29,9 +29,11 @@ static class PromptParts
         return new SourceUnit(span, [.. memberLines]);
     }
 
-    // Types, and the modules and resources of infrastructure models, have spans worth showing.
+    // Types, the modules and resources of infrastructure models, and source files have spans
+    // worth showing.
     internal static bool HasSource(Node node) =>
-        node.FileSpan is not null && (node.Type.IsType || node.Type is NodeType.Module or NodeType.Resource);
+        node.FileSpan is not null
+        && (node.Type.IsType || node.Type is NodeType.Module or NodeType.Resource or NodeType.SourceFile);
 
     internal static void AppendSource(
         StringBuilder text,
@@ -81,6 +83,10 @@ static class PromptParts
         {
             ".cs" => "csharp",
             ".bicep" => "bicep",
+            ".ts" or ".mts" or ".cts" => "typescript",
+            ".tsx" => "tsx",
+            ".js" or ".mjs" or ".cjs" => "javascript",
+            ".jsx" => "jsx",
             _ => "",
         };
 
@@ -234,6 +240,7 @@ static class PromptParts
             NodeType.Type => "type",
             NodeType.Module => "module",
             NodeType.Resource => "resource",
+            NodeType.SourceFile => "file",
             _ => "group",
         };
 

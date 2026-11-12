@@ -1,4 +1,5 @@
 using System.Text;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
@@ -7,7 +8,8 @@ using NodeType = Dependinator.Core.Parsing.NodeType;
 namespace Dependinator.UI.Diagrams.NodeHelp;
 
 // The text that asks an AI that can change the code (Claude Code) to add or improve the comments of
-// some namespaces and types (or Bicep modules and resources), and the descriptions of projects (their
+// some namespaces and types (or Bicep modules and resources, or TypeScript and JavaScript files and
+// types), and the descriptions of projects (their
 // [assembly: AssemblyDescription(...)] attribute), which Dependinator shows as their descriptions. Each one is listed with where it is declared, its comment now, and the parts
 // outside it that it uses and that use it, which a good comment puts it among. It says where a
 // comment must go for the parser to read it: right above the declaration, and for a namespace in
@@ -37,7 +39,12 @@ static class CommentsPrompt
         && node.FileSpan is not null
         && (
             node.Type.IsType
-            || node.Type is NodeType.Assembly or NodeType.Namespace or NodeType.Module or NodeType.Resource
+            || node.Type
+                is NodeType.Assembly
+                    or NodeType.Namespace
+                    or NodeType.Module
+                    or NodeType.Resource
+                    or NodeType.SourceFile
         );
 
     // A C# project, whose description is an attribute (or its project file's property), not a comment.
@@ -50,11 +57,13 @@ static class CommentsPrompt
 
         var isBicep = targets.Any(IsBicep);
         var isProject = targets.Any(IsProject);
-        var isCSharp = targets.Any(t => !IsBicep(t) && !IsProject(t));
+        var isScript = targets.Any(IsScript);
+        var isCSharp = targets.Any(t => !IsBicep(t) && !IsProject(t) && !IsScript(t));
         var parts = Join([
             .. isProject ? ["projects"] : Array.Empty<string>(),
             .. isCSharp ? ["namespaces", "types"] : Array.Empty<string>(),
             .. isBicep ? ["modules", "resources"] : Array.Empty<string>(),
+            .. isScript ? ["files", "types"] : Array.Empty<string>(),
         ]);
 
         var text = new StringBuilder();
@@ -68,7 +77,10 @@ static class CommentsPrompt
 
         text.AppendLine()
             .Append(
-                isCSharp || !isBicep ? GoodComment : GoodComment.Replace("namespace or type", "module or resource")
+                isCSharp ? GoodComment
+                : isBicep ? GoodComment.Replace("namespace or type", "module or resource")
+                : isScript ? GoodComment.Replace("namespace", "file")
+                : GoodComment
             );
         if (isProject)
             text.Append(GoodProjectDescription);
@@ -79,6 +91,8 @@ static class CommentsPrompt
             text.Append(CSharpPlaces);
         if (isBicep)
             text.Append(BicepPlaces);
+        if (isScript)
+            text.Append(ScriptPlaces);
         text.AppendLine().Append(Rules);
 
         text.AppendLine().AppendLine($"## The {(targets.Count == 1 ? "one" : targets.Count)} to comment").AppendLine();
@@ -119,6 +133,12 @@ static class CommentsPrompt
 
     const string BicepPlaces = """
         - A Bicep module's or resource's comment is its `@description('...')` decorator, right above its declaration.
+
+        """;
+
+    const string ScriptPlaces = """
+        - A TypeScript or JavaScript file's comment goes at the very top of the file (below a `#!` line), as `//` lines or a `/* */` block, with an empty line below it. A comment directly above the first declaration is read as that declaration's, not the file's.
+        - A class's, interface's, enum's or type's comment is the JSDoc comment (`/** ... */`) right above its declaration.
 
         """;
 
@@ -166,6 +186,9 @@ static class CommentsPrompt
     }
 
     static bool IsBicep(Node node) => node.Type is NodeType.Module or NodeType.Resource;
+
+    // A TypeScript or JavaScript file, or a type declared in one
+    static bool IsScript(Node node) => node.FileSpan is { } span && ModelPaths.IsScriptFile(span.Path);
 
     // "a", "a and b", "a, b and c".
     static string Join(IReadOnlyList<string> words) =>

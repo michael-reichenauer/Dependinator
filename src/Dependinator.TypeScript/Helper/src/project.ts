@@ -9,6 +9,7 @@ import { createCompilerHost } from "./libraries";
 //   package.json                    the tsconfig.json or jsconfig.json beside it, or else every
 //                                   source file below its folder (a plain JavaScript project)
 export interface Project {
+    entryPath: string;
     projectDir: string;
     packageName?: string;
     packageDescription?: string;
@@ -45,7 +46,7 @@ export function loadProject(entryPath: string): Project {
         options: programOptions,
         host: createCompilerHost(programOptions),
     });
-    return { projectDir, packageName: name, packageDescription: description, program };
+    return { entryPath: fullPath, projectDir, packageName: name, packageDescription: description, program };
 }
 
 function findConfigPath(entryPath: string): string | undefined {

@@ -40,16 +40,23 @@ class VsCodeReceiveService : IVsCodeReceiveService
                 await navigationService.ShowNodeAsync(message);
                 break;
             case "ui/refresh":
-                await RefreshAsync();
+                if (IsSourceOfModel(message))
+                    await RefreshAsync();
                 break;
             case "ui/sourceChanged": // Source files changed while automatic refresh is off
-                modelService.MarkSourceChanged();
+                if (IsSourceOfModel(message))
+                    modelService.MarkSourceChanged();
                 break;
             case "ui/search":
                 applicationEvents.TriggerSearchRequested(); // The "Dependinator: Search Nodes" command
                 break;
         }
     }
+
+    // The message names the kinds of the files that changed (none named: any kind). A change
+    // of a kind the open model is not parsed from is no reason to parse it again: a JavaScript
+    // build writes .js files beside a C# solution.
+    bool IsSourceOfModel(string changedKinds) => changedKinds == "" || modelService.IsParsedFrom(changedKinds);
 
     // Parsing is one opaque, non-cancellable await, so requests arriving while a
     // refresh runs are coalesced into a single re-run once it completes.

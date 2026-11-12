@@ -67,7 +67,7 @@ export class ModelBuilder {
         if (this.ownFiles.length === 0) {
             throw new Error(
                 this.skippedTestFiles > 0
-                    ? "The project contains only test files. Turn on Include test projects in Menu > Settings to parse them."
+                    ? "The project contains only test files. Turn on Include test files in Menu > Settings to parse them."
                     : "No TypeScript or JavaScript source files found in the project."
             );
         }
@@ -76,6 +76,8 @@ export class ModelBuilder {
         this.addNode(this.root, {
             Type: "Solution",
             Description: this.project.packageDescription ?? `${this.languageName()} project`,
+            // The file that defines the project, to open from the node
+            FileSpan: { Path: path.normalize(this.project.entryPath), StartLine: 0, EndLine: 0 },
         });
 
         for (const file of this.ownFiles) {

@@ -17,6 +17,18 @@ static class ModelPaths
     public static bool IsTypeScriptConfig(string path) =>
         IsFileNamed(path, "tsconfig.json") || IsFileNamed(path, "jsconfig.json");
 
+    // A TypeScript or JavaScript source file
+    public static bool IsScriptFile(string path) =>
+        Path.GetExtension(path).ToLowerInvariant()
+            is ".ts"
+                or ".tsx"
+                or ".mts"
+                or ".cts"
+                or ".js"
+                or ".jsx"
+                or ".mjs"
+                or ".cjs";
+
     public static bool IsParseable(string path) => IsSolution(path) || IsBicep(path) || IsTypeScript(path);
 
     public static bool IsDesignModel(string path) => !IsParseable(path);

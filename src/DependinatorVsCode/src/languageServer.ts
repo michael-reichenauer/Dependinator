@@ -152,6 +152,9 @@ export async function startLanguageServer(
     const clientOptions: LanguageClientOptions = {
         documentSelector: [{ scheme: "file", language: "csharp" }],
         initializationOptions: {
+            // The Node this extension runs on (VS Code's own), for the TypeScript parser helper:
+            // the language server runs it there, so the user needs no Node installed.
+            nodePath: process.execPath,
             ...(await getCloudSyncInitializationOptions(context)),
             ...(await getMcpInitializationOptions(context))
         }

@@ -88,10 +88,10 @@
           <MudText Typo="Typo.overline" Class="dep-settings__heading">This model</MudText>
           <MudCheckBox T="bool" Value="includeTestProjects" ValueChanged="SetIncludeTestProjectsAsync" Dense="true"
                        Disabled="isParsing"
-                       Color="Color.Primary" Label="Include test projects"
-                       title="Re-parses the solution. Test projects are excluded by default."
+                       Color="Color.Primary" Label="@(IsScriptProject ? "Include test files" : "Include test projects")"
+                       title="@(IsScriptProject ? "Re-parses the project. Test files (*.test.*, *.spec.*, test folders) are excluded by default." : "Re-parses the solution. Test projects are excluded by default.")"
                        data-checked="@Checked(includeTestProjects)" data-testid="settings-include-test-projects" />
-          <div class="dep-settings__hint">Saved with this model; changing it parses the solution again.</div>
+          <div class="dep-settings__hint">Saved with this model; changing it parses the @(IsScriptProject ? "project" : "solution") again.</div>
         </div>
       }
 
@@ -151,9 +151,12 @@
 
   protected override void OnInitialized() => includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
 
-  // Test projects only exist in C# solutions, and only the hosts that parse can re-parse.
+  // Test projects only exist in C# solutions, and test files in TypeScript and JavaScript
+  // projects; only the hosts that parse can re-parse.
   bool CanIncludeTestProjects =>
-    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsSolution(modelMgr.ModelPath);
+    (Build.IsVsCodeExtWasm || Build.IsWeb) && (ModelPaths.IsSolution(modelMgr.ModelPath) || IsScriptProject);
+
+  bool IsScriptProject => ModelPaths.IsTypeScript(modelMgr.ModelPath);
 
   static string Checked(bool isOn) => isOn ? "true" : "false";
 
@@ -208,7 +211,8 @@
     isParsing = true;
     includeTestProjects = isOn;
     // The refresh path only shows discreet progress, so say what is happening.
-    snackbar.Add(isOn ? "Parsing with test projects ..." : "Parsing without test projects ...", Severity.Info);
+    var tests = IsScriptProject ? "test files" : "test projects";
+    snackbar.Add(isOn ? $"Parsing with {tests} ..." : $"Parsing without {tests} ...", Severity.Info);
 
     // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
     try

@@ -85,14 +85,14 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep)$/"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
                 }
             ],
             "editor/context": [
                 {
                     "command": "dependinator.reveal",
                     "group": "navigation@9",
-                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor"
+                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor || resourceLangId == typescript || resourceLangId == typescriptreact || resourceLangId == javascript || resourceLangId == javascriptreact"
                 }
             ],
             "commandPalette": [

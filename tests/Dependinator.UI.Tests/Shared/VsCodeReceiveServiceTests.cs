@@ -121,4 +121,46 @@ public class VsCodeReceiveServiceTests
         model.Verify(m => m.MarkSourceChanged(), Times.Once);
         canvas.Verify(c => c.RefreshAsync(), Times.Never);
     }
+
+    // A change of files the open model is not parsed from (a JavaScript build beside a C#
+    // solution) neither parses it again nor marks it as changed.
+    [Theory]
+    [InlineData("ui/refresh")]
+    [InlineData("ui/sourceChanged")]
+    public async Task ReceivedMessageAsync_ShouldIgnoreAChangeOfFilesTheModelIsNotParsedFrom(string type)
+    {
+        Mock<ICanvasService> canvas = new();
+        Mock<IModelService> model = new();
+        model.Setup(m => m.IsParsedFrom("script")).Returns(false);
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            new Mock<IApplicationEvents>().Object,
+            model.Object
+        );
+
+        await sut.ReceivedMessageAsync(type, "script");
+
+        canvas.Verify(c => c.RefreshAsync(), Times.Never);
+        model.Verify(m => m.MarkSourceChanged(), Times.Never);
+    }
+
+    [Fact]
+    public async Task ReceivedMessageAsync_ShouldRefresh_ForAChangeOfFilesTheModelIsParsedFrom()
+    {
+        Mock<ICanvasService> canvas = new();
+        canvas.Setup(c => c.RefreshAsync()).Returns(Task.CompletedTask);
+        Mock<IModelService> model = new();
+        model.Setup(m => m.IsParsedFrom("code,script")).Returns(true);
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            new Mock<IApplicationEvents>().Object,
+            model.Object
+        );
+
+        await sut.ReceivedMessageAsync("ui/refresh", "code,script");
+
+        canvas.Verify(c => c.RefreshAsync(), Times.Once);
+    }
 }

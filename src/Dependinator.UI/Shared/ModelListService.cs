@@ -110,7 +110,7 @@ class ModelListService(
                         (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
                         {
                             Path = path,
-                            DisplayName = Path.GetFileName(path),
+                            DisplayName = ModelPaths.DisplayName(path),
                         },
                         folders[index]
                     )
@@ -141,7 +141,7 @@ class ModelListService(
     static ModelItem ToLocalItem(string path) =>
         new(
             path,
-            Path.GetFileName(path),
+            ModelPaths.DisplayName(path),
             IsLocal: true,
             IsCloud: false,
             CloudModel: null,
@@ -182,7 +182,7 @@ class ModelListService(
 
             itemsByNormalizedPath[normalizedPath] = new ModelItem(
                 cloudModel.NormalizedPath,
-                Path.GetFileName(cloudModel.NormalizedPath),
+                ModelPaths.DisplayName(cloudModel.NormalizedPath),
                 IsLocal: false,
                 IsCloud: true,
                 CloudModel: cloudModel

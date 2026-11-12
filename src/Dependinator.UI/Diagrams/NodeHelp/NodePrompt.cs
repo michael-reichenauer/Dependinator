@@ -37,6 +37,7 @@ static class NodePrompt
         var descendants = node.DescendantsAndSelfPreOrder().Skip(1).ToList();
         List<string> parts = [];
         AddCount(parts, descendants.Count(n => n.Type == NodeType.Namespace), "namespace");
+        AddCount(parts, descendants.Count(n => n.Type == NodeType.SourceFile), "file");
         AddCount(parts, descendants.Count(n => n.Type.IsType), "type");
         AddCount(parts, descendants.Count(n => n.Type == NodeType.Module), "module");
         AddCount(parts, descendants.Count(n => n.Type == NodeType.Resource), "resource");
@@ -239,6 +240,7 @@ static class NodePrompt
             NodeType.VariableMember => "variable",
             NodeType.OutputMember => "output",
             NodeType.ResourceMember => "resource",
+            NodeType.FunctionMember => "function",
             _ => Kind(type),
         };
 
