@@ -103,7 +103,13 @@ page objects). Each rule below comes from a real CI or local failure.
   `OnInitialized()` above the class, a known unfixed wart).
 - Edit mode is off by default: tests that edit call `App.EnableEditModeAsync()`. Nested Bicep
   nodes are addressed by long name (`App.Node("rgPlatform.networking")`); the test host reopens
-  the C# demo on reload, so Bicep persistence tests reopen it from the Models menu.
+  the C# demo on reload, so Bicep persistence tests reopen it (`App.OpenOtherModelAsync`).
+- The test host has a workspace, like VS Code: its Models menu lists only the workspace's models
+  (the demo `Demo.sln` standing in for the working solution, then the repository's solution and
+  Bicep files). A demo, design or cloud model is opened with `App.OpenOtherModelAsync(name)`
+  (the Models dialog), and while it is open the breadcrumb bar is up without a selection (the
+  back button and the model with its kind), so `Expect(breadcrumb).ToBeHiddenAsync()` only
+  holds on a workspace model.
 
 ## Browsers
 

@@ -47,21 +47,61 @@ body {
     color: rgba(255, 255, 255, 0.32);
 }
 
-/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
-.dep-breadcrumb {
+/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar.
+   While a model outside the workspace is open, a button back to the workspace leads the row. */
+.dep-breadcrumb-row {
     position: fixed;
     top: 45px;
     left: 15px;
     z-index: 1200;
     display: flex;
+    align-items: stretch;
+    gap: 6px;
+    max-width: calc(100vw - 30px);
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb {
+    display: flex;
     align-items: center;
     gap: 1px;
     padding: 1px 6px;
-    max-width: calc(100vw - 30px);
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
-    font-size: 0.8rem;
-    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    border: 0;
+    padding: 1px 9px 1px 6px;
+    font: inherit;
+    color: var(--mud-palette-primary);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dep-breadcrumb-back:hover {
+    background: var(--mud-palette-surface);
+}
+
+.dep-breadcrumb-back .dep-breadcrumb__icon {
+    color: inherit;
+}
+
+/* The kind of a model that is not the workspace's own ("cloud model"), beside its name. */
+.dep-breadcrumb__kind {
+    margin-left: 2px;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-secondary);
+    font-weight: 400;
+    font-size: 0.72rem;
 }
 
 .dep-breadcrumb__item {
@@ -97,6 +137,37 @@ body {
 .dep-breadcrumb__sep {
     color: var(--mud-palette-text-secondary);
     padding: 0 1px;
+}
+
+/* A model in the Models menu (ModelMenuItems.razor): its name, then its folder or kind at the
+   right edge, cut from the left when it is long (the end of a path says the most). */
+.dep-model-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    width: 100%;
+}
+
+.dep-model-item > :first-child {
+    flex: 1;
+}
+
+/* Right to left only to put the ellipsis at the start; the text is in a <bdi>, or a folder that
+   begins with a dot (".azure/infra") would show the dot at its end. */
+.dep-model-item__sub {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-model-item__synced {
+    align-self: center;
+    font-size: 1rem !important;
+    color: var(--mud-palette-text-secondary);
 }
 
 /* The legend card (Legend.razor), bottom-left over the diagram. */

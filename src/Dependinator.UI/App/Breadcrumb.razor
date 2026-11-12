@@ -6,6 +6,8 @@
 @inject Modeling.Models.IModelMgr modelMgr
 @inject INavigationService navigationService
 @inject ICanvasService canvasService
+@inject IModelListService modelListService
+@inject Dependinator.UI.Shared.CloudSync.IAppCloudSyncService appCloudSyncService
 @implements IDisposable
 
 @* Wayfinding bar under the app bar, shown only while a node is selected: the open model, then
@@ -13,25 +15,50 @@
    as the solution, which the model crumb already names). Every crumb pans and zooms to that node;
    the model crumb fits the whole diagram. With nothing selected it is hidden, to keep the
    diagram clear (the "you are here" chain under the viewport center still drives Escape and
-   the context menu, see ViewContextService). *@
-@if (ModelName.Length > 0 && selectionService.SelectedId.IsNode)
+   the context menu, see ViewContextService).
+
+   In a host with a workspace (VS Code, the dev host) a cloud, design or demo model is a visit:
+   the bar then stays up, tags the model with its kind and leads with a button back to the
+   workspace model used last. *@
+@{
+  var visited = Visited;
+  var homePath = visited is null ? null : modelListService.HomePath;
+  var isNodeSelected = selectionService.SelectedId.IsNode;
+}
+@if (ModelName.Length > 0 && (isNodeSelected || homePath is not null))
 {
-  var chain = viewContext.GetSelectedChain();
-  <nav class="dep-breadcrumb dep-toolbar-card" aria-label="Location" data-testid="breadcrumb">
-    <button type="button" class="dep-breadcrumb__item dep-breadcrumb__model" @onclick="FitToScreen"
-            title="@ModelTitle" data-testid="breadcrumb-model">
-      <MudIcon Icon="@ModelIcon" Size="Size.Small" Class="dep-breadcrumb__icon" />
-      <span>@ModelName</span>
-    </button>
-    @foreach (var item in chain)
+  <div class="dep-breadcrumb-row">
+    @if (homePath is not null)
     {
-      <span class="dep-breadcrumb__sep">›</span>
-      <button type="button" class="dep-breadcrumb__item" @onclick="() => ShowNodeAsync(item.Id)" title="@item.LongName"
-              data-testid="breadcrumb-item">
-        @item.Name
+      <button type="button" class="dep-breadcrumb-back dep-toolbar-card" @onclick="() => canvasService.LoadAsync(homePath)"
+              title="@($"Back to this workspace's {Path.GetFileName(homePath)} ({homePath})")" data-testid="breadcrumb-back">
+        <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.ArrowBack" Size="Size.Small" Class="dep-breadcrumb__icon" />
+        <span>@Path.GetFileName(homePath)</span>
       </button>
     }
-  </nav>
+    <nav class="dep-breadcrumb dep-toolbar-card" aria-label="Location" data-testid="breadcrumb">
+      <button type="button" class="dep-breadcrumb__item dep-breadcrumb__model" @onclick="FitToScreen"
+              title="@ModelTitle" data-testid="breadcrumb-model">
+        <MudIcon Icon="@ModelIcon" Size="Size.Small" Class="dep-breadcrumb__icon" />
+        <span>@ModelName</span>
+        @if (visited is not null)
+        {
+          <span class="dep-breadcrumb__kind" data-testid="breadcrumb-kind">@WorkspaceModels.VisitKind(visited)</span>
+        }
+      </button>
+      @if (isNodeSelected)
+      {
+        @foreach (var item in viewContext.GetSelectedChain())
+        {
+          <span class="dep-breadcrumb__sep">›</span>
+          <button type="button" class="dep-breadcrumb__item" @onclick="() => ShowNodeAsync(item.Id)" title="@item.LongName"
+                  data-testid="breadcrumb-item">
+            @item.Name
+          </button>
+        }
+      }
+    </nav>
+  </div>
 }
 
 @code {
@@ -44,13 +71,48 @@
 
   string ModelIcon => IsDesignModel ? MudBlazor.Icons.Material.Outlined.DesignServices : MudBlazor.Icons.Material.Outlined.Schema;
 
-  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+  // The visited model is looked up once per open model and cloud list, not on every render: the
+  // bar re-renders with each selection and view change.
+  string visitedForPath = "";
+  bool isVisitedStale = true;
+  ModelItem? visited;
+
+  ModelItem? Visited
+  {
+    get
+    {
+      if (isVisitedStale || visitedForPath != ModelPath)
+      {
+        visitedForPath = ModelPath;
+        isVisitedStale = false;
+        visited = modelListService.GetVisitedModel(ModelPath);
+      }
+      return visited;
+    }
+  }
+
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    appCloudSyncService.Changed += OnCloudChanged;
+  }
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  // A synced model's kind follows the cloud list (which arrives after the first model opened).
+  void OnCloudChanged()
+  {
+    isVisitedStale = true;
+    InvokeAsync(StateHasChanged);
+  }
 
   void FitToScreen() => canvasService.PanZoomToFit();
 
   Task ShowNodeAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
 
-  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    appCloudSyncService.Changed -= OnCloudChanged;
+  }
 }

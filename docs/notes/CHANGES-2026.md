@@ -36,7 +36,8 @@ project works.
   line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
-  box, with a summary card on the way in, and styled hover cards for nodes and lines.
+  box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -64,6 +65,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   status-bar item spins while parsing.
 - **Bicep (Oct 9).** `.bicep` entry points are listed as workspace models and count as model
   sources.
+- **Workspace models apart from the others (Nov 12).** In VS Code (and the dev host) the Models
+  menu lists only the workspace's solutions and Bicep files, each with its folder when there are
+  several. Cloud, design and demo models are opened from the Models dialog ("Other Models …",
+  which now lists the demos in every host). While such a model is open it is a visit: the menu
+  names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and
+  a button back to the workspace model used last. The browser app, which has no workspace, is
+  unchanged.
 
 ## Parsing
 

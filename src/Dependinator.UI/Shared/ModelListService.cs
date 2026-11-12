@@ -13,6 +13,10 @@ record ModelItem(
     bool IsDemo = false
 );
 
+// A model of the workspace as the Models menu lists it, with the folder that tells files of one
+// name apart (see WorkspaceModels.RelativeFolders).
+record WorkspaceModel(ModelItem Item, string Folder);
+
 interface IModelListService
 {
     Task InitAsync();
@@ -21,11 +25,23 @@ interface IModelListService
     IReadOnlyList<string> LocalPaths { get; }
     IReadOnlyList<string> CloudPaths { get; }
 
-    // The built-in demo models offered where nothing else can be opened (see DemoModel.ListedPaths).
+    // The built-in demo models.
     IReadOnlyList<string> DemoPaths { get; }
     string? LastUsedPath { get; }
     string? StartupPath { get; }
     bool IsLocalPath(string path);
+
+    // Whether this host shows the solutions and Bicep files of a folder (VS Code, the dev host).
+    // There the workspace's models are what the user switches between, and a cloud, design or
+    // demo model is a visit; the browser app has no workspace, only such models.
+    bool HasWorkspace { get; }
+    bool IsWorkspacePath(string path);
+    IReadOnlyList<WorkspaceModel> GetWorkspaceModels();
+
+    // The model that is open when it is none of the workspace's (null in a host without a
+    // workspace), and the workspace model to go back to from it: the one used last.
+    ModelItem? GetVisitedModel(string currentPath);
+    string? HomePath { get; }
 
     IReadOnlyList<ModelItem> GetModelItems();
 
@@ -45,11 +61,14 @@ class ModelListService(
     IReadOnlyList<string> recentPaths = [];
     IReadOnlyList<string> localPaths = [];
     IReadOnlyList<string> cloudPaths = [];
+    IReadOnlyList<string> workspacePaths = [];
+    HashSet<string> workspaceKeys = new(StringComparer.OrdinalIgnoreCase);
+    string? lastWorkspacePath;
 
     public IReadOnlyList<string> RecentModelPaths => recentPaths;
     public IReadOnlyList<string> LocalPaths => localPaths;
     public IReadOnlyList<string> CloudPaths => cloudPaths;
-    public IReadOnlyList<string> DemoPaths => DemoModel.ListedPaths;
+    public IReadOnlyList<string> DemoPaths => DemoModel.DemoNames;
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
     // The model to show when the app starts. Browser hosts resume the most recently used
@@ -73,6 +92,62 @@ class ModelListService(
 
     public bool IsLocalPath(string path) => LocalPaths.Contains(path);
 
+    public bool HasWorkspace => Build.IsVsCodeExtWasm || Build.IsWeb;
+
+    public bool IsWorkspacePath(string path) =>
+        !string.IsNullOrWhiteSpace(path) && workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path));
+
+    public IReadOnlyList<WorkspaceModel> GetWorkspaceModels()
+    {
+        var items = GetModelItems();
+        var folders = WorkspaceModels.RelativeFolders(workspacePaths);
+        return workspacePaths
+            .Select(
+                (path, index) =>
+                    // The workspace's own spelling of the path, not that of an equal recent path:
+                    // parsing and the startup model compare paths exactly.
+                    new WorkspaceModel(
+                        (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
+                        {
+                            Path = path,
+                            DisplayName = Path.GetFileName(path),
+                        },
+                        folders[index]
+                    )
+            )
+            .ToList();
+    }
+
+    public ModelItem? GetVisitedModel(string currentPath)
+    {
+        if (!HasWorkspace || string.IsNullOrWhiteSpace(currentPath) || IsWorkspacePath(currentPath))
+            return null;
+
+        // A model opened by a share link is in none of the lists.
+        return GetModelItems().FirstOrDefault(i => IsSamePath(i.Path, currentPath)) ?? ToLocalItem(currentPath);
+    }
+
+    // The recent paths are shared by every window of the app, so what this one opened last wins.
+    public string? HomePath =>
+        lastWorkspacePath ?? recentPaths.FirstOrDefault(IsWorkspacePath) ?? workspacePaths.FirstOrDefault();
+
+    static bool IsSamePath(string path1, string path2) =>
+        string.Equals(
+            global::Shared.CloudModelPath.Normalize(path1),
+            global::Shared.CloudModelPath.Normalize(path2),
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    static ModelItem ToLocalItem(string path) =>
+        new(
+            path,
+            Path.GetFileName(path),
+            IsLocal: true,
+            IsCloud: false,
+            CloudModel: null,
+            IsDemo: DemoModel.IsDemo(path)
+        );
+
     public IReadOnlyList<ModelItem> GetModelItems()
     {
         Dictionary<string, ModelItem> itemsByNormalizedPath = new(StringComparer.OrdinalIgnoreCase);
@@ -84,14 +159,7 @@ class ModelListService(
             if (itemsByNormalizedPath.ContainsKey(normalizedPath))
                 return;
 
-            itemsByNormalizedPath[normalizedPath] = new ModelItem(
-                path,
-                Path.GetFileName(path),
-                IsLocal: true,
-                IsCloud: false,
-                CloudModel: null,
-                IsDemo: DemoModel.IsDemo(path)
-            );
+            itemsByNormalizedPath[normalizedPath] = ToLocalItem(path);
             orderedNormalizedPaths.Add(normalizedPath);
         }
 
@@ -136,6 +204,15 @@ class ModelListService(
             : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. await workspaceFileService.GetModelFilePathsAsync()]
             : [];
         localPaths = localPaths.Distinct().ToList();
+        // The test host opens the embedded demo instead of parsing the working solution, so there
+        // the demo stands in for it as the workspace's first model.
+        workspacePaths =
+            !HasWorkspace ? []
+            : Build.IsTestMode ? [DemoModel.Path, .. localPaths]
+            : localPaths;
+        workspaceKeys = workspacePaths
+            .Select(global::Shared.CloudModelPath.Normalize)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // Seed recent paths with the first available model (cloud for standalone Wasm)
         if (!recentPaths.Any())
@@ -150,6 +227,9 @@ class ModelListService(
 
     public async Task AddModelAsync(string path)
     {
+        if (IsWorkspacePath(path))
+            lastWorkspacePath = path;
+
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Prepend(path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());

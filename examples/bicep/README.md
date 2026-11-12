@@ -10,8 +10,7 @@ meant to be deployed as-is: names, SKUs, principals, images and the DNS zone are
   Models menu lists `webshop.bicep`, the deployment's entry point; the modules it references are
   parsed as part of it. Right-click a resource for **Show Source**, and the diagram follows the
   cursor when you edit a `.bicep` file.
-- **Local development host:** `./scripts/watch` lists the same entry point under
-  Models › Manage Models › This workspace.
+- **Local development host:** `./scripts/watch` lists the same entry point in its Models menu.
 
 Only entry points are listed: a `.bicep` file that another file uses as a module (everything
 under `modules/`) is shown nested inside the module that references it.

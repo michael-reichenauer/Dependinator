@@ -53,9 +53,9 @@ public class SignedInUiTests : E2ETestBase, IClassFixture<SeededSyncModel>
         await Expect(Page.GetByTestId("cloud-sign-out")).ToBeVisibleAsync();
         await Page.Keyboard.PressAsync("Escape");
 
-        // The merged model list (Models submenu) shows the seeded cloud model by name (its
+        // The merged model list (the Models dialog) shows the seeded cloud model by name (its
         // presence proves the cloud model list was fetched and merged in).
-        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
-        await Expect(App.MenuItem("menu-model-item").Filter(new() { HasText = "seed-model.sln" })).ToBeVisibleAsync();
+        ILocator models = await App.OpenModelsDialogAsync();
+        await Expect(models.Filter(new() { HasText = "seed-model.sln" })).ToBeVisibleAsync();
     }
 }

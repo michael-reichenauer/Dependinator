@@ -442,6 +442,26 @@ public sealed class AppPage
         }
     }
 
+    // Open a model that is not one of the workspace's (a demo, design or cloud model). The test
+    // host has a workspace, like VS Code, so its Models menu lists only the workspace's models
+    // and the others are opened from the Models dialog (Models › Other Models …).
+    public async Task OpenOtherModelAsync(string name)
+    {
+        await (await OpenModelsDialogAsync())
+            .Filter(new() { HasText = name })
+            .GetByRole(AriaRole.Button)
+            .First.ClickAsync();
+        await page.GetByTestId("models-dialog").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+    }
+
+    // Open the Models dialog and return its rows (one per model, in sections).
+    public async Task<ILocator> OpenModelsDialogAsync()
+    {
+        await (await OpenSubMenuItemAsync("menu-models", "menu-manage-models")).ClickAsync();
+        await page.GetByTestId("models-dialog").WaitForAsync();
+        return page.GetByTestId("models-item");
+    }
+
     // Assert on items in a submenu, reopening the submenu on each attempt. The submenu can close
     // again right after it opened (a re-render, e.g. the one a toggle's re-parse triggers when it
     // completes, or a menu click whose popover was still fading out when the menu was reopened),

@@ -157,6 +157,23 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - View › Rows is a view option (`RowFilter`), not a model edit: rows are skipped in
   `NodeTreeSvg.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.
 
+## Workspace models (Nov 2026)
+
+- A host with a workspace (`IModelListService.HasWorkspace`: VS Code, the dev host and so the e2e
+  test host) keeps its solutions and Bicep files apart from every other model. The Models menu
+  (`App/ModelMenuItems.razor`) lists only `GetWorkspaceModels()`, the Models dialog ("Other
+  Models …") opens the rest, and an open model that is none of the workspace's is a visit
+  (`GetVisitedModel`): a "Viewing" row in the menu, and the breadcrumb bar stays up with the
+  model's kind and a button back to `HomePath`. The browser app has no workspace and keeps the
+  one flat list. Decided with Michael (Nov 12): keep the submenu, don't replace it by the dialog.
+- `HomePath` is what this window opened last, kept in memory: the recent paths in the config are
+  shared by every window (and by parallel e2e tests), so they only decide after a restart.
+- In test mode the embedded demo stands in for the working solution as the first workspace
+  model (`workspacePaths`), but `LocalPaths` is unchanged: `ModelService.RefreshAsync` only
+  re-parses a local path, and the demo must stay out of that.
+- A component with no parameters inside the app bar's menu (`ModelMenuItems`) is not re-rendered
+  with its parent: it subscribes to `UIStateChanged` and the cloud sync's `Changed` itself.
+
 ## iPad home-screen web app (Nov 2026)
 
 - iPadOS 26 draws a foggy "scroll edge" blur over the top ~100px of a home-screen web app (the
