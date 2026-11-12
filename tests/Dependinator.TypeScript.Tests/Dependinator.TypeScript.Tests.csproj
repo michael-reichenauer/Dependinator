@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.TypeScript.Tests</AssemblyName>
+        <RootNamespace>Dependinator.TypeScript.Tests</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <!-- The sample projects are parsed where they are, never compiled or copied -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);Samples/**</DefaultItemExcludes>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Dependinator.Core\Dependinator.Core.csproj" />
+        <ProjectReference Include="..\..\src\Dependinator.TypeScript\Dependinator.TypeScript.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Shared Result assertions, linked from the Core tests (see that file's header). -->
+        <Compile Include="..\Dependinator.Core.Tests\Utils\ResultAssert.cs" Link="Utils\ResultAssert.cs" />
+    </ItemGroup>
+</Project>

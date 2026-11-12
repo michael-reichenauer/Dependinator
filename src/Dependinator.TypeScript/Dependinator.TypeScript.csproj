@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.TypeScript</AssemblyName>
+        <RootNamespace>Dependinator.TypeScript</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <!-- The helper is a Node project of its own (with node_modules), no C# -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);Helper/**</DefaultItemExcludes>
+        <HelperFolder>$(MSBuildProjectDirectory)/Helper</HelperFolder>
+        <HelperScript>$(HelperFolder)/dist/ts-parser.js</HelperScript>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    </ItemGroup>
+
+    <!-- The parser itself is a Node program (Helper/, see its src/main.ts), bundled with the
+         TypeScript compiler into one script and embedded here; TypeScriptParser runs it with Node.
+         Building it needs npm, and is skipped while the script is newer than its sources, and
+         in a design-time build (an IDE, or the C# parser loading this solution). -->
+    <ItemGroup>
+        <HelperSource Include="$(HelperFolder)/src/**/*.ts" />
+        <HelperSource Include="$(HelperFolder)/build.mjs;$(HelperFolder)/tsconfig.json" />
+        <HelperSource Include="$(HelperFolder)/package.json;$(HelperFolder)/package-lock.json" />
+    </ItemGroup>
+
+    <Target
+        Name="BuildHelper"
+        BeforeTargets="AssignTargetPaths"
+        Inputs="@(HelperSource)"
+        Outputs="$(HelperScript)"
+        Condition="'$(DesignTimeBuild)' != 'true'"
+    >
+        <Message Importance="high" Text="Building the TypeScript parser helper (npm ci, npm run build) ..." />
+        <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(HelperFolder)" />
+        <Exec Command="npm run build" WorkingDirectory="$(HelperFolder)" />
+        <Touch Files="$(HelperScript)" />
+    </Target>
+
+    <Target Name="EmbedHelper" BeforeTargets="AssignTargetPaths" DependsOnTargets="BuildHelper">
+        <ItemGroup Condition="Exists('$(HelperScript)')">
+            <EmbeddedResource Include="$(HelperScript)" LogicalName="Dependinator.TypeScript.ts-parser.js" />
+        </ItemGroup>
+    </Target>
+</Project>

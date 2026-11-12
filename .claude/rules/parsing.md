@@ -3,6 +3,8 @@ paths:
   - "src/Dependinator.Core/Parsing/**"
   - "src/Dependinator.Roslyn/**"
   - "src/Dependinator.Bicep/**"
+  - "src/Dependinator.TypeScript/**"
+  - "src/Dependinator.Core/Shared/ScriptProjects.cs"
   - "src/Dependinator.Lsp/**"
   - "src/Dependinator.DemoGen/**"
   - "src/Dependinator.Core/Shared/ModelPaths.cs"
@@ -26,7 +28,9 @@ paths:
   - a library `X → Core` with a `[Transient] class : ISourceParser` that implements `CanParse`;
   - `AddDependinatorXServices()`, registered in the Lsp and Web `Program.cs`;
   - an architecture-test rule;
-  - `ModelPaths` / `WorkspaceFileService` discovery for its file kind.
+  - `ModelPaths` / `WorkspaceFileService` discovery for its file kind;
+  - for a language with its own toolchain, a helper program run with `HelperProcess` (see
+    TypeScript below) rather than a port of its compiler.
 - **Source generators:** `MSBuildWorkspace` runs the generators Roslyn's loader can load (the
   Functions SDK, Regex); `Compiler.RunUnloadableSourceGenerators` runs only the rest (Razor).
   Running a loadable one again defines its types twice: that gave 49 false compile errors in Api
@@ -49,6 +53,44 @@ paths:
     references Dependinator.Bicep (DemoGen aliases it `ModelJson`).
   - Compilation runs without restore (`CreateCompilationWithoutRestore`), so registry modules
     stay leaf nodes. There is one `BicepCompiler` per process (`BicepCompilerHost`).
+- **TypeScript and JavaScript** (beyond CLAUDE.md; design and follow-ups in
+  `docs/notes/TYPESCRIPT-PARSER.md`):
+  - The parser is a Node.js program (`src/Dependinator.TypeScript/Helper/`, the TypeScript 6
+    compiler API) that prints `Parsing.Item` JSON; the C# side only runs it. Its item types
+    (`Helper/src/items.ts`) mirror `Types.cs` by name: a new `NodeType` or property goes in both.
+  - The helper is bundled into one script and embedded in the dll by the csproj's `BuildHelper`
+    target (`npm ci`, esbuild), so a solution build needs Node.js and npm. After changing
+    `Helper/src`, a normal `dotnet build` rebuilds it; `cd Helper && npm run check` type-checks.
+    To try the helper alone: `node Helper/dist/ts-parser.js <tsconfig.json>` (items on stdout).
+  - A bundled compiler has no `lib.*.d.ts` beside it: without them every `Promise`, array and
+    DOM type is unknown and signatures come out empty, with no error. They are bundled as a
+    virtual module (`build.mjs`, `libraries.ts`).
+  - Symbols: resolve an import's alias (`getAliasedSymbol`) before looking at its declaration; a
+    CommonJS file's module symbol is only on the file (`file.symbol`, internal); a symbol whose
+    declaration is a source file or an ambient module is "the whole module" and makes no link.
+  - Node names: a literal dot in a file, folder or package name is `*` (`names.ts`), as for C#
+    project files; `$` and `#` are written full-width (`＄`, `＃`), because `NodeName.ToNiceText`
+    drops the plain ones. Wrap every name taken from source in `names.encodePart`. Lines are 0-based.
+  - TypeScript 6 includes no `@types` package unless the config's `types` names it: the helper
+    sets `types: ["*"]` when the config has none. Without it `fs` and `process` have no
+    declarations and their links silently go missing (found in review, Nov 12).
+  - A config with `references` is one `ts.Program` per project (`ProjectPart`), each with its own
+    options. The same file is a different `ts.SourceFile` in each program: look a declaration up
+    with `fileNode` / `enclosingNode` (by `placeOf`), never by node identity alone, and call
+    `use(part)` before using `this.program` or `this.checker`. Files are parsed once for all
+    programs (`libraries.ts`, keyed by the options that affect parsing and binding); without
+    that a 30-project monorepo ran Node out of memory. Every other part is passed as a project
+    reference so an import of a part leads to its source, not its `dist/*.d.ts`. Try a change to
+    `project.ts` or `libraries.ts` on a made-up monorepo of that size (a script that writes one
+    is quick: N packages linked into `node_modules/@scope`, each importing the previous).
+  - Only a file found through `node_modules` is a package (`packageOf`): the project's own
+    `.d.ts` files and skipped test files have a `package.json` above them too.
+  - The tests link `Samples/parts/libs/core` into `node_modules/@acme` at run time (ignored by
+    git). A sample folder named `packages` is ignored by the repository's `.gitignore`.
+  - In VS Code the parser runs on the editor's own runtime (`initializationOptions.nodePath`,
+    `ELECTRON_RUN_AS_NODE=1`). This cannot be tried in a cloud session.
+  - The extension tells the UI the kinds of the changed files ("script", "code"); a new source
+    kind that is watched needs its kind in `IModelService.IsParsedFrom`.
 - **C# member names** (decided Oct 2026):
   - Extension members keep `Ext.extension(global::Ns.T).Member`. `NodeName` treats `()`, `[]`
     and `<>` as bracket groups whose dots don't split, and a bracket counts only once it closes,

@@ -1,0 +1,15 @@
+{
+    // The sample project of Dependinator.TypeScript.Tests
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "noEmit": true,
+        "types": ["node"],
+        "paths": {
+            "@lib/*": ["./src/lib/*"]
+        }
+    },
+    "include": ["src"]
+}

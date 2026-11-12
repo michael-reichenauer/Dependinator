@@ -1,3 +1,4 @@
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
@@ -150,7 +151,7 @@ class ExportService(
 
     string DefaultFileName()
     {
-        var name = Path.GetFileNameWithoutExtension(modelMgr.ModelPath);
+        var name = ModelPaths.BaseName(modelMgr.ModelPath);
         return string.IsNullOrWhiteSpace(name) ? "diagram" : name;
     }
 }

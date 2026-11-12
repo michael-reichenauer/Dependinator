@@ -55,7 +55,7 @@ public class IconLibraryTests
         // The Default group holds the node-type icons; General holds the extra selectable
         // icons; the cloud groups hold the curated official provider icons (imported via
         // ./scripts/import-icons — update the counts when the manifests change).
-        Assert.Equal(19, icons.Count(icon => icon.Group == "Default"));
+        Assert.Equal(20, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
         Assert.Equal(83, icons.Count(icon => icon.Group == "Azure"));
         Assert.Equal(61, icons.Count(icon => icon.Group == "Aws"));

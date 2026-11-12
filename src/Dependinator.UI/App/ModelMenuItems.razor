@@ -10,7 +10,7 @@
 @implements IDisposable
 
 @* The models to switch between, as items of the app bar's Models menu. A host with a workspace
-   (VS Code, the dev host) lists only the workspace's solutions and Bicep files, each with its
+   (VS Code, the dev host) lists only the workspace's solutions, Bicep files and script projects, each with its
    folder when there are several; a cloud, design or demo model is opened from the Models dialog
    ("Other Models …") and, while it is open, named in a "Viewing" row of its own. The browser app
    has no workspace, so there every model is in one list. *@
@@ -108,7 +108,7 @@ else
             return;
         }
 
-        snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(item.Path)}.", Severity.Success);
+        snackbar.Add($"Loaded cloud model for {item.DisplayName}.", Severity.Success);
     }
 
     // A cloud model's path is its normalized path, so this holds for local and cloud items alike.

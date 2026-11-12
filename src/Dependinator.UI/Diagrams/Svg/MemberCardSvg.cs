@@ -376,6 +376,7 @@ static class MemberCardSvg
             NodeType.RecordType => "record",
             NodeType.Resource => "resource",
             NodeType.Module => "module",
+            NodeType.SourceFile => "file",
             _ => node.Type.ToString().ToLowerInvariant(),
         };
 

@@ -33,6 +33,7 @@
         <ProjectReference Include="..\..\src\Dependinator.UI\Dependinator.UI.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Bicep\Dependinator.Bicep.csproj" />
+        <ProjectReference Include="..\..\src\Dependinator.TypeScript\Dependinator.TypeScript.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Reflection\Dependinator.Reflection.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Claude\Dependinator.Claude.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Mcp\Dependinator.Mcp.csproj" />

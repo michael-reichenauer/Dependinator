@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
@@ -182,6 +183,11 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         if (node.Parent.Type == Parsing.NodeType.EnumType)
             return name;
 
+        // TypeScript and JavaScript declare a member the way its row shows it, the type last:
+        // "start(port?: number): Promise<void>", "limit: number"
+        if (node.FileSpan is { } span && ModelPaths.IsScriptFile(span.Path))
+            return signature.StartsWith('(') ? $"{name}{ParametersAndTypeHtml(signature)}" : $"{name}{Code(signature)}";
+
         if (signature.StartsWith(": "))
         {
             var type = Code(signature[2..]);
@@ -215,6 +221,15 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         }
 
         return HttpUtility.HtmlEncode(signature);
+    }
+
+    // "(port?: number): Promise<void>": the parameters, wrapping between them, then the rest.
+    static string ParametersAndTypeHtml(string signature)
+    {
+        var end = ClosingBracketIndex(signature);
+        return end > 0
+            ? $"{ParametersHtml(signature[..(end + 1)])}{Code(signature[(end + 1)..])}"
+            : HttpUtility.HtmlEncode(signature);
     }
 
     // A long declaration wraps like formatted code: after the opening bracket and between the
@@ -271,10 +286,13 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
             return "Zone";
         return node.Type switch
         {
-            // The Bicep parser makes the entry .bicep file the solution node ("main*bicep")
+            // The Bicep parser makes the entry .bicep file the solution node ("main*bicep"), and
+            // the TypeScript parser the project, which points at its tsconfig.json or package.json
             Parsing.NodeType.Solution => node.Name.EndsWith("*bicep", StringComparison.OrdinalIgnoreCase)
                 ? "Bicep deployment"
-                : "Solution",
+            : node.FileSpan is { } span && ModelPaths.IsTypeScript(span.Path)
+                ? Capitalized(ModelPaths.KindName(span.Path))
+            : "Solution",
             Parsing.NodeType.SolutionFolder => "Solution folder",
             Parsing.NodeType.Assembly or Parsing.NodeType.Dll => "Project",
             Parsing.NodeType.Exe => "Executable project",
@@ -297,9 +315,14 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
             Parsing.NodeType.VariableMember => "Variable",
             Parsing.NodeType.OutputMember => "Output",
             Parsing.NodeType.ResourceMember => "Resource setting",
+            Parsing.NodeType.Folder => "Folder",
+            Parsing.NodeType.SourceFile => "File",
+            Parsing.NodeType.FunctionMember => "Function",
             _ => node.IsManual ? "Node" : "Group",
         };
     }
+
+    static string Capitalized(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 
     // How many other nodes the node (or anything inside it) uses and is used by, outside itself.
     // A member counts as its type, so calls into five methods of one class count as one use, and a

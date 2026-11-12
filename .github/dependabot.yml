@@ -40,3 +40,21 @@ updates:
       # built against MessagePack 2.x; 3.x is a breaking API change, so take only 2.5.x patches.
       - dependency-name: "MessagePack"
         update-types: ["version-update:semver-major"]
+
+  # The TypeScript parser's helper (the TypeScript compiler and esbuild, bundled into
+  # Dependinator.TypeScript by its build). The unit tests parse the sample projects with the
+  # bumped compiler, so a green CI covers a bump.
+  - package-ecosystem: "npm"
+    directory: "/src/Dependinator.TypeScript/Helper"
+    target-branch: "dev"
+    schedule:
+      interval: "weekly"
+    groups:
+      helper-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # TypeScript 7 is the native compiler, whose tool API is not stable before 7.1; the helper
+      # uses the JavaScript API of the 6.x line (docs/notes/TYPESCRIPT-PARSER.md).
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]

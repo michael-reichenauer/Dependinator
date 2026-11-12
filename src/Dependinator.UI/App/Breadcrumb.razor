@@ -31,9 +31,9 @@
     @if (homePath is not null)
     {
       <button type="button" class="dep-breadcrumb-back dep-toolbar-card" @onclick="() => canvasService.LoadAsync(homePath)"
-              title="@($"Back to this workspace's {Path.GetFileName(homePath)} ({homePath})")" data-testid="breadcrumb-back">
+              title="@($"Back to this workspace's {ModelPaths.DisplayName(homePath)} ({homePath})")" data-testid="breadcrumb-back">
         <MudIcon Icon="@MudBlazor.Icons.Material.Outlined.ArrowBack" Size="Size.Small" Class="dep-breadcrumb__icon" />
-        <span>@Path.GetFileName(homePath)</span>
+        <span>@ModelPaths.DisplayName(homePath)</span>
       </button>
     }
     <nav class="dep-breadcrumb dep-toolbar-card" aria-label="Location" data-testid="breadcrumb">
@@ -65,7 +65,7 @@
   string ModelPath => modelMgr.ModelPath;
   bool IsDesignModel => ModelPaths.IsDesignModel(ModelPath);
 
-  string ModelName => string.IsNullOrEmpty(ModelPath) ? "" : (IsDesignModel ? ModelPath : Path.GetFileName(ModelPath));
+  string ModelName => string.IsNullOrEmpty(ModelPath) ? "" : (IsDesignModel ? ModelPath : ModelPaths.DisplayName(ModelPath));
 
   string ModelTitle => $"{ModelPath} ({ModelPaths.KindName(ModelPath)}). Click to fit to screen.";
 

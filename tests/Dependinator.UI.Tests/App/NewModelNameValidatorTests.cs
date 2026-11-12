@@ -39,6 +39,19 @@ public class NewModelNameValidatorTests
     }
 
     [Theory]
+    [InlineData("tsconfig.json")]
+    [InlineData("jsconfig.json")]
+    [InlineData("Package.json")]
+    public void Validate_ShouldReject_ProjectFileName_AndSayWhy(string name)
+    {
+        // Such a name would be parsed as a TypeScript or JavaScript project
+        Assert.Equal(
+            $"Name cannot be '{name}', the name of a project file",
+            NewModelNameValidator.Validate(name, ExistingPaths)
+        );
+    }
+
+    [Theory]
     [InlineData("My Design")]
     [InlineData("my design")] // Same cloud blob key as "My Design"
     public void Validate_ShouldReject_NameOfExistingModel(string name)

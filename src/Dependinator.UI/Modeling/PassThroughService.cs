@@ -8,7 +8,9 @@ namespace Dependinator.UI.Modeling;
 // chain inside "Dependinator.Core.dll") as pass-through: invisible containers that exactly fill
 // their parent, so their contents appear to be shown directly in the assembly node. A namespace
 // only qualifies while it is the sole child at its level; when e.g. a second base namespace
-// appears, the flag is cleared and the node renders normally again.
+// appears, the flag is cleared and the node renders normally again. The same goes for the folders
+// that only lead to a project's source files (the "src" of a TypeScript project): a folder that
+// is the sole child of the project, and of such a folder.
 static class PassThroughService
 {
     public static void UpdatePassThroughFlags(IModel model)
@@ -25,6 +27,13 @@ static class PassThroughService
                 NormalizeChainTransforms(moduleNode, chain);
         }
 
+        foreach (var projectNode in model.Nodes.Values.Where(IsFolderProjectNode))
+        {
+            var chain = MarkFolderChain(projectNode);
+            if (!chain.All(previous.Contains))
+                NormalizeChainTransforms(projectNode, chain);
+        }
+
         // Nodes that reverted to normal rendering have a container transform fitted to the large
         // pass-through boundary; re-fit it to their own (small) stored boundary.
         foreach (var node in previous.Where(n => !n.IsPassThrough))
@@ -35,6 +44,24 @@ static class PassThroughService
     // $Externals node are only synthesized from link targets and get NodeType.Parent.
     static bool IsModuleNode(Models.Node node) =>
         node.Type == NodeType.Assembly || node.Parent is { Type: NodeType.Externals };
+
+    // A project whose source is all in one folder: the node above a sole folder.
+    static bool IsFolderProjectNode(Models.Node node) =>
+        !node.IsRoot && node.Type != NodeType.Folder && node.Children is [{ Type: NodeType.Folder }];
+
+    static List<Models.Node> MarkFolderChain(Models.Node projectNode)
+    {
+        List<Models.Node> chain = [];
+        var current = projectNode;
+        while (current.Children is [{ Type: NodeType.Folder } child])
+        {
+            child.IsPassThrough = true;
+            chain.Add(child);
+            current = child;
+        }
+
+        return chain;
+    }
 
     static List<Models.Node> MarkPassThroughChain(Models.Node moduleNode)
     {

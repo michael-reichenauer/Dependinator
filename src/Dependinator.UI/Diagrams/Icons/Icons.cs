@@ -23,7 +23,7 @@ static class Icon
         { Parsing.NodeType.Namespace, "Namespace" },
         // The Roslyn source parser doesn't emit Namespace nodes; namespace containers are
         // rebuilt as implicit Parent nodes (see StructureService.GetOrCreateParent), so Parent
-        // also renders as a namespace. (The Files icon is kept in the library for future use.)
+        // also renders as a namespace.
         { Parsing.NodeType.Parent, "Namespace" },
         { Parsing.NodeType.Type, "Type" },
         { Parsing.NodeType.ClassType, "Type" },
@@ -45,6 +45,10 @@ static class Icon
         { Parsing.NodeType.VariableMember, "Field" },
         { Parsing.NodeType.OutputMember, "Event" },
         { Parsing.NodeType.ResourceMember, "Cloud" },
+        // Folders, source files and their free functions (TypeScript, JavaScript)
+        { Parsing.NodeType.Folder, "Files" },
+        { Parsing.NodeType.SourceFile, "SourceFile" },
+        { Parsing.NodeType.FunctionMember, "Function" },
     };
 
     // The name of the default icon for a node type (an IconLibrary id), falling back to "Module".

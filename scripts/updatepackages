@@ -1,6 +1,7 @@
 #!/bin/bash
 # List (and with -u/-m upgrade) outdated NuGet and npm packages, and check for
-# vulnerable ones — covers the .NET solution and the VS Code extension.
+# vulnerable ones — covers the .NET solution, the VS Code extension and the TypeScript
+# parser's helper.
 #
 #   ./scripts/updatepackages       list outdated + vulnerable packages
 #   ./scripts/updatepackages -u    upgrade non-major versions
@@ -39,6 +40,9 @@ done
 # Directory holding the TypeScript VS Code extension
 vscode_ext_dir="$PWD/src/DependinatorVsCode"
 
+# Directory holding the TypeScript parser's Node.js helper (bundled into Dependinator.TypeScript)
+ts_helper_dir="$PWD/src/Dependinator.TypeScript/Helper"
+
 # Check if dotnet-outdated is installed
 check_dotnet_outdated_installed
 
@@ -65,12 +69,12 @@ echo "Checking for vulnerable packages in $PWD"
 dotnet list package --vulnerable
 
 # ---------------------------------------------------------------------------------
-# TypeScript packages (VS Code extension)
+# npm packages (VS Code extension)
 # ---------------------------------------------------------------------------------
 if [ -f "$vscode_ext_dir/package.json" ]; then
     echo
     echo "================================================================================="
-    echo "TypeScript (VS Code extension) packages in $vscode_ext_dir"
+    echo "npm packages of the VS Code extension in $vscode_ext_dir"
 
     if [ "$update_packages" = true ]; then
         if [ "$include_major" = true ]; then
@@ -89,6 +93,41 @@ if [ -f "$vscode_ext_dir/package.json" ]; then
     echo
     echo "Checking for vulnerable npm packages"
     (cd "$vscode_ext_dir" && npm audit)
+fi
+
+# ---------------------------------------------------------------------------------
+# npm packages (TypeScript parser helper)
+# ---------------------------------------------------------------------------------
+# typescript is pinned to an exact version there, which "npm update" never moves, so
+# npm-check-updates rewrites it. It stays on its major version even with -m: TypeScript 7 is
+# the native compiler, without the API the helper uses (docs/notes/TYPESCRIPT-PARSER.md).
+if [ -f "$ts_helper_dir/package.json" ]; then
+    echo
+    echo "================================================================================="
+    echo "npm packages of the TypeScript parser helper in $ts_helper_dir"
+
+    if [ "$update_packages" = true ]; then
+        if [ "$include_major" = true ]; then
+            echo "Upgrading all npm packages (including major, but typescript only within its major) ..."
+            (cd "$ts_helper_dir" \
+                && npx --yes npm-check-updates -u --reject typescript \
+                && npx --yes npm-check-updates -u --target minor --filter typescript \
+                && npm install)
+        else
+            echo "Upgrading all non-major npm packages (within semver ranges, typescript within its major) ..."
+            (cd "$ts_helper_dir" \
+                && npx --yes npm-check-updates -u --target minor --filter typescript \
+                && npm install \
+                && npm update)
+        fi
+    fi
+
+    echo
+    echo "Listing all outdated npm packages"
+    (cd "$ts_helper_dir" && npm outdated)
+    echo
+    echo "Checking for vulnerable npm packages"
+    (cd "$ts_helper_dir" && npm audit)
 fi
 
 echo

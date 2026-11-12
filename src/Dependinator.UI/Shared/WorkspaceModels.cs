@@ -8,12 +8,21 @@ static class WorkspaceModels
 {
     // The folder of each path below the folder they all share ("" for a file in that folder), so
     // two main.bicep files read "infra" and "infra/test". A path without a folder (a built-in demo)
-    // gets "" and does not take part in what the others share.
+    // gets "" and does not take part in what the others share. A TypeScript or JavaScript project
+    // is named by its folder (ModelPaths.DisplayName), so it reads the folder that folder is in.
     public static IReadOnlyList<string> RelativeFolders(IReadOnlyList<string> paths)
     {
         var folders = paths.Select(FolderSegments).ToList();
         var shared = SharedPrefixLength(folders.Where(folder => folder.Length > 0).ToList());
-        return folders.Select(folder => string.Join('/', folder.Skip(shared))).ToList();
+        return paths
+            .Select(
+                (path, index) =>
+                {
+                    var relative = folders[index].Skip(shared);
+                    return string.Join('/', ModelPaths.IsTypeScript(path) ? relative.SkipLast(1) : relative);
+                }
+            )
+            .ToList();
     }
 
     // A visited model's kind, as the tag beside its name. A synced model is a cloud model whether

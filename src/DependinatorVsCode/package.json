@@ -1,7 +1,7 @@
 {
     "name": "dependinator",
     "displayName": "Dependinator",
-    "description": "Dependinator visualizes the structure and dependencies of C#/.NET code and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
+    "description": "Dependinator visualizes the structure and dependencies of C#/.NET code, TypeScript and JavaScript projects, and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
     "version": "0.92.0",
     "publisher": "michaelreichenauer",
     "license": "MIT",
@@ -23,6 +23,8 @@
         "diagram",
         "C#",
         ".NET",
+        "TypeScript",
+        "JavaScript",
         "Bicep",
         "Azure",
         "infrastructure"
@@ -85,14 +87,14 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep)$/"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
                 }
             ],
             "editor/context": [
                 {
                     "command": "dependinator.reveal",
                     "group": "navigation@9",
-                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor"
+                    "when": "resourceLangId == csharp || resourceLangId == bicep || resourceExtname == .razor || resourceLangId == typescript || resourceLangId == typescriptreact || resourceLangId == javascript || resourceLangId == javascriptreact"
                 }
             ],
             "commandPalette": [

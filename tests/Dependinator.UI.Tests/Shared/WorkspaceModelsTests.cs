@@ -33,6 +33,20 @@ public class WorkspaceModelsTests
         Assert.Equal(["api", "web"], folders);
     }
 
+    // A TypeScript or JavaScript project is named by its folder, so it reads where that folder is.
+    [Fact]
+    public void RelativeFolders_ShouldBeTheFolderAroundAScriptProjectsFolder()
+    {
+        var folders = WorkspaceModels.RelativeFolders([
+            "/home/me/webshop/Webshop.sln",
+            "/home/me/webshop/src/web/tsconfig.json",
+            "/home/me/webshop/tools/package.json",
+            "/home/me/webshop/jsconfig.json",
+        ]);
+
+        Assert.Equal(["", "src", "", ""], folders);
+    }
+
     [Fact]
     public void RelativeFolders_ShouldReadWindowsPaths()
     {

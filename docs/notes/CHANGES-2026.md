@@ -38,6 +38,7 @@ project works.
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
   VS Code a Models menu of only the workspace's models, with cloud and demo models as visits.
+  A third language: TypeScript and JavaScript projects, parsed by a Node.js helper.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -123,6 +124,20 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     blank line below it (a license) is none, and a removed comment clears the description;
   - a cached model's nodes move to their new parents when it is refreshed, and a stray bracket
     in a design node's name ("Latency < 50ms") no longer joins the parts after it.
+- **TypeScript and JavaScript (Nov 12).** A third parser, `Dependinator.TypeScript`, and the
+  first that is not written in C#: a Node.js helper built on the TypeScript compiler prints the
+  model's items, and the C# side only starts it (in VS Code on the editor's own runtime, so
+  nothing needs installing). A project is a `tsconfig.json`, a `jsconfig.json`, or a
+  `package.json` for plain JavaScript, found in the workspace like solutions and Bicep entry
+  points and named after its folder. The diagram shows folders, files (a new node type with its
+  own icon) and the classes, interfaces, enums and types in them; a file's functions and
+  variables are rows on its card, not exported ones private. Lines follow use, resolved by the
+  compiler through imports, path aliases and re-exports, down to the function that calls and
+  the member that is called, and out to the packages under Externals. Test files are left out
+  unless Settings › Include test files is on. Go to code, hover cards (declarations read like
+  TypeScript), the AI prompts and Improve Comments know files and functions. The helper approach
+  is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`. Next:
+  one model for the whole workspace, so the extension shows in this repository's own diagram.
 
 ## Viewing, navigation and analysis
 

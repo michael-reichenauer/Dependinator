@@ -23,6 +23,10 @@ interface IModelService
 
     // Source files changed since the last successful parse, as reported while automatic refresh
     // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
+    // The open model is parsed from files of one of the kinds, as the VS Code extension names
+    // the files that changed: "script" (TypeScript and JavaScript projects) or "code" (the others).
+    bool IsParsedFrom(string sourceKinds);
+
     bool HasSourceChanges { get; }
     void MarkSourceChanged();
     void Clear();
@@ -306,6 +310,12 @@ class ModelService : IModelService, IDisposable
         }
     }
 
+    public bool IsParsedFrom(string sourceKinds)
+    {
+        var kind = ModelPaths.IsTypeScript(modelMgr.ModelPath) ? "script" : "code";
+        return sourceKinds.Split(',').Contains(kind);
+    }
+
     public async Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects)
     {
         if (modelMgr.WithModel(m => m.IncludeTestProjects == includeTestProjects))
@@ -336,7 +346,7 @@ class ModelService : IModelService, IDisposable
         using (
             var progress = isRefresh
                 ? progressService.StartDiscreet()
-                : progressService.Start($"Parsing {Path.GetFileName(path)} …")
+                : progressService.Start($"Parsing {ModelPaths.DisplayName(path)} …")
         )
         {
             // Let the renderer process the progress state before potentially CPU-heavy parse work starts.
@@ -357,12 +367,14 @@ class ModelService : IModelService, IDisposable
                 // (the path is only set below, after a successful parse), so there is nothing to
                 // refresh and the retry has to load the solution again.
                 var action =
-                    e.Message.Contains("test projects", StringComparison.OrdinalIgnoreCase)
+                    e.Message.Contains("only test projects", StringComparison.OrdinalIgnoreCase)
                         ? new ErrorAction("Include test projects", ErrorActionKind.IncludeTestProjects, path)
+                    : e.Message.Contains("only test files", StringComparison.OrdinalIgnoreCase)
+                        ? new ErrorAction("Include test files", ErrorActionKind.IncludeTestProjects, path)
                     : isRefresh ? new ErrorAction("Retry", ErrorActionKind.RetryRefresh)
                     : new ErrorAction("Retry", ErrorActionKind.RetryLoad, path);
                 applicationEvents.TriggerErrorReported(
-                    $"Failed to parse '{Path.GetFileName(path)}'. {e.Message}",
+                    $"Failed to parse '{ModelPaths.DisplayName(path)}'. {e.Message}",
                     action
                 );
                 return e;

@@ -10,7 +10,10 @@ using Dependinator.Lsp.CloudSync;
 using Dependinator.Lsp.Mcp;
 using Dependinator.Lsp.VsCodeModels;
 using Dependinator.Roslyn;
+using Dependinator.TypeScript;
+using Dependinator.TypeScript.Parsing;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Linq;
 using OmniSharp.Extensions.LanguageServer.Server;
 
 // Language Server Protocol (LSP) server executable. Hosts the Dependinator core and Roslyn
@@ -34,6 +37,7 @@ internal class Program
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
                         services.AddDependinatorBicepServices();
+                        services.AddDependinatorTypeScriptServices();
                         services.AddDependinatorClaudeServices();
                         services.AddSingleton<IClaudeApiKeyProvider, LspClaudeApiKeyProvider>();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();
@@ -74,6 +78,13 @@ internal class Program
                             // Cloud sync config and token provided by the extension at launch.
                             var cloudSyncContext = server.Services.GetRequiredService<LspCloudSyncContext>();
                             cloudSyncContext.InitializeFromOptions(initializeParams.InitializationOptions);
+
+                            // The Node VS Code runs the extension on, for the TypeScript parser helper.
+                            if (
+                                initializeParams.InitializationOptions is JToken options
+                                && options.Value<string>("nodePath") is { Length: > 0 } nodePath
+                            )
+                                server.Services.GetRequiredService<INodeRuntime>().SetPath(nodePath);
 
                             return Task.CompletedTask;
                         }

@@ -1,0 +1,16 @@
+{
+    "name": "dependinator-ts-parser",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Parses a TypeScript or JavaScript project with the TypeScript compiler and prints Dependinator model items (nodes and links) as JSON. Run by Dependinator.TypeScript.",
+    "scripts": {
+        "check": "tsc --noEmit -p .",
+        "bundle": "node build.mjs",
+        "build": "npm run check && npm run bundle"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "esbuild": "^0.25.0",
+        "typescript": "6.0.3"
+    }
+}
