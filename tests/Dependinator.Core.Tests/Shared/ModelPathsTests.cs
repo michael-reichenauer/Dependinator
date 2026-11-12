@@ -30,8 +30,46 @@ public class ModelPathsTests
     }
 
     [Theory]
+    [InlineData("/workspaces/App/web/tsconfig.json")]
+    [InlineData("C:\\App\\web\\TSConfig.json")]
+    [InlineData("/workspaces/App/web/jsconfig.json")]
+    [InlineData("/workspaces/App/tool/package.json")]
+    [InlineData("package.json")]
+    public void IsParseable_ShouldBeTrue_ForTypeScriptAndJavaScriptProjects(string path)
+    {
+        Assert.True(ModelPaths.IsParseable(path));
+        Assert.True(ModelPaths.IsTypeScript(path));
+        Assert.False(ModelPaths.IsSolution(path));
+        Assert.False(ModelPaths.IsDesignModel(path));
+    }
+
+    [Theory]
+    [InlineData("/workspaces/App/web/tsconfig.build.json")]
+    [InlineData("/workspaces/App/web/src/main.ts")]
+    [InlineData("/workspaces/App/web/my-package.json")]
+    public void IsTypeScript_ShouldBeFalse_ForOtherFiles(string path)
+    {
+        Assert.False(ModelPaths.IsTypeScript(path));
+    }
+
+    [Theory]
+    [InlineData("/workspaces/App/App.sln", "App.sln")]
+    [InlineData("/workspaces/App/infra/main.bicep", "main.bicep")]
+    [InlineData("/workspaces/App/web/tsconfig.json", "web")]
+    [InlineData("C:\\App\\tool\\package.json", "tool")]
+    [InlineData("tsconfig.json", "tsconfig.json")]
+    [InlineData("/Demo.sln", "Demo.sln")]
+    public void DisplayName_ShouldBeTheFileName_OrTheFolderOfATypeScriptProject(string path, string expected)
+    {
+        Assert.Equal(expected, ModelPaths.DisplayName(path));
+    }
+
+    [Theory]
     [InlineData("/workspaces/App/App.sln", "solution")]
     [InlineData("/workspaces/App/infra/main.bicep", "Bicep deployment")]
+    [InlineData("/workspaces/App/web/tsconfig.json", "TypeScript project")]
+    [InlineData("/workspaces/App/web/jsconfig.json", "JavaScript project")]
+    [InlineData("/workspaces/App/tool/package.json", "JavaScript project")]
     [InlineData("My Design", "design model")]
     public void KindName_ShouldDescribeThePathKind(string path, string expected)
     {

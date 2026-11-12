@@ -8,6 +8,7 @@ using Dependinator.Core.Utils;
 using Dependinator.Core.Utils.Logging;
 using Dependinator.Mcp;
 using Dependinator.Roslyn;
+using Dependinator.TypeScript;
 using Dependinator.UI;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
@@ -49,6 +50,7 @@ public class Program
         builder.Services.AddDependinatorServices<Program>();
         builder.Services.AddDependinatorRoslynServices();
         builder.Services.AddDependinatorBicepServices();
+        builder.Services.AddDependinatorTypeScriptServices();
         builder.Services.AddDependinatorClaudeServices();
         builder.Services.AddSingleton<IClaudeApiKeyProvider, EnvironmentClaudeApiKeyProvider>();
 

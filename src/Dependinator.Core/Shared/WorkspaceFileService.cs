@@ -5,7 +5,8 @@ namespace Dependinator.Core.Shared;
 [Rpc]
 interface IWorkspaceFileService
 {
-    // The workspace's parseable model files: every .sln, then every .bicep entry point.
+    // The workspace's parseable model files: every .sln, then every .bicep entry point, then
+    // every TypeScript or JavaScript project (its tsconfig.json, jsconfig.json or package.json).
     Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
 
@@ -31,17 +32,28 @@ class WorkspaceFileService : IWorkspaceFileService
     public async Task<IReadOnlyList<string>> GetModelFilePathsAsync()
     {
         await Task.CompletedTask;
+        Log.Info("Enumerate model files in", rootPaths);
         // Solutions first, then Bicep entry points (the .bicep files no other file uses as a
         // module). Each group is ordered shallowest first, then by path, so the workspace's top
         // level solution comes first regardless of enumeration order; callers treat the first
-        // path as the workspace model (e.g. the model the VS Code extension starts on).
+        // path as the workspace model (e.g. the model the VS Code extension starts on). The
+        // TypeScript and JavaScript projects come last (see ScriptProjects).
         var solutionPaths = OrderShallowestFirst(EnumerateFiles(rootPaths, "*.sln"));
         var bicepPaths = BicepEntryPoints.Find(
             OrderShallowestFirst(EnumerateFiles(rootPaths, "*.bicep")),
             File.ReadAllText
         );
-        Log.Info("Model file paths", solutionPaths, bicepPaths);
-        return [.. solutionPaths, .. bicepPaths];
+        var scriptPaths = ScriptProjects.Find(
+            OrderShallowestFirst([
+                .. EnumerateFiles(rootPaths, "tsconfig.json"),
+                .. EnumerateFiles(rootPaths, "jsconfig.json"),
+            ]),
+            OrderShallowestFirst(EnumerateFiles(rootPaths, "package.json")),
+            File.ReadAllText,
+            folder => ScriptProjects.HasSourceFiles(folder, (f, pattern) => EnumerateFiles([f], pattern))
+        );
+        Log.Info("Model file paths", solutionPaths, bicepPaths, scriptPaths);
+        return [.. solutionPaths, .. bicepPaths, .. scriptPaths];
     }
 
     static List<string> OrderShallowestFirst(IEnumerable<string> paths) =>
@@ -79,8 +91,6 @@ class WorkspaceFileService : IWorkspaceFileService
 
     static IEnumerable<string> EnumerateFiles(IReadOnlyList<string> roots, string searchPattern = "*")
     {
-        Log.Info("Enumerate:");
-        roots.ForEach(r => Log.Info("Enum", r));
         var pending = new Stack<string>();
         roots.ForEach(pending.Push);
 

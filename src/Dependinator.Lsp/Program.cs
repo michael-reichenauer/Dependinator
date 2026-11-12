@@ -10,6 +10,7 @@ using Dependinator.Lsp.CloudSync;
 using Dependinator.Lsp.Mcp;
 using Dependinator.Lsp.VsCodeModels;
 using Dependinator.Roslyn;
+using Dependinator.TypeScript;
 using Microsoft.Extensions.DependencyInjection;
 using OmniSharp.Extensions.LanguageServer.Server;
 
@@ -34,6 +35,7 @@ internal class Program
                         services.AddDependinatorCoreServices();
                         services.AddDependinatorRoslynServices();
                         services.AddDependinatorBicepServices();
+                        services.AddDependinatorTypeScriptServices();
                         services.AddDependinatorClaudeServices();
                         services.AddSingleton<IClaudeApiKeyProvider, LspClaudeApiKeyProvider>();
                         services.AddSingleton<IWorkspaceFolderService, WorkspaceFolderService>();

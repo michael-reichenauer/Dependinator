@@ -277,6 +277,10 @@ FakesAssemblies/
 # Node.js Tools for Visual Studio
 .ntvs_analysis.dat
 node_modules/
+# The made-up packages of the TypeScript parser tests' sample project
+!tests/Dependinator.TypeScript.Tests/Samples/shop/node_modules/
+# The TypeScript parser helper's bundled script, built with the solution
+src/Dependinator.TypeScript/Helper/dist/
 
 # Visual Studio 6 build log
 *.plg

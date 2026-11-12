@@ -4,7 +4,7 @@ using NetArchTest.Rules;
 namespace Dependinator.Architecture.Tests;
 
 // Guards the solution's layering direction against future drift. The dependency direction is
-// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core, Reflection -> Core, Claude -> Core and Mcp -> Core). Today the project references already make
+// Hosts -> UI -> Core -> Shared (with Roslyn -> Core, Bicep -> Core, TypeScript -> Core, Reflection -> Core, Claude -> Core and Mcp -> Core). Today the project references already make
 // upward dependencies impossible to compile, but these tests fail loudly if someone later adds
 // such a reference (e.g. Core taking a dependency on UI for a "quick fix").
 public class LayeringTests
@@ -15,6 +15,7 @@ public class LayeringTests
     static readonly Assembly RoslynAssembly = Assembly.Load("Dependinator.Roslyn");
     static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
     static readonly Assembly BicepAssembly = Assembly.Load("Dependinator.Bicep");
+    static readonly Assembly TypeScriptAssembly = Assembly.Load("Dependinator.TypeScript");
     static readonly Assembly ClaudeAssembly = Assembly.Load("Dependinator.Claude");
     static readonly Assembly McpAssembly = Assembly.Load("Dependinator.Mcp");
 
@@ -29,6 +30,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
+                "Dependinator.TypeScript",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
                 "Dependinator.Mcp",
@@ -62,11 +64,26 @@ public class LayeringTests
     }
 
     [Fact]
+    public void TypeScript_ShouldNotDependOnUiOrHosts()
+    {
+        AssertNoDependencyOn(
+            TypeScriptAssembly,
+            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Bicep", .. HostAssemblies]
+        );
+    }
+
+    [Fact]
     public void Claude_ShouldNotDependOnUiOrParsersOrHosts()
     {
         AssertNoDependencyOn(
             ClaudeAssembly,
-            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Bicep", .. HostAssemblies]
+            [
+                "Dependinator.UI",
+                "Dependinator.Roslyn",
+                "Dependinator.Bicep",
+                "Dependinator.TypeScript",
+                .. HostAssemblies,
+            ]
         );
     }
 
@@ -85,7 +102,14 @@ public class LayeringTests
     {
         AssertNoDependencyOn(
             McpAssembly,
-            ["Dependinator.UI", "Dependinator.Roslyn", "Dependinator.Bicep", "Dependinator.Claude", .. HostAssemblies]
+            [
+                "Dependinator.UI",
+                "Dependinator.Roslyn",
+                "Dependinator.Bicep",
+                "Dependinator.TypeScript",
+                "Dependinator.Claude",
+                .. HostAssemblies,
+            ]
         );
     }
 
@@ -113,6 +137,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
+                "Dependinator.TypeScript",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
                 "Dependinator.Mcp",
