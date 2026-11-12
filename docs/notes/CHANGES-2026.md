@@ -471,7 +471,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Node sizes and straighter lines (Oct 14).** The automatic layout sizes each node by its
   code (declaration lines, summed up the tree) and how central it is among its siblings, in four
   steps (60, 100, 140, 180), so the big and coordinating parts stand out and small utilities
-  stay small. Bigger nodes open as containers earlier while zooming in. Nodes are centered in
+  stay small. Bigger nodes also opened as containers earlier while zooming in, until Nov 12:
+  siblings were then icons and open containers side by side over a 3x zoom range, which looked
+  arbitrary, so all children of a node now open at the same zoom and a bigger node is a bigger
+  icon until then (only a node resized by hand far beyond those steps opens by its own size on
+  screen). Nodes are centered in
   their columns and pulled toward their neighbors from both sides, so lines run straighter.
   A thorough layout pass orders nodes for fewer line crossings and routes long lines around
   nodes; it runs when a container is first shown, or for a large container in idle moments

@@ -106,18 +106,57 @@ public class NodeViewPolicyTests
         Assert.Equal(expected, NodeViewPolicy.IsShowIcon(DefaultNode(), zoom));
     }
 
-    [Fact]
-    public void IsShowIcon_LargeNode_ShouldOpenAtLowerZoom()
+    // Siblings open together: every size the layout gives a node (NodeSizing.SideSteps) opens at
+    // the zoom a default-size node does, so a container's children are all icons or all open.
+    [Theory]
+    [InlineData(60)]
+    [InlineData(100)]
+    [InlineData(140)]
+    [InlineData(180)]
+    public void IsShowIcon_LayoutSizes_ShouldOpenAtTheSameZoom(double side)
     {
-        // A node twice the reference size opens when it is as large on screen as a default node
-        // opening, i.e. at half the zoom; a small node stays an icon a little longer.
-        var large = NodeOfSize(200);
-        var small = NodeOfSize(60);
+        var node = NodeOfSize(side);
 
-        Assert.True(NodeViewPolicy.IsShowIcon(large, 1.0));
-        Assert.False(NodeViewPolicy.IsShowIcon(large, 1.01));
-        Assert.True(NodeViewPolicy.IsShowIcon(small, 3.0));
-        Assert.False(NodeViewPolicy.IsShowIcon(small, 3.4));
+        Assert.True(NodeViewPolicy.IsShowIcon(node, 2.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(node, 2.01));
+        Assert.False(NodeViewPolicy.IsPastIcon(node, 2.0));
+        Assert.True(NodeViewPolicy.IsPastIcon(node, 2.01));
+    }
+
+    [Fact]
+    public void IsShowIcon_NodeResizedFarBeyondTheLayoutSizes_ShouldOpenByItsSizeOnScreen()
+    {
+        // A node enlarged by hand opens at the latest when it is 400 pixels on screen, instead of
+        // staying an ever larger icon; a node shrunk by hand opens once it is 100 pixels.
+        var huge = NodeOfSize(400);
+        var tiny = NodeOfSize(25);
+
+        Assert.True(NodeViewPolicy.IsShowIcon(huge, 1.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(huge, 1.01));
+        Assert.True(NodeViewPolicy.IsShowIcon(tiny, 4.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(tiny, 4.01));
+    }
+
+    [Fact]
+    public void IsShowIcon_NonSquareNode_ShouldOpenByItsShorterSide()
+    {
+        var wide = new ModelNode("Node", null!) { Type = NodeType.ClassType, Boundary = new Rect(0, 0, 600, 100) };
+
+        Assert.True(NodeViewPolicy.IsShowIcon(wide, 2.0));
+        Assert.False(NodeViewPolicy.IsShowIcon(wide, 2.01));
+    }
+
+    [Fact]
+    public void ContainerBackgroundOpacity_LargeNode_ShouldStayFullForADoublingAfterItOpens()
+    {
+        // A 180 node opens at zoom 2 like its siblings, when it is 360 pixels on screen: its tint
+        // is full until zoom 4, as a default node's is, not only until it is 400 pixels (zoom 2.2).
+        var large = NodeOfSize(180);
+
+        Assert.Equal(1.0, NodeViewPolicy.ContainerBackgroundOpacity(large, 2.01));
+        Assert.Equal(1.0, NodeViewPolicy.ContainerBackgroundOpacity(large, 4.0));
+        Assert.True(NodeViewPolicy.ContainerBackgroundOpacity(large, 4.5) < 1.0);
+        Assert.Equal(0.0, NodeViewPolicy.ContainerBackgroundOpacity(large, 64.0 / 1.8));
     }
 
     [Fact]
@@ -232,6 +271,38 @@ public class NodeViewPolicyTests
         // The parent's zoom with the nested type framed: not its summary card, which hides it
         var zoom = 1 / (type.ContainerZoom * NodeViewPolicy.FramingZoomFactor(nested));
         Assert.False(NodeViewPolicy.IsMemberSummary(type, zoom / 1.3));
+    }
+
+    // A node that is large in its parent (a container zoom near 1) is framed closer than as an
+    // icon when its parent would otherwise still be an icon itself, hiding the node.
+    [Theory]
+    [InlineData(100, 0.3)]
+    [InlineData(100, 0.8)]
+    [InlineData(180, 0.8)]
+    [InlineData(180, 1.0)]
+    [InlineData(400, 1.0)]
+    public void FramingZoomFactor_ChildOfAnyParent_ShouldFrameItInAnOpenParent(double parentSize, double containerZoom)
+    {
+        var parent = NodeOfSize(parentSize, NodeType.Namespace);
+        parent.ContainerZoom = containerZoom;
+        var child = NodeOfSize(100);
+        parent.AddChild(child);
+
+        // The parent's zoom with the child framed (at 1 / factor pixels per unit), also in a tile,
+        // which is rendered up to 1.3 times closer than the view.
+        var zoom = 1 / (containerZoom * NodeViewPolicy.FramingZoomFactor(child));
+        Assert.False(NodeViewPolicy.IsShowIcon(parent, zoom), $"Parent is an icon at {zoom}");
+        Assert.False(NodeViewPolicy.IsShowIcon(parent, zoom * 1.3), $"Parent is an icon at {zoom * 1.3}");
+    }
+
+    [Fact]
+    public void FramingZoomFactor_ChildInADefaultContainer_ShouldStillFrameItAsAnIcon()
+    {
+        var parent = NodeOfSize(180, NodeType.Namespace); // Default container zoom (1/8)
+        var child = NodeOfSize(180);
+        parent.AddChild(child);
+
+        Assert.Equal(1.2, NodeViewPolicy.FramingZoomFactor(child), 6);
     }
 
     static ModelNode DefaultNode(NodeType type = NodeType.ClassType) => NodeOfSize(100, type);
