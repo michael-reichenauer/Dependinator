@@ -190,10 +190,17 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
 
     const refresh = (): void => {
         hasUnrefreshedChanges = false;
-        logger.log("Source files changed, refreshing diagram");
+        // This refresh covers the changes a pending timer waits to report
+        if (pendingTimer) {
+            clearTimeout(pendingTimer);
+            pendingTimer = undefined;
+        }
         const kinds = [...new Set([...unrefreshedKinds, ...changedKinds])].join(",");
         unrefreshedKinds.clear();
         changedKinds.clear();
+        if (kinds === "")
+            return; // Nothing changed: no kinds would mean every kind to the UI
+        logger.log("Source files changed, refreshing diagram");
         panel.webview.postMessage({ type: "ui/refresh", message: kinds });
     };
 

@@ -8,8 +8,29 @@ import libraries from "virtual:typescript-libraries";
 // compiler from memory, as files of a folder that does not exist.
 const LibraryFolder = "/$typescript-libraries";
 
+// The declaration files (the libraries, the packages' types) parsed so far. A project of several
+// parts is several programs that read the same ones, and parsing the DOM's and Node's types for
+// each part costs most of its time and memory. A parsed file is shared by the programs whose
+// options parse and bind it alike, as the editor shares them between its projects.
+const declarationFiles = new Map<string, ts.SourceFile | undefined>();
+const SourceFileOptions: (keyof ts.CompilerOptions)[] = [
+    "target",
+    "module",
+    "moduleResolution",
+    "moduleDetection",
+    "jsx",
+    "jsxImportSource",
+    "importHelpers",
+    "alwaysStrict",
+    "strict",
+    "noFallthroughCasesInSwitch",
+    "allowUnusedLabels",
+    "allowUnreachableCode",
+];
+
 export function createCompilerHost(options: ts.CompilerOptions): ts.CompilerHost {
     const host = ts.createCompilerHost(options, true);
+    const optionsKey = SourceFileOptions.map(name => JSON.stringify(options[name]) ?? "").join("|");
     const library = (fileName: string): string | undefined =>
         fileName.startsWith(`${LibraryFolder}/`) ? libraries[fileName.slice(LibraryFolder.length + 1)] : undefined;
 
@@ -21,10 +42,20 @@ export function createCompilerHost(options: ts.CompilerOptions): ts.CompilerHost
         fileExists: fileName => library(fileName) !== undefined || fileExists(fileName),
         readFile: fileName => library(fileName) ?? readFile(fileName),
         getSourceFile: (fileName, languageVersionOrOptions, onError, shouldCreateNewSourceFile) => {
-            const text = library(fileName);
-            return text !== undefined
-                ? ts.createSourceFile(fileName, text, languageVersionOrOptions)
-                : getSourceFile(fileName, languageVersionOrOptions, onError, shouldCreateNewSourceFile);
+            const create = () => {
+                const text = library(fileName);
+                return text !== undefined
+                    ? ts.createSourceFile(fileName, text, languageVersionOrOptions)
+                    : getSourceFile(fileName, languageVersionOrOptions, onError, shouldCreateNewSourceFile);
+            };
+            if (!/\.d\.[cm]?ts$/i.test(fileName)) {
+                return create();
+            }
+            const key = `${fileName}|${optionsKey}|${JSON.stringify(languageVersionOrOptions)}`;
+            if (!declarationFiles.has(key)) {
+                declarationFiles.set(key, create());
+            }
+            return declarationFiles.get(key);
         },
     };
 }

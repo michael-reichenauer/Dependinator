@@ -19,7 +19,10 @@ static class HelperScript
         lock (syncRoot)
         {
             if (path is not null && File.Exists(path))
+            {
+                MarkUsed(path);
                 return path;
+            }
 
             var result = Result.Catch(Write);
             if (result is string written)
@@ -49,8 +52,7 @@ static class HelperScript
         var scriptPath = Path.Combine(folder, $"ts-parser-{hash}.js");
         if (File.Exists(scriptPath) && File.ReadAllBytes(scriptPath).AsSpan().SequenceEqual(content))
         {
-            // Its time tells the other versions that this one is in use
-            Result.Catch(() => File.SetLastWriteTimeUtc(scriptPath, DateTime.UtcNow));
+            MarkUsed(scriptPath);
             return scriptPath;
         }
 
@@ -62,7 +64,16 @@ static class HelperScript
         return scriptPath;
     }
 
-    // The scripts of versions that have not started since the time (and what a stopped process
+    // The script's time tells the other versions that this one is in use: set on every use (at
+    // most once a day), since a host can run for longer than the age that counts as unused.
+    static void MarkUsed(string scriptPath)
+    {
+        var now = DateTime.UtcNow;
+        if (now - File.GetLastWriteTimeUtc(scriptPath) > TimeSpan.FromDays(1))
+            Result.Catch(() => File.SetLastWriteTimeUtc(scriptPath, now));
+    }
+
+    // The scripts of versions that have not parsed since the time (and what a stopped process
     // left half written).
     internal static void DeleteUnusedVersions(string folder, string scriptPath, DateTime unusedSinceUtc)
     {

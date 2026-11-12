@@ -72,24 +72,23 @@ static class ScriptProjects
         return [.. configs, .. packages];
     }
 
-    // The folder has a source file the parser would parse: not a declaration file, nothing built,
-    // and not counting the tools' "x.config.js" settings. One walk of the folder's files, which
-    // stops at the first source file.
-    public static bool HasSourceFiles(string folder, Func<string, IEnumerable<string>> enumerateFiles) =>
-        enumerateFiles(folder).Any(file => IsSourceFile(folder, file));
+    // The folder has a source file the parser takes as a project's own (a test file too: the
+    // parser offers to include them): not a declaration file, nothing built or downloaded, and
+    // not counting the tools' "x.config.js" settings. One walk of the folder's files, which
+    // leaves the output folders out and stops at the first source file.
+    public static bool HasSourceFiles(
+        string folder,
+        Func<string, Func<string, bool>, IEnumerable<string>> enumerateFiles
+    ) => enumerateFiles(folder, IsOutputFolder).Any(IsSourceFile);
 
-    static bool IsSourceFile(string folder, string file)
+    static bool IsOutputFolder(string name) => OutputFolders.Contains(name, StringComparer.OrdinalIgnoreCase);
+
+    static bool IsSourceFile(string file)
     {
         var name = Path.GetFileName(file);
-        if (
-            !SourceExtensions.Any(extension => name.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
-            || DeclarationFile.IsMatch(name)
-            || name.Contains(".config.", StringComparison.OrdinalIgnoreCase)
-        )
-            return false;
-
-        var folders = Path.GetRelativePath(folder, file).Split('/', '\\').SkipLast(1);
-        return !folders.Any(part => OutputFolders.Contains(part, StringComparer.OrdinalIgnoreCase));
+        return SourceExtensions.Any(extension => name.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+            && !DeclarationFile.IsMatch(name)
+            && !name.Contains(".config.", StringComparison.OrdinalIgnoreCase);
     }
 
     static string FolderOf(string file) =>

@@ -65,6 +65,11 @@ public class WorkspaceFileServiceTests
             await File.WriteAllTextAsync(Path.Combine(root, "tool", "lib", "run.js"), "");
             // A package.json without source
             await File.WriteAllTextAsync(Path.Combine(root, "docs", "package.json"), "{}");
+            // A package.json with only what was built and its declarations
+            Directory.CreateDirectory(Path.Combine(root, "built", "dist"));
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "dist", "index.js"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "index.d.ts"), "");
 
             var service = new WorkspaceFileService();
             service.SetWorkspaceFolders([root]);

@@ -56,9 +56,19 @@ config that references other projects is **one program per project** (a "part"),
 with its own options, because a solution style config has no options of its own and its projects
 differ in path aliases, `types`, libraries and JSX. A file belongs to the part whose config names
 it; the same file is a different object in each program that reads it, so a declaration reached
-from another part is found by its place in the source (`placeOf`: file, position and kind). Memory
-grows with the number of parts, since each program reads the libraries again; a monorepo of many
-dozens of referenced projects is untried.
+from another part is found by its place in the source (`placeOf`: file, position and kind).
+
+Two things keep that workable for a monorepo:
+
+- **Declaration files are parsed once** for all the programs (`libraries.ts`: the libraries and
+  the packages' types, shared between programs whose options parse and bind them alike, as the
+  editor shares them between its projects). A made-up monorepo of 30 referenced projects that
+  use the DOM and Node parses in 4 s with 340 MB; without the sharing Node ran out of memory.
+- **An import of a referenced project is its source**, as in the editor
+  (`useSourceOfProjectReferenceRedirect`, with the config's `references`): `@acme/util` whose
+  `package.json` names `dist/index.d.ts` leads to `libs/util/src`, built or not. This needs the
+  importing project's own config to reference the other, as `tsc -b` needs it too. Without that
+  reference the import is what was built: no link (and no made-up package beside the part).
 
 Two options are not the config's: nothing is emitted, and where the config has no `types`, every
 installed `@types` package is included (`types: ["*"]`). TypeScript 6 includes none by itself,
@@ -66,7 +76,8 @@ and then Node's modules and globals (`fs`, `process`) have no declarations to li
 
 A `package.json` project takes every source file below its folder except `node_modules` and the
 usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that may hold TypeScript.
-`ScriptProjects.HasSourceFiles` uses the same rule to decide whether a `package.json` is a model.
+`ScriptProjects.HasSourceFiles` uses the same rule to decide whether a `package.json` is a model
+(test files count there: the parser offers to include them when a project has nothing else).
 
 ## Model shape
 
@@ -115,7 +126,10 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   `npm install`), each as one summary. An import the compiler cannot resolve is "not installed"
   only when no `node_modules` folder above the file has the package: a style sheet or image of an
   installed package (`import "pkg/dist/site.css"`) is a plain link to the package, and a path
-  alias (the config's `paths`, or the bundlers' `@/x`, `~/x`, `#x`) is no package at all.
+  alias (the config's `paths` apart from a catch-all `*`, or the bundlers' `@/x`, `~/x`, `#x`) is
+  no package at all. An alias that only the bundler's config knows and that looks like a package
+  (`@components/Button`) cannot be told from a missing one: it is reported, and the message says
+  that such an alias belongs in the config's `paths`.
 - A project's sole folder chain (`src`) is a pass-through in the diagram, like the namespaces
   that repeat an assembly's name (`PassThroughService`), so opening the project shows its files.
 
@@ -124,7 +138,8 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
 The extension watches script and project files too. Each change message names the kinds of the
 files that changed ("script", "code"), and the UI ignores the kinds the open model is not parsed
 from (`IModelService.IsParsedFrom`), because a JavaScript build writes `.js` files beside a C#
-solution. Script files under `dist`, `out`, `build` and `coverage` are not watched (what a
+solution. With auto refresh off, a message carries only the kinds changed since the last one.
+Script files under `dist`, `out`, `build` and `coverage` are not watched (what a
 project builds), and nothing under `node_modules`, `bin` or `obj`; the folders are matched within
 the workspace, not in the path to it. So a project that keeps source in a folder of one of these
 names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
@@ -152,3 +167,6 @@ names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
   nightly package task does not look at it either. Bump TypeScript by hand, with the tests.
 - A project whose source is under `build` or `out` and that has no config file is not found (the
   folders are skipped when a `package.json` project's files are collected).
+- With auto refresh off, the extension does not learn of a manual re-parse, so switching auto
+  refresh on re-parses once for changes that may already be in the model (as before for C#).
+- A part that imports another part's built output without referencing it gets no link to it.

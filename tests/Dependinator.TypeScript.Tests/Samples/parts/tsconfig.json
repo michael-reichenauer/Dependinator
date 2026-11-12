@@ -2,5 +2,5 @@
     // A solution style config: no files of its own, only the projects it references, each with
     // its own options
     "files": [],
-    "references": [{ "path": "./server" }, { "path": "./web" }]
+    "references": [{ "path": "./libs/util" }, { "path": "./server" }, { "path": "./web" }]
 }

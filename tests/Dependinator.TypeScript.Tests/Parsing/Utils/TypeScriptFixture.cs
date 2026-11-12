@@ -13,10 +13,11 @@ public class TypeScriptFixture : IAsyncLifetime
     // Samples/tool
     internal IReadOnlyList<Item> Tool { get; private set; } = [];
 
-    // Samples/parts, with its libs/core linked into node_modules as a package manager's
-    // workspace does it (false where the link could not be made, as on Windows without the right)
+    // Samples/parts, with its libs/core and libs/util linked into node_modules as a package
+    // manager's workspace does it (false where the links could not be made, as on Windows
+    // without the right)
     internal IReadOnlyList<Item> Parts { get; private set; } = [];
-    internal bool IsWorkspacePackageLinked { get; private set; }
+    internal bool AreWorkspacePackagesLinked { get; private set; }
 
     internal static TypeScriptParser Parser() => new(new NodeRuntime());
 
@@ -26,7 +27,7 @@ public class TypeScriptFixture : IAsyncLifetime
         var shopWithTests = Parser()
             .ParseAsync(Root.ShopConfigPath, new SolutionParseOptions { IncludeTestProjects = true });
         var tool = Parser().ParseAsync(Root.ToolPackagePath, SolutionParseOptions.Default);
-        IsWorkspacePackageLinked = LinkWorkspacePackage();
+        AreWorkspacePackagesLinked = LinkWorkspacePackages();
         var parts = Parser().ParseAsync(Root.PartsConfigPath, SolutionParseOptions.Default);
 
         Shop = AssertOk(await shop);
@@ -35,20 +36,23 @@ public class TypeScriptFixture : IAsyncLifetime
         Parts = AssertOk(await parts);
     }
 
-    // node_modules/@acme/core -> libs/core. Made here, not checked in: a link in the
-    // repository is a plain file in a checkout without link support.
-    static bool LinkWorkspacePackage()
+    // node_modules/@acme/core -> libs/core, and util likewise. Made here, not checked in: a link
+    // in the repository is a plain file in a checkout without link support.
+    static bool LinkWorkspacePackages()
     {
         var scope = Path.Combine(Root.PartsFolderPath, "node_modules", "@acme");
-        var link = Path.Combine(scope, "core");
         try
         {
-            if (!Directory.Exists(link))
+            Directory.CreateDirectory(scope);
+            foreach (var name in new[] { "core", "util" })
             {
-                Directory.CreateDirectory(scope);
-                Directory.CreateSymbolicLink(link, Path.Combine("..", "..", "libs", "core"));
+                var link = Path.Combine(scope, name);
+                if (!Directory.Exists(link))
+                    Directory.CreateSymbolicLink(link, Path.Combine("..", "..", "libs", name));
+                if (!File.Exists(Path.Combine(link, "package.json")))
+                    return false;
             }
-            return File.Exists(Path.Combine(link, "package.json"));
+            return true;
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {

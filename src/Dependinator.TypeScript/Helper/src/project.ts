@@ -45,7 +45,7 @@ export function loadProject(entryPath: string): Project {
     return { entryPath: fullPath, projectDir, packageName: name, packageDescription: description, parts };
 }
 
-function createPart({ fileNames, options }: Config): ProjectPart {
+function createPart({ fileNames, options, references }: Config): ProjectPart {
     const programOptions: ts.CompilerOptions = {
         ...options,
         // TypeScript 6 no longer includes the @types packages by itself. Without Node's and the
@@ -61,7 +61,11 @@ function createPart({ fileNames, options }: Config): ProjectPart {
     const program = ts.createProgram({
         rootNames: fileNames,
         options: programOptions,
-        host: createCompilerHost(programOptions),
+        // An import of a referenced project is its source, as in the editor: not the declaration
+        // files it builds, which may not be built and are no nodes of the model.
+        projectReferences: references,
+        // (An option of the editor's hosts that the compiler host's type leaves out)
+        host: { ...createCompilerHost(programOptions), useSourceOfProjectReferenceRedirect: () => true } as ts.CompilerHost,
     });
     return { program, rootFiles: new Set(fileNames.map(f => program.getSourceFile(f)?.fileName ?? f)) };
 }
@@ -89,6 +93,7 @@ function readPackage(projectDir: string): { name?: string; description?: string 
 interface Config {
     fileNames: string[];
     options: ts.CompilerOptions;
+    references?: readonly ts.ProjectReference[];
 }
 
 // A config file's files and options, followed by those of the projects it references (and
@@ -113,7 +118,7 @@ function readConfigs(configPath: string): Config[] {
         if (!parsed) {
             return;
         }
-        configs.push({ fileNames: parsed.fileNames, options: parsed.options });
+        configs.push({ fileNames: parsed.fileNames, options: parsed.options, references: parsed.projectReferences });
         for (const reference of parsed.projectReferences ?? []) {
             const referencePath = ts.resolveProjectReferencePath(reference);
             if (fs.existsSync(referencePath)) {

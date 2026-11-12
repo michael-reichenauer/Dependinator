@@ -482,7 +482,9 @@ export class ModelBuilder {
 
     // The node of a project's file, in whichever part's program the file object is from
     fileNode(file: ts.SourceFile): string | undefined {
-        return this.declarationNodes.get(file) ?? this.declarationPlaces.get(placeOf(file.fileName, file));
+        const name = this.declarationNodes.get(file);
+        // One part has one object per file: no place to look up for every use of a library
+        return name ?? (this.project.parts.length > 1 ? this.declarationPlaces.get(placeOf(file.fileName, file)) : undefined);
     }
 
     // The declaration's JSDoc comment text
@@ -646,6 +648,10 @@ export class ModelBuilder {
             const parent = path.dirname(dir);
             if (!name && parent !== dir) {
                 name = this.sourcePackageOf(parent);
+            } else if (name && this.ownFiles.some(f => path.normalize(f.file.fileName).startsWith(dir + path.sep))) {
+                // What a part of this model has built (its dist/index.d.ts): the part's source
+                // is in the model already, and it is no package beside it.
+                name = undefined;
             }
         }
         this.sourcePackages.set(dir, name);
@@ -777,9 +783,13 @@ export class ModelBuilder {
     isPathAlias(specifier: string): boolean {
         return Object.keys(this.program.getCompilerOptions().paths ?? {}).some(pattern => {
             const star = pattern.indexOf("*");
-            return star < 0
-                ? specifier === pattern
-                : specifier.startsWith(pattern.slice(0, star)) && specifier.endsWith(pattern.slice(star + 1));
+            if (star < 0) {
+                return specifier === pattern;
+            }
+            // Not the catch-all "*" (more places to look for any module): it names no alias
+            const prefix = pattern.slice(0, star);
+            const suffix = pattern.slice(star + 1);
+            return (prefix !== "" || suffix !== "") && specifier.startsWith(prefix) && specifier.endsWith(suffix);
         });
     }
 
@@ -859,9 +869,11 @@ export class ModelBuilder {
             this.problems.push({
                 Problem: {
                     Message:
-                        missing.length === 1
-                            ? `The package ${shown} is not installed, so what is used of it is not shown (npm install)`
-                            : `${missing.length} packages are not installed (${shown}), so what is used of them is not shown (npm install)`,
+                        // Not found can also be an alias only the bundler knows of
+                        (missing.length === 1
+                            ? `The package ${shown} is not installed, so what is used of it is not shown`
+                            : `${missing.length} packages are not installed (${shown}), so what is used of them is not shown`) +
+                        ' (npm install; an alias of the bundler belongs in the config\'s "paths")',
                     ErrorCount: missing.length,
                     NodeName: this.root,
                 },

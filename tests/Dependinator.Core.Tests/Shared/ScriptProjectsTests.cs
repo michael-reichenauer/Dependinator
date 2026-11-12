@@ -120,6 +120,13 @@ public class ScriptProjectsTests
     }
 
     [Fact]
+    public void HasSourceFiles_ShouldCountATestFile()
+    {
+        // The parser leaves test files out, and offers to include them when there is nothing else
+        Assert.True(HasSourceFiles("e2e/login.spec.ts"));
+    }
+
+    [Fact]
     public void HasSourceFiles_ShouldWalkTheFolderOnce_AndStopAtTheFirstSourceFile()
     {
         var walks = 0;
@@ -134,16 +141,19 @@ public class ScriptProjectsTests
             }
         }
 
-        Assert.True(ScriptProjects.HasSourceFiles(Path.Combine(Root, "app"), _ => Files()));
+        Assert.True(ScriptProjects.HasSourceFiles(Path.Combine(Root, "app"), (_, _) => Files()));
         Assert.Equal(1, walks);
         Assert.Equal(2, read);
     }
 
+    // The files as a walk gives them: without those in the folders it is told to skip
     static bool HasSourceFiles(params string[] files)
     {
         var folder = Path.Combine(Root, "app");
-        return ScriptProjects.HasSourceFiles(folder, _ =>
-            files.Select(file => Path.Combine([folder, .. file.Split('/')]))
+        return ScriptProjects.HasSourceFiles(folder, (_, isSkippedFolder) =>
+            files
+                .Where(file => !file.Split('/').SkipLast(1).Any(isSkippedFolder))
+                .Select(file => Path.Combine([folder, .. file.Split('/')]))
         );
     }
 }

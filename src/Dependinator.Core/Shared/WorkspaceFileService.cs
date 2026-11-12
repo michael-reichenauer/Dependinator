@@ -50,7 +50,10 @@ class WorkspaceFileService : IWorkspaceFileService
             ]),
             OrderShallowestFirst(EnumerateFiles(rootPaths, "package.json")),
             File.ReadAllText,
-            folder => ScriptProjects.HasSourceFiles(folder, f => EnumerateFiles([f]))
+            folder =>
+                ScriptProjects.HasSourceFiles(folder, (f, isSkippedFolder) =>
+                    EnumerateFiles([f], isSkippedFolder: isSkippedFolder)
+                )
         );
         Log.Info("Model file paths", solutionPaths, bicepPaths, scriptPaths);
         return [.. solutionPaths, .. bicepPaths, .. scriptPaths];
@@ -89,7 +92,11 @@ class WorkspaceFileService : IWorkspaceFileService
         return fullPath.StartsWith(folder, comparison);
     }
 
-    static IEnumerable<string> EnumerateFiles(IReadOnlyList<string> roots, string searchPattern = "*")
+    static IEnumerable<string> EnumerateFiles(
+        IReadOnlyList<string> roots,
+        string searchPattern = "*",
+        Func<string, bool>? isSkippedFolder = null
+    )
     {
         var pending = new Stack<string>();
         roots.ForEach(pending.Push);
@@ -146,7 +153,11 @@ class WorkspaceFileService : IWorkspaceFileService
                 var name = Path.GetFileName(subDir);
 
                 // Skip some common build/tooling dirs
-                if (name.StartsWith('.') || IgnoredDirectoryNames.Contains(name))
+                if (
+                    name.StartsWith('.')
+                    || IgnoredDirectoryNames.Contains(name)
+                    || isSkippedFolder?.Invoke(name) == true
+                )
                     continue;
 
                 // Skip symlink/junction directories (avoid following symlinks)

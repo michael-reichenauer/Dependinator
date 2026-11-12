@@ -4,7 +4,7 @@ using Dependinator.TypeScript.Tests.Parsing.Utils;
 namespace Dependinator.TypeScript.Tests.Parsing;
 
 // Parses Samples/parts, a "solution style" project: its tsconfig.json names no files, only the
-// two projects it references (server, web), each with its own options. What the web part
+// projects it references (server, web, libs/util), each with its own options. What the web part
 // imports is what trips a parser up: a path alias of its own, a style sheet of an installed
 // package, a file that is not there, a file of the other part and names with "$" and "#".
 [Collection(nameof(TypeScriptCollection))]
@@ -52,7 +52,7 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
     [Fact]
     public void WorkspacePackage_ShouldBeAPackage_NamedByItsPackageJson()
     {
-        if (!fixture.IsWorkspacePackageLinked)
+        if (!fixture.AreWorkspacePackagesLinked)
         {
             return; // No link support here
         }
@@ -60,6 +60,29 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
         // node_modules/@acme/core links to libs/core, which is where the compiler finds it
         Assert.True(Items.HasLink(Ping, "@acme.core.shared"));
         Assert.DoesNotContain(Items.Nodes(), n => n.Name.Contains("core"));
+        Assert.Equal(NodeType.Folder, Items.Node("parts.libs").Properties.Type);
+    }
+
+    [Fact]
+    public void PartUsedAsAPackage_ShouldBeItsSource_NotWhatItBuilds()
+    {
+        if (!fixture.AreWorkspacePackagesLinked)
+        {
+            return; // No link support here
+        }
+
+        // "@acme/util" is libs/util, which the config references too. Its package.json names
+        // dist/index.d.ts, which is not built: the server's reference to it leads to the source
+        Assert.True(Items.HasLink(Ping, "parts.libs.util.src.index*ts.stamp"));
+        Assert.DoesNotContain(Items.Links(), l => l.Target.StartsWith("@acme.util"));
+    }
+
+    [Fact]
+    public void CatchAllPath_ShouldBeNoAlias()
+    {
+        // "paths": { "*": [...] } matches every module: "path", which the made-up Node types do
+        // not declare, is still one of Node's modules
+        Assert.True(Items.HasLink("parts.server.src.api*ts", "node.path"));
     }
 
     [Fact]
@@ -76,7 +99,7 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
         // import { missing } from "@/missing": a file that is not there, not a package "@/missing"
         Assert.DoesNotContain(Items.Links(), l => l.Target.StartsWith('@') && !l.Target.StartsWith("@acme"));
         Assert.DoesNotContain(Items, i => i.Problem?.Message.Contains("@/") == true);
-        if (fixture.IsWorkspacePackageLinked)
+        if (fixture.AreWorkspacePackagesLinked)
         {
             Assert.DoesNotContain(Items, i => i.Problem is not null);
         }

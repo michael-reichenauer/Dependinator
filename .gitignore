@@ -278,7 +278,7 @@ FakesAssemblies/
 .ntvs_analysis.dat
 node_modules/
 # The made-up packages of the TypeScript parser tests' sample projects (the tests link
-# parts/libs/core into @acme)
+# parts/libs into @acme)
 !tests/Dependinator.TypeScript.Tests/Samples/shop/node_modules/
 !tests/Dependinator.TypeScript.Tests/Samples/parts/node_modules/
 tests/Dependinator.TypeScript.Tests/Samples/parts/node_modules/@acme/

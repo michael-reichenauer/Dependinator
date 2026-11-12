@@ -77,7 +77,9 @@ paths:
   - A config with `references` is one `ts.Program` per project (`ProjectPart`), each with its own
     options. The same file is a different `ts.SourceFile` in each program: look a declaration up
     with `fileNode` / `enclosingNode` (by `placeOf`), never by node identity alone, and call
-    `use(part)` before using `this.program` or `this.checker`.
+    `use(part)` before using `this.program` or `this.checker`. Declaration files are parsed once
+    for all programs (`libraries.ts`); without that a 30-project monorepo ran Node out of memory.
+    Try a change to `project.ts` or `libraries.ts` on a made-up monorepo of that size.
   - Only a file found through `node_modules` is a package (`packageOf`): the project's own
     `.d.ts` files and skipped test files have a `package.json` above them too.
   - The tests link `Samples/parts/libs/core` into `node_modules/@acme` at run time (ignored by
