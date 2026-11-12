@@ -144,11 +144,16 @@ body {
 .dep-model-item {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 24px;
+    gap: 12px;
     width: 100%;
 }
 
+.dep-model-item > :first-child {
+    flex: 1;
+}
+
+/* Right to left only to put the ellipsis at the start; the text is in a <bdi>, or a folder that
+   begins with a dot (".azure/infra") would show the dot at its end. */
 .dep-model-item__sub {
     max-width: 220px;
     overflow: hidden;
@@ -156,6 +161,12 @@ body {
     white-space: nowrap;
     direction: rtl;
     font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-model-item__synced {
+    align-self: center;
+    font-size: 1rem !important;
     color: var(--mud-palette-text-secondary);
 }
 

@@ -84,6 +84,18 @@ public class ModelListServiceTests
     }
 
     [Fact]
+    public async Task GetWorkspaceModels_ShouldKeepTheWorkspacesSpellingOfAPath()
+    {
+        var service = await CreateAsync();
+        await service.AddModelAsync(ToolsPath.ToUpperInvariant().Replace('/', '\\'));
+
+        var tools = service.GetWorkspaceModels()[1];
+
+        Assert.Equal(ToolsPath, tools.Item.Path);
+        Assert.True(service.IsLocalPath(tools.Item.Path));
+    }
+
+    [Fact]
     public async Task GetVisitedModel_ShouldBeNull_ForAWorkspaceModel()
     {
         var service = await CreateAsync();

@@ -16,7 +16,8 @@ static class WorkspaceModels
         return folders.Select(folder => string.Join('/', folder.Skip(shared))).ToList();
     }
 
-    // A visited model's kind, as the tag beside its name.
+    // A visited model's kind, as the tag beside its name. A synced model is a cloud model whether
+    // or not a copy of it is cached here: once opened, a model of the cloud is both.
     public static string VisitKind(ModelItem item) =>
         item.IsDemo ? "demo model"
         : ModelPaths.IsDesignModel(item.Path) ? "design model"

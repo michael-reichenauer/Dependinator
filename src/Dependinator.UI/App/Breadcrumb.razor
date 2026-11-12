@@ -7,6 +7,7 @@
 @inject INavigationService navigationService
 @inject ICanvasService canvasService
 @inject IModelListService modelListService
+@inject Dependinator.UI.Shared.CloudSync.IAppCloudSyncService appCloudSyncService
 @implements IDisposable
 
 @* Wayfinding bar under the app bar, shown only while a node is selected: the open model, then
@@ -20,7 +21,7 @@
    the bar then stays up, tags the model with its kind and leads with a button back to the
    workspace model used last. *@
 @{
-  var visited = modelListService.GetVisitedModel(ModelPath);
+  var visited = Visited;
   var homePath = visited is null ? null : modelListService.HomePath;
   var isNodeSelected = selectionService.SelectedId.IsNode;
 }
@@ -70,13 +71,48 @@
 
   string ModelIcon => IsDesignModel ? MudBlazor.Icons.Material.Outlined.DesignServices : MudBlazor.Icons.Material.Outlined.Schema;
 
-  protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+  // The visited model is looked up once per open model and cloud list, not on every render: the
+  // bar re-renders with each selection and view change.
+  string visitedForPath = "";
+  bool isVisitedStale = true;
+  ModelItem? visited;
+
+  ModelItem? Visited
+  {
+    get
+    {
+      if (isVisitedStale || visitedForPath != ModelPath)
+      {
+        visitedForPath = ModelPath;
+        isVisitedStale = false;
+        visited = modelListService.GetVisitedModel(ModelPath);
+      }
+      return visited;
+    }
+  }
+
+  protected override void OnInitialized()
+  {
+    applicationEvents.UIStateChanged += OnUiStateChanged;
+    appCloudSyncService.Changed += OnCloudChanged;
+  }
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+  // A synced model's kind follows the cloud list (which arrives after the first model opened).
+  void OnCloudChanged()
+  {
+    isVisitedStale = true;
+    InvokeAsync(StateHasChanged);
+  }
 
   void FitToScreen() => canvasService.PanZoomToFit();
 
   Task ShowNodeAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
 
-  public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+  public void Dispose()
+  {
+    applicationEvents.UIStateChanged -= OnUiStateChanged;
+    appCloudSyncService.Changed -= OnCloudChanged;
+  }
 }

@@ -62,6 +62,7 @@ class ModelListService(
     IReadOnlyList<string> localPaths = [];
     IReadOnlyList<string> cloudPaths = [];
     IReadOnlyList<string> workspacePaths = [];
+    HashSet<string> workspaceKeys = new(StringComparer.OrdinalIgnoreCase);
     string? lastWorkspacePath;
 
     public IReadOnlyList<string> RecentModelPaths => recentPaths;
@@ -93,7 +94,8 @@ class ModelListService(
 
     public bool HasWorkspace => Build.IsVsCodeExtWasm || Build.IsWeb;
 
-    public bool IsWorkspacePath(string path) => workspacePaths.Any(wp => IsSamePath(wp, path));
+    public bool IsWorkspacePath(string path) =>
+        !string.IsNullOrWhiteSpace(path) && workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path));
 
     public IReadOnlyList<WorkspaceModel> GetWorkspaceModels()
     {
@@ -102,8 +104,14 @@ class ModelListService(
         return workspacePaths
             .Select(
                 (path, index) =>
+                    // The workspace's own spelling of the path, not that of an equal recent path:
+                    // parsing and the startup model compare paths exactly.
                     new WorkspaceModel(
-                        items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path),
+                        (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
+                        {
+                            Path = path,
+                            DisplayName = Path.GetFileName(path),
+                        },
                         folders[index]
                     )
             )
@@ -198,7 +206,13 @@ class ModelListService(
         localPaths = localPaths.Distinct().ToList();
         // The test host opens the embedded demo instead of parsing the working solution, so there
         // the demo stands in for it as the workspace's first model.
-        workspacePaths = Build.IsTestMode ? [DemoModel.Path, .. localPaths] : localPaths;
+        workspacePaths =
+            !HasWorkspace ? []
+            : Build.IsTestMode ? [DemoModel.Path, .. localPaths]
+            : localPaths;
+        workspaceKeys = workspacePaths
+            .Select(global::Shared.CloudModelPath.Normalize)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // Seed recent paths with the first available model (cloud for standalone Wasm)
         if (!recentPaths.Any())

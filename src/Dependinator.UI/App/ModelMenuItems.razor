@@ -45,7 +45,11 @@
                 <span>@model.Item.DisplayName</span>
                 @if (model.Folder.Length > 0)
                 {
-                    <span class="dep-model-item__sub" data-testid="menu-model-folder">@model.Folder</span>
+                    <span class="dep-model-item__sub" data-testid="menu-model-folder"><bdi>@model.Folder</bdi></span>
+                }
+                @if (model.Item.IsCloud)
+                {
+                    <MudIcon Icon="@Icons.Material.Outlined.CloudDone" Class="dep-model-item__synced" title="Synced to the cloud" />
                 }
             </span>
         </MudMenuItem>
@@ -62,7 +66,7 @@ else
     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
     @foreach (ModelItem item in modelItems)
     {
-        bool isCurrent = IsCurrentModel(item);
+        bool isCurrent = IsOpen(item);
         <MudMenuItem IconColor="@ItemIconColor(isCurrent)" Icon="@ModelItemIcon(item)"
                      Style="@CurrentItemStyle(isCurrent)" title="@ModelItemTitle(item)"
                      OnClick="() => OpenAsync(item)" data-testid="menu-model-item">
@@ -76,9 +80,6 @@ else
 }
 
 @code {
-    string? CurrentRecentModelPath =>
-        modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
-
     protected override void OnInitialized()
     {
         applicationEvents.UIStateChanged += OnChanged;
@@ -110,22 +111,12 @@ else
         snackbar.Add($"Loaded cloud model for {Path.GetFileNameWithoutExtension(item.Path)}.", Severity.Success);
     }
 
+    // A cloud model's path is its normalized path, so this holds for local and cloud items alike.
     bool IsOpen(ModelItem item) =>
         string.Equals(
             global::Shared.CloudModelPath.Normalize(item.Path),
             appCloudSyncService.CurrentNormalizedModelPath,
             StringComparison.OrdinalIgnoreCase
-        );
-
-    bool IsCurrentModel(ModelItem item) =>
-        string.Equals(item.Path, CurrentRecentModelPath, StringComparison.Ordinal)
-        || (
-            item.IsCloud
-            && string.Equals(
-                item.CloudModel!.NormalizedPath,
-                appCloudSyncService.CurrentNormalizedModelPath,
-                StringComparison.OrdinalIgnoreCase
-            )
         );
 
     static MudBlazor.Color ItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
