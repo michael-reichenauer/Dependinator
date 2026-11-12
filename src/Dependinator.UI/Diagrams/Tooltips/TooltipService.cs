@@ -315,6 +315,7 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
             Parsing.NodeType.VariableMember => "Variable",
             Parsing.NodeType.OutputMember => "Output",
             Parsing.NodeType.ResourceMember => "Resource setting",
+            Parsing.NodeType.Folder => "Folder",
             Parsing.NodeType.SourceFile => "File",
             Parsing.NodeType.FunctionMember => "Function",
             _ => node.IsManual ? "Node" : "Group",

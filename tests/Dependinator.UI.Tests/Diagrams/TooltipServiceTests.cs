@@ -191,7 +191,7 @@ public class TooltipServiceTests
         {
             project = AddNode(model, "app", model.Root, NodeType.Solution);
             project.Update(new ParsedNode("app", new() { FileSpan = new FileSpan("/repo/app/tsconfig.json", 0, 0) }));
-            var src = AddNode(model, "app.src", project, NodeType.Parent);
+            var src = AddNode(model, "app.src", project, NodeType.Folder);
             file = AddNode(model, "app.src.main*ts", src, NodeType.SourceFile);
             start = AddNode(model, "app.src.main*ts.start", file, NodeType.FunctionMember);
         }
@@ -199,6 +199,7 @@ public class TooltipServiceTests
         var service = NewService();
 
         Assert.Contains("TypeScript project", Html(service, NodeElement(project)));
+        Assert.Contains("Folder in app", Html(service, NodeElement(file.Parent)));
         Assert.Contains("File in src", Html(service, NodeElement(file)));
         Assert.Contains("Function in src.main.ts", Html(service, NodeElement(start))?.Replace("<wbr>", ""));
     }

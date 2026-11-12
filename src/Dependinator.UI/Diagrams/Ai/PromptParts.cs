@@ -240,6 +240,7 @@ static class PromptParts
             NodeType.Type => "type",
             NodeType.Module => "module",
             NodeType.Resource => "resource",
+            NodeType.Folder => "folder",
             NodeType.SourceFile => "file",
             _ => "group",
         };

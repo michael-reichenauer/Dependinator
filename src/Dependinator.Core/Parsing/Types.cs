@@ -110,10 +110,12 @@ enum NodeType
 
     // Languages whose code lives in files and free functions (TypeScript, JavaScript): SourceFile
     // is a source file, a container of its types with its functions and variables (VariableMember)
-    // as member rows, and FunctionMember a function that is no method of a type.
+    // as member rows, FunctionMember a function that is no method of a type, and Folder a folder
+    // of source files.
     // Appended at the end: NodeType crosses JSON-RPC as an int.
     SourceFile,
     FunctionMember,
+    Folder,
 }
 
 static class NodeDescriptions

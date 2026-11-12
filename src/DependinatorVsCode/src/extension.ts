@@ -155,7 +155,7 @@ function sendShowNodeForEditor(editor: vscode.TextEditor | undefined): void {
 const autoRefreshIgnoredSegments = ["/obj/", "/bin/", "/node_modules/", "/.git/"];
 
 // What a TypeScript or JavaScript project builds, which is not its source.
-const scriptOutputSegments = ["/dist/", "/out/", "/build/", "/coverage/", "/wwwroot/"];
+const scriptOutputSegments = ["/dist/", "/out/", "/build/", "/coverage/"];
 
 function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
     const path = uri.path.toLowerCase();

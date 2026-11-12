@@ -129,6 +129,7 @@ export class ModelBuilder {
 
     declareFile(file: ts.SourceFile): void {
         const fileName = this.fileNodeName(file);
+        this.declareFolders(fileName);
         const lastLine = file.getLineAndCharacterOfPosition(file.getEnd()).line;
         this.addNode(fileName, {
             Type: "SourceFile",
@@ -140,6 +141,14 @@ export class ModelBuilder {
         const exported = this.exportedDeclarations(file);
         for (const statement of file.statements) {
             this.declareStatement(statement, fileName, exported);
+        }
+    }
+
+    // The folders above a file, each a level of its name between the root and the file itself.
+    declareFolders(fileName: string): void {
+        const levels = fileName.split(".");
+        for (let count = 2; count < levels.length; count++) {
+            this.addNode(levels.slice(0, count).join("."), { Type: "Folder" });
         }
     }
 

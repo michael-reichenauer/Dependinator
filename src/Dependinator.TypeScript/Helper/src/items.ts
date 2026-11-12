@@ -14,7 +14,8 @@ export type NodeType =
     | "MethodMember"
     | "VariableMember"
     | "SourceFile"
-    | "FunctionMember";
+    | "FunctionMember"
+    | "Folder";
 
 export interface FileSpan {
     Path: string;

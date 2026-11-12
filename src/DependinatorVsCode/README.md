@@ -33,6 +33,11 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
   deployments with the Bicep compiler; resources carry their Azure icons, local
   modules expand in place, and existing resources show as externals.
+- **TypeScript and JavaScript (new).** A project (a `tsconfig.json`, a
+  `jsconfig.json`, or a `package.json` for plain JavaScript) is drawn as its
+  folders and files, with classes and interfaces inside and each file's
+  functions as rows; the TypeScript compiler resolves what uses what, across
+  imports and out to the packages.
 - **Types as UML cards.** Zoom into a type and it opens into a card with its
   fields, constructors, properties and methods, their signatures and comments,
   a padlock on private members, and a line from each member that has
@@ -67,13 +72,16 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 
 ## Requirements
 
-- A workspace containing a **.NET solution (`.sln`)** with C# projects, or an
-  **Azure Bicep deployment** (a `.bicep` entry file and its local modules).
-  Dependinator parses it to build the dependency map.
+- A workspace containing a **.NET solution (`.sln`)** with C# projects, an
+  **Azure Bicep deployment** (a `.bicep` entry file and its local modules), or a
+  **TypeScript or JavaScript project** (a `tsconfig.json`, `jsconfig.json` or
+  `package.json`). Dependinator parses it to build the dependency map.
 - For C#, a [.NET SDK](https://dotnet.microsoft.com/download) that can build the
   solution, since Roslyn loads the projects with the SDK's MSBuild. Bicep needs no
   local `dotnet` or `bicep` installation; the extension bundles a self-contained
-  language server with the Bicep compiler.
+  language server with the Bicep compiler. TypeScript and JavaScript need nothing
+  installed either: the parser runs on VS Code's own Node.js runtime (run
+  `npm install` in the project, so its packages resolve).
 
 ## Getting started
 
@@ -95,10 +103,10 @@ navigation tips, and keyboard/mouse controls.
 
 | Command | Description |
 | --- | --- |
-| `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C#, solution and Bicep files, and the status bar item). |
+| `Dependinator: Open` | Open the Dependinator dependency map (also the icon in the editor title bar of C#, solution, Bicep, TypeScript and JavaScript files, and the status bar item). |
 | `Dependinator: Reveal Current File in Diagram` | Show the node for the file at the cursor (`Ctrl+Alt+D`, `Cmd+Alt+D` on macOS; also in the editor's right-click menu). |
 | `Dependinator: Search Nodes` | Open the diagram's node search. |
-| `Dependinator: Re-parse Model` | Parse the solution or Bicep deployment again now. |
+| `Dependinator: Re-parse Model` | Parse the solution, Bicep deployment or project again now. |
 | `Dependinator: Set Claude API Key` | Store (or, left empty, remove) your own Anthropic API key, from console.anthropic.com, for the Claude route of the AI features (you are also asked for it on first use). It is kept in VS Code's secret storage and sent only to Anthropic. |
 | `Dependinator: Connect Claude Code` | Add Dependinator's MCP server to Claude Code for this folder (`claude mcp add`, local scope), so Claude Code can ask about the open diagram. Copilot finds the server without this. |
 | `Dependinator: Install in Dev Container` | Jump to the Extensions view to install the extension inside a dev container. |

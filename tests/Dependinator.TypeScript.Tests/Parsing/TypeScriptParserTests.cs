@@ -83,9 +83,14 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
         Assert.Equal(NodeType.SourceFile, file.Properties.Type);
         Assert.Equal(Path.Combine(Root.ShopFolderPath, "src", "lib", "pricing.ts"), file.Properties.FileSpan!.Path);
         Assert.Equal(0, file.Properties.FileSpan.StartLine);
-        // Folders get no node of their own: the model makes them from the names
-        Assert.False(Items.HasNode("shop.src"));
-        Assert.False(Items.HasNode("shop.src.lib"));
+    }
+
+    [Fact]
+    public void Folders_ShouldBeNodes_BetweenTheProjectAndItsFiles()
+    {
+        Assert.Equal(NodeType.Folder, Items.Node("shop.src").Properties.Type);
+        Assert.Equal(NodeType.Folder, Items.Node("shop.src.lib").Properties.Type);
+        Assert.Equal(2, Items.Nodes().Count(n => n.Properties.Type == NodeType.Folder));
     }
 
     [Fact]
