@@ -69,7 +69,19 @@ paths:
     CommonJS file's module symbol is only on the file (`file.symbol`, internal); a symbol whose
     declaration is a source file or an ambient module is "the whole module" and makes no link.
   - Node names: a literal dot in a file, folder or package name is `*` (`names.ts`), as for C#
-    project files. Lines are 0-based.
+    project files; `$` and `#` are written full-width (`＄`, `＃`), because `NodeName.ToNiceText`
+    drops the plain ones. Wrap every name taken from source in `names.encodePart`. Lines are 0-based.
+  - TypeScript 6 includes no `@types` package unless the config's `types` names it: the helper
+    sets `types: ["*"]` when the config has none. Without it `fs` and `process` have no
+    declarations and their links silently go missing (found in review, Nov 12).
+  - A config with `references` is one `ts.Program` per project (`ProjectPart`), each with its own
+    options. The same file is a different `ts.SourceFile` in each program: look a declaration up
+    with `fileNode` / `enclosingNode` (by `placeOf`), never by node identity alone, and call
+    `use(part)` before using `this.program` or `this.checker`.
+  - Only a file found through `node_modules` is a package (`packageOf`): the project's own
+    `.d.ts` files and skipped test files have a `package.json` above them too.
+  - The tests link `Samples/parts/libs/core` into `node_modules/@acme` at run time (ignored by
+    git). A sample folder named `packages` is ignored by the repository's `.gitignore`.
   - In VS Code the parser runs on the editor's own runtime (`initializationOptions.nodePath`,
     `ELECTRON_RUN_AS_NODE=1`). This cannot be tried in a cloud session.
   - The extension tells the UI the kinds of the changed files ("script", "code"); a new source

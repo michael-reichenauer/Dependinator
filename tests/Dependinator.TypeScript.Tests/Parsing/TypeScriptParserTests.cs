@@ -58,7 +58,8 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
 
             var error = AssertError(await TypeScriptFixture.Parser().ParseAsync(path, SolutionParseOptions.Default));
 
-            Assert.Contains("No TypeScript or JavaScript files found", error.Message);
+            // Only the helper's words: the UI says which model failed to parse
+            Assert.StartsWith("No TypeScript or JavaScript files found", error.Message);
         }
         finally
         {

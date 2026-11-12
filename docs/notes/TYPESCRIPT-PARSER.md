@@ -31,7 +31,9 @@ host, `libraries.ts`), because types like `Promise` and `Array` come from them a
 compiler has no `lib` folder beside it. About 7 MB. The C# project builds it before compiling (the
 `BuildHelper` target: `npm ci` and `npm run build`, skipped while the output is newer than the
 sources and in design-time builds) and embeds it as a resource; `HelperScript` writes it to
-`LocalApplicationData/Dependinator/helpers/ts-parser-<hash>.js` on first use. So **building the
+`LocalApplicationData/Dependinator/helpers/ts-parser-<hash>.js` on first use. Versions of the app
+that run side by side each have their own script there; one that no version has started with for
+30 days is deleted. So **building the
 solution needs Node.js and npm** (CI runners, the devcontainer and cloud sessions have them), and
 `Helper/package-lock.json` is committed.
 
@@ -49,9 +51,22 @@ one and not listed; a `package.json` is listed only when no config is beside, ab
 The model's display name is the project's folder (`ModelPaths.DisplayName`), since every project's
 file is called the same.
 
-The program is what the compiler makes of the config: its files and options, with the referenced
-projects' files (`project.ts`). A `package.json` project takes every source file below its folder
-except `node_modules` and the usual output folders, as JavaScript that may hold TypeScript.
+The program is what the compiler makes of the config: its files and options (`project.ts`). A
+config that references other projects is **one program per project** (a "part"), each compiled
+with its own options, because a solution style config has no options of its own and its projects
+differ in path aliases, `types`, libraries and JSX. A file belongs to the part whose config names
+it; the same file is a different object in each program that reads it, so a declaration reached
+from another part is found by its place in the source (`placeOf`: file, position and kind). Memory
+grows with the number of parts, since each program reads the libraries again; a monorepo of many
+dozens of referenced projects is untried.
+
+Two options are not the config's: nothing is emitted, and where the config has no `types`, every
+installed `@types` package is included (`types: ["*"]`). TypeScript 6 includes none by itself,
+and then Node's modules and globals (`fs`, `process`) have no declarations to link to.
+
+A `package.json` project takes every source file below its folder except `node_modules` and the
+usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that may hold TypeScript.
+`ScriptProjects.HasSourceFiles` uses the same rule to decide whether a `package.json` is a model.
 
 ## Model shape
 
@@ -67,6 +82,17 @@ except `node_modules` and the usual output folders, as JavaScript that may hold 
 | namespace | `Namespace` inside its file | |
 | package, Node.js built-in | under `$Externals`, a scope as a level | `vscode.window`, `@angular.core`, `node.fs.readFileSync` |
 
+- **Names:** a literal dot in a file, folder or package name is `*`, as for C# project files. `$`
+  and `#` mean other things in a node name (`$Externals`, and the UI drops them), so those of
+  JavaScript names (`data$`, `#count`, a route file `posts.$slug.tsx`) are written as their
+  full-width forms `＄` and `＃`, which `NodeName.ToNiceText` shows as `$` and `#` again.
+- **One name, two declarations:** a value and a type or namespace of the same name (`const
+  Options = {…}` with `type Options = {…}`) are one node, the type's, since a member row cannot
+  hold the type's members. Overloads and merged interfaces are the first declaration's node.
+- **Packages:** a file under `node_modules` belongs to the package it is installed as (`@types/x`
+  is `x`). A package of the same repository that `node_modules` only links to (a workspace
+  package, which the compiler resolves to its real folder) is named by the nearest
+  `package.json`, unless it is one of the model's own parts.
 - **Private** is "not exported" for a file's declarations and `private`/`#name` for class members.
   CommonJS exports (`module.exports = { a }`, `exports.a = …`) count as exported.
 - **Signatures** are TypeScript style, the way the member rows show them: `(port?: number):
@@ -86,7 +112,10 @@ except `node_modules` and the usual output folders, as JavaScript that may hold 
   `__mocks__`, `e2e`) are left out unless Settings › Include test files is on (the setting that
   includes test projects for C#).
 - **Problems:** files with syntax errors, and imported packages that are not installed (run
-  `npm install`), each as one summary.
+  `npm install`), each as one summary. An import the compiler cannot resolve is "not installed"
+  only when no `node_modules` folder above the file has the package: a style sheet or image of an
+  installed package (`import "pkg/dist/site.css"`) is a plain link to the package, and a path
+  alias (the config's `paths`, or the bundlers' `@/x`, `~/x`, `#x`) is no package at all.
 - A project's sole folder chain (`src`) is a pass-through in the diagram, like the namespaces
   that repeat an assembly's name (`PassThroughService`), so opening the project shows its files.
 
@@ -96,7 +125,9 @@ The extension watches script and project files too. Each change message names th
 files that changed ("script", "code"), and the UI ignores the kinds the open model is not parsed
 from (`IModelService.IsParsedFrom`), because a JavaScript build writes `.js` files beside a C#
 solution. Script files under `dist`, `out`, `build` and `coverage` are not watched (what a
-project builds), and nothing under `node_modules`.
+project builds), and nothing under `node_modules`, `bin` or `obj`; the folders are matched within
+the workspace, not in the path to it. So a project that keeps source in a folder of one of these
+names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
 
 ## Parked follow-ups
 
@@ -119,3 +150,5 @@ project builds), and nothing under `node_modules`.
   parsed in VS Code and synced.
 - `Helper/package.json` is not covered by Dependabot (the npm ecosystem is not configured); the
   nightly package task does not look at it either. Bump TypeScript by hand, with the tests.
+- A project whose source is under `build` or `out` and that has no config file is not found (the
+  folders are skipped when a `package.json` project's files are collected).

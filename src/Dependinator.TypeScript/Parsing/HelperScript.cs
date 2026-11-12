@@ -5,9 +5,12 @@ namespace Dependinator.TypeScript.Parsing;
 // The parser helper's script (Helper/, bundled into one file and embedded in this assembly) as
 // a file Node can run: written once per version to the user's local application data, under a
 // name of its content's hash, so a file of that name that someone changed is never run.
+// Several versions of the app can run at once (VS Code's release and pre-release, the browser
+// host), each with its own script: one in use is never deleted, only what nobody used for long.
 static class HelperScript
 {
     const string ResourceName = "Dependinator.TypeScript.ts-parser.js";
+    static readonly TimeSpan UnusedAge = TimeSpan.FromDays(30);
     static readonly Lock syncRoot = new();
     static string? path;
 
@@ -45,19 +48,28 @@ static class HelperScript
         Directory.CreateDirectory(folder);
         var scriptPath = Path.Combine(folder, $"ts-parser-{hash}.js");
         if (File.Exists(scriptPath) && File.ReadAllBytes(scriptPath).AsSpan().SequenceEqual(content))
+        {
+            // Its time tells the other versions that this one is in use
+            Result.Catch(() => File.SetLastWriteTimeUtc(scriptPath, DateTime.UtcNow));
             return scriptPath;
+        }
 
         // Written beside and moved into place, so a parse in another process never runs half a file
         var tempPath = $"{scriptPath}.{Environment.ProcessId}.tmp";
         File.WriteAllBytes(tempPath, content);
         File.Move(tempPath, scriptPath, overwrite: true);
-        DeleteOtherVersions(folder, scriptPath);
+        DeleteUnusedVersions(folder, scriptPath, DateTime.UtcNow - UnusedAge);
         return scriptPath;
     }
 
-    static void DeleteOtherVersions(string folder, string scriptPath)
+    // The scripts of versions that have not started since the time (and what a stopped process
+    // left half written).
+    internal static void DeleteUnusedVersions(string folder, string scriptPath, DateTime unusedSinceUtc)
     {
-        foreach (var file in Directory.EnumerateFiles(folder, "ts-parser-*.js").Where(file => file != scriptPath))
+        var others = Directory
+            .EnumerateFiles(folder, "ts-parser-*")
+            .Where(file => file != scriptPath && File.GetLastWriteTimeUtc(file) < unusedSinceUtc);
+        foreach (var file in others)
             Result.Catch(() => File.Delete(file));
     }
 }

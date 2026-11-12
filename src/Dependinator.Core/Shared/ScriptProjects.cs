@@ -12,7 +12,11 @@ namespace Dependinator.Core.Shared;
 // Cheap checks, so listing models stays fast; the TypeScript parser reads the real settings.
 static class ScriptProjects
 {
-    static readonly string[] SourcePatterns = ["*.js", "*.mjs", "*.cjs", "*.jsx", "*.ts", "*.tsx"];
+    // What the TypeScript parser takes as a project's source without a config file (the helper's
+    // project.ts): these files, outside the folders that hold what is built or downloaded.
+    static readonly string[] SourceExtensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+    static readonly string[] OutputFolders = ["node_modules", "dist", "build", "out", "coverage", "bower_components"];
+    static readonly Regex DeclarationFile = new(@"\.d\.[cm]?ts$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // "references": [{ "path": "./packages/core" }, ...]
     static readonly Regex References = new(@"""references""\s*:\s*\[(?<list>[^\]]*)\]", RegexOptions.Compiled);
@@ -68,12 +72,25 @@ static class ScriptProjects
         return [.. configs, .. packages];
     }
 
-    // The folder has a source file of its own, not counting the tools' "x.config.js" settings.
-    public static bool HasSourceFiles(string folder, Func<string, string, IEnumerable<string>> enumerateFiles) =>
-        SourcePatterns.Any(pattern =>
-            enumerateFiles(folder, pattern)
-                .Any(file => !Path.GetFileName(file).Contains(".config.", StringComparison.OrdinalIgnoreCase))
-        );
+    // The folder has a source file the parser would parse: not a declaration file, nothing built,
+    // and not counting the tools' "x.config.js" settings. One walk of the folder's files, which
+    // stops at the first source file.
+    public static bool HasSourceFiles(string folder, Func<string, IEnumerable<string>> enumerateFiles) =>
+        enumerateFiles(folder).Any(file => IsSourceFile(folder, file));
+
+    static bool IsSourceFile(string folder, string file)
+    {
+        var name = Path.GetFileName(file);
+        if (
+            !SourceExtensions.Any(extension => name.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
+            || DeclarationFile.IsMatch(name)
+            || name.Contains(".config.", StringComparison.OrdinalIgnoreCase)
+        )
+            return false;
+
+        var folders = Path.GetRelativePath(folder, file).Split('/', '\\').SkipLast(1);
+        return !folders.Any(part => OutputFolders.Contains(part, StringComparer.OrdinalIgnoreCase));
+    }
 
     static string FolderOf(string file) =>
         Path.TrimEndingDirectorySeparator(Path.GetDirectoryName(Path.GetFullPath(file)) ?? "")

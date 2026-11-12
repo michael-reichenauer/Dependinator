@@ -50,7 +50,7 @@ class WorkspaceFileService : IWorkspaceFileService
             ]),
             OrderShallowestFirst(EnumerateFiles(rootPaths, "package.json")),
             File.ReadAllText,
-            folder => ScriptProjects.HasSourceFiles(folder, (f, pattern) => EnumerateFiles([f], pattern))
+            folder => ScriptProjects.HasSourceFiles(folder, f => EnumerateFiles([f]))
         );
         Log.Info("Model file paths", solutionPaths, bicepPaths, scriptPaths);
         return [.. solutionPaths, .. bicepPaths, .. scriptPaths];

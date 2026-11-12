@@ -65,6 +65,18 @@ public class ModelPathsTests
     }
 
     [Theory]
+    [InlineData("/workspaces/App/App.sln", "App")]
+    [InlineData("C:\\App\\infra\\main.bicep", "main")]
+    [InlineData("/workspaces/App/web/tsconfig.json", "web")]
+    [InlineData("/workspaces/App/my.tool/package.json", "my.tool")]
+    [InlineData("Sketch", "Sketch")]
+    [InlineData("", "")]
+    public void BaseName_ShouldBeTheNameWithoutExtension_OrTheFolderOfATypeScriptProject(string path, string expected)
+    {
+        Assert.Equal(expected, ModelPaths.BaseName(path));
+    }
+
+    [Theory]
     [InlineData("/workspaces/App/App.sln", "solution")]
     [InlineData("/workspaces/App/infra/main.bicep", "Bicep deployment")]
     [InlineData("/workspaces/App/web/tsconfig.json", "TypeScript project")]

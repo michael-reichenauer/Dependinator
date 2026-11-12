@@ -158,7 +158,9 @@ const autoRefreshIgnoredSegments = ["/obj/", "/bin/", "/node_modules/", "/.git/"
 const scriptOutputSegments = ["/dist/", "/out/", "/build/", "/coverage/"];
 
 function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
-    const path = uri.path.toLowerCase();
+    // The path within the workspace: a workspace that is itself below a folder named "build"
+    // or "bin" has source files all the same.
+    const path = "/" + vscode.workspace.asRelativePath(uri, false).replace(/\\/g, "/").toLowerCase();
     if (autoRefreshIgnoredSegments.some(segment => path.includes(segment)))
         return false;
     return !isScriptFile(path) || !scriptOutputSegments.some(segment => path.includes(segment));
@@ -180,11 +182,8 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     // JavaScript project's files and "code" for the others. The UI ignores a change of the kind
     // its model is not parsed from: a JavaScript build must not re-parse a C# solution.
     const changedKinds = new Set<string>();
-    const takeChangedKinds = (): string => {
-        const kinds = [...changedKinds].join(",");
-        changedKinds.clear();
-        return kinds;
-    };
+    // The kinds the UI was told of while auto refresh was off: refreshed when it is switched on
+    const unrefreshedKinds = new Set<string>();
 
     // Read config at use time so toggling the setting needs no reload.
     const config = () => vscode.workspace.getConfiguration("dependinator.autoRefresh");
@@ -192,7 +191,10 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     const refresh = (): void => {
         hasUnrefreshedChanges = false;
         logger.log("Source files changed, refreshing diagram");
-        panel.webview.postMessage({ type: "ui/refresh", message: takeChangedKinds() });
+        const kinds = [...new Set([...unrefreshedKinds, ...changedKinds])].join(",");
+        unrefreshedKinds.clear();
+        changedKinds.clear();
+        panel.webview.postMessage({ type: "ui/refresh", message: kinds });
     };
 
     const onFileEvent = (uri: vscode.Uri): void => {
@@ -209,10 +211,14 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
                 refresh();
                 return;
             }
-            // Manual mode: only mark the diagram as out of date (a dot on the Re-parse button).
-            // The kinds stay until the refresh, which sends them
+            // Manual mode: only mark the diagram as out of date (a dot on the Re-parse button),
+            // with the kinds changed since the last message: an earlier change of another kind
+            // must not mark a model that has been re-parsed since.
             hasUnrefreshedChanges = true;
-            panel.webview.postMessage({ type: "ui/sourceChanged", message: [...changedKinds].join(",") });
+            const kinds = [...changedKinds].join(",");
+            changedKinds.forEach(kind => unrefreshedKinds.add(kind));
+            changedKinds.clear();
+            panel.webview.postMessage({ type: "ui/sourceChanged", message: kinds });
         }, delaySeconds * 1000);
     };
 

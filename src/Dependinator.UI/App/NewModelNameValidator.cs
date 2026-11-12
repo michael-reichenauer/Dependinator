@@ -14,6 +14,8 @@ static class NewModelNameValidator
             return "Name is required";
         if (trimmedName.Contains('/') || trimmedName.Contains('\\'))
             return "Name cannot contain '/' or '\\'";
+        if (ModelPaths.IsTypeScript(trimmedName))
+            return $"Name cannot be '{trimmedName}', the name of a project file";
         if (ModelPaths.IsParseable(trimmedName))
             return "Name cannot end with '.sln' or '.bicep'";
         if (!TryCreateKey(trimmedName, out string? nameKey))

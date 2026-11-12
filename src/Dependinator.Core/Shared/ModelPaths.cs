@@ -55,6 +55,11 @@ static class ModelPaths
         return folder == "" ? FileName(path) : folder;
     }
 
+    // The model's name without a file extension, for the name of a file made from it (an
+    // exported image) and for short messages: "App" for App.sln, the folder for a script project.
+    public static string BaseName(string path) =>
+        IsTypeScript(path) ? DisplayName(path) : Path.GetFileNameWithoutExtension(FileName(path));
+
     static bool IsFileNamed(string path, string name) =>
         FileName(path).Equals(name, StringComparison.OrdinalIgnoreCase);
 

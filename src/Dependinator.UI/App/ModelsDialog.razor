@@ -80,7 +80,7 @@
 
       List<Section> sections = [];
       if (modelListService.HasWorkspace)
-        sections.Add(new("This workspace", "No solution (.sln) or Bicep deployment (.bicep) found in the workspace.", workspace));
+        sections.Add(new("This workspace", "No solution (.sln), Bicep deployment (.bicep) or TypeScript or JavaScript project found in the workspace.", workspace));
       sections.Add(new("Recent", "Nothing opened yet.", recent));
       sections.Add(new("In the cloud", appCloudSyncService.AuthState.IsAuthenticated
           ? "No other models are synced to this account."

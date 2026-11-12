@@ -20,10 +20,12 @@ class TypeScriptParser(INodeRuntime nodeRuntime) : ISourceParser
         if (!File.Exists(path))
             return new Error($"Project file not found: {path}");
 
-        if (nodeRuntime.GetPath() is not string nodePath)
-            return nodeRuntime.GetPath().Error;
-        if (HelperScript.GetPath() is not string scriptPath)
-            return new Error("The TypeScript parser could not be prepared.", HelperScript.GetPath().Error);
+        var node = nodeRuntime.GetPath();
+        if (node is not string nodePath)
+            return node.Error;
+        var script = HelperScript.GetPath();
+        if (script is not string scriptPath)
+            return new Error("The TypeScript parser could not be prepared.", script.Error);
 
         List<string> arguments = [scriptPath, path];
         if (options.IncludeTestProjects)
@@ -38,8 +40,10 @@ class TypeScriptParser(INodeRuntime nodeRuntime) : ISourceParser
             new Dictionary<string, string> { ["ELECTRON_RUN_AS_NODE"] = "1" },
             Timeout
         );
+        // The helper's own words ("No TypeScript or JavaScript files found …"); the caller says
+        // which model failed to parse.
         if (output is not string json)
-            return new Error($"Failed to parse '{ModelPaths.DisplayName(path)}'. {output.Error.Message}");
+            return output.Error;
 
         try
         {
@@ -52,7 +56,7 @@ class TypeScriptParser(INodeRuntime nodeRuntime) : ISourceParser
         catch (Exception e)
         {
             Log.Exception(e, $"Failed to read the items of {path}");
-            return new Error($"Failed to parse '{ModelPaths.DisplayName(path)}'.", e);
+            return new Error("The TypeScript parser's result could not be read.", e);
         }
     }
 }

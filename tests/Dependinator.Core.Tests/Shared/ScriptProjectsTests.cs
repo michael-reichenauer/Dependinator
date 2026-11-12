@@ -93,18 +93,57 @@ public class ScriptProjectsTests
         Assert.Equal([web, web2], Find([web], [web2]));
     }
 
-    [Fact]
-    public void HasSourceFiles_ShouldNotCountToolSettings()
+    [Theory]
+    [InlineData("index.js")]
+    [InlineData("src/a.ts")]
+    [InlineData("src/view.tsx")]
+    [InlineData("lib/module.mts")]
+    [InlineData("lib/common.cts")]
+    [InlineData("web/app.mjs")]
+    public void HasSourceFiles_ShouldCountWhatTheParserParses(string file)
     {
-        Assert.False(
-            ScriptProjects.HasSourceFiles("/app", (_, pattern) => pattern == "*.js" ? ["/app/eslint.config.js"] : [])
+        Assert.True(HasSourceFiles("eslint.config.js", "README.md", file));
+    }
+
+    [Theory]
+    [InlineData("eslint.config.js")] // A tool's settings
+    [InlineData("types/global.d.ts")] // Declarations only
+    [InlineData("types/global.d.mts")]
+    [InlineData("dist/index.js")] // What is built
+    [InlineData("web/build/app.js")]
+    [InlineData("out/main.js")]
+    [InlineData("coverage/lcov-report/sorter.js")]
+    [InlineData("styles/site.css")]
+    public void HasSourceFiles_ShouldNotCountWhatTheParserLeavesOut(string file)
+    {
+        Assert.False(HasSourceFiles("README.md", file));
+    }
+
+    [Fact]
+    public void HasSourceFiles_ShouldWalkTheFolderOnce_AndStopAtTheFirstSourceFile()
+    {
+        var walks = 0;
+        var read = 0;
+        IEnumerable<string> Files()
+        {
+            walks++;
+            foreach (var file in new[] { "a.md", "index.js", "b.js", "c.js" })
+            {
+                read++;
+                yield return Path.Combine(Root, "app", file);
+            }
+        }
+
+        Assert.True(ScriptProjects.HasSourceFiles(Path.Combine(Root, "app"), _ => Files()));
+        Assert.Equal(1, walks);
+        Assert.Equal(2, read);
+    }
+
+    static bool HasSourceFiles(params string[] files)
+    {
+        var folder = Path.Combine(Root, "app");
+        return ScriptProjects.HasSourceFiles(folder, _ =>
+            files.Select(file => Path.Combine([folder, .. file.Split('/')]))
         );
-        Assert.True(
-            ScriptProjects.HasSourceFiles("/app", (_, pattern) =>
-                pattern == "*.js" ? ["/app/eslint.config.js", "/app/index.js"] : []
-            )
-        );
-        Assert.True(ScriptProjects.HasSourceFiles("/app", (_, pattern) => pattern == "*.ts" ? ["/app/src/a.ts"] : []));
-        Assert.False(ScriptProjects.HasSourceFiles("/app", (_, _) => []));
     }
 }
