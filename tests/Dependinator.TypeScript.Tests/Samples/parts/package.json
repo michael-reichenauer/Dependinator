@@ -1,0 +1,6 @@
+{
+    "name": "parts",
+    "version": "1.0.0",
+    "private": true,
+    "description": "A project of two parts: the solution style sample of the TypeScript parser tests."
+}

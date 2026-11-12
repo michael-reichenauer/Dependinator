@@ -1,0 +1,11 @@
+{
+    // No "types": the installed @types packages (Node's) are included, as before TypeScript 6
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "composite": true
+    },
+    "include": ["src"]
+}

@@ -74,6 +74,9 @@ static partial class NodeName
             .Replace("$", "")
             .Replace("%", "")
             .Replace("/", ".")
+            // The "$" and "#" of JavaScript names, which the TypeScript parser writes full-width
+            .Replace('\uFF04', '$')
+            .Replace('\uFF03', '#')
             .Replace("op_Equality", "==")
             .Replace("op_Inequality", "!=");
 }

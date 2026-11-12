@@ -189,7 +189,7 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
     public void ClassMembers_ShouldBePrivate_WhenDeclaredPrivate()
     {
         Assert.True(Items.Node($"{Cart}.total").Properties.IsPrivate);
-        Assert.True(Items.Node($"{Cart}.#items").Properties.IsPrivate);
+        Assert.True(Items.Node($"{Cart}.\uFF03items").Properties.IsPrivate);
         // constructor(private readonly store: Store): the parameter is a property too
         var store = Items.Node($"{Cart}.store");
         Assert.Equal(NodeType.PropertyMember, store.Properties.Type);

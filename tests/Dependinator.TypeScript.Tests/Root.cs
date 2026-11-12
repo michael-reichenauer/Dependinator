@@ -14,6 +14,10 @@ static class Root
     public static string ShopFolderPath { get; } = Path.Combine(SamplesFolderPath, "shop");
     public static string ShopConfigPath { get; } = Path.Combine(ShopFolderPath, "tsconfig.json");
 
+    // A solution style TypeScript project: a tsconfig.json that only references its two parts
+    public static string PartsFolderPath { get; } = Path.Combine(SamplesFolderPath, "parts");
+    public static string PartsConfigPath { get; } = Path.Combine(PartsFolderPath, "tsconfig.json");
+
     // A plain JavaScript project: only a package.json
     public static string ToolPackagePath { get; } = Path.Combine(SamplesFolderPath, "tool", "package.json");
 

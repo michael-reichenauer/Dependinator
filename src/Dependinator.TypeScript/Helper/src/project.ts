@@ -13,7 +13,16 @@ export interface Project {
     projectDir: string;
     packageName?: string;
     packageDescription?: string;
+    parts: ProjectPart[];
+}
+
+// One config file's program. A config that references other projects is several parts: each
+// project is compiled with its own options (its path aliases, types, libraries and JSX), as
+// the compiler builds them.
+export interface ProjectPart {
     program: ts.Program;
+    // The files the config names, apart from what they import
+    rootFiles: Set<string>;
 }
 
 const SourceExtensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
@@ -27,13 +36,21 @@ export function loadProject(entryPath: string): Project {
     const { name, description } = readPackage(projectDir);
 
     const configPath = findConfigPath(fullPath);
-    const { fileNames, options } = configPath ? readConfig(configPath) : inferProject(projectDir);
-    if (fileNames.length === 0) {
+    const configs = configPath ? readConfigs(configPath) : [inferProject(projectDir)];
+    if (configs.every(config => config.fileNames.length === 0)) {
         throw new Error(`No TypeScript or JavaScript files found for '${path.basename(fullPath)}'.`);
     }
 
+    const parts = configs.filter(config => config.fileNames.length > 0).map(createPart);
+    return { entryPath: fullPath, projectDir, packageName: name, packageDescription: description, parts };
+}
+
+function createPart({ fileNames, options }: Config): ProjectPart {
     const programOptions: ts.CompilerOptions = {
         ...options,
+        // TypeScript 6 no longer includes the @types packages by itself. Without Node's and the
+        // other global typings, what a project uses of them has no declaration to link to.
+        types: options.types ?? ["*"],
         // Nothing is emitted and the libraries are not checked: only symbols are resolved.
         noEmit: true,
         skipLibCheck: true,
@@ -46,7 +63,7 @@ export function loadProject(entryPath: string): Project {
         options: programOptions,
         host: createCompilerHost(programOptions),
     });
-    return { entryPath: fullPath, projectDir, packageName: name, packageDescription: description, program };
+    return { program, rootFiles: new Set(fileNames.map(f => program.getSourceFile(f)?.fileName ?? f)) };
 }
 
 function findConfigPath(entryPath: string): string | undefined {
@@ -69,12 +86,16 @@ function readPackage(projectDir: string): { name?: string; description?: string 
     }
 }
 
-// The files and options of a config file, with those of the projects it references: a
-// solution style tsconfig.json names no files of its own, only references.
-function readConfig(configPath: string): { fileNames: string[]; options: ts.CompilerOptions } {
-    const fileNames = new Set<string>();
+interface Config {
+    fileNames: string[];
+    options: ts.CompilerOptions;
+}
+
+// A config file's files and options, followed by those of the projects it references (and
+// they reference): a solution style tsconfig.json names no files of its own, only references.
+function readConfigs(configPath: string): Config[] {
+    const configs: Config[] = [];
     const visited = new Set<string>();
-    let options: ts.CompilerOptions | undefined;
 
     const read = (configFile: string) => {
         const key = path.resolve(configFile);
@@ -92,12 +113,7 @@ function readConfig(configPath: string): { fileNames: string[]; options: ts.Comp
         if (!parsed) {
             return;
         }
-        parsed.fileNames.forEach(f => fileNames.add(f));
-        // The options of the first config that has files: the entry's own, or those of the
-        // first project a solution style config references.
-        if (!options && parsed.fileNames.length > 0) {
-            options = parsed.options;
-        }
+        configs.push({ fileNames: parsed.fileNames, options: parsed.options });
         for (const reference of parsed.projectReferences ?? []) {
             const referencePath = ts.resolveProjectReferencePath(reference);
             if (fs.existsSync(referencePath)) {
@@ -107,12 +123,12 @@ function readConfig(configPath: string): { fileNames: string[]; options: ts.Comp
     };
     read(configPath);
 
-    return { fileNames: [...fileNames], options: options ?? {} };
+    return configs;
 }
 
 // A project without a config file: every source file below the folder, as JavaScript that may
 // hold TypeScript too.
-function inferProject(projectDir: string): { fileNames: string[]; options: ts.CompilerOptions } {
+function inferProject(projectDir: string): Config {
     const fileNames = ts.sys.readDirectory(
         projectDir,
         SourceExtensions,

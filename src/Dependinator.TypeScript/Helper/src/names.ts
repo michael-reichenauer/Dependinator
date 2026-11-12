@@ -3,10 +3,13 @@ import * as ts from "typescript";
 
 // Node names. "." (and "/") separate the levels of a model node name, so a literal dot in a
 // file, folder or package name is written "*" ("extension*ts", shown as "extension.ts"), the
-// encoding the C# and Bicep parsers use for solution, project and file names.
+// encoding the C# and Bicep parsers use for solution, project and file names. "$" and "#" have
+// meanings of their own in node names ("$Externals") and are not shown, so the ones of
+// JavaScript names ("data$", "#count", "posts.$slug.tsx") are written as their full-width
+// forms, which the UI shows as "$" and "#" again (NodeName.ToNiceText).
 
 export function encodePart(text: string): string {
-    return text.replace(/\./g, "*");
+    return text.replace(/\./g, "*").replace(/\$/g, "\uFF04").replace(/#/g, "\uFF03");
 }
 
 export function child(parentName: string, name: string): string {
@@ -32,16 +35,21 @@ export function declarationName(name: ts.DeclarationName | undefined): string | 
         return undefined;
     }
     if (ts.isIdentifier(name) || ts.isPrivateIdentifier(name)) {
-        return name.text;
+        return encodePart(name.text);
     }
     if (ts.isStringLiteralLike(name) || ts.isNumericLiteral(name)) {
-        return /^[\w$#-]+$/.test(name.text) ? name.text : undefined;
+        return /^[\w$#-]+$/.test(name.text) ? encodePart(name.text) : undefined;
     }
     return undefined;
 }
 
+// A package's name as npm allows it, with an optional scope
+const PackageName = /^(@[a-z0-9][\w.-]*\/)?[a-z0-9][\w.-]*$/i;
+
 // The package a module specifier names: "lodash" for "lodash/fp", "@scope/pkg" for
-// "@scope/pkg/sub"; undefined for a relative or absolute path and for "virtual:" style ids.
+// "@scope/pkg/sub"; undefined for a relative or absolute path, for "virtual:" style ids and
+// for what can be no package's name: the usual path aliases ("@/components/Button", "~/lib/x")
+// and Node's subpath imports ("#internal/x").
 export function packageOfSpecifier(specifier: string): string | undefined {
     if (specifier.startsWith("node:")) {
         return specifier;
@@ -50,7 +58,8 @@ export function packageOfSpecifier(specifier: string): string | undefined {
         return undefined;
     }
     const parts = specifier.split("/");
-    return specifier.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
+    const name = specifier.startsWith("@") ? parts.slice(0, 2).join("/") : parts[0];
+    return PackageName.test(name) ? name : undefined;
 }
 
 // The package a file under node_modules belongs to, with a "@types/x" package named as the

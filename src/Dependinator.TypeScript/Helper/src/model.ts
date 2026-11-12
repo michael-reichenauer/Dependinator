@@ -1,16 +1,17 @@
+import * as fs from "node:fs";
 import { builtinModules } from "node:module";
 import * as path from "node:path";
 import * as ts from "typescript";
 import type { Item, LinkProperties, NodeProperties, NodeType } from "./items";
 import * as names from "./names";
-import type { Project } from "./project";
+import type { Project, ProjectPart } from "./project";
 import { accessorSignature, functionSignature, variableSignature } from "./signatures";
 
 // Walks a compiled TypeScript or JavaScript project into model items.
 //
 // Hierarchy (dotted node names, see names.ts):
 //   dependinator                              the project (Solution), named after its package
-//   dependinator.src                          a folder (no node of its own: the model makes one)
+//   dependinator.src                          a folder (Folder)
 //   dependinator.src.extension*ts             a source file (SourceFile)
 //   dependinator.src.extension*ts.activate    a function or variable of the file: a member row
 //   dependinator.src.types*ts.Options         a class, interface, enum or type alias
@@ -31,9 +32,16 @@ export interface ParseOptions {
 const TestFile = /\.(test|spec|e2e)\.[cm]?[jt]sx?$/i;
 const TestFolders = new Set(["test", "tests", "__tests__", "__mocks__", "e2e"]);
 
+interface OwnFile {
+    file: ts.SourceFile;
+    part: ProjectPart;
+}
+
 export class ModelBuilder {
-    readonly checker: ts.TypeChecker;
-    readonly program: ts.Program;
+    // The program and checker of the part whose files are being declared or linked
+    program!: ts.Program;
+    checker!: ts.TypeChecker;
+    resolutionCache!: ts.ModuleResolutionCache;
     readonly root: string;
 
     readonly nodes = new Map<string, NodeProperties>();
@@ -42,9 +50,14 @@ export class ModelBuilder {
 
     // The node of each declaration that has one, to find the node a symbol's declaration is (in).
     readonly declarationNodes = new Map<ts.Node, string>();
+    // The same by its place in the source, for a declaration met through another part's
+    // program, which has its own syntax tree of the file. Only kept for a project of several parts.
+    readonly declarationPlaces = new Map<string, string>();
     readonly missingPackages = new Set<string>();
-    readonly resolutionCache: ts.ModuleResolutionCache;
-    ownFiles: ts.SourceFile[] = [];
+    readonly resolutionCaches = new Map<ProjectPart, ts.ModuleResolutionCache>();
+    readonly sourcePackages = new Map<string, string | undefined>();
+    readonly installedPackages = new Map<string, boolean>();
+    ownFiles: OwnFile[] = [];
     baseDir = "";
     skippedTestFiles = 0;
 
@@ -52,14 +65,25 @@ export class ModelBuilder {
         readonly project: Project,
         readonly options: ParseOptions
     ) {
-        this.program = project.program;
-        this.checker = project.program.getTypeChecker();
         this.root = names.rootName(project.packageName, project.projectDir);
-        this.resolutionCache = ts.createModuleResolutionCache(
-            project.projectDir,
-            fileName => (ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase()),
-            project.program.getCompilerOptions()
-        );
+    }
+
+    use(part: ProjectPart): void {
+        if (this.program === part.program) {
+            return;
+        }
+        this.program = part.program;
+        this.checker = part.program.getTypeChecker();
+        let cache = this.resolutionCaches.get(part);
+        if (!cache) {
+            cache = ts.createModuleResolutionCache(
+                this.project.projectDir,
+                fileName => (ts.sys.useCaseSensitiveFileNames ? fileName : fileName.toLowerCase()),
+                part.program.getCompilerOptions()
+            );
+            this.resolutionCaches.set(part, cache);
+        }
+        this.resolutionCache = cache;
     }
 
     build(): Item[] {
@@ -71,7 +95,7 @@ export class ModelBuilder {
                     : "No TypeScript or JavaScript source files found in the project."
             );
         }
-        this.baseDir = commonDirectory([this.project.projectDir, ...this.ownFiles.map(f => path.dirname(f.fileName))]);
+        this.baseDir = commonDirectory([this.project.projectDir, ...this.ownFiles.map(f => path.dirname(f.file.fileName))]);
 
         this.addNode(this.root, {
             Type: "Solution",
@@ -80,10 +104,12 @@ export class ModelBuilder {
             FileSpan: { Path: path.normalize(this.project.entryPath), StartLine: 0, EndLine: 0 },
         });
 
-        for (const file of this.ownFiles) {
+        for (const { file, part } of this.ownFiles) {
+            this.use(part);
             this.declareFile(file);
         }
-        for (const file of this.ownFiles) {
+        for (const { file, part } of this.ownFiles) {
+            this.use(part);
             this.linkFile(file);
         }
         this.addProblems();
@@ -97,28 +123,42 @@ export class ModelBuilder {
 
     // --- Files ---------------------------------------------------------------------------
 
-    // The project's own source: not a declaration file, not from a package, and no test unless asked for.
-    findOwnFiles(): ts.SourceFile[] {
-        const files: ts.SourceFile[] = [];
-        for (const file of this.program.getSourceFiles()) {
-            if (
-                file.isDeclarationFile ||
-                this.program.isSourceFileFromExternalLibrary(file) ||
-                file.fileName.includes("/node_modules/")
-            ) {
-                continue;
+    // The project's own source: not a declaration file, not from a package, and no test unless
+    // asked for. A file belongs to the part whose config names it (the last, for a file that a
+    // referenced project and the project that references it both name), or else to the first
+    // part that imports it.
+    findOwnFiles(): OwnFile[] {
+        const owners = new Map<string, OwnFile>();
+        const skippedTests = new Set<string>();
+        const claim = (part: ProjectPart, isRoot: boolean) => {
+            for (const file of part.program.getSourceFiles()) {
+                if (
+                    owners.has(file.fileName) ||
+                    part.rootFiles.has(file.fileName) !== isRoot ||
+                    file.isDeclarationFile ||
+                    file.fileName.includes("/node_modules/") ||
+                    // A package of the same repository, linked into node_modules, unless it is a part itself
+                    (!isRoot && part.program.isSourceFileFromExternalLibrary(file))
+                ) {
+                    continue;
+                }
+                if (!this.options.includeTests && isTestFile(file.fileName, this.project.projectDir)) {
+                    skippedTests.add(file.fileName);
+                    continue;
+                }
+                owners.set(file.fileName, { file, part });
             }
-            if (!this.options.includeTests && isTestFile(file.fileName, this.project.projectDir)) {
-                this.skippedTestFiles++;
-                continue;
-            }
-            files.push(file);
-        }
-        return files.sort((a, b) => a.fileName.localeCompare(b.fileName));
+        };
+        const parts = this.project.parts;
+        [...parts].reverse().forEach(part => claim(part, true));
+        parts.forEach(part => claim(part, false));
+
+        this.skippedTestFiles = skippedTests.size;
+        return [...owners.values()].sort((a, b) => a.file.fileName.localeCompare(b.file.fileName));
     }
 
     languageName(): string {
-        return this.ownFiles.some(f => /\.[cm]?tsx?$/i.test(f.fileName)) ? "TypeScript" : "JavaScript";
+        return this.ownFiles.some(f => /\.[cm]?tsx?$/i.test(f.file.fileName)) ? "TypeScript" : "JavaScript";
     }
 
     fileNodeName(file: ts.SourceFile): string {
@@ -136,7 +176,7 @@ export class ModelBuilder {
             Description: fileDescription(file),
             FileSpan: { Path: path.normalize(file.fileName), StartLine: 0, EndLine: lastLine },
         });
-        this.declarationNodes.set(file, fileName);
+        this.setDeclared(file, fileName);
 
         const exported = this.exportedDeclarations(file);
         for (const statement of file.statements) {
@@ -201,17 +241,17 @@ export class ModelBuilder {
                 this.declareClass(statement, names.child(parent, name), isPrivate(statement));
             }
         } else if (ts.isInterfaceDeclaration(statement)) {
-            const name = names.child(parent, statement.name.text);
+            const name = names.child(parent, names.encodePart(statement.name.text));
             this.declare(statement, name, { Type: "InterfaceType", IsPrivate: isPrivate(statement) });
             this.declareTypeMembers(statement.members, name);
         } else if (ts.isTypeAliasDeclaration(statement)) {
-            const name = names.child(parent, statement.name.text);
+            const name = names.child(parent, names.encodePart(statement.name.text));
             this.declare(statement, name, { Type: "Type", IsPrivate: isPrivate(statement) });
             if (ts.isTypeLiteralNode(statement.type)) {
                 this.declareTypeMembers(statement.type.members, name);
             }
         } else if (ts.isEnumDeclaration(statement)) {
-            const name = names.child(parent, statement.name.text);
+            const name = names.child(parent, names.encodePart(statement.name.text));
             this.declare(statement, name, { Type: "EnumType", IsPrivate: isPrivate(statement) });
             for (const member of statement.members) {
                 const memberName = names.declarationName(member.name);
@@ -225,7 +265,7 @@ export class ModelBuilder {
             }
         } else if (ts.isModuleDeclaration(statement) && ts.isIdentifier(statement.name)) {
             // namespace X { ... }: its declarations are nodes inside it
-            const name = names.child(parent, statement.name.text);
+            const name = names.child(parent, names.encodePart(statement.name.text));
             this.declare(statement, name, { Type: "Namespace", IsPrivate: isPrivate(statement) });
             if (statement.body && ts.isModuleBlock(statement.body)) {
                 for (const inner of statement.body.statements) {
@@ -285,7 +325,7 @@ export class ModelBuilder {
             return;
         }
         if (ts.isIdentifier(declaration.name)) {
-            this.declareValue(declaration, declaration.initializer, names.child(parent, declaration.name.text), isPrivate(declaration));
+            this.declareValue(declaration, declaration.initializer, names.child(parent, names.encodePart(declaration.name.text)), isPrivate(declaration));
             return;
         }
         // const { a, b } = ...: each name it binds is a variable
@@ -295,7 +335,7 @@ export class ModelBuilder {
                     continue;
                 }
                 if (ts.isIdentifier(element.name)) {
-                    this.declare(element, names.child(parent, element.name.text), {
+                    this.declare(element, names.child(parent, names.encodePart(element.name.text)), {
                         Type: "VariableMember",
                         IsPrivate: isPrivate(element),
                     });
@@ -329,7 +369,7 @@ export class ModelBuilder {
 
     declareClass(classNode: ts.ClassLikeDeclaration, name: string, isPrivate: true | undefined, declaration?: ts.Node): void {
         this.declare(declaration ?? classNode, name, { Type: "ClassType", IsPrivate: isPrivate });
-        this.declarationNodes.set(classNode, name);
+        this.setDeclared(classNode, name);
 
         for (const member of classNode.members) {
             const memberPrivate = isPrivateMember(member) ? true : undefined;
@@ -342,7 +382,7 @@ export class ModelBuilder {
                 // constructor(private readonly store: Store): the parameter is a property too
                 for (const parameter of member.parameters) {
                     if (ts.isIdentifier(parameter.name) && ts.isParameterPropertyDeclaration(parameter, member)) {
-                        this.declare(parameter, names.child(name, parameter.name.text), {
+                        this.declare(parameter, names.child(name, names.encodePart(parameter.name.text)), {
                             Type: "PropertyMember",
                             Signature: variableSignature(parameter, this.checker),
                             IsPrivate: isPrivateMember(parameter) ? true : undefined,
@@ -404,8 +444,9 @@ export class ModelBuilder {
     // Adds the node of a declaration. A name declared more than once (overloads, an interface
     // merged from several declarations) is one node: the first declaration's.
     declare(declaration: ts.Node, name: string, properties: NodeProperties): void {
-        this.declarationNodes.set(declaration, name);
-        if (this.nodes.has(name)) {
+        this.setDeclared(declaration, name);
+        const existing = this.nodes.get(name);
+        if (existing && !(isMemberType(existing.Type) && !isMemberType(properties.Type))) {
             return;
         }
         const file = declaration.getSourceFile();
@@ -420,10 +461,28 @@ export class ModelBuilder {
         });
     }
 
+    // The first declaration of a name is its node. Where a value and a type or namespace share
+    // a name (const Options = {...} and type Options = ...), the one with members inside is: a
+    // member row cannot hold the other's members.
     addNode(name: string, properties: NodeProperties): void {
-        if (!this.nodes.has(name)) {
+        const existing = this.nodes.get(name);
+        if (!existing) {
             this.nodes.set(name, properties);
+        } else if (isMemberType(existing.Type) && !isMemberType(properties.Type)) {
+            this.nodes.set(name, { ...properties, Description: properties.Description ?? existing.Description });
         }
+    }
+
+    setDeclared(node: ts.Node, name: string): void {
+        this.declarationNodes.set(node, name);
+        if (this.project.parts.length > 1) {
+            this.declarationPlaces.set(placeOf(node.getSourceFile().fileName, node), name);
+        }
+    }
+
+    // The node of a project's file, in whichever part's program the file object is from
+    fileNode(file: ts.SourceFile): string | undefined {
+        return this.declarationNodes.get(file) ?? this.declarationPlaces.get(placeOf(file.fileName, file));
     }
 
     // The declaration's JSDoc comment text
@@ -528,8 +587,13 @@ export class ModelBuilder {
 
     // The node a declaration is, or is declared in: a local variable is part of its function.
     enclosingNode(node: ts.Node): string | undefined {
+        // A file declared by another part is another syntax tree here: found by place
+        const file = node.getSourceFile();
+        const isDeclaredTree = this.declarationNodes.has(file);
         for (let current: ts.Node | undefined = node; current; current = current.parent) {
-            const name = this.declarationNodes.get(current);
+            const name = isDeclaredTree
+                ? this.declarationNodes.get(current)
+                : this.declarationPlaces.get(placeOf(file.fileName, current));
             if (name) {
                 return name;
             }
@@ -543,15 +607,49 @@ export class ModelBuilder {
             return undefined;
         }
         const file = declaration.getSourceFile();
-        if (this.declarationNodes.has(file)) {
+        if (this.fileNode(file)) {
             const name = this.enclosingNode(declaration);
             return name ? { name, type: this.nodes.get(name)?.Type } : undefined;
         }
         if (this.program.isSourceFileDefaultLibrary(file)) {
             return undefined; // Array, Promise, console, the DOM: the language's own
         }
-        const packageName = names.packageOfFile(file.fileName);
+        const packageName = this.packageOf(file.fileName);
         return packageName ? this.externalTarget(packageName, declaration) : undefined;
+    }
+
+    // The package a file that is not the project's own belongs to: the one it is installed as,
+    // or, for a package of the same repository that node_modules only links to (a workspace
+    // package, which the compiler resolves to its real folder), the nearest package.json's name.
+    packageOf(fileName: string): string | undefined {
+        const packageName = names.packageOfFile(fileName);
+        if (packageName) {
+            return packageName;
+        }
+        // Only a file found through node_modules: the project's own declaration files and
+        // skipped test files are no package, whatever package.json is above them.
+        const file = this.program.getSourceFile(fileName);
+        return file && this.program.isSourceFileFromExternalLibrary(file)
+            ? this.sourcePackageOf(path.dirname(path.normalize(fileName)))
+            : undefined;
+    }
+
+    sourcePackageOf(dir: string): string | undefined {
+        if (this.sourcePackages.has(dir)) {
+            return this.sourcePackages.get(dir);
+        }
+        const projectDir = this.project.projectDir;
+        let name: string | undefined;
+        // Not the project's own package, nor one around it: its own files are no package to it
+        if (dir !== projectDir && !projectDir.startsWith(dir + path.sep)) {
+            name = readPackageName(path.join(dir, "package.json"));
+            const parent = path.dirname(dir);
+            if (!name && parent !== dir) {
+                name = this.sourcePackageOf(parent);
+            }
+        }
+        this.sourcePackages.set(dir, name);
+        return name;
     }
 
     // What is used of a package: the package's exported name the declaration belongs to
@@ -650,23 +748,53 @@ export class ModelBuilder {
         const resolvedFile = this.resolvedModuleFile(specifier);
         if (resolvedFile) {
             const file = this.program.getSourceFile(resolvedFile);
-            if (file && this.declarationNodes.has(file)) {
-                return linkFile ? this.declarationNodes.get(file) : undefined;
+            const fileNode = file && this.fileNode(file);
+            if (fileNode) {
+                return linkFile ? fileNode : undefined;
             }
-            const packageName = names.packageOfFile(resolvedFile);
+            const packageName = this.packageOf(resolvedFile);
             return linkPackage && packageName ? names.packageNodeName(packageName) : undefined;
         }
 
+        // Not resolved. A path alias (of the config, or what a bundler knows as one) names a file
+        // of the project that is not there: no package.
         const packageName = names.packageOfSpecifier(specifier.text);
-        if (!packageName) {
+        if (!packageName || this.isPathAlias(specifier.text)) {
             return undefined;
         }
         if (packageName.startsWith("node:") || builtinModules.includes(packageName)) {
             // One of Node's own modules, without Node's types installed
             return names.packageNodeName(`node/${specifier.text.replace(/^node:/, "")}`);
         }
-        this.missingPackages.add(packageName);
+        // A package that is installed, but has nothing the compiler reads at that path (a style
+        // sheet or an image of it, or JavaScript without types): the import is the use of it.
+        if (!this.isInstalled(packageName, path.dirname(path.normalize(specifier.getSourceFile().fileName)))) {
+            this.missingPackages.add(packageName);
+        }
         return names.packageNodeName(packageName);
+    }
+
+    isPathAlias(specifier: string): boolean {
+        return Object.keys(this.program.getCompilerOptions().paths ?? {}).some(pattern => {
+            const star = pattern.indexOf("*");
+            return star < 0
+                ? specifier === pattern
+                : specifier.startsWith(pattern.slice(0, star)) && specifier.endsWith(pattern.slice(star + 1));
+        });
+    }
+
+    // Whether a node_modules folder at or above the folder has the package.
+    isInstalled(packageName: string, dir: string): boolean {
+        const key = `${packageName}\n${dir}`;
+        let isInstalled = this.installedPackages.get(key);
+        if (isInstalled === undefined) {
+            const parent = path.dirname(dir);
+            isInstalled =
+                fs.existsSync(path.join(dir, "node_modules", packageName)) ||
+                (parent !== dir && this.isInstalled(packageName, parent));
+            this.installedPackages.set(key, isInstalled);
+        }
+        return isInstalled;
     }
 
     // The file a module specifier resolves to: as the compiler resolved it (a module declared
@@ -709,8 +837,8 @@ export class ModelBuilder {
 
     // What can leave the model incomplete, one brief summary each: the editor lists the errors.
     addProblems(): void {
-        for (const file of this.ownFiles) {
-            const errors = this.program
+        for (const { file, part } of this.ownFiles) {
+            const errors = part.program
                 .getSyntacticDiagnostics(file)
                 .filter(d => d.category === ts.DiagnosticCategory.Error).length;
             if (errors > 0) {
@@ -743,6 +871,24 @@ export class ModelBuilder {
 }
 
 // --- Helpers ------------------------------------------------------------------------------
+
+// A declaration's place in the source: the same in every program that has the file.
+function placeOf(fileName: string, node: ts.Node): string {
+    return `${fileName}\n${node.pos}\n${node.end}\n${node.kind}`;
+}
+
+function isMemberType(type: NodeType): boolean {
+    return type.endsWith("Member");
+}
+
+function readPackageName(packagePath: string): string | undefined {
+    try {
+        const name = JSON.parse(fs.readFileSync(packagePath, "utf8")).name;
+        return typeof name === "string" && name !== "" ? name : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 function isTestFile(fileName: string, projectDir: string): boolean {
     if (TestFile.test(fileName)) {
