@@ -79,9 +79,10 @@ the model shape, so it doubles as a regression guard for the pinned compiler pac
 `/Demo.bicep` is the example deployment pre-parsed by `./scripts/gen-demo bicep` into
 `src/Dependinator.Wasm/wwwroot/demo-bicep.model` (root renamed `webshop*bicep` -> `Demo*bicep`),
 served to the browser app as a static asset and embedded into `Dependinator.Bicep`, so the Web/LSP
-hosts open it without the compiler (`BicepParser` handles the demo path first). `DemoModel.ListedPaths`
-offers both demos in the Models menu in the standalone web app and the e2e test host ("Demo models"
-section in Manage Models); share links use the key `demo-bicep`. Regenerate it after changing the
+hosts open it without the compiler (`BicepParser` handles the demo path first). Every host
+lists both demos (`DemoModel.DemoNames`): the standalone web app in its Models menu, VS Code and
+the dev host in the Models dialog ("Demo models", Models › Other Models …); share links use the
+key `demo-bicep`. Regenerate it after changing the
 example; `BicepParserTests` and the e2e `BicepDemoTests` check a few of its facts.
 
 ## Parked follow-ups

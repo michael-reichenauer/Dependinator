@@ -8,9 +8,11 @@
 @inject IFileService fileService
 @inject ISnackbar snackbar
 
-@* The models the app knows about, in sections: the solutions of this workspace, recently opened
-   models, models only in the cloud, and hand-drawn design models. A row opens the model; a
-   cached model can be removed (a solution is simply re-parsed when opened again). *@
+@* The models the app knows about, in sections: the solutions and Bicep files of this workspace,
+   recently opened models, models only in the cloud, hand-drawn design models and the built-in
+   demos. A row opens the model; a cached model can be removed (a solution is simply re-parsed
+   when opened again). In a host with a workspace the Models menu lists only the first section,
+   so this dialog is where the others are opened ("Other Models …"). *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">Models</MudText>
@@ -70,22 +72,21 @@
     get
     {
       var items = modelListService.GetModelItems();
-      var demos = items.Where(i => i.IsDemo).ToList();
-      var workspace = items.Where(i => !i.IsDemo && modelListService.IsLocalPath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var workspace = items.Where(i => modelListService.IsWorkspacePath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      var demos = items.Except(workspace).Where(i => i.IsDemo).ToList();
       var design = items.Where(i => !i.IsDemo && ModelPaths.IsDesignModel(i.Path)).ToList();
       var cloudOnly = items.Where(i => !i.IsDemo && i.IsCloud && !i.IsLocal && !ModelPaths.IsDesignModel(i.Path)).ToList();
       var recent = items.Except(demos).Except(workspace).Except(design).Except(cloudOnly).ToList();
 
       List<Section> sections = [];
-      if (Build.IsVsCodeExtWasm || Build.IsWeb)
+      if (modelListService.HasWorkspace)
         sections.Add(new("This workspace", "No solution (.sln) or Bicep deployment (.bicep) found in the workspace.", workspace));
       sections.Add(new("Recent", "Nothing opened yet.", recent));
       sections.Add(new("In the cloud", appCloudSyncService.AuthState.IsAuthenticated
           ? "No other models are synced to this account."
           : "Enable device sync (the cloud button) to see models from your other devices.", cloudOnly));
       sections.Add(new("Design models", "Hand-drawn models appear here (New Model …).", design));
-      if (modelListService.DemoPaths.Count > 0)
-        sections.Add(new("Demo models", "", demos));
+      sections.Add(new("Demo models", "", demos));
       return sections;
     }
   }
@@ -110,7 +111,7 @@
   // Only cached local copies that are not open can be removed here; the open model is deleted
   // from the Models menu, which also offers to delete its cloud copy.
   bool CanRemove(ModelItem item) =>
-      item.IsLocal && !item.IsDemo && !IsCurrent(item) && !modelListService.IsLocalPath(item.Path);
+      item.IsLocal && !item.IsDemo && !IsCurrent(item) && !modelListService.IsWorkspacePath(item.Path);
 
   async Task OpenAsync(ModelItem item)
   {

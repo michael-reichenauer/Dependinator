@@ -36,8 +36,10 @@
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
                 Style="@CssPosition">
-    <MudTooltip Text="Menu">
-        <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
+    @* Not shown on focus: the button gets the focus back when its menu (or a dialog opened from
+       it) closes, and the tooltip then stayed up over the breadcrumb bar's first button. *@
+    <MudTooltip Text="Menu" ShowOnFocus="false">
+        <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true" AriaLabel="Menu"
                  AnchorOrigin="Origin.BottomCenter" PopoverClass="@MenuClass" data-testid="appbar-menu">
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
                          data-testid="menu-search">
@@ -261,29 +263,28 @@
             </MudMenu>
 
             <MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
-                             data-testid="menu-manage-models">
-                    Manage Models …
-                </MudMenuItem>
-
-                <MudDivider />
-
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
-                @{
-                    IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
-                }
-                @foreach (ModelItem item in modelItems)
+                @* A host with a workspace lists its own models first; the dialog holds the others. *@
+                @if (!modelListService.HasWorkspace)
                 {
-                    bool isCurrent = IsCurrentModel(item);
-                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@GetModelItemIcon(item)"
-                                 Style="@GetCurrentItemStyle(isCurrent)" title="@GetModelItemTitle(item)"
-                                 OnClick="() => LoadModelItemAsync(item)" data-testid="menu-model-item">
-                        @item.DisplayName
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                                 data-testid="menu-manage-models">
+                        Manage Models …
                     </MudMenuItem>
+
+                    <MudDivider />
                 }
-                @if (modelItems.Count == 0)
+
+                <ModelMenuItems />
+
+                @if (modelListService.HasWorkspace)
                 {
-                    <MudMenuItem Disabled="true">No models</MudMenuItem>
+                    <MudDivider />
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                                 title="Cloud, design and demo models, and models of other folders."
+                                 data-testid="menu-manage-models">
+                        Other Models …
+                    </MudMenuItem>
                 }
 
                 <MudDivider />
@@ -501,8 +502,6 @@
     MudMessageBox aboutBox { get; set; } = null!;
     bool isSearchOpen;
 
-    string? CurrentRecentModelPath =>
-    modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
     string CssPosition => $"position:fixed;left:{15}px; top:{6}px;";
@@ -622,20 +621,6 @@
         appCloudSyncService.Changed -= OnUiStateChanged;
         themeService.Changed -= OnUiStateChanged;
         keyboardService.KeyDown -= OnKeyDown;
-    }
-
-    async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
-    {
-        if (await appCloudSyncService.LoadCloudModelAsync(cloudModel) is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add(
-        $"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
-        Severity.Success
-        );
     }
 
     bool HasRemoteCopyOfCurrentModel =>
@@ -877,52 +862,4 @@
         modelService.ClearCache();
         applicationEvents.TriggerUIStateChanged();
     }
-
-    static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
-
-    static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
-
-    static string GetModelItemIcon(ModelItem item) =>
-    item switch
-    {
-        { IsLocal: true, IsCloud: true } => Icons.Material.Outlined.CloudDone,
-        { IsCloud: true } => Icons.Material.Outlined.CloudDownload,
-        _ when ModelPaths.IsDesignModel(item.Path) => Icons.Material.Outlined.DesignServices,
-        _ => Icons.Material.Outlined.Schema,
-    };
-
-    static string GetModelItemTitle(ModelItem item)
-    {
-        string source = item switch
-        {
-            { IsDemo: true } => "Demo",
-            { IsLocal: true, IsCloud: true } => "Local + cloud",
-            { IsCloud: true } => "Cloud",
-            _ when ModelPaths.IsDesignModel(item.Path) => "Design",
-            _ => "Local",
-        };
-        return $"{item.Path} ({source})";
-    }
-
-    async Task LoadModelItemAsync(ModelItem item)
-    {
-        if (item.IsLocal)
-        {
-            await canvasService.LoadAsync(item.Path);
-            return;
-        }
-
-        await LoadCloudModelAsync(item.CloudModel!);
-    }
-
-    bool IsCurrentModel(ModelItem item) =>
-    string.Equals(item.Path, CurrentRecentModelPath, StringComparison.Ordinal)
-    || (
-    item.IsCloud
-    && string.Equals(
-    item.CloudModel!.NormalizedPath,
-    CurrentCloudModelPath,
-    StringComparison.OrdinalIgnoreCase
-    )
-    );
 }

@@ -40,14 +40,11 @@ public class DesignModelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
 
         // Wait for the debounced save, then reload. In test mode the app always starts with the
-        // demo model, so re-open the design model via the menu.
+        // demo model, so re-open the design model from the Models dialog.
         await App.WaitForSavedAsync();
         await App.GotoMainPageAsync();
 
-        // Open the Models submenu (anchored on the always-present New Model item, since
-        // menu-model-item matches several entries), then click the created model's entry.
-        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
-        await App.MenuItem("menu-model-item").Filter(new() { HasText = modelName }).ClickAsync();
+        await App.OpenOtherModelAsync(modelName);
 
         // The design model was persisted and re-loaded without parsing.
         await Expect(App.NodeLabel(NodeIcon)).ToBeVisibleAsync();
