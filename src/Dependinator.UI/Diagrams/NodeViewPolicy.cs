@@ -32,9 +32,9 @@ static class NodeViewPolicy
 
     // The sizes on screen (the node's shorter side in pixels) between which a node opens: the
     // layout's sizes (NodeSizing.SideSteps, 60 to 180) open at 120 to 360 pixels, all at
-    // MinContainerZoom. A node enlarged by hand opens at the latest where its background would
-    // start to fade (BackgroundFadeStartZoom), instead of staying an ever larger icon, and one
-    // shrunk by hand not before its children can be told apart.
+    // MinContainerZoom. A node enlarged by hand opens at the latest at twice the size a default
+    // node opens at, instead of staying an ever larger icon, and one shrunk by hand not before
+    // half that size, where its children can be told apart.
     const double MinOpenSize = MinContainerZoom * ReferenceNodeSize / 2;
     const double MaxOpenSize = MinContainerZoom * ReferenceNodeSize * 2;
 
@@ -46,7 +46,8 @@ static class NodeViewPolicy
     const double MaxNestedViewportZoom = 1000;
 
     // Up to this zoom a container's background is drawn at full strength; beyond it the fill
-    // fades out (see ContainerBackgroundOpacity).
+    // fades out (see ContainerBackgroundOpacity). A node that opens larger on screen than a
+    // default-size one starts to fade later (BackgroundFadeStart).
     const double BackgroundFadeStartZoom = 2 * MinContainerZoom;
 
     // The zoom at which the node's own size is drawn, scaled by its size relative to the
@@ -87,8 +88,31 @@ static class NodeViewPolicy
         // card instead of its children.
         if (node.Parent is { IsRoot: false } cardParent && IsMemberCardNode(cardParent))
             factor = Math.Min(factor, 1 / TileZoomMargin);
+        return Math.Min(factor, OpenAncestorsFactor(node));
+    }
+
+    // The largest framing factor at which every ancestor of the node is open, since the view
+    // would otherwise show an ancestor's icon instead of the node. It matters where the node is
+    // large in its parent (a container zoom near 1, as in a small card): the parent opens at
+    // MinContainerZoom, later than the node is framed at. Being visible goes before being an
+    // icon, so such a node can be framed past its own icon size. Tiles are only rendered closer
+    // than the view's zoom, where the ancestors stay open.
+    static double OpenAncestorsFactor(Node node)
+    {
+        var factor = double.MaxValue;
+        var scale = 1.0; // The ancestor's units per unit of the node
+        for (var ancestor = node.Parent; ancestor is { IsRoot: false }; ancestor = ancestor.Parent)
+        {
+            scale *= ancestor.ContainerZoom;
+            if (ancestor.IsPassThrough || ancestor.Boundary == Rect.None)
+                continue; // Always shows its children, or not laid out yet
+            // The ancestor's size on screen with the node at 1 pixel per unit, over the size it must have.
+            factor = Math.Min(factor, Side(ancestor) / scale / (OpenAncestorMargin * OpenSize(ancestor)));
+        }
         return factor;
     }
+
+    const double OpenAncestorMargin = 1.05;
 
     const double TileZoomMargin = 1.3;
 
@@ -104,15 +128,20 @@ static class NodeViewPolicy
     // doubling removes the same share), and it reaches zero exactly at MaxNodeZoom, where the
     // chrome is dropped altogether, so that cut is invisible.
     public static double ContainerBackgroundOpacity(Node node, double zoom) =>
-        ContainerBackgroundOpacity(EffectiveZoom(node, zoom));
+        ContainerBackgroundOpacity(EffectiveZoom(node, zoom), BackgroundFadeStart(node));
 
-    static double ContainerBackgroundOpacity(double zoom)
+    // The effective zoom at which the node's background starts to fade: twice the zoom it opens
+    // at, so a large node, which opens later, also keeps its full tint for a doubling of the zoom.
+    static double BackgroundFadeStart(Node node) =>
+        Math.Max(BackgroundFadeStartZoom, 2 * OpenSize(node) / ReferenceNodeSize);
+
+    static double ContainerBackgroundOpacity(double zoom, double fadeStartZoom)
     {
-        if (zoom <= BackgroundFadeStartZoom)
+        if (zoom <= fadeStartZoom)
             return 1;
         if (zoom >= MaxNodeZoom)
             return 0;
-        return 1 - Math.Log(zoom / BackgroundFadeStartZoom) / Math.Log(MaxNodeZoom / BackgroundFadeStartZoom);
+        return 1 - Math.Log(zoom / fadeStartZoom) / Math.Log(MaxNodeZoom / fadeStartZoom);
     }
 
     public static bool IsRenderedFlat(double zoom) => zoom > MaxNestedViewportZoom;

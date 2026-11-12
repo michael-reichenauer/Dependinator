@@ -113,6 +113,9 @@ static class MemberCardSvg
         );
     }
 
+    // The smallest scale of the summary card's text (of its sizes for a 180 px card).
+    const double MinSummaryScale = 0.85;
+
     // The summary card: a type (or a resource with auxiliary rows) opened far enough to show more
     // than an icon but not yet its readable rows. A header with the icon, name and kind, the member
     // counts, and as many members as fit, public first, with "+ N more". It is a leaf like an
@@ -128,9 +131,10 @@ static class MemberCardSvg
     )
     {
         // Sizes for a 180 px card: it shows from 120 px (the smallest type) to 360 px (the largest;
-        // NodeViewPolicy.OpenSize), and its text stops growing at about 230 px, near the size the
-        // rows have when the full card replaces it, so growing it reveals more rows instead.
-        var u = Math.Min(rect.Width / 180, 1.3);
+        // NodeViewPolicy.OpenSize). Its text stops shrinking at about 150 px, so a small card
+        // shows fewer rows that can still be read, and stops growing at about 230 px, near the
+        // size the rows have when the full card replaces it, so growing it reveals more rows.
+        var u = Math.Clamp(rect.Width / 180, MinSummaryScale, 1.3);
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
         var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;

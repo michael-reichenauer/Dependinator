@@ -71,7 +71,10 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   icon at `MinContainerZoom`, whatever its size, so the layout's sizes open at 120 to 360 px on
   screen). Only a node resized by hand outside 50 to 200 units opens by its own size on screen
   (at 100 or 400 px), so a resize can still open a node at an unchanged zoom. The node's own
-  chrome (background fade, zoomed past) still follows its size on screen.
+  chrome still follows its size on screen (zoomed past, and the background fade, which starts a
+  doubling of the zoom after the node opened). "Show node" frames a node so that every ancestor
+  is open (`OpenAncestorsFactor`): a node that is large in its parent is framed closer than as
+  an icon, since being visible goes first.
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
   `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.
