@@ -166,7 +166,7 @@ d.group(30, 70, 200, 630, "People")
 d.group(280, 70, 660, 630, "Dependinator", "one Blazor UI, three hosts, one small cloud API")
 d.group(990, 70, 380, 630, "External", "not run by Dependinator")
 
-d.person("developer", 130, 182, "Developer", "VS Code, a C# solution\nor a Bicep deployment")
+d.person("developer", 130, 182, "Developer", "VS Code, with C#, Bicep,\nTypeScript or JavaScript")
 d.person("visitor", 130, 382, "Developer, anywhere", "a browser on\nany device")
 d.person("contributor", 130, 582, "Contributor", "works on Dependinator\nitself")
 
@@ -235,15 +235,15 @@ d.box("webview", 50, 310, 220, 140, "Webview", [
     "the same UI as dependinator.com"], icon="View", tint=ACCENT)
 d.box("lsp", 290, 310, 220, 140, "Language server", [
     "**.NET, self-contained",
-    "Dependinator.Lsp + Core,",
-    "Roslyn, Bicep, Claude, Mcp",
+    "Dependinator.Lsp + Core, the",
+    "parsers, Claude, Mcp",
     "OmniSharp LSP over stdio"], icon="Parsing")
 d.node("idb1", 160, 565, "Database", "IndexedDB", "model cache,\nin the webview")
-d.node("ws", 400, 565, "Solution", "Workspace folders", ".sln, .bicep, sources;\nMSBuild needs a .NET SDK")
+d.node("ws", 400, 565, "Solution", "Workspace folders", ".sln, .bicep, tsconfig.json;\nMSBuild needs a .NET SDK")
 d.port("ext.b1", 160, 255); d.port("ext.b2", 400, 255)
 d.edge("ext.b1", "webview.t", "postMessage", ASYNC, dashed=True, both=True, label_dx=6, anchor="start", label_dy=4)
 d.edge("ext.b2", "lsp.t", "LSP, stdio", ASYNC, dashed=True, both=True, label_dx=6, anchor="start", label_dy=4)
-d.edge("lsp.b", "ws", "MSBuild, Roslyn,\nBicep compiler", ACCENT, label_dx=6, anchor="start", label_dy=-4)
+d.edge("lsp.b", "ws", "MSBuild, Roslyn, Bicep\ncompiler, Node.js helper", ACCENT, label_dx=6, anchor="start", label_dy=-4)
 d.edge("webview.b", "idb1", None)
 
 d.group(570, 60, 480, 620, "Browser · dependinator.com", "Azure Static Web Apps: releases = production, previews = pre-release")
@@ -265,8 +265,8 @@ d.edge("func.l1", "clerk2", "signing keys\n(JWKS)", dashed=True, via=[(820, 375)
 
 d.group(1080, 60, 400, 620, "Development", "the dev container and ./scripts")
 d.box("webhost", 1110, 110, 340, 140, "Blazor Server · localhost:5000", [
-    "Dependinator.Web + UI + Core, with Roslyn,",
-    "Bicep, Claude and Mcp in the same process",
+    "Dependinator.Web + UI + Core, with the parsers,",
+    "Claude and Mcp in the same process",
     "the UI runs on the server (SignalR circuit)",
     "parses this repository; the e2e test target"], icon="Testing", tint=ACCENT)
 d.node("funclocal", 1200, 360, "Azure-Functions", "Functions host", "func start, src/Api")
@@ -290,22 +290,23 @@ d.box("h-web", 60, 100, 190, 90, "Dependinator.Web", ["Blazor Server dev host", 
 d.box("h-wasm", 270, 100, 190, 90, "Dependinator.Wasm", ["WebAssembly app", "0.1k lines"])
 d.box("h-lsp", 480, 100, 190, 90, "Dependinator.Lsp", ["language server", "1.0k lines"])
 d.box("h-api", 690, 100, 190, 90, "Api", ["Azure Functions", "0.7k lines"])
-d.box("h-ext", 900, 100, 220, 90, "DependinatorVsCode", ["TypeScript, npm, not in the .sln", "1.9k lines"], dashed=True)
+d.box("h-ext", 900, 100, 220, 90, "DependinatorVsCode", ["TypeScript, npm, not in the .sln", "2.0k lines"], dashed=True)
 
-d.group(30, 240, 1110, 170, "Dependinator.UI · 41.5k lines", "Blazor + MudBlazor, shared by every host")
+d.group(30, 240, 1110, 170, "Dependinator.UI · 41.6k lines", "Blazor + MudBlazor, shared by every host")
 d.box("u-app", 60, 285, 240, 110, "App/", ["app bar and menus, model list,", "Settings dialog, breadcrumb, progress,", "problem indicator, cloud sync button"])
 d.box("u-diag", 320, 285, 300, 110, "Diagrams/", ["canvas, SVG rendering and tiles, pan/zoom", "and editing gestures, dependency explorer,", "cycles, rules, paths, search, export, icons,", "AI help: reviews, Ask, tours (view 8)"], tint=ACCENT)
 d.box("u-model", 640, 285, 230, 110, "Modeling/", ["Model (nodes, links, lines),", "layout engine, undoable commands,", "persisted DTOs"], tint=ACCENT)
 d.box("u-shared", 890, 285, 230, 110, "Shared/", ["IndexedDB, cloud sync, VS Code", "bridge, navigation, share links,", "events, themes, keyboard"])
 
-d.group(30, 440, 1110, 140, "Parsers and integrations", "each plugs into Core")
-d.box("p-roslyn", 60, 480, 190, 85, "Dependinator.Roslyn", ["C# solutions: MSBuildWorkspace", "1.9k lines"], icon="Parsing")
-d.box("p-bicep", 270, 480, 190, 85, "Dependinator.Bicep", ["Bicep: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
-d.box("p-claude", 480, 480, 190, 85, "Dependinator.Claude", ["Claude API and Claude Code", "1.1k lines"], icon="Api")
-d.box("p-mcp", 690, 480, 190, 85, "Dependinator.Mcp", ["MCP server: model tools", "0.4k lines"], icon="Api")
-d.box("p-refl", 900, 480, 220, 85, "Dependinator.Reflection", ["assemblies (Mono.Cecil), 2.5k", "inactive, no host uses it"], dashed=True)
+d.group(30, 440, 1110, 140, "Parsers and integrations", "Dependinator.Roslyn, .Bicep, …: each plugs into Core")
+d.box("p-roslyn", 60, 480, 170, 85, "Roslyn", ["C#: MSBuildWorkspace", "1.9k lines"], icon="Parsing")
+d.box("p-bicep", 238, 480, 170, 85, "Bicep", ["Bicep: Azure.Bicep.Core", "1.0k lines"], icon="Parsing")
+d.box("p-ts", 416, 480, 170, 85, "TypeScript", ["TypeScript, JavaScript: a", "Node.js helper, 1.5k lines"], icon="Parsing")
+d.box("p-claude", 594, 480, 170, 85, "Claude", ["Claude API and Claude Code", "1.1k lines"], icon="Api")
+d.box("p-mcp", 772, 480, 170, 85, "Mcp", ["MCP server: model tools", "0.4k lines"], icon="Api")
+d.box("p-refl", 950, 480, 170, 85, "Reflection", ["assemblies (Mono.Cecil),", "2.5k lines, inactive"], dashed=True)
 
-d.group(30, 610, 1110, 150, "Dependinator.Core · 3.8k lines", "no UI framework, no parser library, no AI SDK")
+d.group(30, 610, 1110, 150, "Dependinator.Core · 4.0k lines", "no UI framework, no parser library, no AI SDK")
 d.box("c-parse", 60, 655, 170, 90, "Parsing/", ["IParserService [Rpc],", "ISourceParser, Item types"], tint=ACCENT)
 d.box("c-rpc", 238, 655, 170, 90, "Rpc/", ["JsonRpcService ([Rpc]", "interfaces, StreamJsonRpc)"])
 d.box("c-sync", 416, 655, 170, 90, "CloudSync/", ["HTTP client for the", "sync API"])
@@ -322,33 +323,34 @@ d.port("wasm-down", 365, 190); d.port("diag-top", 365, 285)
 d.edge("wasm-down", "diag-top", None)
 d.port("lsp-down", 630, 190); d.port("claude-top", 630, 480)
 d.edge("lsp-down", "claude-top", "Lsp: Core, parsers, Claude, Mcp", label_at=0.81, label_dx=6, anchor="start", label_dy=4)
-d.port("model-down", 850, 395); d.port("cshared-top", 890, 655)
-d.edge("model-down", "cshared-top", "UI → Core", via=[(850, 422), (890, 422)], label_at=0.5, label_dx=6, anchor="start", label_dy=-6)
+d.port("model-down", 850, 395); d.port("cshared-top", 900, 655)
+d.edge("model-down", "cshared-top", "UI → Core", via=[(850, 422), (946, 422), (946, 628), (900, 628)], label_at=0.12, label_dx=6, anchor="start", label_dy=-6)
 d.edge("h-api.b", "s-dto.r", "Api: Shared only", via=[(785, 225), (1160, 225), (1160, 835)], label_at=0.652, label_dx=-6, anchor="end", label_dy=4)
-for x in (155, 365, 575, 785):
+for x in (145, 323, 501, 679, 857):
     d.port(f"p{x}a", x, 565); d.port(f"p{x}b", x, 655)
     d.edge(f"p{x}a", f"p{x}b", None)
-d.note(161, 600, ["parsers and integrations → Core"], size=10.5)
-d.port("refl-a", 1020, 565); d.port("refl-b", 1020, 655)
+d.note(151, 600, ["parsers and integrations → Core"], size=10.5)
+d.port("refl-a", 1035, 565); d.port("refl-b", 1035, 655)
 d.edge("refl-a", "refl-b", None, dashed=True)
 d.port("core-a", 1060, 745); d.port("core-b", 1060, 812)
 d.edge("core-a", "core-b", None)
 d.note(1066, 784, ["Core → Shared"], size=10.5)
 
-d.group(1180, 60, 240, 815, "Tests · 33k lines", "tests/, xUnit + Moq + Verify")
+d.group(1180, 60, 240, 815, "Tests · 34k lines", "tests/, xUnit + Moq + Verify")
 d.note(1194, 120, ["**Unit tests (dotnet test)",
-                   "UI.Tests · 19.8k",
+                   "UI.Tests · 20.1k",
                    "Roslyn.Tests · 1.8k",
-                   "Core.Tests · 1.4k",
+                   "Core.Tests · 1.6k",
                    "Api.Tests · 1.0k",
                    "Claude.Tests · 0.9k",
                    "Bicep.Tests · 0.7k",
                    "Lsp.Tests · 0.7k",
+                   "TypeScript.Tests · 0.6k",
                    "Reflection.Tests · 0.5k",
                    "Mcp.Tests · 0.4k",
                    "",
                    "**UI tests (./scripts/e2e)",
-                   "E2E.Tests · 6.2k",
+                   "E2E.Tests · 6.3k",
                    "Playwright against the dev",
                    "host: Chromium, Firefox and",
                    "WebKit, plus cloud sync",
@@ -368,23 +370,25 @@ d.note(1194, 120, ["**Unit tests (dotnet test)",
                    "· the MCP SDK stays out of",
                    "  Core and UI",
                    "· Shared uses nothing of ours"], size=11)
-write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep, Claude and Mcp libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, the AI and MCP contracts, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
+write("3-code-structure.svg", d, "Code structure view of Dependinator: thin hosts (Web, Wasm, Lsp, Api, and the TypeScript extension) on top of Dependinator.UI, which holds the App, Diagrams, Modeling and Shared areas; the Roslyn, Bicep, TypeScript, Claude and Mcp libraries plug into Dependinator.Core, which holds parsing contracts, RPC, cloud sync client, the AI and MCP contracts, shared services and utilities; Shared holds the DTOs the API also uses. Architecture tests enforce that references only point down.")
 
 # ------------------------------------------------------------------------------------------
 # 4. Runtime view: from source code to a picture on the screen
 # ------------------------------------------------------------------------------------------
 d = Diagram(1500, 960, "Dependinator runtime view")
 d.group(20, 60, 610, 380, "1 · Parse", "in the language server (VS Code) or the dev host; a demo file in the browser")
-d.node("src", 90, 240, "Solution", "Source", ".sln and C# files,\n.bicep files")
-d.node("roslyn", 300, 135, "Parsing", "Roslyn parser", "a compilation per project:\ntypes, members, references")
-d.node("bicep", 300, 240, "Parsing", "Bicep parser", "the Bicep compiler's\nsemantic model and graph")
-d.node("demo", 300, 345, "Files", "Demo model", "parsed at build time,\ngzipped JSON")
+d.node("src", 90, 240, "Solution", "Source", ".sln and C# files,\n.bicep files,\nTypeScript, JavaScript")
+d.node("roslyn", 300, 120, "Parsing", "Roslyn parser", "a compilation per project:\ntypes, members, references", size=36)
+d.node("bicep", 300, 202, "Parsing", "Bicep parser", "the Bicep compiler's\nsemantic model and graph", size=36)
+d.node("ts", 300, 284, "Parsing", "TypeScript parser", "a Node.js helper with\nthe TypeScript compiler", size=36)
+d.node("demo", 300, 366, "Files", "Demo model", "parsed at build time,\ngzipped JSON", size=36)
 d.node("items", 520, 240, "Files", "Items", "a flat list of Node, Link,\nLineDescription, ParseProblem")
-for p in ("roslyn", "bicep"):
-    d.edge("src", p, None, ACCENT)
-for p in ("roslyn", "bicep", "demo"):
-    d.edge(p, "items", None, ACCENT)
-d.note(420, 395, ["ParserService picks the first", "parser whose CanParse(path) matches."], size=10.5)
+# Right-angled, so no line crosses the text under a parser
+for p, y in (("roslyn", 120), ("bicep", 202), ("ts", 284)):
+    d.edge("src", p, None, ACCENT, via=[(185, 240), (185, y)])
+for p, y in (("roslyn", 120), ("bicep", 202), ("ts", 284), ("demo", 366)):
+    d.edge(p, "items", None, ACCENT, via=[(425, y), (425, 240)])
+d.note(420, 405, ["ParserService picks the first", "parser whose CanParse(path) matches."], size=10.5)
 
 d.divider(655, 70, 440, [])
 
@@ -429,7 +433,7 @@ feats = [("explorer", "Search", "Dependency explorer", "what a node uses,\nand w
          ("ai", "Api", "AI help", "reviews, Ask, tours, rule\nsuggestions (view 8)")]
 for i, (key, icon, label, sub) in enumerate(feats):
     d.node(key, 110 + i * 183, 835, icon, label, sub, size=36)
-write("4-runtime.svg", d, "Runtime view of Dependinator: a parser (Roslyn for C#, the Bicep compiler for Bicep, or a pre-parsed demo file) turns source into a flat list of items; across the IParserService RPC boundary ModelService and StructureService build the model of nodes, links and lines, which is cached in IndexedDB and optionally synced; the layout engine, RepLineService and SvgService turn it into cached SVG tiles on the canvas; the explorer, cycles, rules, path finder, problem indicator, search, undoable commands and the AI help work on the same model.")
+write("4-runtime.svg", d, "Runtime view of Dependinator: a parser (Roslyn for C#, the Bicep compiler for Bicep, a Node.js helper with the TypeScript compiler for TypeScript and JavaScript, or a pre-parsed demo file) turns source into a flat list of items; across the IParserService RPC boundary ModelService and StructureService build the model of nodes, links and lines, which is cached in IndexedDB and optionally synced; the layout engine, RepLineService and SvgService turn it into cached SVG tiles on the canvas; the explorer, cycles, rules, path finder, problem indicator, search, undoable commands and the AI help work on the same model.")
 
 # ------------------------------------------------------------------------------------------
 # 5. VS Code integration view: how the webview, the extension and the server talk
@@ -466,7 +470,7 @@ d.group(1040, 60, 380, 830, "Language server", "Dependinator.Lsp, .NET, OmniShar
 d.box("lmh", 1070, 110, 320, 100, "LspMessageHandler", ["notification lsp/message in,", "notification ui/message out"], icon="Messaging")
 d.box("rpc2", 1070, 260, 320, 90, "JsonRpcService (Core)", ["the same transport class as the UI"], icon="Communication")
 d.box("targets", 1070, 400, 320, 190, "[Rpc] targets", [
-    "IParserService → Roslyn or Bicep parser", "IWorkspaceFileService: the workspace's", "  .sln files and Bicep entry points,", "  source text for excerpts",
+    "IParserService → the parser for the model", "IWorkspaceFileService: the workspace's", "  .sln files, Bicep entry points, script", "  projects; source text for excerpts",
     "ICloudSyncRpcService → sync API (HTTP)", "IClaudeService → Anthropic API, Claude Code", "IVsCodeModelService → the extension",
     "and one proxy: IModelQueryService → the UI"], icon="Parsing", tint=ACCENT)
 d.box("mcp", 1070, 640, 320, 110, "MCP server (Dependinator.Mcp)", [
@@ -568,7 +572,7 @@ d.port("vsx.l1", 1100, 305)
 d.edge("site", "vsx.l1", "then", ACCENT, label_dy=-8)
 d.edge("vsx.b", "market", None, ACCENT)
 d.note(30, 595, ["**Quality gate",
-                 "About 1,200 unit tests and a Playwright suite of 6.2k lines run on every push (build.yml calls unit-tests.yml and e2e.yml), and the Release workflow runs them all before it publishes;",
+                 "About 1,270 unit tests and a Playwright suite of 6.3k lines run on every push (build.yml calls unit-tests.yml and e2e.yml), and the Release workflow runs them all before it publishes;",
                  "Playwright traces are uploaded when an e2e test fails. CSharpier formatting is checked during the build, and the architecture tests guard the layering."], size=11)
 write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and Dependabot PRs merge into dev, whose pushes only run the tests; the Release workflow, run by hand on dev, runs the full gate and builds the site and a .vsix per platform, and then a preview deploys the pre-release site, the Marketplace's pre-release track and a GitHub pre-release, while a release merges dev into main, deploys dependinator.com and publishes the VS Code Marketplace and a GitHub release.")
 

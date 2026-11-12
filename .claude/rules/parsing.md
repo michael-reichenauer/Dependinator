@@ -3,6 +3,8 @@ paths:
   - "src/Dependinator.Core/Parsing/**"
   - "src/Dependinator.Roslyn/**"
   - "src/Dependinator.Bicep/**"
+  - "src/Dependinator.TypeScript/**"
+  - "src/Dependinator.Core/Shared/ScriptProjects.cs"
   - "src/Dependinator.Lsp/**"
   - "src/Dependinator.DemoGen/**"
   - "src/Dependinator.Core/Shared/ModelPaths.cs"
@@ -26,7 +28,9 @@ paths:
   - a library `X → Core` with a `[Transient] class : ISourceParser` that implements `CanParse`;
   - `AddDependinatorXServices()`, registered in the Lsp and Web `Program.cs`;
   - an architecture-test rule;
-  - `ModelPaths` / `WorkspaceFileService` discovery for its file kind.
+  - `ModelPaths` / `WorkspaceFileService` discovery for its file kind;
+  - for a language with its own toolchain, a helper program run with `HelperProcess` (see
+    TypeScript below) rather than a port of its compiler.
 - **Source generators:** `MSBuildWorkspace` runs the generators Roslyn's loader can load (the
   Functions SDK, Regex); `Compiler.RunUnloadableSourceGenerators` runs only the rest (Razor).
   Running a loadable one again defines its types twice: that gave 49 false compile errors in Api
@@ -49,6 +53,27 @@ paths:
     references Dependinator.Bicep (DemoGen aliases it `ModelJson`).
   - Compilation runs without restore (`CreateCompilationWithoutRestore`), so registry modules
     stay leaf nodes. There is one `BicepCompiler` per process (`BicepCompilerHost`).
+- **TypeScript and JavaScript** (beyond CLAUDE.md; design and follow-ups in
+  `docs/notes/TYPESCRIPT-PARSER.md`):
+  - The parser is a Node.js program (`src/Dependinator.TypeScript/Helper/`, the TypeScript 6
+    compiler API) that prints `Parsing.Item` JSON; the C# side only runs it. Its item types
+    (`Helper/src/items.ts`) mirror `Types.cs` by name: a new `NodeType` or property goes in both.
+  - The helper is bundled into one script and embedded in the dll by the csproj's `BuildHelper`
+    target (`npm ci`, esbuild), so a solution build needs Node.js and npm. After changing
+    `Helper/src`, a normal `dotnet build` rebuilds it; `cd Helper && npm run check` type-checks.
+    To try the helper alone: `node Helper/dist/ts-parser.js <tsconfig.json>` (items on stdout).
+  - A bundled compiler has no `lib.*.d.ts` beside it: without them every `Promise`, array and
+    DOM type is unknown and signatures come out empty, with no error. They are bundled as a
+    virtual module (`build.mjs`, `libraries.ts`).
+  - Symbols: resolve an import's alias (`getAliasedSymbol`) before looking at its declaration; a
+    CommonJS file's module symbol is only on the file (`file.symbol`, internal); a symbol whose
+    declaration is a source file or an ambient module is "the whole module" and makes no link.
+  - Node names: a literal dot in a file, folder or package name is `*` (`names.ts`), as for C#
+    project files. Lines are 0-based.
+  - In VS Code the parser runs on the editor's own runtime (`initializationOptions.nodePath`,
+    `ELECTRON_RUN_AS_NODE=1`). This cannot be tried in a cloud session.
+  - The extension tells the UI the kinds of the changed files ("script", "code"); a new source
+    kind that is watched needs its kind in `IModelService.IsParsedFrom`.
 - **C# member names** (decided Oct 2026):
   - Extension members keep `Ext.extension(global::Ns.T).Member`. `NodeName` treats `()`, `[]`
     and `<>` as bracket groups whose dots don't split, and a bracket counts only once it closes,

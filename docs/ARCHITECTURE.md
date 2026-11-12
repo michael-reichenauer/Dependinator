@@ -8,8 +8,9 @@ script and are meant to be updated with it (see the end of this page).
 
 ## The product at a glance
 
-Dependinator draws a codebase as a zoomable map. A C# solution or an Azure Bicep deployment is
-parsed into nodes (projects, namespaces, types, members, or modules and resources) and the links
+Dependinator draws a codebase as a zoomable map. A C# solution, an Azure Bicep deployment or a
+TypeScript or JavaScript project is parsed into nodes (projects, namespaces, types, members, or
+modules and resources, or folders, files and functions) and the links
 between them, laid out automatically, and drawn so that zooming in opens a node to show its inside.
 Users explore dependencies, find cycles, check architecture rules, jump to the code, and add their
 own notes, icons and hand-drawn nodes on top.
@@ -17,10 +18,10 @@ own notes, icons and hand-drawn nodes on top.
 | | |
 |---|---|
 | **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for viewing synced models from anywhere and making small adjustments (with demo models to get started) |
-| **Languages it reads** | C# (`.sln` with C# projects, through Roslyn) and Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler) |
+| **Languages it reads** | C# (`.sln` with C# projects, through Roslyn), Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler), and TypeScript and JavaScript (a `tsconfig.json`, `jsconfig.json` or `package.json` project, through the TypeScript compiler in a Node.js helper process) |
 | **Stack** | .NET 10 (built with the .NET 11 SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in, the Anthropic and Model Context Protocol C# SDKs for the AI features |
-| **Size** | About 56k lines of product code, three quarters of it in the shared UI library; about 33k lines of tests |
-| **Tests** | About 1,200 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
+| **Size** | About 58k lines of product code, three quarters of it in the shared UI library; about 34k lines of tests |
+| **Tests** | About 1,270 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
 | **Releases** | Version 0.91 (beta), about 40 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
 
 ## 1. Context view: who uses Dependinator, and what it talks to
@@ -80,14 +81,15 @@ for the cloud.
 Points to discuss: the browser and VS Code builds are the same binary, which keeps behavior aligned
 but means UI work is always tested in WebAssembly, the slowest of the three (layout budgets are
 measured there). Parsing C# needs an installed .NET SDK on the user's machine, because Roslyn loads
-projects with the SDK's MSBuild; Bicep needs nothing installed.
+projects with the SDK's MSBuild; Bicep needs nothing installed, and TypeScript and JavaScript are
+parsed on the Node.js runtime VS Code itself runs on (the dev host needs `node` on the PATH).
 
 ## 3. Code structure view: projects, layers and the rules that guard them
 
 ![Code structure view](architecture/3-code-structure.svg)
 
 References point one way: **hosts → UI → Core → Shared**, with the parser libraries (**Roslyn**,
-**Bicep**) and the **Claude** and **Mcp** integrations plugging into Core. Hosts are thin (the two Blazor hosts
+**Bicep**, **TypeScript**) and the **Claude** and **Mcp** integrations plugging into Core. Hosts are thin (the two Blazor hosts
 a couple of hundred lines each, the language server about a thousand): they register services and start. `Dependinator.Core` is host-agnostic: the parsing
 contracts (`IParserService`, `ISourceParser`, the `Item` types), the JSON-RPC transport, the cloud
 sync HTTP client, workspace and model-path services, the `[Rpc]` contracts of the AI features and
@@ -103,7 +105,11 @@ features `Cycles/`, `Rules/`, `Navigation/` (search, paths), `Dependencies/`, `T
 cards), `Icons/`, `Export/`, `Tours/`, `Ask/` and `NodeHelp/`, with `Ai/` the plumbing the AI
 features share (view 8); `App/` is the shell (app bar, model list, the Settings dialog); `Shared/`
 holds the cross-cutting services. Adding a language means adding a library with an `ISourceParser`,
-registering it in the Lsp and Web hosts, and adding an architecture rule; nothing else changes.
+registering it in the Lsp and Web hosts, and adding an architecture rule; little else changes (a
+node type and an icon where the language has a new kind of thing, as files and functions were for
+TypeScript). A language with its own toolchain keeps it: `Dependinator.TypeScript` is 200 lines of
+C# that start a Node.js helper (1.3k lines of TypeScript on the TypeScript compiler API, bundled
+into one script and embedded in the dll), which prints the items.
 
 `Dependinator.Architecture.Tests` turns the layering into failing tests (NetArchTest), so a
 reference in the wrong direction breaks the build in CI rather than surfacing in a review.
@@ -119,8 +125,9 @@ libraries if it keeps growing.
 
 **Parse.** `ParserService` hands the model path to the first parser whose `CanParse` matches:
 Roslyn opens the solution with `MSBuildWorkspace` and walks each project's compilation; the Bicep
-parser compiles the entry file with its local modules and walks the semantic model; the demo paths
-load a pre-parsed file. Every parser returns the same thing, a flat list of **items**: nodes named
+parser compiles the entry file with its local modules and walks the semantic model; the TypeScript
+parser starts its Node.js helper, which builds the compiler's program for the project and resolves
+every reference to its declaration; the demo paths load a pre-parsed file. Every parser returns the same thing, a flat list of **items**: nodes named
 by dotted paths (`Dependinator.Core.Parsing.ParserService`), links between names, optional line
 descriptions, and parse problems such as compile errors. This list is the only contract between
 parsing and the rest, and the call is an `[Rpc]` interface, so it crosses a process boundary in VS
@@ -298,7 +305,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 |---|---|---|
 | One Blazor UI for every host | One implementation of a large, interactive UI for VS Code, the web and development | WebAssembly sets the performance budget for everything |
 | Parsers behind an `[Rpc]` interface | The parser runs where the files and the SDK are (the language server), the UI stays the same | Settings must travel as arguments; calls can fail like network calls |
-| A flat item list as the parser contract | New languages (Bicep was added in one release) only produce items; layout, rendering and analysis come for free | Language-specific meaning has to fit nodes, links and a few properties |
+| A flat item list as the parser contract | New languages (Bicep was added in one release) only produce items; layout, rendering and analysis come for free. The list is plain JSON, so a parser can be a program in another language (TypeScript's runs on Node.js) | Language-specific meaning has to fit nodes, links and a few properties |
 | Lazy layout and tiled SVG rendering | Large solutions stay responsive; only what is on screen is computed | More moving parts: layout versions, refinement, tile cache budgets |
 | Local-first models with optional sync | Works offline and without an account; nothing leaves the machine by default | Two copies to reconcile when sync is on |
 | `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Builds with the .NET 11 SDK while the target stays net10.0 |
@@ -314,6 +321,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | What parsers return | `src/Dependinator.Core/Parsing/Types.cs`, `ParserService.cs` |
 | C# parsing | `src/Dependinator.Roslyn/Parsing/SourceParser.cs` |
 | Bicep parsing | `src/Dependinator.Bicep/Parsing/BicepParser.cs`, `ModelBuilder.cs`, and [docs/notes/BICEP-PARSER.md](notes/BICEP-PARSER.md) |
+| TypeScript and JavaScript parsing | `src/Dependinator.TypeScript/Helper/src/model.ts` (the helper), `Parsing/TypeScriptParser.cs` (runs it), and [docs/notes/TYPESCRIPT-PARSER.md](notes/TYPESCRIPT-PARSER.md) |
 | The in-memory model | `src/Dependinator.UI/Modeling/Models/Model.cs`, `Node.cs` |
 | Rendering and zoom | `src/Dependinator.UI/Diagrams/`: `Svg/SvgService.cs` (tile cache), `Svg/NodeTreeSvg.cs` (drawing), `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
 | Layout | `src/Dependinator.UI/Modeling/NodeLayout.cs`, `Layout/LayeredEngine.cs` |
@@ -333,6 +341,9 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
   [docs/notes/NET11-UPGRADE.md](notes/NET11-UPGRADE.md).
 - **C# parsing needs a .NET SDK on the user's machine** (Bicep does not). A user without one gets
   a clear error, but it is a step to install before the first map.
+- **A second toolchain in the build.** The TypeScript parser's helper is built with npm, so a
+  solution build needs Node.js, and its packages (the TypeScript compiler, esbuild) are bumped by
+  hand: Dependabot and the nightly package task only look at NuGet.
 - **Clerk free tier.** The 180-day token workaround (view 6) trades some security for convenience.
 - **Concentration in one library.** Three quarters of the product code is in `Dependinator.UI`,
   which grew by almost half in the three weeks the AI features were added.
