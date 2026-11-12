@@ -5,6 +5,7 @@ import * as ts from "typescript";
 import type { Item, LinkProperties, NodeProperties, NodeType } from "./items";
 import * as names from "./names";
 import type { Project, ProjectPart } from "./project";
+import { SourceExtensions } from "./project";
 import { accessorSignature, functionSignature, variableSignature } from "./signatures";
 
 // Walks a compiled TypeScript or JavaScript project into model items.
@@ -648,10 +649,6 @@ export class ModelBuilder {
             const parent = path.dirname(dir);
             if (!name && parent !== dir) {
                 name = this.sourcePackageOf(parent);
-            } else if (name && this.ownFiles.some(f => path.normalize(f.file.fileName).startsWith(dir + path.sep))) {
-                // What a part of this model has built (its dist/index.d.ts): the part's source
-                // is in the model already, and it is no package beside it.
-                name = undefined;
             }
         }
         this.sourcePackages.set(dir, name);
@@ -786,10 +783,25 @@ export class ModelBuilder {
             if (star < 0) {
                 return specifier === pattern;
             }
-            // Not the catch-all "*" (more places to look for any module): it names no alias
             const prefix = pattern.slice(0, star);
             const suffix = pattern.slice(star + 1);
-            return (prefix !== "" || suffix !== "") && specifier.startsWith(prefix) && specifier.endsWith(suffix);
+            if (prefix === "" && suffix === "") {
+                return this.isInCatchAllPath(specifier);
+            }
+            return specifier.startsWith(prefix) && specifier.endsWith(suffix);
+        });
+    }
+
+    // The catch-all "*" (more places to look for any module) matches every specifier. It is
+    // an alias only where one of its places has the specifier's first folder or file:
+    // "components/Button" with "*": ["src/*"] and a folder src/components.
+    isInCatchAllPath(specifier: string): boolean {
+        const options = this.program.getCompilerOptions();
+        const baseDir = options.baseUrl ?? (options as { pathsBasePath?: string }).pathsBasePath ?? this.project.projectDir;
+        const first = specifier.split("/")[0];
+        return (options.paths?.["*"] ?? []).some(place => {
+            const target = path.resolve(baseDir, place.replace("*", first));
+            return fs.existsSync(target) || SourceExtensions.some(extension => fs.existsSync(target + extension));
         });
     }
 

@@ -66,12 +66,13 @@ static class HelperScript
 
     // The script's time tells the other versions that this one is in use: set on every use (at
     // most once a day), since a host can run for longer than the age that counts as unused.
-    static void MarkUsed(string scriptPath)
-    {
-        var now = DateTime.UtcNow;
-        if (now - File.GetLastWriteTimeUtc(scriptPath) > TimeSpan.FromDays(1))
-            Result.Catch(() => File.SetLastWriteTimeUtc(scriptPath, now));
-    }
+    static void MarkUsed(string scriptPath) =>
+        Result.Catch(() =>
+        {
+            var now = DateTime.UtcNow;
+            if (now - File.GetLastWriteTimeUtc(scriptPath) > TimeSpan.FromDays(1))
+                File.SetLastWriteTimeUtc(scriptPath, now);
+        });
 
     // The scripts of versions that have not parsed since the time (and what a stopped process
     // left half written).

@@ -1,6 +1,8 @@
 {
     // No "types": the installed @types packages (Node's) are included, as before TypeScript 6.
-    // The catch-all path is more places to look for any module, not an alias.
+    // No "references" either: that libs/util is a part is known from the solution's config.
+    // The catch-all path is more places to look for any module, and an alias only for what is
+    // in one of them ("shapes/…").
     "compilerOptions": {
         "target": "ES2022",
         "module": "ESNext",
@@ -11,6 +13,5 @@
             "*": ["./types/*"]
         }
     },
-    "include": ["src"],
-    "references": [{ "path": "../libs/util" }]
+    "include": ["src"]
 }

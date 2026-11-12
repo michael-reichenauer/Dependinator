@@ -8,12 +8,19 @@ import libraries from "virtual:typescript-libraries";
 // compiler from memory, as files of a folder that does not exist.
 const LibraryFolder = "/$typescript-libraries";
 
-// The declaration files (the libraries, the packages' types) parsed so far. A project of several
-// parts is several programs that read the same ones, and parsing the DOM's and Node's types for
-// each part costs most of its time and memory. A parsed file is shared by the programs whose
-// options parse and bind it alike, as the editor shares them between its projects.
-const declarationFiles = new Map<string, ts.SourceFile | undefined>();
-const SourceFileOptions: (keyof ts.CompilerOptions)[] = [
+// The files parsed so far. A project of several parts is several programs that read the same
+// libraries, package types and each other's source, and parsing the DOM's and Node's types for
+// each part costs most of its time and memory (a monorepo of 30 parts ran Node out of memory).
+// A parsed file is shared by the programs whose options parse and bind it alike, as the editor
+// shares them between its projects (the compiler's document registry).
+const sourceFiles = new Map<string, ts.SourceFile | undefined>();
+
+// The options that decide how a file is parsed and bound: the compiler's own list (not part of
+// its public types), or else the ones it had in TypeScript 6.0.
+const SourceFileOptions: string[] = (
+    (ts as { sourceFileAffectingCompilerOptions?: { name: string }[] }).sourceFileAffectingCompilerOptions ?? []
+).map(option => option.name);
+const KnownSourceFileOptions = [
     "target",
     "module",
     "moduleResolution",
@@ -30,7 +37,9 @@ const SourceFileOptions: (keyof ts.CompilerOptions)[] = [
 
 export function createCompilerHost(options: ts.CompilerOptions): ts.CompilerHost {
     const host = ts.createCompilerHost(options, true);
-    const optionsKey = SourceFileOptions.map(name => JSON.stringify(options[name]) ?? "").join("|");
+    const optionsKey = [...new Set([...SourceFileOptions, ...KnownSourceFileOptions])]
+        .map(name => JSON.stringify(options[name]) ?? "")
+        .join("|");
     const library = (fileName: string): string | undefined =>
         fileName.startsWith(`${LibraryFolder}/`) ? libraries[fileName.slice(LibraryFolder.length + 1)] : undefined;
 
@@ -48,14 +57,19 @@ export function createCompilerHost(options: ts.CompilerOptions): ts.CompilerHost
                     ? ts.createSourceFile(fileName, text, languageVersionOrOptions)
                     : getSourceFile(fileName, languageVersionOrOptions, onError, shouldCreateNewSourceFile);
             };
-            if (!/\.d\.[cm]?ts$/i.test(fileName)) {
-                return create();
+            const parse =
+                typeof languageVersionOrOptions === "object"
+                    ? [
+                          languageVersionOrOptions.languageVersion,
+                          languageVersionOrOptions.impliedNodeFormat,
+                          languageVersionOrOptions.jsDocParsingMode,
+                      ]
+                    : [languageVersionOrOptions];
+            const key = `${fileName}|${optionsKey}|${parse.join("|")}`;
+            if (!sourceFiles.has(key)) {
+                sourceFiles.set(key, create());
             }
-            const key = `${fileName}|${optionsKey}|${JSON.stringify(languageVersionOrOptions)}`;
-            if (!declarationFiles.has(key)) {
-                declarationFiles.set(key, create());
-            }
-            return declarationFiles.get(key);
+            return sourceFiles.get(key);
         },
     };
 }

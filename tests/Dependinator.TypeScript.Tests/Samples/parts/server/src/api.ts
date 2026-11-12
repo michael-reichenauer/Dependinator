@@ -3,7 +3,10 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { shared } from "@acme/core";
 import { stamp } from "@acme/util";
+import { area } from "shapes/square";
+import { gone } from "shapes/gone";
 
 export function ping(): string {
-    return stamp(readFileSync(join(process.env.HOME ?? "", "ping.txt"), "utf8") + shared());
+    const text = readFileSync(join(process.env.HOME ?? "", "ping.txt"), "utf8");
+    return stamp(text + shared() + area(2) + gone);
 }

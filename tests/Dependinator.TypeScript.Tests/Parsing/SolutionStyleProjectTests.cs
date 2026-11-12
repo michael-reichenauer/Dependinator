@@ -71,18 +71,25 @@ public class SolutionStyleProjectTests(TypeScriptFixture fixture)
             return; // No link support here
         }
 
-        // "@acme/util" is libs/util, which the config references too. Its package.json names
-        // dist/index.d.ts, which is not built: the server's reference to it leads to the source
+        // "@acme/util" is libs/util, a part of the solution's config too. Its package.json names
+        // dist/index.d.ts, which is not built, and the server's config does not reference it:
+        // the use still leads to the part's source
         Assert.True(Items.HasLink(Ping, "parts.libs.util.src.index*ts.stamp"));
         Assert.DoesNotContain(Items.Links(), l => l.Target.StartsWith("@acme.util"));
     }
 
     [Fact]
-    public void CatchAllPath_ShouldBeNoAlias()
+    public void CatchAllPath_ShouldBeAnAlias_OnlyForWhatIsInItsPlaces()
     {
-        // "paths": { "*": [...] } matches every module: "path", which the made-up Node types do
-        // not declare, is still one of Node's modules
+        // "paths": { "*": ["./types/*"] } matches every module. "path", which the made-up Node
+        // types do not declare, is still one of Node's modules
         Assert.True(Items.HasLink("parts.server.src.api*ts", "node.path"));
+
+        // "shapes/square" is a file in that place, and "shapes/gone" one that is not there: no
+        // package "shapes"
+        Assert.True(Items.HasLink(Ping, "parts.server.types.shapes.square*ts.area"));
+        Assert.DoesNotContain(Items.Links(), l => l.Target.StartsWith("shapes"));
+        Assert.DoesNotContain(Items, i => i.Problem?.Message.Contains("shapes") == true);
     }
 
     [Fact]

@@ -60,15 +60,17 @@ from another part is found by its place in the source (`placeOf`: file, position
 
 Two things keep that workable for a monorepo:
 
-- **Declaration files are parsed once** for all the programs (`libraries.ts`: the libraries and
-  the packages' types, shared between programs whose options parse and bind them alike, as the
-  editor shares them between its projects). A made-up monorepo of 30 referenced projects that
-  use the DOM and Node parses in 4 s with 340 MB; without the sharing Node ran out of memory.
-- **An import of a referenced project is its source**, as in the editor
-  (`useSourceOfProjectReferenceRedirect`, with the config's `references`): `@acme/util` whose
-  `package.json` names `dist/index.d.ts` leads to `libs/util/src`, built or not. This needs the
-  importing project's own config to reference the other, as `tsc -b` needs it too. Without that
-  reference the import is what was built: no link (and no made-up package beside the part).
+- **Files are parsed once** for all the programs (`libraries.ts`: the libraries, the packages'
+  types and the parts' source, shared between programs whose options parse and bind them alike,
+  as the editor shares them between its projects). A made-up monorepo of 31 referenced projects
+  that use the DOM, Node and a 200-file core package parses in 3 s with 410 MB; without the
+  sharing Node ran out of memory at 30 small projects.
+- **An import of another part is that part's source**, as in the editor
+  (`useSourceOfProjectReferenceRedirect`): `@acme/util` whose `package.json` names
+  `dist/index.d.ts` leads to `libs/util/src`, built or not. Every other part is given to the
+  program as a referenced project, also where a part's own config has no `references` (a
+  workspace that leaves the order to its package manager). The configs are read once
+  (`readConfig`, served to the programs through `getParsedCommandLine`).
 
 Two options are not the config's: nothing is emitted, and where the config has no `types`, every
 installed `@types` package is included (`types: ["*"]`). TypeScript 6 includes none by itself,
@@ -126,8 +128,9 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   `npm install`), each as one summary. An import the compiler cannot resolve is "not installed"
   only when no `node_modules` folder above the file has the package: a style sheet or image of an
   installed package (`import "pkg/dist/site.css"`) is a plain link to the package, and a path
-  alias (the config's `paths` apart from a catch-all `*`, or the bundlers' `@/x`, `~/x`, `#x`) is
-  no package at all. An alias that only the bundler's config knows and that looks like a package
+  alias (the config's `paths`, or the bundlers' `@/x`, `~/x`, `#x`) is no package at all. A
+  catch-all `"*": ["src/*"]` is an alias only for what is in one of its places (`components/x`
+  with a folder `src/components`), since it matches every package's name too. An alias that only the bundler's config knows and that looks like a package
   (`@components/Button`) cannot be told from a missing one: it is reported, and the message says
   that such an alias belongs in the config's `paths`.
 - A project's sole folder chain (`src`) is a pass-through in the diagram, like the namespaces
@@ -169,4 +172,5 @@ names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
   folders are skipped when a `package.json` project's files are collected).
 - With auto refresh off, the extension does not learn of a manual re-parse, so switching auto
   refresh on re-parses once for changes that may already be in the model (as before for C#).
-- A part that imports another part's built output without referencing it gets no link to it.
+- `preserveSymlinks` projects are untried: a part used through its `node_modules` link may then
+  show as a package beside its own source.

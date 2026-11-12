@@ -25,7 +25,7 @@ export interface ProjectPart {
     rootFiles: Set<string>;
 }
 
-const SourceExtensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+export const SourceExtensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
 
 // Folders that hold what is built or downloaded, never the project's own source.
 const OutputFolders = ["node_modules", "dist", "build", "out", "coverage", "bower_components"];
@@ -41,11 +41,13 @@ export function loadProject(entryPath: string): Project {
         throw new Error(`No TypeScript or JavaScript files found for '${path.basename(fullPath)}'.`);
     }
 
-    const parts = configs.filter(config => config.fileNames.length > 0).map(createPart);
+    const withFiles = configs.filter(config => config.fileNames.length > 0);
+    const parts = withFiles.map(config => createPart(config, withFiles));
     return { entryPath: fullPath, projectDir, packageName: name, packageDescription: description, parts };
 }
 
-function createPart({ fileNames, options, references }: Config): ProjectPart {
+function createPart(config: Config, configs: Config[]): ProjectPart {
+    const { fileNames, options } = config;
     const programOptions: ts.CompilerOptions = {
         ...options,
         // TypeScript 6 no longer includes the @types packages by itself. Without Node's and the
@@ -58,14 +60,23 @@ function createPart({ fileNames, options, references }: Config): ProjectPart {
         incremental: false,
         tsBuildInfoFile: undefined,
     };
+    const host = {
+        ...createCompilerHost(programOptions),
+        // (Two options of the editor's hosts that the compiler host's type leaves out)
+        useSourceOfProjectReferenceRedirect: () => true,
+        getParsedCommandLine: readConfig,
+    } as ts.CompilerHost;
     const program = ts.createProgram({
         rootNames: fileNames,
         options: programOptions,
-        // An import of a referenced project is its source, as in the editor: not the declaration
-        // files it builds, which may not be built and are no nodes of the model.
-        projectReferences: references,
-        // (An option of the editor's hosts that the compiler host's type leaves out)
-        host: { ...createCompilerHost(programOptions), useSourceOfProjectReferenceRedirect: () => true } as ts.CompilerHost,
+        // An import of another part is that part's source, as in the editor: not the declaration
+        // files it builds, which may not be built and are no nodes of the model. Every other
+        // part counts as referenced, also where a config leaves its "references" to the
+        // package manager's workspace.
+        projectReferences: configs
+            .filter(other => other !== config && other.configPath)
+            .map(other => ({ path: other.configPath! })),
+        host,
     });
     return { program, rootFiles: new Set(fileNames.map(f => program.getSourceFile(f)?.fileName ?? f)) };
 }
@@ -91,9 +102,28 @@ function readPackage(projectDir: string): { name?: string; description?: string 
 }
 
 interface Config {
+    configPath?: string;
     fileNames: string[];
     options: ts.CompilerOptions;
-    references?: readonly ts.ProjectReference[];
+}
+
+// The config files read so far: each program asks for the configs of the parts it references.
+const parsedConfigs = new Map<string, ts.ParsedCommandLine | undefined>();
+
+function readConfig(configFile: string): ts.ParsedCommandLine | undefined {
+    const key = path.resolve(configFile);
+    if (!parsedConfigs.has(key)) {
+        parsedConfigs.set(
+            key,
+            ts.getParsedCommandLineOfConfigFile(configFile, undefined, {
+                ...ts.sys,
+                onUnRecoverableConfigFileDiagnostic: diagnostic => {
+                    throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
+                },
+            })
+        );
+    }
+    return parsedConfigs.get(key);
 }
 
 // A config file's files and options, followed by those of the projects it references (and
@@ -109,16 +139,11 @@ function readConfigs(configPath: string): Config[] {
         }
         visited.add(key);
 
-        const parsed = ts.getParsedCommandLineOfConfigFile(configFile, undefined, {
-            ...ts.sys,
-            onUnRecoverableConfigFileDiagnostic: diagnostic => {
-                throw new Error(ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n"));
-            },
-        });
+        const parsed = readConfig(configFile);
         if (!parsed) {
             return;
         }
-        configs.push({ fileNames: parsed.fileNames, options: parsed.options, references: parsed.projectReferences });
+        configs.push({ configPath: key, fileNames: parsed.fileNames, options: parsed.options });
         for (const reference of parsed.projectReferences ?? []) {
             const referencePath = ts.resolveProjectReferencePath(reference);
             if (fs.existsSync(referencePath)) {
