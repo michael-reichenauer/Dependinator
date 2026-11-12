@@ -26,7 +26,10 @@ public class ExtensionProjectTests
             && l.Target == "DependinatorVsCode.src.languageServer*ts.startLanguageServer"
         );
         Assert.True(
-            items.HasLink("DependinatorVsCode.src.languageServer*ts.startLanguageServer", "DependinatorVsCode.src.logger*ts.log")
+            items.HasLink(
+                "DependinatorVsCode.src.languageServer*ts.startLanguageServer",
+                "DependinatorVsCode.src.logger*ts.log"
+            )
         );
         Assert.True(items.Nodes().Count() > 100, $"Only {items.Nodes().Count()} nodes");
         Assert.True(items.Links().Count() > 150, $"Only {items.Links().Count()} links");
