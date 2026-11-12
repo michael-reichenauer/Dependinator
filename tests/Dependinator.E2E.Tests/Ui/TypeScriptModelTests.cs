@@ -17,8 +17,10 @@ public class TypeScriptModelTests(ITestOutputHelper output) : E2ETestBase(output
         await App.WaitForModelRenderedAsync();
 
         await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
-        // The whole text: "webshop.bicep" has "shop" in it too
-        await App.MenuItem("menu-model-item").Filter(new() { HasTextRegex = new Regex(@"^\s*shop\s*$") }).ClickAsync();
+        // The whole name: "webshop.bicep" has "shop" in it too
+        await App.MenuItem("menu-model-item")
+            .Filter(new() { Has = Page.GetByText("shop", new() { Exact = true }) })
+            .ClickAsync();
 
         // The project is named after its package. The first parse also unpacks the helper script.
         await Expect(App.Node("shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
