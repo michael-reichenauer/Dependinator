@@ -39,8 +39,7 @@ Only three external services are involved, and all are optional for the core use
 users in for cloud sync, the small **cloud sync API** (our own Azure Functions over Blob Storage)
 stores the synced models, and the **Anthropic Claude API** answers the AI features when the user
 asks (reviewing a cycle or a dependency that breaks a rule, suggesting rules and line labels, a
-guided tour of the codebase, improving comments, questions about a node or the model), with the
-user's own API key. Claude is called from the VS Code extension's language
+guided tour of the codebase, questions about a node or the model), with the user's own API key. Claude is called from the VS Code extension's language
 server and from the dev host, never from the browser app. The same features can instead run the
 user's local **Claude Code** (experimental), in VS Code a model VS Code offers to extensions
 (**Copilot**'s by default, through its Language Model API, asked by the extension for the language
@@ -50,8 +49,8 @@ Claude Code) can ask Dependinator about the open model through its **MCP server*
 
 Points to discuss: source code never leaves the machine through sync, only the drawn model does,
 but the AI features send code excerpts of what they ask about, and Ask about the model can read a
-node's source on request. Claude Code and Copilot can also change the code, only when the user
-presses a "Fix with" or "Do it with" button. The web app cannot parse
+node's source on request. Claude Code and Copilot can also change the code (a fix, a proposed
+change, better comments), only when the user presses the button for it. The web app cannot parse
 code: what it shows comes from VS Code through sync, or from the demo models.
 
 ## 2. Hosts view: one UI, three hosts
@@ -88,8 +87,8 @@ projects with the SDK's MSBuild; Bicep needs nothing installed.
 ![Code structure view](architecture/3-code-structure.svg)
 
 References point one way: **hosts → UI → Core → Shared**, with the parser libraries (**Roslyn**,
-**Bicep**) and the **Claude** and **Mcp** integrations plugging into Core. Hosts are thin (a few hundred lines
-each): they register services and start. `Dependinator.Core` is host-agnostic: the parsing
+**Bicep**) and the **Claude** and **Mcp** integrations plugging into Core. Hosts are thin (the two Blazor hosts
+a couple of hundred lines each, the language server about a thousand): they register services and start. `Dependinator.Core` is host-agnostic: the parsing
 contracts (`IParserService`, `ISourceParser`, the `Item` types), the JSON-RPC transport, the cloud
 sync HTTP client, workspace and model-path services, the `[Rpc]` contracts of the AI features and
 the MCP server (`IClaudeService`, `IVsCodeModelService`, `IModelQueryService`), and the
@@ -147,8 +146,8 @@ WebAssembly.
 
 The features that make the map useful read the same model: the dependency explorer, cycle
 detection (strongly connected components among siblings, with "accept" or "fix later"),
-architecture rules of several kinds (must not use, only X may use Y, layers, independent, no
-cycles inside; a violation can be allowed or marked "fix later"), the path finder ("why does A
+architecture rules of several kinds (must not use, only X may use Y, layers, independent,
+independent parts, no cycles inside; a violation can be allowed or marked "fix later"), the path finder ("why does A
 depend on B?"), the problem indicator, dimmed and hidden nodes, hover cards, search and share
 links. The AI features (view 8) read it through the same services. Every edit goes through `CommandService`, so it can be undone, and is saved.
 
@@ -173,7 +172,8 @@ Next to the tunnel there are a few plain messages between the UI and the extensi
 editor at a node's source, show the node for the file the user switched to, refresh after source
 files changed, open search, report parsing status for the status bar. Secrets stay in the
 extension: the Clerk token, the Claude key and the MCP server's token live in VS Code's secret
-storage, and the server asks for the first two per request. The server also asks the extension for
+storage. The server asks for the Claude key per request; the two tokens are handed over when it
+starts, the Clerk token again whenever it changes. The server also asks the extension for
 what only VS Code can do: a turn of a VS Code language model (Copilot's) and opening Copilot Chat
 with a prompt (`languageModels.ts`).
 
@@ -185,7 +185,7 @@ rules. The extension registers the server with VS Code for Copilot and, with *De
 Claude Code*, with Claude Code for the folder. While the diagram is closed the tools answer with an
 error that asks to open it. The dev host serves the same tools at `/mcp`, without a token. The
 app's own AI features use them too: Suggest rules, the codebase tour and Ask about the model pass the server to
-`claude -p`, so Claude Code can check a rule or look things up on the model, and the API key route
+`claude -p`, so Claude Code can check a rule or look things up on the model, and Ask's API key route
 (`ModelToolsAgent` in `Dependinator.Claude`) and the Copilot route (`VsCodeToolsAgent` in the
 language server) run their own tool-use loops as MCP clients of the same server, so the tools are
 defined once (view 8). Each query reports itself to the UI scope it asks
@@ -266,19 +266,20 @@ asks a model VS Code offers. The *AI chat* route needs nothing: the user copies 
 pastes the answer back. The UI never calls an AI itself, so the standalone browser app, which has
 no key and no source files, offers only the AI chat.
 
-**An AI asks back.** The Ask panel, Suggest rules and the tour need more than one prompt can hold, so the AI
-looks things up while it answers, with the nine read-only tools of the MCP server (the model's
-outline, a node's children and dependencies, paths, cycles, rules, a check of a rule that is not
-saved, a node's source). The tools are defined once, in `Dependinator.Mcp`, and reach the open
+**An AI asks back.** The Ask panel, Suggest rules and the tour are better with more than one
+prompt can hold, so the AI looks things up while it answers, with the nine read-only tools of the
+MCP server (the model's outline, node search, a node's children and dependencies, paths, cycles,
+rules, a check of a rule that is not saved, a node's source). The tools are defined once, in `Dependinator.Mcp`, and reach the open
 diagram through `[Rpc] IModelQueryService`, which the UI's `ModelQueries` answers. Claude Code is
-started with the server in its MCP configuration; the API key route and the Copilot route run
-their own tool loops (`ModelToolsAgent`, `VsCodeToolsAgent`) as clients of the same server.
+started with the server in its MCP configuration; the Copilot route and, for the Ask panel, the
+API key route run their own tool loops (`VsCodeToolsAgent`, `ModelToolsAgent`) as clients of the
+same server. Suggest rules and the tour on the API key route answer from the prompt alone.
 Outside agents use the same tools: Copilot, or Claude Code in a terminal (view 5).
 
-**Changing code** is a separate, explicit step. "Fix with" and "Do it with" run Claude Code in the
-model's folder with edit tools but no command tools, after a warning about uncommitted changes, or
-hand the prompt to Copilot Chat's agent mode with its own Keep/Undo review. The file watcher
-re-parses afterwards.
+**Changing code** is a separate, explicit step. "Fix with", "Do it with" and "Improve with" run
+Claude Code in the model's folder with edit tools but no command tools, with a warning first when
+git shows uncommitted changes, or hand the prompt to Copilot Chat's agent mode with its own
+Keep/Undo review. The model is re-parsed afterwards, in VS Code by the file watcher.
 
 Dependinator does not take an answer on trust where it can check: suggested rules are checked
 again against the model, tour stops that are not nodes are dropped, node names in an answer become
@@ -302,7 +303,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | Local-first models with optional sync | Works offline and without an account; nothing leaves the machine by default | Two copies to reconcile when sync is on |
 | `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Builds with the .NET 11 SDK while the target stays net10.0 |
 | Architecture rules as tests | The layering stays true without relying on review | A new project needs a new rule |
-| AI behind `[Rpc]` interfaces, with the user's own provider | No AI cost or key on our side; the UI, which also ships to the browser, holds no SDK and no secret | Four routes to keep working, two of which we cannot test in CI |
+| AI behind `[Rpc]` interfaces, with the user's own provider | No AI cost or key on our side; the UI, which also ships to the browser, holds no SDK and no secret | Four routes to keep working; CI tests them against stand-ins, the real services are tried by hand |
 | One MCP server for every AI that looks things up | The model tools are defined once, for outside agents and for the app's own features | The diagram must be open; in VS Code each tool call crosses the tunnel |
 
 ## Where to start reading the code
@@ -348,3 +349,8 @@ as the [webshop example's diagrams](../examples/bicep/ARCHITECTURE.md): icons fr
 icon library (`src/Dependinator.UI/Diagrams/Icons/Library`), cards, groups and labeled edges placed
 by hand, so they stay consistent and can be edited as text. Run it with Python 3 after changing the
 architecture, and check the result in a browser; the files render standalone and inside this page.
+
+The sizes in this page and in the diagrams are lines of C# and Razor per project (TypeScript for
+the extension), and the unit test count is the `[Fact]` and `[Theory]` attributes outside the e2e
+project. They, the version and the diagrams are what goes stale first: feature work tends to
+update the text and leave `generate.py` alone.

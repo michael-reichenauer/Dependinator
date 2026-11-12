@@ -459,7 +459,7 @@ d.box("ext", 570, 330, 320, 195, "extension.ts", [
 d.box("secrets", 570, 760, 320, 110, "VS Code SecretStorage", [
     "Clerk access token (cloudSyncAuth.ts)", "Claude API key (claudeApiKey.ts)", "MCP server token (mcpServer.ts)", "never stored in the UI"], icon="Security")
 d.box("aiext", 570, 610, 320, 110, "mcpServer.ts, languageModels.ts", [
-    "registers the MCP server for Copilot and", "Claude Code once it reports its URL",
+    "registers the MCP server for Copilot, and", "for Claude Code when the user connects it",
     "runs one turn of a VS Code model (vscode.lm),", "opens Copilot Chat with a fix prompt"], icon="Api")
 
 d.group(1040, 60, 380, 830, "Language server", "Dependinator.Lsp, .NET, OmniSharp")
@@ -493,8 +493,8 @@ d.port("ext.r1", 890, 420); d.port("lmh.l2", 1070, 185)
 d.edge("ext.r1", "lmh.l2", "LSP notifications\nover stdio", ACCENT, both=True, via=[(980, 420), (980, 185)], label_at=0.6, label_dx=-6, anchor="end")
 d.edge("ext.t", "ls.b", "starts", label_dx=6, anchor="start", label_dy=4)
 d.port("targets.l1", 1070, 560); d.port("secrets.r1", 890, 815)
-d.edge("targets.l1", "secrets.r1", "asks for the token or\nthe key, per request", ASYNC, dashed=True, via=[(1005, 560), (1005, 815)], label_at=0.6, label_dy=4, label_dx=-6, anchor="end")
-write("5-vscode.svg", d, "VS Code integration view: the UI in the webview calls [Rpc] interfaces through Core's JsonRpcService, whose messages go via postMessage to the extension host, which relays them as LSP notifications over stdio to the language server, where another JsonRpcService dispatches them to the parser, workspace file, cloud sync, Claude and VS Code model services. The language server also runs the MCP server, whose tools ask the open diagram through the same tunnel in the other direction (IModelQueryService, answered by the UI). The extension also sends editor, refresh and search messages to the UI, starts the server, registers the MCP server for Copilot and Claude Code, runs VS Code's language models for the server, and keeps the Clerk token, the Claude key and the MCP token in VS Code's secret storage.")
+d.edge("targets.l1", "secrets.r1", "asks for the Claude key,\nper request", ASYNC, dashed=True, via=[(1005, 560), (1005, 815)], label_at=0.6, label_dy=-10, label_dx=-6, anchor="end")
+write("5-vscode.svg", d, "VS Code integration view: the UI in the webview calls [Rpc] interfaces through Core's JsonRpcService, whose messages go via postMessage to the extension host, which relays them as LSP notifications over stdio to the language server, where another JsonRpcService dispatches them to the parser, workspace file, cloud sync, Claude and VS Code model services. The language server also runs the MCP server, whose tools ask the open diagram through the same tunnel in the other direction (IModelQueryService, answered by the UI). The extension also sends editor, refresh and search messages to the UI, starts the server, registers the MCP server for Copilot and, when the user connects it, for Claude Code, runs VS Code's language models for the server, and keeps the Clerk token, the Claude key and the MCP token in VS Code's secret storage.")
 
 # ------------------------------------------------------------------------------------------
 # 6. Cloud sync and identity view
@@ -578,7 +578,7 @@ write("7-delivery.svg", d, "Delivery view of Dependinator: feature branches and 
 d = Diagram(1440, 900, "Dependinator AI features view")
 d.group(20, 60, 380, 780, "Dependinator.UI", "the same in every host")
 d.box("feat", 45, 105, 330, 130, "Features that ask", [
-    "review a cycle or a broken rule, Suggest rules,", "the Ask panel, About Node, Improve Comments,", "the codebase tour, line labels",
+    "review a cycle or a broken rule, Suggest rules,", "the Ask panel, About Node, the codebase tour,", "line labels; Improve Comments (edits code)",
     "each builds a prompt and the JSON schema", "of its answer"], icon="View", tint=ACCENT)
 d.box("aisvc", 45, 300, 330, 125, "IAiService (Diagrams/Ai)", [
     "AiProvider.All: who can answer, look things up", "with the model tools, or edit code",
@@ -591,8 +591,8 @@ d.note(57, 490, ["**What the app keeps to itself",
                  "· decisions: nothing is accepted, allowed or",
                  "  added to the model until the user says so"], size=11)
 d.box("mq", 45, 680, 330, 130, "ModelQueries (Diagrams/Ai)", [
-    "answers IModelQueryService on the open", "diagram: the model's outline, a node's children",
-    "and dependencies, paths, cycles, rules, a check", "of a rule that is not saved, a node's source"], icon="Search", tint=ACCENT)
+    "answers IModelQueryService on the open", "diagram: the model's outline, node search,",
+    "children, dependencies, paths, cycles, rules,", "a check of an unsaved rule, a node's source"], icon="Search", tint=ACCENT)
 d.edge("feat.b", "aisvc.t", "AskAsync(route, prompt, schema)", ACCENT, label_dx=6, anchor="start", label_dy=4)
 
 d.group(560, 200, 380, 640, "Language server (VS Code) or dev host", "never in the browser app, which has no key and no files")
