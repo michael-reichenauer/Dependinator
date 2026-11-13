@@ -79,9 +79,9 @@ page objects). Each rule below comes from a real CI or local failure.
   later. Together these were a third of the CI flakes of Oct 28-Nov 11 2026 (HiddenNodesTests).
 - `App.SelectLineAsync` waits for the line toolbar, which proves nothing when a line is selected
   already: going from line to line, wait for the clicked line's selection overlay
-  (`polyline[stroke-dasharray='3,50']` beside its hit target; `LineStubTests.SelectedMark`). An
-  Escape sent while the click was still measured stepped back to the stub first, then the click
-  selected the line again (Nov 13 2026).
+  (`polyline[stroke-dasharray='3,50']` beside its hit target, found by the line's `data-name`;
+  `LineStubTests.SelectShownLineAsync`). An Escape sent while the click was still measured
+  stepped back to the stub first, then the click selected the line again (Nov 13 2026).
 - CI writes the failed tests and their messages to the run's summary page
   (`scripts/test-summary`), e2e ones with "passed on the re-run (flaky)". Job logs download in a
   cloud session with `gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`.

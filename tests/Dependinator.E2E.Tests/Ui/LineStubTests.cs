@@ -58,13 +58,11 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         // The toolbar is up already (the stub's), so wait for the clicked line's selection mark:
         // an Escape sent while the click is still being handled steps back first, and then the
         // click selects the line again.
-        await App.SelectLineAsync(shownLines.First);
-        await Expect(SelectedMark(shownLines.First)).ToHaveCountAsync(1);
+        await SelectShownLineAsync(shownLines.First);
         await Expect(App.CousinLines).ToHaveCountAsync(stubLines);
         if (stubLines > 1)
         {
-            await App.SelectLineAsync(shownLines.Last);
-            await Expect(SelectedMark(shownLines.Last)).ToHaveCountAsync(1);
+            await SelectShownLineAsync(shownLines.Last);
             await Expect(App.CousinLines).ToHaveCountAsync(stubLines);
         }
 
@@ -131,7 +129,15 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
     // The ring of the stub that the line (its hover group) is drawn as.
     static ILocator StubRing(ILocator line) => line.Locator("xpath=..").Locator("circle.line-stub-ring");
 
-    // The dashed overlay LineSvg draws over a selected line.
+    // Clicks the line and waits for the dashed overlay LineSvg draws over a selected line, found by
+    // the line's name, since a positional locator can point at another line after the re-render.
+    async Task SelectShownLineAsync(ILocator line)
+    {
+        string name = await line.GetAttributeAsync("data-name") ?? "";
+        await App.SelectLineAsync(line);
+        await Expect(SelectedMark(Page.Locator($"#svgcanvas g.hoverable[data-name='{name}']"))).ToHaveCountAsync(1);
+    }
+
     static ILocator SelectedMark(ILocator line) =>
         line.Locator("xpath=..").Locator("polyline[stroke-dasharray='3,50']");
 }
