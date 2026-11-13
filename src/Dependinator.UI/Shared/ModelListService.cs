@@ -41,7 +41,7 @@ interface IModelListService
     // The path of the model of the whole workspace: the sources found in the workspace folder
     // that the user chose, in one diagram. Null without a workspace folder. It is listed among
     // the workspace's models with two or more sources; with one it would be the same as that
-    // source's own model. Listed or not, it is a workspace path, and a local path (it is
+    // source's own model. Listed or not, it is a workspace path and a local path (it is
     // parsed here) while there is a source: a model that is open stays what it is when a source
     // is removed.
     string? WorkspaceModelPath { get; }
@@ -108,17 +108,17 @@ class ModelListService(
         }
     }
 
-    public bool IsLocalPath(string path) =>
-        LocalPaths.Contains(path) || (workspaceSourcePaths.Count > 0 && IsSamePath(path, WorkspaceModelPath));
+    public bool IsLocalPath(string path) => LocalPaths.Contains(path) || IsUsableWorkspaceModel(path);
 
     public bool HasWorkspace => Build.IsVsCodeExtWasm || Build.IsWeb;
 
     public bool IsWorkspacePath(string path) =>
         !string.IsNullOrWhiteSpace(path)
-        && (
-            workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path))
-            || IsSamePath(path, WorkspaceModelPath)
-        );
+        && (workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path)) || IsUsableWorkspaceModel(path));
+
+    // The workspace model, listed or not, while there is a source to parse it from: without
+    // one it is like a model of another folder, a visit that shows what was saved.
+    bool IsUsableWorkspaceModel(string path) => workspaceSourcePaths.Count > 0 && IsSamePath(path, WorkspaceModelPath);
 
     public string? WorkspaceModelPath =>
         HasWorkspace && workspaceFolder != "" ? ModelPaths.WorkspacePath(workspaceFolder) : null;
@@ -296,6 +296,10 @@ class ModelListService(
 
     public async Task RemoveModelAsync(string path)
     {
+        // Not the model to go back to any more (HomePath)
+        if (IsSamePath(lastWorkspacePath, path))
+            lastWorkspacePath = null;
+
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());

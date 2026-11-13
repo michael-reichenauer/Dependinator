@@ -123,9 +123,11 @@ public class ModelListServiceTests
         Assert.Equal(DemoModel.WorkingSolutionPath, service.LocalPaths[0]);
         Assert.Equal(DemoModel.WorkingSolutionPath, service.HomePath);
 
-        // Once it is opened, it is the workspace model to go back to
+        // Once it is opened, it is the workspace model to go back to, until it is deleted
         await service.AddModelAsync(workspaceModelPath);
         Assert.Equal(workspaceModelPath, service.HomePath);
+        await service.RemoveModelAsync(workspaceModelPath);
+        Assert.Equal(DemoModel.WorkingSolutionPath, service.HomePath);
     }
 
     // With one source the model of the workspace would be the same as that source's own model,
@@ -147,10 +149,12 @@ public class ModelListServiceTests
         Assert.True(service.IsWorkspacePath(workspaceModelPath));
         Assert.Null(service.GetVisitedModel(workspaceModelPath));
 
-        // Without a source there is nothing to parse it from
+        // Without a source there is nothing to parse it from: it is a visit, like a model of
+        // another folder
         workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([]);
         await service.RefreshWorkspaceSourcesAsync();
         Assert.False(service.IsLocalPath(workspaceModelPath));
+        Assert.False(service.IsWorkspacePath(workspaceModelPath));
 
         // A project added later is found when the sources are listed again
         workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath, BicepPath]);

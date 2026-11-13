@@ -34,17 +34,27 @@ static class SourceChoices
         IReadOnlyList<SourceChoice> choices,
         IReadOnlyList<WorkspaceSource> saved,
         IReadOnlyDictionary<string, string>? parsedRootNames = null
-    ) =>
+    )
+    {
+        // A root name that a parsed source has now is no longer the name of a source that was
+        // not parsed: that one had it while the other was not found, and would claim it back.
+        var parsedNames = parsedRootNames?.Values.ToHashSet(StringComparer.Ordinal) ?? [];
+        string? Kept(string? rootName) => rootName is not null && parsedNames.Contains(rootName) ? null : rootName;
+
+        return
         [
             .. choices.Select(choice => new WorkspaceSource(
                 choice.Key,
                 choice.IsIncluded,
-                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Saved(saved, choice.Key)?.RootName
+                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName)
             )),
-            .. saved.Where(source =>
-                !choices.Any(choice => string.Equals(choice.Key, source.Path, StringComparison.OrdinalIgnoreCase))
-            ),
+            .. saved
+                .Where(source =>
+                    !choices.Any(choice => string.Equals(choice.Key, source.Path, StringComparison.OrdinalIgnoreCase))
+                )
+                .Select(source => source with { RootName = Kept(source.RootName) }),
         ];
+    }
 
     // What is saved about the source with the key, if anything.
     public static WorkspaceSource? Saved(IReadOnlyList<WorkspaceSource> saved, string key) =>

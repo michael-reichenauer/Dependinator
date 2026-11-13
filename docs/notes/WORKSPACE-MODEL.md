@@ -39,7 +39,7 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   (whenever there is a workspace folder, compared with `ModelListService.IsSamePath`, since a
   recent or cloud path can spell it another way). It is listed with two or more sources;
   listed or not it is a workspace path, and a local path (so it refreshes) while there is a
-  source.
+  source. With no source left it is a visit that shows what was saved.
 - **The choice** is saved with the model: `Model.WorkspaceSources` (`ModelDto.WorkspaceSources`,
   no format bump), one `WorkspaceSource` per source with its key (the path below the workspace
   folder with "/", so it holds wherever the folder is checked out), whether it is included, and
@@ -64,7 +64,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
     name is held for its source also while that fails or is left out of the model, so a name
     once given stays, and a source added later is the one that is renamed. Only a source whose
     root has another name now (a package was renamed) gives the old name up. Should two sources
-    have had one name (each parsed while the other was not found), one in this parse owns it;
+    have had one name (each parsed while the other was not found), one in this parse owns it,
+    and the other's saved name is forgotten (`SourceChoices.ToSaved`);
   - a node an earlier source already has is left to that source (a project shared by two
     solutions is shown once). Within one source every item is kept, as in its own model;
   - two C# projects that only share their name (two different `App.Core` in two solutions) are
@@ -100,5 +101,10 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   whole (not compile errors, which are problems of a parsed source), the project moves to the
   second until the first parses again: only root names are held for a failed source, not the
   names of its nodes.
+- Saved models go by the exact path, for every kind of model. Where the same path is spelled
+  two ways (on Windows a cloud copy has "/" where the workspace has "\", and a drive letter's
+  case can differ), the workspace model opened by the other spelling is a second saved copy,
+  and asks for its sources once more. One canonical path for every model that is opened would
+  settle it for all kinds.
 - Keeping two same-named C# projects of different solutions apart (the folder in the project's
   name, as for a root) needs the rename to be remembered per project, as it is per root.

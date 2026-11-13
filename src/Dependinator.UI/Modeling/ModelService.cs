@@ -166,7 +166,7 @@ class ModelService : IModelService, IDisposable
 
     // The sources chosen for a workspace model whose first parse has not succeeded yet. The
     // choice is saved with the model, which is there only once it is parsed: until then the
-    // next try starts from this (GetSourceChoices).
+    // next try starts from this (GetSourceChoices). Forgotten once a workspace model is open.
     IReadOnlyList<WorkspaceSource> unparsedSourceChoices = [];
 
     public async Task<Result<ModelInfo>> LoadAsync(
@@ -206,7 +206,7 @@ class ModelService : IModelService, IDisposable
             }
 
             var parsedModelInfo = await ParseNewModelAsync(path);
-            if (parsedModelInfo is ModelInfo)
+            if (parsedModelInfo is ModelInfo && ModelPaths.IsWorkspace(path))
                 unparsedSourceChoices = [];
             TriggerSave();
             applicationEvents.TriggerModelChanged();
@@ -214,6 +214,8 @@ class ModelService : IModelService, IDisposable
             return parsedModelInfo;
         }
 
+        if (ModelPaths.IsWorkspace(path))
+            unparsedSourceChoices = [];
         RefreshAsync().RunInBackground();
         return modelInfo;
     }
