@@ -10,7 +10,8 @@
 @implements IDisposable
 
 @* The models to switch between, as items of the app bar's Models menu. A host with a workspace
-   (VS Code, the dev host) lists only the workspace's solutions, Bicep files and script projects, each with its
+   (VS Code, the dev host) lists only the workspace's models: the model of the whole workspace first, then its
+   solutions, Bicep files and script projects, each with its
    folder when there are several; a cloud, design or demo model is opened from the Models dialog
    ("Other Models …") and, while it is open, named in a "Viewing" row of its own. The browser app
    has no workspace, so there every model is in one list. *@
@@ -37,7 +38,7 @@
     @foreach (WorkspaceModel model in workspaceModels)
     {
         bool isCurrent = visited is null && IsOpen(model.Item);
-        <MudMenuItem IconColor="@ItemIconColor(isCurrent)" Icon="@(isCurrent ? Icons.Material.Outlined.Check : Icons.Material.Outlined.Schema)"
+        <MudMenuItem IconColor="@ItemIconColor(isCurrent)" Icon="@(isCurrent ? Icons.Material.Outlined.Check : WorkspaceItemIcon(model.Item))"
                      Style="@CurrentItemStyle(isCurrent)" title="@model.Item.Path"
                      data-checked="@(isCurrent ? "true" : "false")"
                      OnClick="() => OpenAsync(model.Item)" data-testid="menu-model-item">
@@ -98,7 +99,9 @@ else
     {
         if (item.IsLocal)
         {
-            await canvasService.LoadAsync(item.Path);
+            // Not awaited: the menu closes when this returns, and a load can take long (a parse)
+            // or first ask what a workspace model is made of. Failures are reported by the load.
+            canvasService.LoadAsync(item.Path).RunInBackground();
             return;
         }
 
@@ -122,6 +125,9 @@ else
     static MudBlazor.Color ItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
 
     static string? CurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
+
+    static string WorkspaceItemIcon(ModelItem item) =>
+        ModelPaths.IsWorkspace(item.Path) ? Icons.Material.Outlined.Workspaces : Icons.Material.Outlined.Schema;
 
     static string VisitedIcon(ModelItem item) =>
         item.IsDemo ? Icons.Material.Outlined.Slideshow

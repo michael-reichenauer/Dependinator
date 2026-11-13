@@ -72,7 +72,9 @@
     get
     {
       var items = modelListService.GetModelItems();
-      var workspace = items.Where(i => modelListService.IsWorkspacePath(i.Path) && !ModelPaths.IsDesignModel(i.Path)).ToList();
+      // The model of the whole workspace first, as in the Models menu
+      var workspace = items.Where(i => modelListService.IsWorkspacePath(i.Path) && !ModelPaths.IsDesignModel(i.Path))
+          .OrderByDescending(i => ModelPaths.IsWorkspace(i.Path)).ToList();
       var demos = items.Except(workspace).Where(i => i.IsDemo).ToList();
       var design = items.Where(i => !i.IsDemo && ModelPaths.IsDesignModel(i.Path)).ToList();
       var cloudOnly = items.Where(i => !i.IsDemo && i.IsCloud && !i.IsLocal && !ModelPaths.IsDesignModel(i.Path)).ToList();
@@ -98,14 +100,19 @@
   static string ItemIcon(ModelItem item) =>
       ModelPaths.IsDesignModel(item.Path) ? MudBlazor.Icons.Material.Outlined.DesignServices
       : item.IsCloud && !item.IsLocal ? MudBlazor.Icons.Material.Outlined.CloudDownload
+      : ModelPaths.IsWorkspace(item.Path) ? MudBlazor.Icons.Material.Outlined.Workspaces
       : MudBlazor.Icons.Material.Outlined.Schema;
 
   static string Subtitle(ModelItem item)
   {
     var kind = ModelPaths.KindName(item.Path);
     var cloud = item.CloudModel is { } cm ? $", synced {cm.UpdatedUtc.ToLocalTime():g}" : "";
-    var where = item.IsDemo ? "built-in demo" : item.IsLocal ? item.Path : "cloud only";
-    return $"{kind}{cloud} · {where}";
+    // A workspace model has no file: it is the model of its folder
+    var where = item.IsDemo ? "built-in demo"
+        : !item.IsLocal ? "cloud only"
+        : ModelPaths.IsWorkspace(item.Path) ? ModelPaths.WorkspaceFolder(item.Path)
+        : item.Path;
+    return $"{(ModelPaths.IsWorkspace(item.Path) ? WorkspaceModels.WholeWorkspace : kind)}{cloud} · {where}";
   }
 
   // Only cached local copies that are not open can be removed here; the open model is deleted
