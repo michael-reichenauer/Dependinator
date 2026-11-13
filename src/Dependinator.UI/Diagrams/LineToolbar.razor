@@ -46,14 +46,19 @@
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Label" OnClick="EditLabel"
                                    data-testid="line-label" />
                 </MudTooltip>
-                <MudTooltip Text="Add line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
-                                   data-testid="line-add-point" />
-                </MudTooltip>
-                <MudTooltip Text="Remove line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
-                                   data-testid="line-remove-point" />
-                </MudTooltip>
+                @* They act at the spot where the line was clicked: a line selected without a click
+                   (a stub that Escape stepped back to) has none. *@
+                @if (selectionService.SelectedLineClickPosition != Shared.Types.Pos.None)
+                {
+                    <MudTooltip Text="Add line point">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
+                                       data-testid="line-add-point" />
+                    </MudTooltip>
+                    <MudTooltip Text="Remove line point">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
+                                       data-testid="line-remove-point" />
+                    </MudTooltip>
+                }
                 @if (IsSelectedLineManual)
                 {
                     <MudTooltip Text="Delete link (Del)">

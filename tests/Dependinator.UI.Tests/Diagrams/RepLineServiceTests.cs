@@ -796,6 +796,81 @@ public class RepLineServiceTests
     }
 
     [Fact]
+    public void Sync_ClickedLineOfAnExploredStub_ShouldKeepTheStubsOtherLines()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var other = AddNode(model, "Other", parentB);
+        AddLink(model, source, target);
+        AddLink(model, source, other);
+        var stub = GetLine(model, "Source", "ParentA");
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub));
+        var clicked = GetLine(model, "Source", "Target");
+        clicked.IsSelected = true;
+        stub.IsExplored = true;
+
+        // The selection asks for the clicked line and for the stub it belongs to.
+        var reveal = NodeTreeSvg.GetLineReveal(LineEmphasis.FindSelection(model), RowFilter.None, LineFilter.None);
+        Assert.Equal(clicked, reveal.KeptLine);
+        Assert.Equal(stub, reveal.Stub);
+        RepLineService.Sync(model, ContainerZoom, reveal);
+
+        // Both lines stay, lit beside the selected one, and the stub with them.
+        Assert.True(clicked.IsActiveRep);
+        var otherLine = GetLine(model, "Source", "Other");
+        Assert.True(otherLine.IsActiveRep);
+        Assert.True(otherLine.IsRevealed);
+        Assert.True(stub.IsActiveRep);
+        Assert.False(LineEmphasis.IsLineDimmed(otherLine, LineEmphasis.FindSelection(model)));
+        Assert.False(LineEmphasis.IsLineDimmed(stub, LineEmphasis.FindSelection(model)));
+    }
+
+    [Fact]
+    public void Sync_ClickedLineOfAnExploredStub_ShouldStayWhole_WhileTheOthersSplit()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var other = AddNode(model, "Other", parentB);
+        var middle = AddNode(model, "Middle", model.Root);
+        middle.Boundary = new Rect(1000, 500, 100, 100);
+        var third = AddNode(model, "Third", middle);
+        AddLink(model, source, target);
+        AddLink(model, source, other);
+        AddLink(model, source, third);
+        var stub = GetLine(model, "Source", "ParentA");
+        var farAway = new Rect(-50, -50, 300, 300);
+
+        // ParentB is out of the tile: one line to it, clicked.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = farAway });
+        var clicked = GetLine(model, "Source", "ParentB");
+        Assert.True(clicked.IsActiveRep);
+
+        // Panned to where both containers are: the clicked line keeps its two links, the stub's
+        // other far end splits.
+        var both = new Rect(-50, -50, 1200, 700);
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { KeptLine = clicked, Area = both });
+
+        Assert.True(clicked.IsActiveRep);
+        Assert.Equal(2, clicked.Links.Count);
+        Assert.True(GetLine(model, "Source", "Third").IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+
+        // The memo walks the stub's far ends again on the next tile, leaving the kept links out.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { KeptLine = clicked, Area = farAway });
+        Assert.True(clicked.IsActiveRep);
+        Assert.False(GetLine(model, "Source", "Third").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Middle").IsActiveRep);
+    }
+
+    [Fact]
     public void Sync_ClickedLineOfAStub_ShouldNotKeepItsInheritanceTwin()
     {
         using var model = NewModel();
@@ -1033,7 +1108,7 @@ public class RepLineServiceTests
         Assert.True(line.IsActiveRep);
         Assert.True(line.IsRevealed);
         Assert.True(stub.IsActiveRep);
-        Assert.False(stub.IsRevealed);
+        Assert.True(stub.IsRevealed); // Lit with its lines, also while one of them is selected
 
         // What the node uses stays in the funnel: its other stub and the line between the containers.
         Assert.False(model.Lines.ContainsKey(LineId.From("Node", "Used")));

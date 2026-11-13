@@ -8,7 +8,7 @@ namespace Dependinator.E2E.Tests.Ui;
 // Exercises the stubs (LineStub, LineSvg) and a selected stub's lines (RepLineService's
 // LineReveal): the lines between a container's edge and its children are short arrows with a
 // ring at the child, and selecting a stub draws its lines end to end across the containers.
-// Selecting the node does not.
+// Selecting the node does not. Clicking one of the stub's lines keeps the others.
 public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     const string Parsing = "Demo.Core.Parsing";
@@ -48,12 +48,30 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.SelectLineAsync(incoming);
         await Expect(App.CousinLines).Not.ToHaveCountAsync(0);
 
-        // Clicking one of them selects it: that line stays (the others belonged to the stub's
-        // selection and are gone again).
-        await App.SelectLineAsync(
-            Page.Locator("#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']) g.hoverable").First
+        int stubLines = await App.CousinLines.CountAsync();
+
+        // Clicking one of them selects it, and the stub's other lines stay, to go from line to
+        // line: the same lines, the clicked one selected.
+        ILocator shownLines = Page.Locator(
+            "#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']) g.hoverable"
         );
-        await Expect(App.CousinLines).ToHaveCountAsync(1);
+        // The toolbar is up already (the stub's), so wait for the clicked line's selection mark:
+        // an Escape sent while the click is still being handled steps back first, and then the
+        // click selects the line again.
+        await SelectShownLineAsync(shownLines.First);
+        await Expect(App.CousinLines).ToHaveCountAsync(stubLines);
+        if (stubLines > 1)
+        {
+            await SelectShownLineAsync(shownLines.Last);
+            await Expect(App.CousinLines).ToHaveCountAsync(stubLines);
+        }
+
+        // Escape steps back to the stub, its lines still drawn, and then clears the selection.
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(App.CousinLines).ToHaveCountAsync(stubLines);
+        await Expect(litIncoming).ToHaveCountAsync(1);
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(App.CousinLines).ToHaveCountAsync(0);
     }
 
     [E2EFact]
@@ -110,4 +128,16 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
 
     // The ring of the stub that the line (its hover group) is drawn as.
     static ILocator StubRing(ILocator line) => line.Locator("xpath=..").Locator("circle.line-stub-ring");
+
+    // Clicks the line and waits for the dashed overlay LineSvg draws over a selected line, found by
+    // the line's name, since a positional locator can point at another line after the re-render.
+    async Task SelectShownLineAsync(ILocator line)
+    {
+        string name = await line.GetAttributeAsync("data-name") ?? "";
+        await App.SelectLineAsync(line);
+        await Expect(SelectedMark(Page.Locator($"#svgcanvas g.hoverable[data-name='{name}']"))).ToHaveCountAsync(1);
+    }
+
+    static ILocator SelectedMark(ILocator line) =>
+        line.Locator("xpath=..").Locator("polyline[stroke-dasharray='3,50']");
 }

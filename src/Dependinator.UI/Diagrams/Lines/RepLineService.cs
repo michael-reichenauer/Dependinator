@@ -17,7 +17,10 @@ namespace Dependinator.UI.Diagrams.Lines;
 // one line per container. Panning the container into view, or zooming in, splits its line.
 //
 // Clicking one of these lines moves the selection from the stub to the line. KeptLine is that
-// line: its links stay between its two ends, or the line would vanish under the click.
+// line: its links stay between its two ends, or the line would vanish under the click. The stub
+// is still being explored then (Line.IsExplored, set by SelectionService), so Stub stays set
+// too and its other lines stay drawn: the user goes from line to line until something else is
+// selected. The kept line's links go first.
 //
 // A selected node asks for nothing (Michael, Nov 13 2026): nodes are selected all the time, by
 // a search or a go to, and its lines across the diagram came unasked. Its stubs are there to
@@ -133,7 +136,6 @@ static class RepLineService
             state is not null
             && state.StructureVersion == model.StructureVersion
             && state.StubFarEnds is { } lastFarEnds
-            && reveal.KeptLine is null
             && state.Reveal.IsSameButArea(reveal)
             && AllExpansionStatesUnchanged(state.ExpansionStates, zoom)
             && IsEveryStubFarEndUnchanged(model, zoom, reveal, lastFarEnds)
@@ -183,7 +185,10 @@ static class RepLineService
         // without a link to be drawn for: it stays as the selected line those lines belong to.
         // Not when its links left it for another reason (the explorer's focus lines).
         if (reveal.Stub is { } selectedStub && groups.Values.Any(group => group.IsRevealed))
+        {
             selectedStub.IsActiveRep = true;
+            selectedStub.IsRevealed = true; // Lit with its lines while one of them is selected
+        }
 
         lastSync.AddOrUpdate(
             model,
@@ -273,13 +278,7 @@ static class RepLineService
             var isSourceRevealed = false;
             var isTargetRevealed = false;
             var isRevealedLink = false;
-            if (
-                !isFocusLink
-                && reveal.KeptLine is { } kept
-                && IndexOf(sourcePath, kept.Source) != int.MaxValue
-                && IndexOf(targetPath, kept.Target) != int.MaxValue
-                && IsInheritanceBetween(link, kept.Source, kept.Target) == kept.IsInheritance
-            )
+            if (!isFocusLink && reveal.KeptLine is { } kept && IsKeptLink(link, kept, sourcePath, targetPath))
             {
                 // The selected line of an earlier selection: its links stay between its ends.
                 // Not the links of its twin (usage and inheritance between the same two nodes
@@ -399,6 +398,8 @@ static class RepLineService
             FillAncestorsAndSelf(link.Target, targetPath);
             if (focus is not null && IsFocusLink(focus, link, sourcePath, targetPath))
                 continue; // Drawn for the explorer, not for the stub
+            if (reveal.KeptLine is { } kept && IsKeptLink(link, kept, sourcePath, targetPath))
+                continue; // Stays on the clicked line
 
             int common = CountCommonAncestors(sourcePath, targetPath);
             var farPath = isIncoming ? sourcePath : targetPath;
@@ -411,6 +412,13 @@ static class RepLineService
         }
         return count == farEnds.Count;
     }
+
+    // A link the kept line holds: its ends lie at or below the line's two ends, and it is of the
+    // line's kind (usage and inheritance between the same nodes are two lines).
+    static bool IsKeptLink(Link link, Line kept, List<Node> sourcePath, List<Node> targetPath) =>
+        IndexOf(sourcePath, kept.Source) != int.MaxValue
+        && IndexOf(targetPath, kept.Target) != int.MaxValue
+        && IsInheritanceBetween(link, kept.Source, kept.Target) == kept.IsInheritance;
 
     // Same rule as LineService.AddDirectLine: inheritance styling only where the line touches the
     // real inheritance endpoints.

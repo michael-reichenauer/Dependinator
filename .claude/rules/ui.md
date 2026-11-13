@@ -63,7 +63,7 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   node still lights its own lines and its stubs (`LineEmphasis.IsNodeLine`). Don't re-propose
   the node's lines, or lines on hover (dropped by him the same day: selecting is enough).
 - Traps the reviews of the stub lines found:
-  - Clicking one of a stub's lines moves the selection to that line, which ends the stub's
+  - Clicking one of a stub's lines moves the selection to that line, which would end the stub's
     reveal: `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes
     under the click.
   - The click must also survive the repaint: `SelectionService` measures a clicked line
@@ -83,14 +83,24 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     `LineService.AddDirectLine`), so a node can have two stubs on one side, and a clicked line
     can have a twin. Picking links by direction or by the ends alone drew both: go by the
     stub's own links, and by `IsInheritanceBetween` for the kept line.
-  - Beside a selected line only its own lines may be `IsRevealed` (that is what keeps the dim
-    rule to one test): a reveal that flags more lights them.
+  - Beside a selected line only its own lines and its explored stub's may be `IsRevealed` (that
+    is what keeps the dim rule to one test): a reveal that flags more lights them.
   - Stubs are drawn after a container's other lines (`NodeLinesSvg.DrawnNodeLines` yields them
     last): a line back to a node on the left starts at its node's right side and runs level
     under the node and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils
     in the demo). Known and left: a stub therefore also lies over the handles of a selected
     hand-routed line whose point is right at it, and a selected stub's own lines end at its
     anchor and lie over it (a second click on the selected stub can select one of its lines).
+- **Exploring a stub's lines (Nov 13, Michael).** Clicking one of a selected stub's lines keeps
+  the stub's other lines, so the user goes from line to line and pans and zooms around:
+  `SelectionService` marks the stub `Line.IsExplored` when the clicked line is one of its lines
+  (a cousin line with only the stub's links; not `IsRevealed`, which holds only the newest
+  tile's lines) and keeps it while the next clicked line is one of its lines too;
+  `LineEmphasis.FindSelection` hands it on as `RenderSelection.ExploredStub`, and
+  `GetLineReveal` asks for `KeptLine` and `Stub` together (the kept line's links go first, so a
+  clicked line to a whole container stays whole while the others split). The stub is
+  `IsRevealed` too, lit with its lines. Escape first selects the stub again
+  (`TrySelectExploredStub`), then clears; any other selection ends the exploring.
 - **One line per far container (Nov 13, Michael).** A selected stub's far side opens no container
   that lies outside the tile (`LineReveal.Area`, the tile's canvas area with its margin, set in
   `SvgService.CreateModelTile`) or whose default-size child would be below

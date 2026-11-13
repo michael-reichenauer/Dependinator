@@ -187,10 +187,10 @@ class SvgService : ISvgService
                 selection,
                 viewOptions.RowFilter,
                 viewOptions.LineFilter,
-                // Only a selected edge line asks, and that line exists before the Sync.
-                selection.Line
-                    is { } selectedLine
-                && LineStub.IsEdgeLine(selectedLine)
+                // Only a selected or explored edge line asks, and it exists before the Sync.
+                selection.ExploredStub
+                    is not null
+                || selection.Line is { } selectedLine && LineStub.IsEdgeLine(selectedLine)
                     ? pathFinderService.GetPathLineIds()
                     : null
             );
