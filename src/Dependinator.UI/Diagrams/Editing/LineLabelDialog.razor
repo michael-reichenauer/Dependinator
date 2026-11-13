@@ -68,6 +68,12 @@
       <MudButton Color="Color.Error" StartIcon="@MudBlazor.Icons.Material.Outlined.LabelOff" OnClick="Clear"
                  data-testid="line-label-clear">Remove</MudButton>
     }
+    @if (IsMoved && !isPositionReset)
+    {
+      @* A label dragged along its line goes back to the line's middle (with Save, one undo step each). *@
+      <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.VerticalAlignCenter" OnClick="ResetPosition"
+                 title="Put the label back at the middle of the line" data-testid="line-label-reset-position">To the middle</MudButton>
+    }
     <MudSpacer />
     <MudButton OnClick="Cancel" data-testid="line-label-cancel">Cancel</MudButton>
     <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Save" data-testid="line-label-save">Save</MudButton>
@@ -80,6 +86,11 @@
   [Parameter] public string Label { get; set; } = "";
   [Parameter] public string Description { get; set; } = "";
   [Parameter] public bool HasLabel { get; set; }
+
+  // The label was dragged away from the line's middle (Line.LabelPosition).
+  [Parameter] public bool IsMoved { get; set; }
+
+  bool isPositionReset;
 
   // The prompt that asks any AI for the label, to copy or show; null hides the AI section.
   [Parameter] public Func<Task<string>>? GetPrompt { get; set; }
@@ -122,7 +133,10 @@
 
   // Empty texts save as "no label".
   void Save() =>
-      MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), (Description ?? "").Trim(), false)));
+      MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult((Label ?? "").Trim(), (Description ?? "").Trim(), false, isPositionReset)));
+
+  // Takes effect with Save, like the texts.
+  void ResetPosition() => isPositionReset = true;
 
   void Clear() => MudDialog.Close(DialogResult.Ok(new LineLabelDialogResult("", "", true)));
 

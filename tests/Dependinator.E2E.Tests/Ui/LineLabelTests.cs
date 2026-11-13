@@ -83,6 +83,67 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(LineLabel("test label")).ToBeVisibleAsync();
     }
 
+    [E2EFact]
+    public async Task LineLabel_ShouldSlideAlongItsLine_WhenDragged_AndGoBackWithTheDialog()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.EnableEditModeAsync();
+
+        ILocator line = App.Line("Demo.sln", "Externals");
+        ILocator field = Page.GetByTestId("line-label-text");
+        await App.DoubleClickLineAsync(line, field);
+        await SaveLabelAsync("uses");
+        ILocator label = LineLabel("uses");
+        await Expect(label).ToBeVisibleAsync();
+        float middleX = await LabelCenterXAsync(label);
+
+        // The label takes the press (not the line under it) and follows the pointer along the line.
+        LocatorBoundingBoxResult box = (await label.BoundingBoxAsync())!;
+        float x = box.X + box.Width / 2;
+        float y = box.Y + box.Height / 2;
+        await Page.Mouse.MoveAsync(x, y);
+        await Page.Mouse.DownAsync();
+        for (int step = 1; step <= 10; step++)
+            await Page.Mouse.MoveAsync(x + step * 4, y + 15, new() { Steps = 2 });
+        await Page.Mouse.UpAsync();
+        await WaitUntilAsync(async () => await LabelCenterXAsync(label) > middleX + 20, "the label moved right");
+
+        // Double-clicking the label edits it, and "To the middle" puts it back.
+        await App.RepeatUntilVisibleAsync(
+            async () =>
+            {
+                LocatorBoundingBoxResult moved = (await label.BoundingBoxAsync())!;
+                await Page.Mouse.DblClickAsync(moved.X + moved.Width / 2, moved.Y + moved.Height / 2);
+            },
+            field
+        );
+        await Page.GetByTestId("line-label-reset-position").ClickAsync();
+        await Page.GetByTestId("line-label-save").ClickAsync();
+        await WaitUntilAsync(
+            async () => Math.Abs(await LabelCenterXAsync(label) - middleX) < 2,
+            "the label is back in the middle"
+        );
+    }
+
+    // The canvas repaints after the edit, so the label's place is read until it holds.
+    static async Task WaitUntilAsync(Func<Task<bool>> condition, string what)
+    {
+        for (int i = 0; i < 50; i++)
+        {
+            if (await condition())
+                return;
+            await Task.Delay(200);
+        }
+        throw new TimeoutException($"Timed out waiting until {what}.");
+    }
+
+    static async Task<float> LabelCenterXAsync(ILocator label)
+    {
+        LocatorBoundingBoxResult? box = await label.BoundingBoxAsync();
+        return box is null ? float.NaN : box.X + box.Width / 2;
+    }
+
     ILocator LineLabel(string text) => Page.Locator("#svgcanvas text.lineLabel", new() { HasText = text });
 
     ILocator LineDescription(string text) => Page.Locator("#svgcanvas text.lineDescription", new() { HasText = text });

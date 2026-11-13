@@ -130,4 +130,79 @@ public class LineLabelCommandTests
         new LineLabelCommand(line.Id) { Label = "", Description = "" }.Execute(model);
         Assert.False(line.HasLabel);
     }
+
+    [Fact]
+    public void LineLabelPositionCommand_ShouldMoveTheLabel_AndRevertRestoreThePreviousPlace()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+
+        var command = new LineLabelPositionCommand(line.Id) { Position = 0.2 };
+        command.Execute(model);
+        Assert.Equal(0.2, line.LabelPosition);
+        Assert.True(line.IsLabelMoved);
+
+        command.Revert(model);
+        Assert.Equal(Line.DefaultLabelPosition, line.LabelPosition);
+        Assert.False(line.IsLabelMoved);
+
+        command.Execute(model);
+        Assert.Equal(0.2, line.LabelPosition);
+    }
+
+    [Fact]
+    public void Execute_ShouldPutTheLabelBackInTheMiddle_WhenCleared_AndRevertRestoreItsPlace()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+        line.SetLabelPosition(0.2);
+
+        var clear = new LineLabelCommand(line.Id) { Label = "", Description = "" };
+        clear.Execute(model);
+        Assert.False(line.HasLabel);
+        Assert.False(line.IsLabelMoved);
+
+        clear.Revert(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal(0.2, line.LabelPosition);
+    }
+
+    [Fact]
+    public void Revert_ShouldLeaveTheLabelsPlace_WhenOnlyTheTextChanged()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+
+        var edit = new LineLabelCommand(line.Id) { Label = "orders, payments" };
+        edit.Execute(model);
+        line.SetLabelPosition(0.3); // as by a drag, which has its own command
+
+        edit.Revert(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal(0.3, line.LabelPosition);
+    }
+
+    [Fact]
+    public void ToLabelPosition_ShouldRoundAsStored()
+    {
+        Assert.Equal(0.123, Line.ToLabelPosition(0.12345));
+        Assert.Equal(0.05, Line.ToLabelPosition(-1));
+    }
+
+    [Fact]
+    public void SetLabelPosition_ShouldKeepTheLabelOffTheLineEnds()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+
+        line.SetLabelPosition(0);
+        Assert.Equal(0.05, line.LabelPosition);
+        line.SetLabelPosition(2);
+        Assert.Equal(0.95, line.LabelPosition);
+        line.SetLabelPosition(double.NaN);
+        Assert.Equal(Line.DefaultLabelPosition, line.LabelPosition);
+    }
 }

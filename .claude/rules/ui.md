@@ -234,6 +234,22 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   - `LineDto` carries the Source and Target names with a label, because line ids are hashes.
   - Labels render in their own layer after the child nodes.
   - `StructureService.RenameNode` re-parks labels under the new line ids.
+  - Drawn smaller than node texts (`LineSvg.LabelFontSize`, `LabelMaxTextZoom`), the label cut
+    to one row and the description wrapped to three (`SvgText.GetUserTextLines` keeps the user's
+    line breaks); the hover card shows them in full (Michael, Nov 13).
+  - `Line.LabelPosition` is a fraction of the line's length (not a point), so the label stays
+    on its line when nodes move or the line is rerouted; saved only when moved
+    (`LineDto.LabelPosition`, also in `PendingLineLabel`). The label's transparent hit rect
+    (`LineSvg.LabelHitSvg`) has the element id `PointerId.LineLabelElementId`, which `Parse`
+    reads back as the line with `IsLineLabel` (equal to the line's id, so selecting, menus
+    and hover cards treat it as the line); only the edit-mode drag (`InteractionService`,
+    `LineEditService.MoveLabel`, `LineLabelPositionCommand`) looks at `IsLineLabel`. Its group
+    carries the line's element id (for the hover card) but no `data-name`, so the e2e
+    `App.Line` locator still matches one element. Labels lie above the nodes, a selected line's
+    bend-point handles with the line below them: a handle under a label gets a transparent copy
+    of its hit circle above the rect (`LineSvg.LabelHandleClass`, same id). Letting presses
+    through the whole rect instead broke the double-click on a bent line's label: the first
+    click selects the line, so the second missed it (seen only in the published Wasm app).
 - Alias edits bump `StructureVersion`, because panels cache their rows by it. Tooltips stay
   `"{LongName} ({Alias})"`, because `App.Node(label)` in the e2e tests matches the long-name prefix.
 - `HideNodesCommand` needs its own `MergeKey`: same-type commands within 500 ms merge, which turned

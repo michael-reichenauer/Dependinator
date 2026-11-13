@@ -194,7 +194,7 @@ class StructureService(ILineService linesService) : IStructureService
                 line.IsDirect ? LineId.FromDirect(source, target)
                 : line.IsInheritance ? LineId.FromInheritance(source, target)
                 : LineId.From(source, target);
-            model.SetPendingLineLabel(lineId, new PendingLineLabel(line.Label, line.LabelDescription, source, target));
+            model.SetPendingLineLabel(lineId, PendingLineLabel.From(line, source, target));
         }
 
         foreach (var (newName, newParentName, dto) in plan)
@@ -313,7 +313,8 @@ class StructureService(ILineService linesService) : IStructureService
                         lineLayoutDto.Label,
                         lineLayoutDto.LabelDescription,
                         lineLayoutDto.Source,
-                        lineLayoutDto.Target
+                        lineLayoutDto.Target,
+                        lineLayoutDto.LabelPosition
                     )
                 );
             return;
@@ -324,7 +325,10 @@ class StructureService(ILineService linesService) : IStructureService
         if (lineLayoutDto.Description is not null)
             line.SetDescription(lineLayoutDto.Description, model.UpdateStamp);
         if (lineLayoutDto.Label is not null || lineLayoutDto.LabelDescription is not null)
+        {
             line.SetLabel(lineLayoutDto.Label, lineLayoutDto.LabelDescription);
+            line.SetLabelPosition(lineLayoutDto.LabelPosition ?? Line.DefaultLabelPosition);
+        }
     }
 
     public void ClearNotUpdated(IModel model)
