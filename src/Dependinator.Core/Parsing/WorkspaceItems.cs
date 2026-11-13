@@ -5,7 +5,8 @@ namespace Dependinator.Core.Parsing;
 // Makes one model of the items of a workspace model's sources, each parsed by its own parser.
 // The root node of every source ends up side by side under the model's root, with the names its
 // own model has, so what is true of a node there (its source file, a rule, a search) is true here.
-//   - A source that failed is a problem item, and the others still make the model. Every
+//   - A source that failed is a problem item, and the others still make the model: only when
+//     there are no others, in this parse or in the model, is the parse a failure. Every
 //     problem item names the source it is of.
 //   - A source whose root is named like a node before it (two "main.bicep", two project folders
 //     named "app") gets its folder in the name of its root, and so in the names of all its nodes.
@@ -22,7 +23,8 @@ static class WorkspaceItems
     public static Result<IReadOnlyList<Item>> Combine(
         string workspacePath,
         IReadOnlyList<(string Path, Result<IReadOnlyList<Item>> Result)> sources,
-        IReadOnlyList<ParsedSource>? knownSources = null
+        IReadOnlyList<ParsedSource>? knownSources = null,
+        bool hasOtherSources = false
     )
     {
         if (sources.Count == 0)
@@ -139,7 +141,8 @@ static class WorkspaceItems
                 combined.Add(new Item(null, null, Source: new ParsedSource(path, rootName)));
         }
 
-        if (errors.Count == sources.Count)
+        // (hasOtherSources: the model is made of more sources than these, which it keeps.)
+        if (errors.Count == sources.Count && !hasOtherSources)
         {
             return sources.Count == 1
                 ? errors[0]

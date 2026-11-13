@@ -75,6 +75,23 @@ public class WorkspaceItemsTests
         Assert.Equal("'App.sln' contains only test projects.", e.Message);
     }
 
+    // A refresh of only the script projects of a model that has a solution too: the model is
+    // not gone when they all fail.
+    [Fact]
+    public void Combine_ShouldReportTheFailedSourcesAsProblems_WhenTheModelHasOtherSources()
+    {
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [("/repo/web/tsconfig.json", new Error("Node.js was not found."))],
+                hasOtherSources: true
+            )
+        );
+
+        var problem = Assert.Single(items).Problem;
+        Assert.Equal("web could not be parsed. Node.js was not found.", problem?.Message);
+    }
+
     [Fact]
     public void Combine_ShouldReturnError_WithoutSources()
     {

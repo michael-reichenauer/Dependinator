@@ -86,11 +86,15 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   shown in goes by their order in one parse. A kind is also parsed when the model gets a source
   of it that it has nothing of, or loses one (Choose Sources, a source added or deleted). A
   source that is only taken out is removed without a parse, and a change that leaves the model
-  as it is does nothing at all. Parsed in full: the Parse button, opening the model, Retry, and
-  once when the saved model has a problem that names no source (saved before phase 2).
-- **A new source is noticed.** The extension adds "sources" to the kinds when a solution or a
-  script project's defining file is added or removed, or a Bicep file changes (the deployments
-  are the Bicep files no other one uses). `VsCodeReceiveService` then lists the sources again
+  as it is does nothing at all. When every source of such a parse fails, that is a problem of
+  each (`SolutionParseOptions.HasOtherSources`), not a failed refresh. Parsed in full: the
+  Parse button, opening the model, Retry, once when the saved model has a problem that names
+  no source (saved before phase 2), and the refresh after one that failed as a whole (the
+  kinds of a failed partial refresh are parsed with the next one).
+- **A new source is noticed.** The extension adds "sources" to the kinds when any watched file
+  is added or removed, or when a file that says which files are sources changes: a Bicep file
+  (the deployments are the Bicep files no other one uses) or a script project's config (its
+  "references"). `VsCodeReceiveService` then lists the sources again
   (`RefreshWorkspaceSourcesAsync`), so the Models menu shows the new model, and a workspace
   model takes a new source in by the proposal rule. The dev host has no file watcher: there
   the Parse button lists the sources again (`CanvasService.RefreshAsync`).
@@ -111,6 +115,10 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   the changes that were only marked are not kept in the UI.
 - A source whose parse gives nothing (no root node and no problem) counts as new at every
   refresh, so its kind is parsed each time.
+- A source whose first parse failed has only its problem in the model. It is parsed again when
+  files of its kind change or with the Parse button, not at every refresh (that would parse
+  its whole kind, a second solution too, at every change of any file). When the cause is
+  outside the watched files (`npm install`, a restore), press Parse.
 - **Phase 3 (optional):** bring the layout along from a source's own model when it is added.
 - **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
   been lived with.

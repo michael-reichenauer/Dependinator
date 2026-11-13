@@ -26,6 +26,7 @@ public class ModelServiceWorkspaceModelTests
     readonly Mock<IPersistenceService> persistenceService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
     readonly List<SolutionParseOptions> parsedOptions = [];
+    bool isParserReached = true;
 
     // What the parser answers for each source that is asked for: its items, or null when it fails
     readonly Dictionary<string, IReadOnlyList<Item>?> sourceItems = new()
@@ -49,6 +50,8 @@ public class ModelServiceWorkspaceModelTests
                 (string _, SolutionParseOptions options) =>
                 {
                     parsedOptions.Add(options);
+                    if (!isParserReached)
+                        return new Error("The parser did not answer.");
                     return WorkspaceItems.Combine(
                         ModelPath,
                         [
@@ -61,7 +64,8 @@ public class ModelServiceWorkspaceModelTests
                                 )
                             ),
                         ],
-                        options.KnownSources
+                        options.KnownSources,
+                        options.HasOtherSources
                     );
                 }
             );
@@ -363,6 +367,87 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(2, parsedOptions.Count);
         Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
         Assert.Equal(["App*sln", "Core", "Core.Type"], ParsedNodeNames());
+    }
+
+    // The only source of the changed kind fails: the model has other sources, so that is a
+    // problem of the source, which keeps its nodes, and not a failed refresh.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldReportAProblem_WhenEverySourceItParsesFails()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        sourceItems[Web] = null;
+
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+
+        Assert.Equal([Web], parsedOptions[^1].Sources);
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.main*ts"], ParsedNodeNames());
+        var problem = Assert.Single(modelMgr.WithModel(m => m.ParseProblems));
+        Assert.Equal("web could not be parsed. It failed.", problem.Message);
+    }
+
+    // A refresh that fails as a whole (the parser is not reached) leaves its kinds of sources
+    // as they were: the next refresh, of whatever kind, parses them too.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldParseTheKindsOfAFailedRefreshAgain()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        isParserReached = false;
+        AssertError(await modelService.RefreshChangedAsync(["code"]));
+        isParserReached = true;
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+        Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
+
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+        Assert.Equal([Web], parsedOptions[^1].Sources);
+
+        // And after a failed refresh of everything, everything
+        isParserReached = false;
+        AssertError(await modelService.RefreshAsync());
+        isParserReached = true;
+        AssertOk(await modelService.RefreshChangedAsync(["bicep"]));
+        Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
+    }
+
+    // A note or a zone the user put in a source keeps the source's root in the diagram when
+    // the source is taken out. That root is not a source to remove at every refresh.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldDoNothing_ForTheRootThatStaysOfASourceTakenOut()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        modelMgr.WithModel(m =>
+        {
+            var root = m.Nodes[NodeId.FromName("web")];
+            var note = new Dependinator.UI.Modeling.Models.Node("web.note", root) { IsManual = true };
+            m.TryAddNode(note);
+            root.AddChild(note);
+        });
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, false)));
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.note"], ParsedNodeNames());
+
+        Assert.False(modelService.IsParsedFrom("script,sources"));
+        Assert.True(modelService.IsParsedFrom("code"));
+    }
+
+    // With automatic refresh off, VS Code only marks that source files changed. Taking a
+    // source out parses nothing, so the mark stays until the changed files are parsed.
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldLeaveTheSourceChangesMarked()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        modelService.MarkSourceChanged();
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, true)));
+        Assert.Equal([Sample], parsedOptions[^1].Sources);
+        Assert.True(modelService.HasSourceChanges);
+
+        AssertOk(await modelService.RefreshChangedAsync(["code"]));
+        Assert.False(modelService.HasSourceChanges);
     }
 
     // Nothing in the model is parsed from Bicep files.

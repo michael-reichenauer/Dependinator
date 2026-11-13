@@ -26,6 +26,11 @@ record SolutionParseOptions
     // the ones that have been parsed before (also ones not among Sources now): a source keeps
     // that name, whichever of the others are parsed this time.
     public IReadOnlyList<ParsedSource> KnownSources { get; init; } = [];
+
+    // The model has more sources than the ones in Sources (a refresh of only the kinds of
+    // sources whose files changed): when every source in this parse fails, that is a problem
+    // of each like any other, not a failed parse of the model.
+    public bool HasOtherSources { get; init; }
 }
 
 record Link(string Source, string Target, LinkProperties Properties);
