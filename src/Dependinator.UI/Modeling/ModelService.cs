@@ -169,6 +169,10 @@ class ModelService : IModelService, IDisposable
         IReadOnlyList<SourceChoice>? sourceChoices = null
     )
     {
+        // The workspace's own spelling of its model's path: the saved model and the refresh go
+        // by the exact path.
+        path = ModelListService.WorkspaceSpelling(path, modelListService.WorkspaceModelPath);
+
         Clear();
         if (includeTestProjects is { } include)
             modelMgr.WithModel(m => m.IncludeTestProjects = include);
@@ -404,12 +408,13 @@ class ModelService : IModelService, IDisposable
 
         var parseOptions = modelMgr.WithModel(m =>
         {
-            var sources = isWorkspace ? SourceChoicesOf(m).Where(c => c.IsIncluded).ToList() : [];
+            var sources = isWorkspace ? SourceChoicesOf(m) : [];
             return new Parsing.SolutionParseOptions
             {
                 IncludeTestProjects = m.IncludeTestProjects,
-                Sources = [.. sources.Select(c => c.Path)],
-                // The root names of the last parse, which the sources keep (WorkspaceItems)
+                Sources = [.. sources.Where(c => c.IsIncluded).Select(c => c.Path)],
+                // The root names the sources had when last parsed, which they keep, also the
+                // ones that are left out now (WorkspaceItems)
                 KnownSources =
                 [
                     .. sources

@@ -38,10 +38,10 @@ interface IModelListService
     bool IsWorkspacePath(string path);
     IReadOnlyList<WorkspaceModel> GetWorkspaceModels();
 
-    // The model of the whole workspace: the sources found in the workspace folder that the user
-    // chose, in one diagram. Null without a workspace, and with fewer than two sources, where it
-    // would be the same as the one source's own model; a model that has been used here stays
-    // when the workspace is down to one source.
+    // The path of the model of the whole workspace: the sources found in the workspace folder
+    // that the user chose, in one diagram. Null without a workspace folder. It is listed among
+    // the workspace's models (and is a local path) with two or more sources; with one it would
+    // be the same as that source's own model, so then only while it is in use.
     string? WorkspaceModelPath { get; }
 
     // The sources found in the workspace (solutions, Bicep deployments, script projects), which
@@ -113,16 +113,19 @@ class ModelListService(
     public bool IsWorkspacePath(string path) =>
         !string.IsNullOrWhiteSpace(path) && workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path));
 
-    public string? WorkspaceModelPath
+    public string? WorkspaceModelPath =>
+        HasWorkspace && workspaceFolder != "" ? ModelPaths.WorkspacePath(workspaceFolder) : null;
+
+    // The workspace model when it is one of the models to switch between: with two or more
+    // sources, and with one while it is in use (opened in this window, or among the recent
+    // models), so that a model in use still refreshes after a source was removed.
+    string? ListedWorkspaceModelPath
     {
         get
         {
-            if (!HasWorkspace || workspaceFolder == "")
+            if (WorkspaceModelPath is not { } path || workspaceSourcePaths.Count == 0)
                 return null;
 
-            // A workspace model in use is not taken away when a source is removed: it would no
-            // longer refresh, and its sources could not be chosen.
-            var path = ModelPaths.WorkspacePath(workspaceFolder);
             var isInUse = IsSamePath(lastWorkspacePath, path) || recentPaths.Any(recent => IsSamePath(recent, path));
             return workspaceSourcePaths.Count >= 2 || isInUse ? path : null;
         }
@@ -151,7 +154,7 @@ class ModelListService(
         // The model of the whole workspace comes first, before the models of its single sources.
         return
         [
-            .. WorkspaceModelPath is { } workspaceModelPath
+            .. ListedWorkspaceModelPath is { } workspaceModelPath
                 ? new[] { ToModel(workspaceModelPath, WorkspaceModels.WholeWorkspace) }
                 : [],
             .. workspacePaths.Select((path, index) => ToModel(path, folders[index])),
@@ -181,6 +184,11 @@ class ModelListService(
             global::Shared.CloudModelPath.Normalize(path2),
             StringComparison.OrdinalIgnoreCase
         );
+
+    // The workspace's own spelling of its model's path, for a path that names that model in
+    // another spelling (a recent path with another case of the drive letter).
+    public static string WorkspaceSpelling(string path, string? workspaceModelPath) =>
+        workspaceModelPath is not null && IsSamePath(path, workspaceModelPath) ? workspaceModelPath : path;
 
     static ModelItem ToLocalItem(string path) =>
         new(
@@ -261,6 +269,13 @@ class ModelListService(
             ? (await workspaceFileService.GetWorkspaceFoldersAsync())?.FirstOrDefault() ?? ""
             : "";
 
+        UpdateLists();
+    }
+
+    // The lists of models as made of the workspace's sources: again when the models in use
+    // change, which the listing of the workspace model depends on.
+    void UpdateLists()
+    {
         // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
         // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
         IReadOnlyList<string> sourceModelPaths =
@@ -271,7 +286,7 @@ class ModelListService(
 
         // The workspace model is a local model too (it is parsed here), but it comes last: the
         // first local path is the model a new workspace starts on, which stays a single source.
-        localPaths = WorkspaceModelPath is { } workspaceModelPath
+        localPaths = ListedWorkspaceModelPath is { } workspaceModelPath
             ? [.. sourceModelPaths, workspaceModelPath]
             : sourceModelPaths;
 
@@ -282,26 +297,31 @@ class ModelListService(
             : Build.IsTestMode ? [DemoModel.Path, .. sourceModelPaths]
             : sourceModelPaths;
         workspaceKeys = workspacePaths
-            .Concat(WorkspaceModelPath is { } path ? [path] : [])
+            .Concat(ListedWorkspaceModelPath is { } path ? [path] : [])
             .Select(global::Shared.CloudModelPath.Normalize)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task AddModelAsync(string path)
     {
-        if (IsWorkspacePath(path))
+        if (IsWorkspacePath(path) || IsSamePath(path, WorkspaceModelPath))
             lastWorkspacePath = path;
 
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Prepend(path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
+        UpdateLists();
     }
 
     public async Task RemoveModelAsync(string path)
     {
+        if (IsSamePath(lastWorkspacePath, path))
+            lastWorkspacePath = null;
+
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
+        UpdateLists();
     }
 
     IReadOnlyList<string> GetCloudPaths()

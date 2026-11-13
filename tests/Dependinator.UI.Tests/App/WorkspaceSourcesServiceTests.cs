@@ -127,23 +127,23 @@ public class WorkspaceSourcesServiceTests
         VerifyAsked(Times.Once());
     }
 
-    // The choice is saved with the model, which is only there after its first parse: a retry of
-    // a parse that failed is of what the user chose, without asking again.
+    // The choice is saved with the model, which is only there after its first parse: when that
+    // failed, the next try starts from what the user chose, and can still change it.
     [Fact]
-    public async Task AskBeforeFirstOpenAsync_ShouldAnswerTheEarlierChoice_ForARetry()
+    public async Task AskBeforeFirstOpenAsync_ShouldStartFromTheEarlierChoice_WhenAskedAgain()
     {
         IReadOnlyList<SourceChoice> chosen = [.. Proposed.Select(c => c with { IsIncluded = !c.IsIncluded })];
         SetupAnswer(chosen);
         await service.AskBeforeFirstOpenAsync(ModelPath);
 
-        var answer = await service.AskBeforeFirstOpenAsync(ModelPath, isRetry: true);
+        // The retry, with no model open: cancelling opens what is ticked
+        modelMgr.Setup(m => m.ModelPath).Returns("");
+        SetupAnswer(null);
+        var answer = await service.AskBeforeFirstOpenAsync(ModelPath);
 
         Assert.False(answer.IsCancelled);
-        Assert.Equal(chosen, answer.Choices);
-        VerifyAsked(Times.Once());
-
-        // Opened anew from the menu, the user is asked again
-        await service.AskBeforeFirstOpenAsync(ModelPath);
+        Assert.Equal([false, true], answer.Choices!.Select(c => c.IsIncluded));
+        Assert.All(answer.Choices!, c => Assert.False(c.IsNew));
         VerifyAsked(Times.Exactly(2));
     }
 

@@ -31,8 +31,7 @@ interface ICanvasService
     void PanZoomToFit();
     Task InitialShowAsync();
 
-    // isRetry: the load is tried again after it failed, with what the user chose for it.
-    Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false);
+    Task LoadAsync(string modelPath, bool? includeTestProjects = null);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
@@ -135,11 +134,11 @@ class CanvasService(
         await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && DemoModel.IsDemo(startupPath));
     }
 
-    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false)
+    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
     {
         // The workspace's model, opened for the first time: the user chooses what is in it, and
         // cancelling leaves the open model as it is.
-        var sources = await workspaceSourcesService.AskBeforeFirstOpenAsync(modelPath, isRetry);
+        var sources = await workspaceSourcesService.AskBeforeFirstOpenAsync(modelPath);
         if (sources.IsCancelled)
             return;
 

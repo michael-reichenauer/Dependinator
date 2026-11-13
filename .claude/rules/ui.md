@@ -176,7 +176,9 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - The model of the whole workspace (`WorkspaceModelPath`, `docs/notes/WORKSPACE-MODEL.md`) is
   first in `GetWorkspaceModels()` but last in `LocalPaths`: the first local path is the model a
   new workspace starts on, and that stays a single source (decided with Michael, Nov 13: no
-  host starts on the workspace model by itself). It exists only with two or more sources.
+  host starts on the workspace model by itself). `WorkspaceModelPath` is its identity (non-null
+  with a workspace folder, compare with `ModelListService.IsSamePath`, never `==`); it is
+  listed and a local path only with two or more sources, or with one while it is in use.
 - A menu item that opens a model must not await the load (`ModelMenuItems.OpenAsync` runs it
   in the background): MudBlazor keeps the menu open until the click handler returns, so the
   menu stayed up behind the sources dialog and through the whole parse.

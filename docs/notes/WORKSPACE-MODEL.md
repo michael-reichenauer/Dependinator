@@ -35,14 +35,20 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   `ModelListService` keeps them (`WorkspaceSourcePaths`, `WorkspaceFolder` from the new
   `GetWorkspaceFoldersAsync`, `WorkspaceModelPath`) and lists them again before the dialog
   opens. The workspace model is last in `LocalPaths`, so the model a new workspace starts on
-  stays a single source.
+  stays a single source. `WorkspaceModelPath` says which path is this workspace's model
+  (whenever there is a workspace folder); whether it is listed and a local path (so that it
+  refreshes) is the two-sources-or-in-use rule above. A path that names it in another spelling
+  (a recent path with another case) is opened under the workspace's spelling
+  (`ModelListService.WorkspaceSpelling`), since saved models go by the exact path.
 - **The choice** is saved with the model: `Model.WorkspaceSources` (`ModelDto.WorkspaceSources`,
   no format bump), one `WorkspaceSource` per source with its key (the path below the workspace
   folder with "/", so it holds wherever the folder is checked out), whether it is included, and
   the name of its root node from the last parse. `SourceChoices.Of` joins the found sources with
   the saved ones; `WorkspaceSources` (Core) has the key and the proposal rule. The choice is
   saved only once the model has been parsed: until then `WorkspaceSourcesService` holds it, so
-  Retry after a failed first parse is of the same sources.
+  after a failed first parse the dialog of the next try (Retry, or opening it again) starts
+  from what the user chose, and it can still be changed. A saved source that is not found now
+  is kept (it can be back with another branch); such entries are never removed, they are small.
 - **The parse.** `ModelService` sends the included sources on `SolutionParseOptions.Sources`
   (the parse runs in the LSP in VS Code). `ParserService.ParseWorkspaceAsync` gives each source
   to its own parser: different parsers run at the same time, the sources of one parser one by
@@ -51,11 +57,12 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
     hold in both;
   - a source whose root is named like an earlier node gets its folder in the root's name
     (`app (services∕app)`), and so in all its node names;
-  - a root keeps the name it had in the last parse (`SolutionParseOptions.KnownSources`, from
+  - a root keeps the name it had in its last parse (`SolutionParseOptions.KnownSources`, from
     the saved root names), whichever of the other sources parse this time and in whatever
-    order, since the layout, the rules and a failed source's kept nodes all go by name. So a
-    name once given stays, also after the source it was told apart from is left out, and a
-    source added later is the one that is renamed;
+    order, since the layout, the rules and a failed source's kept nodes all go by name. The
+    name is held for its source also while that fails or is left out of the model, so a name
+    once given stays, and a source added later is the one that is renamed. Only a source whose
+    root has another name now (a package was renamed) gives the old name up;
   - a node an earlier source already has is left to that source (a project shared by two
     solutions is shown once). Within one source every item is kept, as in its own model;
   - two C# projects that only share their name (two different `App.Core` in two solutions) are
@@ -87,5 +94,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - A workspace with several folders uses the first as the workspace folder (the editor's order,
   which the LSP's `WorkspaceFolderService` keeps); sources of the others keep their whole path
   as key.
+- A project that two solutions share is shown in the first. When the first solution fails as a
+  whole (not compile errors, which are problems of a parsed source), the project moves to the
+  second until the first parses again: only root names are held for a failed source, not the
+  names of its nodes.
 - Keeping two same-named C# projects of different solutions apart (the folder in the project's
   name, as for a root) needs the rename to be remembered per project, as it is per root.

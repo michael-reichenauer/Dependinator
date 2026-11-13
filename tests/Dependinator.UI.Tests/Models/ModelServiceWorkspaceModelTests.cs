@@ -184,6 +184,38 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(["web", SampleRoot], modelMgr.WithModel(m => m.WorkspaceSources).Skip(1).Select(s => s.RootName));
     }
 
+    // Two sources with a root of one name, one after the other in the model: the name stays the
+    // first one's, so both can be in the model later with the names (and the layout) they had.
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldHoldTheRootName_OfASourceThatIsLeftOut()
+    {
+        sourceItems[Sample] = [Root("web"), Node("web.index*ts")];
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(false, true, false)));
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(false, false, true)));
+
+        const string SampleRoot = "web (tests\u2215sample)";
+        Assert.Equal([SampleRoot, $"{SampleRoot}.index*ts"], ParsedNodeNames());
+        Assert.Equal([new ParsedSource(Web, "web")], parsedOptions[1].KnownSources);
+        Assert.Equal(["web", SampleRoot], modelMgr.WithModel(m => m.WorkspaceSources).Skip(1).Select(s => s.RootName));
+    }
+
+    // The workspace's model is one model however its path is spelled (a recent path can have
+    // another case): it is opened, saved and refreshed under the workspace's spelling.
+    [Fact]
+    public async Task LoadAsync_ShouldOpenTheWorkspaceModel_UnderTheWorkspacesSpellingOfItsPath()
+    {
+        using var modelService = CreateModelService();
+
+        var modelInfo = AssertOk(await modelService.LoadAsync("\\REPO\\.workspace"));
+
+        Assert.Equal(ModelPath, modelInfo.Path);
+        Assert.Equal(ModelPath, modelMgr.ModelPath);
+        AssertOk(await modelService.RefreshAsync());
+        Assert.Equal(2, parsedOptions.Count);
+    }
+
     // A source that is not found for a while (another branch is checked out) keeps what the user
     // chose about it.
     [Fact]

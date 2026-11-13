@@ -8,9 +8,10 @@ namespace Dependinator.Core.Parsing;
 //   - A source that failed is a problem item, and the others still make the model.
 //   - A source whose root is named like a node before it (two "main.bicep", two project folders
 //     named "app") gets its folder in the name of its root, and so in the names of all its nodes.
-//     A root keeps the name it had in the last parse (knownSources), whichever of the other
+//     A root keeps the name it had in its last parse (knownSources), whichever of the other
 //     sources are parsed this time and in whatever order: the layout, the rules and what a
-//     failed source keeps in the model all go by node names.
+//     failed source keeps in the model all go by node names. That name is held for its source
+//     also while the source is left out of the model or fails.
 //   - A node that an earlier source already has is left to that source: a project that two
 //     solutions share is shown once, in the first. Two projects that only share their name are
 //     shown as one as well, since a C# project's nodes are not named by its solution: that is
@@ -34,12 +35,18 @@ static class WorkspaceItems
         List<Error> errors = [];
 
         // The root names the sources had before, each held for its source: also for one that
-        // fails this time, whose nodes the model keeps.
+        // fails this time (the model keeps its nodes) or is not in this parse. A source whose
+        // root has another name now gives its old name up.
         Dictionary<string, string> knownRoots = [];
         Dictionary<string, string> rootOwners = new(StringComparer.Ordinal);
         foreach (var known in knownSources ?? [])
         {
-            if (sources.Any(source => source.Path == known.Path) && knownRoots.TryAdd(known.Path, known.RootName))
+            var isNamedAnew = sources.Any(source =>
+                source.Path == known.Path
+                && source.Result is IReadOnlyList<Item> items
+                && !IsNameOf(known.RootName, RootName(items), WorkspaceSources.Key(folder, known.Path))
+            );
+            if (!isNamedAnew && knownRoots.TryAdd(known.Path, known.RootName))
                 rootOwners.TryAdd(known.RootName, known.Path);
         }
 
@@ -61,10 +68,7 @@ static class WorkspaceItems
             if (rootName is not null)
             {
                 var newRootName =
-                    knownRoots.TryGetValue(path, out var knownRoot)
-                    && IsNameOf(knownRoot, rootName)
-                    && !IsTaken(knownRoot)
-                        ? knownRoot
+                    knownRoots.TryGetValue(path, out var knownRoot) && !IsTaken(knownRoot) ? knownRoot
                     : IsTaken(rootName) ? UniqueRootName(rootName, WorkspaceSources.Key(folder, path), IsTaken)
                     : rootName;
                 if (newRootName != rootName)
@@ -145,7 +149,15 @@ static class WorkspaceItems
     // and "*" for its dots, since "/" and "." would split the name into parts.
     static string UniqueRootName(string rootName, string sourceKey, Func<string, bool> isTaken)
     {
-        var sourceFolder = WorkspaceSources
+        var sourceFolder = FolderText(sourceKey);
+        var name = sourceFolder == "" ? rootName : $"{rootName} ({sourceFolder})";
+        for (var number = 2; isTaken(name); number++)
+            name = $"{rootName} ({(sourceFolder == "" ? "" : $"{sourceFolder} ")}{number})";
+        return name;
+    }
+
+    static string FolderText(string sourceKey) =>
+        WorkspaceSources
             .FolderOf(sourceKey)
             .Replace('/', '∕')
             .Replace('.', '*')
@@ -154,17 +166,22 @@ static class WorkspaceItems
             .Replace("(", "")
             .Replace(")", "");
 
-        var name = sourceFolder == "" ? rootName : $"{rootName} ({sourceFolder})";
-        for (var number = 2; isTaken(name); number++)
-            name = $"{rootName} ({(sourceFolder == "" ? "" : $"{sourceFolder} ")}{number})";
-        return name;
-    }
+    // Whether a root name from an earlier parse is a name of this root: the name itself, or one
+    // it was given to tell it apart (UniqueRootName). A source whose root changed its name (a
+    // package was renamed) is named anew.
+    static bool IsNameOf(string knownRootName, string? rootName, string sourceKey)
+    {
+        if (rootName is null)
+            return false;
+        if (knownRootName == rootName)
+            return true;
 
-    // Whether a root name from an earlier parse is a name of this root: the name itself, or the
-    // one it was given to tell it apart. A source whose root changed its name (a package was
-    // renamed) is named anew.
-    static bool IsNameOf(string knownRootName, string rootName) =>
-        knownRootName == rootName || knownRootName.StartsWith($"{rootName} (", StringComparison.Ordinal);
+        var start = $"{rootName} ({FolderText(sourceKey)}";
+        if (!knownRootName.StartsWith(start, StringComparison.Ordinal) || !knownRootName.EndsWith(')'))
+            return false;
+        var number = knownRootName[start.Length..^1].TrimStart(' ');
+        return number.All(char.IsAsciiDigit);
+    }
 
     static Item Renamed(Item item, string from, string to)
     {

@@ -234,16 +234,50 @@ public class WorkspaceItemsTests
         Assert.Equal(["app (app)", "app (app).new*ts", "app", "app.old*ts"], NodeNames(items));
     }
 
-    [Fact]
-    public void Combine_ShouldNameARootAnew_WhenItsOwnNameChanged()
+    // A saved name is the root's own only when it is its name now, or that name with what was
+    // added to tell it apart; a root whose name changed is named anew.
+    [Theory]
+    [InlineData("web", "shop", "shop")]
+    [InlineData("app (legacy)", "app", "app")]
+    [InlineData("app (web)", "app", "app (web)")]
+    [InlineData("app (web 2)", "app", "app (web 2)")]
+    [InlineData("app (webs)", "app", "app")]
+    public void Combine_ShouldNameARootAnew_WhenItsOwnNameChanged(string knownName, string name, string expected)
     {
         const string Path = "/repo/web/package.json";
 
+        var items = AssertOk(WorkspaceItems.Combine(Workspace, [(Path, Source(name))], [new(Path, knownName)]));
+
+        Assert.Equal([expected], NodeNames(items));
+    }
+
+    // The name a root had is free again once its source has another name.
+    [Fact]
+    public void Combine_ShouldGiveARootTheNameThatAnotherSourceGaveUp()
+    {
+        const string Renamed = "/repo/p/package.json";
+        const string New = "/repo/q/package.json";
+
         var items = AssertOk(
-            WorkspaceItems.Combine(Workspace, [(Path, Source("shop", Node("shop.main*js")))], [new(Path, "web")])
+            WorkspaceItems.Combine(Workspace, [(Renamed, Source("shop")), (New, Source("web"))], [new(Renamed, "web")])
         );
 
-        Assert.Equal(["shop", "shop.main*js"], NodeNames(items));
+        Assert.Equal(["shop", "web"], NodeNames(items));
+    }
+
+    // A source that is left out of the model for now still has its root name: the one parsed
+    // instead does not take it, so both can be in the model again with the names they had.
+    [Fact]
+    public void Combine_ShouldHoldTheRootName_OfASourceThatIsLeftOut()
+    {
+        const string Dev = "/repo/dev/main.bicep";
+        const string Prod = "/repo/prod/main.bicep";
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(Workspace, [(Prod, Source("main*bicep"))], [new(Dev, "main*bicep")])
+        );
+
+        Assert.Equal(["main*bicep (prod)"], NodeNames(items));
     }
 
     // Within one source a node can be given more than once (a project built for two frameworks),
