@@ -228,6 +228,13 @@ class SelectionService(
             return;
         }
 
+        if (pointerId.IsLine)
+        {
+            // The line replaces the current selection itself, once it has been measured.
+            await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: true);
+            return;
+        }
+
         if (IsSelected)
             Unselect(); // Clicked on some other item or outside the diagram
 
@@ -258,11 +265,6 @@ class SelectionService(
                 await UpdateSelectedPositionAsync();
             }
         }
-
-        if (pointerId.IsLine)
-        {
-            await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: true);
-        }
     }
 
     public void Unselect()
@@ -270,6 +272,15 @@ class SelectionService(
         if (!IsSelected)
             return;
 
+        ClearSelection();
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Clears the selection's state without telling anyone: the caller raises the events, at
+    // once or after it has selected something else.
+    void ClearSelection()
+    {
         if (selectedId.IsNode)
         {
             using (var model = modelMgr.UseModel())
@@ -302,14 +313,24 @@ class SelectionService(
         // the position is unchanged, so re-selecting the same node at the same spot would
         // otherwise select it in the model without ever showing it (no border, no toolbar).
         selectedPosition = Pos.None;
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
     }
 
+    // A newly selected line replaces the current selection here, not in the caller, and only
+    // after it has been measured and without a repaint in between: a selected node's lines are
+    // drawn end to end only while it is selected (RepLineService's LineReveal), so deselecting
+    // the node first takes the clicked line off the screen, and a line that is not on screen
+    // cannot be selected. (The browser app repaints before the measuring call returns; there the
+    // click only deselected the node.)
     async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
     {
         if (await screenService.GetBoundingRectangle(pointerId.ElementId) is not ElementBoundingRectangle bound)
-            return false; // Selected line is not visible on the screen
+        {
+            if (isNewSelection)
+                Unselect(); // Clicked on a line that is no longer on the screen
+            return false;
+        }
+        if (isNewSelection)
+            ClearSelection();
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);
@@ -345,6 +366,8 @@ class SelectionService(
 
         applicationEvents.TriggerModelChanged();
         await UpdateSelectedPositionAsync();
+        if (isNewSelection)
+            applicationEvents.TriggerUIStateChanged(); // Also when the toolbar did not move
         return true;
     }
 

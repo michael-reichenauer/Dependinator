@@ -67,11 +67,17 @@
       $"<polyline points=\"3,7 46,7\" fill=\"none\" stroke=\"{color}\" stroke-width=\"{width}\" marker-end=\"url(#{marker})\"{dash}{extra} />"
       + $"<circle cx=\"3\" cy=\"7\" r=\"2.5\" fill=\"{color}\"{extra} />";
 
+  // A stub into a node: a ring, then a short arrow (see LineStub).
+  static string StubSample(string color, string marker) =>
+      $"<circle cx=\"16\" cy=\"7\" r=\"2.5\" fill=\"none\" stroke=\"{color}\" stroke-width=\"1.5\" />"
+      + $"<polyline points=\"18.5,7 40,7\" fill=\"none\" stroke=\"{color}\" stroke-width=\"1.5\" marker-end=\"url(#{marker})\" />";
+
   IReadOnlyList<(string Svg, string Text)> LineSamples =>
   [
     (Sample(DColors.Line, "arrow-line"), "Dependency (with Settings › Line widths by link count, a selection's thicker lines carry more links)"),
     (Sample(DColors.Line, "arrow-inheritance"), "Inherits / implements"),
-    (Sample(DColors.CousinLine, "arrow-cousin"), "Crossing line (lines shown per child)"),
+    (StubSample(DColors.Line, "arrow-line"), "Used from, or uses, outside its container (select the node to see where)"),
+    (Sample(DColors.CousinLine, "arrow-cousin"), "Crossing line (the selection's lines, lines shown per child)"),
     (Sample(DColors.DirectLine, "arrow-direct", " stroke-dasharray=\"2,4\"", 2), "Dependencies explorer line"),
     (Sample(DColors.LineHidden, "arrow-hidden", " stroke-dasharray=\"6,4,1,4\""), "Line of a dimmed (or revealed hidden) node"),
     (Sample(DColors.CycleLine, "arrow-cycle"), "Part of a circular dependency (View › Show Cycles)"),

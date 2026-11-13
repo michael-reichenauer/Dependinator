@@ -1,5 +1,6 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Tiles;
@@ -165,12 +166,22 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
+        // The selection's lines are drawn end to end, except while cycles are shown: the cycle
+        // lines are the lines between siblings, which must then stay as they are. The lines are
+        // synced before the flags are read, since a selection can create lines and the rule
+        // and path line sets below must hold them.
+        var selection = LineEmphasis.FindSelection(model);
+        var reveal = viewOptions.IsCyclesShown
+            ? LineReveal.None
+            : NodeTreeSvg.GetLineReveal(selection, viewOptions.RowFilter, viewOptions.LineFilter);
+        RepLineService.Sync(model, tileZoom, reveal);
+
         // The problems GetTile checked the cache against, so the tile matches them.
         var viewFlags = Flags;
-        var selection = LineEmphasis.FindSelection(model);
         var flags = viewFlags with
         {
             Selection = selection,
+            Reveal = reveal,
             DimSelection = LineEmphasis.FindDimSelection(model, selection, viewFlags.SelectedCycleMembers),
             NodeProblems = nodeProblems,
             HiddenChildCounts = hiddenChildCounts,

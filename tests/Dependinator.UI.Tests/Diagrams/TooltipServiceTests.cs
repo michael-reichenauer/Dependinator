@@ -311,6 +311,39 @@ public class TooltipServiceTests
     }
 
     [Fact]
+    public void GetHtml_ShouldCallAContainersEndOfAStub_OutsideIt()
+    {
+        Line incoming;
+        Line outgoing;
+        using (var model = modelMgr.UseModel())
+        {
+            var m = AddNode(model, "M", model.Root, NodeType.Namespace);
+            var n = AddNode(model, "N", model.Root, NodeType.Namespace);
+            var user = AddNode(model, "M.User", m);
+            var used = AddNode(model, "N.Used", n);
+            AddLink(model, user, used);
+            incoming = model.Lines.Values.Single(l => l.Source == n && l.Target == used);
+            outgoing = model.Lines.Values.Single(l => l.Source == user && l.Target == m);
+        }
+
+        var service = NewService();
+        var incomingHtml = Html(service, PointerId.FromLine(incoming.Id).ElementId);
+        var outgoingHtml = Html(service, PointerId.FromLine(outgoing.Id).ElementId);
+
+        // The line between a container's edge and its child stands for links that cross the
+        // container's border; the links below name the real ends.
+        Assert.Contains(
+            "<span class=\"dep-tt-outside\">outside</span> N<span class=\"dep-tt-arrow\">→</span><wbr>Used",
+            incomingHtml
+        );
+        Assert.Contains("<code>User</code>", incomingHtml);
+        Assert.Contains(
+            "User<span class=\"dep-tt-arrow\">→</span><wbr><span class=\"dep-tt-outside\">outside</span> M",
+            outgoingHtml
+        );
+    }
+
+    [Fact]
     public void GetHtml_ShouldShowAZonesLabel_WithoutItsGeneratedName()
     {
         Node zone;

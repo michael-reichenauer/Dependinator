@@ -31,6 +31,45 @@ Lines are the aggregated funnel by default. Descent is opt-in through `Node.Line
 toolbar +/−, both directions, pass-through nodes don't count as a level) and `Model.LineFocus`
 (the explorer splits lines into its expanded rows, `Line.IsFocused`), both read by
 `RepLineService.Sync`.
+- **Stubs (Nov 13 2026, Michael's idea).** The lines between a container's edge and its children
+  (`LineStub.IsEdgeLine`) are drawn as a short arrow with a ring at the child, not as the long
+  fan to the middle of the container's edge. A stub is the same line drawn short (`LineSvg`
+  swaps the points): same element id, hover card, selection and rule colour. Drawn in full
+  still: an edge line on the dependency path being shown, one with a label, one the user routed
+  with line points (adding a point to a stub brings the full line back), and one whose links all
+  end at the container itself (a method using its own type: `LineStub.CrossesBorder`, nothing
+  continues outside). Stubs are level (upright
+  at an inheritance end) because stubs in the old line's direction looked like a hedgehog;
+  `LineStub.GetDirection` turns one aside when a sibling line leaves the same anchor that way.
+  The length is in the container's units (so the two stubs between neighbours stay apart at the
+  layout's 60-unit gap) within pixel limits.
+- **The selection's lines.** `RepLineService.Sync` takes a `LineReveal` (the selected nodes, from
+  `NodeTreeSvg.GetLineReveal`): a link of a selected node is pinned at that node and descends on
+  its far side as deep as the nodes are open, so the selection's lines run end to end as cousin
+  lines (lit by `LineEmphasis.IsNodeLine`). The reveal is part of the Sync memo, the lines it
+  creates are inactive again after the selection (never pruned, never saved), and an export has
+  no selection. It leaves out what View › Rows and "hide member lines" hide. Traps the review
+  of the first version found:
+  - Clicking one of these lines moves the selection to the line, which ends the node's reveal:
+    `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes under
+    the click.
+  - The click must also survive the repaint: `SelectionService` measures a clicked line
+    (`GetBoundingRectangle`) before it clears the old selection and raises no event in
+    between. Deselecting the node first worked in the dev host and failed in the browser app
+    (Wasm repaints before the interop call returns, so the line was gone and the click only
+    deselected the node; Michael found it on the PR's test site). The chromium e2e run on the
+    dev host cannot see this kind of bug: check selection changes in a published
+    `Dependinator.Wasm` too (see the Layout section for how to serve one).
+  - One line of 7 links becomes 7 lines of one link, which a minimum link count would drop: the
+    selection's lines are flagged `Line.IsRevealed` and skip that filter.
+  - No reveal while cycles are shown: the cycle lines are the sibling lines (`CycleService`
+    ids), and a split line would lose its cycle colour.
+  - `SvgService.CreateModelTile` syncs the lines before it reads the view flags: a Sync can
+    create lines, and the rule and path line id sets must already hold them.
+  Next (Michael, Nov 13): selecting a stub shows only that stub's lines (what uses the node, or
+  what it uses), not the node's other stub's. Hover was dropped by him: selecting is enough.
+  Still open: one line per container for far ends that are off screen or tiny (a hub such as
+  Demo.Core.Utils lights 45 lines).
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:

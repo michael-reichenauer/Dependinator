@@ -149,8 +149,11 @@ open menu overlay swallows them).
   (shift-click test).
 - `Demo.UI.Main` reaches `Demo.Core.Shared.ModelPaths` in 3 hops (Main → Canvas → AppBar →
   ModelPaths) with no direct Core dependency; Main has lines to Externals/MudBlazor.
-- At the InsideMain view: `Demo.UI.Main→Demo.UI.Shared (7)` (2.4 px while Main is selected) and
-  `Demo.UI.Main→Demo.UI.Diagrams (1)` (stays 1 px).
+- At the InsideMain view: `Demo.UI.Main→Demo.UI.Shared (7)` and `Demo.UI.Main→Demo.UI.Diagrams (1)`.
+  While Main is selected its lines run end to end instead (the selection's lines, see `ui.md`):
+  `Demo.UI.Main→Demo.UI.Shared.IThemeService (7)` (2.4 px with link-count widths on) and
+  `Demo.UI.Main→Demo.UI.Diagrams.Canvas (1)` (stays 1 px). A test that looks for a node's
+  container-level line must not have the node selected.
 - Cycles are picked by name, never `.First`: the `Result ↔ Result<T>` pair is the accept case in
   test mode, a "TaskExtensions" cycle the break case.
 
