@@ -83,8 +83,8 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     `LineService.AddDirectLine`), so a node can have two stubs on one side, and a clicked line
     can have a twin. Picking links by direction or by the ends alone drew both: go by the
     stub's own links, and by `IsInheritanceBetween` for the kept line.
-  - Beside a selected line only its own lines may be `IsRevealed` (that is what keeps the dim
-    rule to one test): a reveal that flags more lights them.
+  - Beside a selected line only its own lines and its explored stub's may be `IsRevealed` (that
+    is what keeps the dim rule to one test): a reveal that flags more lights them.
   - Stubs are drawn after a container's other lines (`NodeLinesSvg.DrawnNodeLines` yields them
     last): a line back to a node on the left starts at its node's right side and runs level
     under the node and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils
