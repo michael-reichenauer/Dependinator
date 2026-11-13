@@ -5,6 +5,7 @@ using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Modeling.Models;
 
@@ -118,8 +119,17 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         var html = new StringBuilder();
         var count = line.Links.Count;
         var isManual = count > 0 && line.Links.All(l => l.IsManual);
+        // A line between a container's edge and one of its children (drawn as a stub at the
+        // child) stands for the links that cross the container's border, so the container's end
+        // reads "outside X"; the links listed below name the real ends.
+        var sourceName = LineStub.IsIncoming(line)
+            ? $"<span class=\"dep-tt-outside\">outside</span> {line.Source.HtmlDisplayName}"
+            : line.Source.HtmlDisplayName;
+        var targetName = LineStub.IsOutgoing(line)
+            ? $"<span class=\"dep-tt-outside\">outside</span> {line.Target.HtmlDisplayName}"
+            : line.Target.HtmlDisplayName;
         html.Append(
-            $"<div class=\"dep-tt-name\">{line.Source.HtmlDisplayName}<span class=\"dep-tt-arrow\">→</span><wbr>{line.Target.HtmlDisplayName}</div>"
+            $"<div class=\"dep-tt-name\">{sourceName}<span class=\"dep-tt-arrow\">→</span><wbr>{targetName}</div>"
         );
         var parent = line.Source.Parent == line.Target.Parent && !line.Source.Parent.IsRoot ? line.Source.Parent : null;
         var kind =
