@@ -17,8 +17,9 @@ interface IViewContextService
     // open container.
     IReadOnlyList<ViewContextItem> GetViewCenterChain();
 
-    // The selected node's chain from the top level down to the node itself; empty if no node
-    // is selected.
+    // The chain from the top level down to the node a go to highlighted (IHighlightService, the
+    // node the user just asked for, when it is one), else to the selected node; empty if there is
+    // neither.
     IReadOnlyList<ViewContextItem> GetSelectedChain();
 }
 
@@ -27,7 +28,8 @@ class ViewContextService(
     IModelMgr modelMgr,
     IScreenService screenService,
     IViewOptions viewOptions,
-    Interaction.ISelectionService selectionService
+    Interaction.ISelectionService selectionService,
+    Interaction.IHighlightService highlightService
 ) : IViewContextService
 {
     public IReadOnlyList<ViewContextItem> GetViewCenterChain()
@@ -83,14 +85,15 @@ class ViewContextService(
 
     public IReadOnlyList<ViewContextItem> GetSelectedChain()
     {
-        if (!selectionService.SelectedId.IsNode)
+        var nodeId =
+            highlightService.HighlightedIds is [var highlightedId] ? highlightedId
+            : selectionService.SelectedId.IsNode ? selectionService.SelectedId.NodeId
+            : null;
+        if (nodeId is null)
             return [];
 
         using var model = modelMgr.UseModel();
-        if (
-            !model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node)
-            || NodeViewPolicy.IsAnnotation(node)
-        )
+        if (!model.Nodes.TryGetValue(nodeId, out var node) || NodeViewPolicy.IsAnnotation(node))
             return [];
 
         return node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();

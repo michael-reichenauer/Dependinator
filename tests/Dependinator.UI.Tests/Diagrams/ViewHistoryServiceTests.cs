@@ -12,8 +12,10 @@ public class ViewHistoryServiceTests
     readonly ModelMgr modelMgr = new(new StateMgr());
     readonly Mock<IPanZoomService> panZoomService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
+    readonly Mock<IHighlightService> highlightService = new();
 
-    ViewHistoryService CreateService() => new(modelMgr, panZoomService.Object, applicationEvents.Object);
+    ViewHistoryService CreateService() =>
+        new(modelMgr, panZoomService.Object, applicationEvents.Object, highlightService.Object);
 
     void SetView(double x, double y, double zoom)
     {

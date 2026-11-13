@@ -36,6 +36,12 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     [Inject]
     Tooltips.ITooltipService tooltipService { get; init; } = null!;
 
+    [Inject]
+    Interaction.IHighlightService highlightService { get; init; } = null!;
+
+    // A go to's brackets pulse for a moment when the view lands (dep-highlight in the style below).
+    string? SvgClass => highlightService.IsPulsing ? "dep-highlight-pulsing" : null;
+
     DotNetObjectReference<Canvas>? selfReference;
     bool isDisposed;
 

@@ -38,6 +38,7 @@ class InteractionService(
     ILineEditService lineEditService,
     IApplicationEvents applicationEvents,
     ISelectionService selectionService,
+    IHighlightService highlightService,
     IModelMgr modelMgr,
     IDependenciesService dependenciesService,
     IManualEditService manualEditService,
@@ -220,6 +221,7 @@ class InteractionService(
     // plus/minus zoom. (Search, undo/redo and fit live in the app bar; Delete in the toolbars.)
     void OnKeyDown(KeyPress key)
     {
+        highlightService.Clear(); // A go to's highlight lasts until the user's next action
         if (key.Is("Escape") && key.IsPlain)
         {
             CancelOrDeselect();
@@ -530,6 +532,9 @@ class InteractionService(
 
     void OnMouseDown(PointerEvent e)
     {
+        // A go to's highlight lasts until the user's next action: a click, a tap, the start of a pan.
+        // (A wheel zoom keeps it, so the user can zoom out around the node.)
+        highlightService.Clear();
         // A suppressed click (if any) would have fired before this next press; clear a stale flag
         // from a selection drag that was too long to produce a click event at all.
         suppressNextClick = false;

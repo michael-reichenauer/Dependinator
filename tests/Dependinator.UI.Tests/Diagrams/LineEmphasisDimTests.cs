@@ -175,4 +175,36 @@ public class LineEmphasisDimTests
         Assert.False(LineEmphasis.IsLineWeighted(focused, nodeSelection, false));
         Assert.False(LineEmphasis.IsLineWeighted(ab, new RenderSelection(null, ab), false));
     }
+
+    [Fact]
+    public void IsLineDimmed_ShouldKeepTheHighlightedNodesLines_WithOrWithoutASelection()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var c = AddNode(root, "C");
+        var d = AddNode(root, "D");
+        var ab = new Line(a, b);
+        var cd = new Line(c, d);
+        var bc = new Line(b, c);
+
+        // Only a go to's highlight: its lines are lit, the others dim.
+        var highlightOnly = new RenderSelection(null, null, Highlighted: [a]);
+        Assert.False(highlightOnly.IsEmpty);
+        Assert.False(LineEmphasis.IsLineDimmed(ab, highlightOnly));
+        Assert.True(LineEmphasis.IsLineLit(ab, highlightOnly));
+        Assert.True(LineEmphasis.IsLineDimmed(bc, highlightOnly));
+
+        // Beside a selected node, both nodes' lines stay bright.
+        var withNode = new RenderSelection(c, null, Highlighted: [a]);
+        Assert.False(LineEmphasis.IsLineDimmed(ab, withNode));
+        Assert.False(LineEmphasis.IsLineDimmed(cd, withNode));
+        Assert.True(LineEmphasis.IsLineDimmed(new Line(b, d), withNode));
+
+        // Beside a selected line too.
+        var withLine = new RenderSelection(null, cd, Highlighted: [a]);
+        Assert.False(LineEmphasis.IsLineDimmed(ab, withLine));
+        Assert.False(LineEmphasis.IsLineDimmed(cd, withLine));
+        Assert.True(LineEmphasis.IsLineDimmed(bc, withLine));
+    }
 }

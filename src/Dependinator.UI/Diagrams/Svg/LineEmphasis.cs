@@ -9,30 +9,41 @@ using Dependinator.UI.Shared.Types;
 namespace Dependinator.UI.Diagrams.Svg;
 
 // ExploredStub: the stub whose lines stay drawn while one of them is the selected Line.
+// Highlighted: the nodes a "go to" marked (Node.IsHighlighted), whose lines are lit like a
+// selected node's, beside whatever is selected.
 readonly record struct RenderSelection(
     Node? Node,
     Line? Line,
     IReadOnlyList<Node>? OtherNodes = null,
-    Line? ExploredStub = null
+    Line? ExploredStub = null,
+    IReadOnlyList<Node>? Highlighted = null
 )
 {
-    public bool IsEmpty => Node is null && Line is null;
+    public bool IsEmpty => Node is null && Line is null && Highlighted is null;
 }
 
 static class LineEmphasis
 {
-    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
+    // The selected node(s) or line and the highlighted nodes, for selection dimming; empty when
+    // nothing is selected or highlighted.
     internal static RenderSelection FindSelection(IModel model)
     {
+        var highlighted = model.Nodes.Values.Where(n => n.IsHighlighted).ToList();
+        var highlightedOrNull = highlighted.Count > 0 ? highlighted : null;
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
         var node = nodes.FirstOrDefault();
         if (node is not null)
-            return new RenderSelection(node, null, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+            return new RenderSelection(
+                node,
+                null,
+                nodes.Count > 1 ? nodes.Skip(1).ToList() : null,
+                Highlighted: highlightedOrNull
+            );
 
         var line = model.Lines.Values.FirstOrDefault(l => l.IsSelected);
         // Only one of a stub's lines (a cousin line) can be selected while the stub is explored.
         var exploredStub = line is { IsCousin: true } ? model.Lines.Values.FirstOrDefault(l => l.IsExplored) : null;
-        return new RenderSelection(null, line, null, exploredStub);
+        return new RenderSelection(null, line, null, exploredStub, highlightedOrNull);
     }
 
     // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked
@@ -58,10 +69,14 @@ static class LineEmphasis
     {
         if (line.IsFocused)
             return false;
+        // A highlighted node's lines stay bright beside any selection, the rest dim even when
+        // only the highlight is there.
+        if (selection.Highlighted is { } highlighted && highlighted.Any(h => IsNodeLine(line, h)))
+            return false;
         if (selection.Line is { } selectedLine)
             return line != selectedLine && !line.IsRevealed;
         if (selection.Node is not { } node)
-            return false;
+            return selection.Highlighted is not null;
         if (IsNodeLine(line, node))
             return false;
         // With several nodes selected, a line of any of them stays bright.

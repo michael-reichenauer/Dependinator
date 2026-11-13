@@ -106,6 +106,10 @@ class Node : IItem
 
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
+
+    // Marked by a "go to" (search, a link, a list) so the user spots the node among its
+    // neighbours without it being selected (HighlightService); runtime only, never saved.
+    public bool IsHighlighted { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;

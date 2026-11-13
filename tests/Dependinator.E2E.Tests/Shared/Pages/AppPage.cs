@@ -579,10 +579,10 @@ public sealed class AppPage
     }
 
     // Clear the selection with Escape and verify it took (the node toolbar goes away). Waits for
-    // the selection first: a navigation (NavigationService.ShowNodeAsync) selects its node only
-    // after the pan/zoom animation, so an Escape pressed before that cancels nothing and the
-    // toolbar shows up afterwards (a CI flake). A keystroke landing while something animates
-    // can also be swallowed, so Escape is pressed again until the toolbar is gone.
+    // the selection first: a selection lands on the server after the click, so an Escape pressed
+    // before that cancels nothing and the toolbar shows up afterwards (a CI flake). A keystroke
+    // landing while something animates can also be swallowed, so Escape is pressed again until
+    // the toolbar is gone.
     public async Task DeselectAsync()
     {
         await Expect(NodeToolbarMenu).ToBeVisibleAsync();
@@ -1205,18 +1205,29 @@ public sealed class AppPage
     ILocator KeyboardOwners =>
         page.Locator(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list");
 
+    // A go to's highlight (NodeSvg.HighlightSvg): a navigation marks the node it showed instead of
+    // selecting it, until the user's next press or key.
+    public ILocator NodeHighlight => page.GetByTestId("node-highlight");
+
     // Navigate to a node by its exact full name through the search dialog (which closes on
-    // Enter and selects the node once the pan/zoom animation lands). Waits for that selection:
-    // a test that went on before it landed had its own selection replaced by the navigation's a
-    // moment later, so its node menu acted on the wrong node, or its menu click was swallowed
-    // by the toolbar's re-render (the most common CI flake of Oct-Nov 2026, HiddenNodesTests).
+    // Enter and highlights the node once the pan/zoom animation lands), then select it, as the
+    // callers act on it through its node toolbar. Waits for the highlight first: a click before the
+    // view landed hit whatever was under the pointer then, and a test that went on before a
+    // navigation landed had its own state changed by it a moment later (the most common CI flake
+    // of Oct-Nov 2026, HiddenNodesTests, when a navigation still selected its node).
     public async Task NavigateToNodeAsync(string fullName)
+    {
+        await NavigateToNodeWithoutSelectingAsync(fullName);
+        await SelectNodeByFullNameAsync(fullName);
+    }
+
+    // Navigate to a node by its exact full name and wait for its highlight, leaving the selection
+    // as it was.
+    public async Task NavigateToNodeWithoutSelectingAsync(string fullName)
     {
         SearchDialog search = await OpenSearchViaHotkeyAsync();
         await search.NavigateToAsync(fullName);
-        // Proves the selection only when nothing was selected before, as in every caller so far:
-        // the navigation clears the selection first, but a toolbar still showing passes at once.
-        await Expect(NodeToolbarMenu).ToBeVisibleAsync();
+        await Expect(NodeHighlight).ToBeVisibleAsync();
     }
 
     // Stub Clerk sign-in without the real Clerk (E2ETestBase keeps it away): stub window.Clerk
