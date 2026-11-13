@@ -825,6 +825,64 @@ public class RepLineServiceTests
     }
 
     [Fact]
+    public void Sync_SelectedLineOfASelection_ShouldNotKeepItsInheritanceTwin()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var member = AddNode(model, "Member", source);
+        AddLink(model, member, target);
+        AddLink(model, source, target, isInheritance: true);
+
+        // The node inherits the target and a member of it uses the target: two lines between
+        // them while the node is selected.
+        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        var uses = GetLine(model, "Source", "Target");
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out var inherits));
+        Assert.True(uses.IsActiveRep);
+        Assert.True(inherits!.IsActiveRep);
+
+        // The usage line clicked: only that line stays, the inheritance is back in the funnel.
+        RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = uses });
+
+        Assert.True(uses.IsActiveRep);
+        Assert.True(uses.IsRevealed);
+        Assert.Single(uses.Links);
+        Assert.False(inherits.IsActiveRep);
+
+        // And the inheritance line clicked.
+        RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = inherits });
+
+        Assert.True(inherits.IsActiveRep);
+        Assert.Single(inherits.Links);
+        Assert.False(uses.IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectedStub_ShouldGoWithItsLinks_WhenTheExplorerTakesThem()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var user = AddNode(model, "User", parentA);
+        var node = AddNode(model, "Node", parentB);
+        AddLink(model, user, node);
+        var stub = GetLine(model, "ParentB", "Node");
+
+        // The explorer shows what uses the node: its lines replace the stub, selected or not,
+        // as they replace any other line.
+        model.LineFocus = LineFocus.ForNode(node, isReferences: true);
+        model.BumpStructureVersion();
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub));
+
+        Assert.False(stub.IsActiveRep);
+        var focused = model.Lines.Values.Single(line => line.IsFocused && line.IsActiveRep && line.Target == node);
+        Assert.False(focused.IsRevealed);
+    }
+
+    [Fact]
     public void Sync_SelectionsLines_ShouldNotBeLeftOutByTheLinkCount()
     {
         using var model = NewModel();
@@ -980,8 +1038,11 @@ public class RepLineServiceTests
         Assert.True(Reveal(new RenderSelection(null, between)).IsEmpty); // An ordinary line
         Assert.Equal([source], Reveal(new RenderSelection(source, null)).Nodes);
 
-        // An edge line drawn in full for its line points is selected to move them, not to see
-        // where it goes.
+        // An edge line drawn in full, on the shown path or for its line points, is selected for
+        // itself, not to see where it goes.
+        var pathLines = new HashSet<LineId> { stub.Id };
+        var selectedStub = new RenderSelection(null, stub);
+        Assert.True(NodeTreeSvg.GetLineReveal(selectedStub, RowFilter.None, LineFilter.None, pathLines).IsEmpty);
         stub.IsSegmentsUserSet = true;
         Assert.True(Reveal(new RenderSelection(null, stub)).IsEmpty);
 

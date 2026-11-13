@@ -10,9 +10,10 @@ namespace Dependinator.UI.Diagrams.Lines;
 // Clicking one of these lines moves the selection from the node to the line. KeptLine is that
 // line: its links stay between its two ends, or the line would vanish under the click.
 //
-// A selected stub (Stub, see LineStub) asks for half of what its node would: only the links
-// that cross the container's border in the stub's direction, into the child or out of it, are
-// drawn end to end. The stub itself stays, as the selected line the lines belong to.
+// A selected stub (Stub, see LineStub) asks for a part of what its node would: only the stub's
+// own links that cross the container's border are drawn end to end (a node can have a stub on
+// each side, and a second one on a side for inheritance). The stub itself stays, as the
+// selected line the lines belong to.
 readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter Rows, bool HideMemberLines)
 {
     public static readonly LineReveal None = new(null, RowFilter.None, false);
@@ -257,9 +258,12 @@ static class RepLineService
                 && reveal.KeptLine is { } kept
                 && IndexOf(sourcePath, kept.Source) != int.MaxValue
                 && IndexOf(targetPath, kept.Target) != int.MaxValue
+                && IsInheritanceBetween(link, kept.Source, kept.Target) == kept.IsInheritance
             )
             {
                 // The selected line of an earlier selection: its links stay between its ends.
+                // Not the links of its twin (usage and inheritance between the same two nodes
+                // are two lines): those go back to where they were.
                 sourcePin = kept.Source;
                 targetPin = kept.Target;
                 isRevealedLink = true;
@@ -270,13 +274,13 @@ static class RepLineService
                 // side, for inheritance, with links of its own). Those that cross the container's
                 // border are pinned at the child and descend on the far side, like a selected
                 // node's; a link between the child and the container itself stays in the stub.
-                if (isStubIncoming && IndexOf(sourcePath, stubContainer!) == int.MaxValue)
+                if (isStubIncoming && link.Source != stubContainer)
                 {
                     targetPin = stubChild;
                     isSourceRevealed = true;
                     isRevealedLink = true;
                 }
-                else if (!isStubIncoming && IndexOf(targetPath, stubContainer!) == int.MaxValue)
+                else if (!isStubIncoming && link.Target != stubContainer)
                 {
                     sourcePin = stubChild;
                     isTargetRevealed = true;
@@ -313,9 +317,7 @@ static class RepLineService
             if (repSource == repTarget)
                 continue;
 
-            // Same rule as LineService.AddDirectLine: inheritance styling only where the line
-            // touches the real inheritance endpoints.
-            var isInheritance = link.IsInheritance && (repSource == link.Source || repTarget == link.Target);
+            var isInheritance = IsInheritanceBetween(link, repSource, repTarget);
 
             var pair = new RepPair(repSource, repTarget, isInheritance);
             if (!groups.TryGetValue(pair, out var group))
@@ -330,6 +332,11 @@ static class RepLineService
 
         return (groups, isChildrenShownCache);
     }
+
+    // Same rule as LineService.AddDirectLine: inheritance styling only where the line touches the
+    // real inheritance endpoints.
+    static bool IsInheritanceBetween(Link link, Node repSource, Node repTarget) =>
+        link.IsInheritance && (repSource == link.Source || repTarget == link.Target);
 
     // A focus link is one of the subject line's links or, for a node subject, a link whose
     // near endpoint lies at or below the subject node.

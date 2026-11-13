@@ -173,7 +173,17 @@ class SvgService : ISvgService
         var selection = LineEmphasis.FindSelection(model);
         var reveal = viewOptions.IsCyclesShown
             ? LineReveal.None
-            : NodeTreeSvg.GetLineReveal(selection, viewOptions.RowFilter, viewOptions.LineFilter);
+            : NodeTreeSvg.GetLineReveal(
+                selection,
+                viewOptions.RowFilter,
+                viewOptions.LineFilter,
+                // Only a selected edge line asks, and that line exists before the Sync.
+                selection.Line
+                    is { } selectedLine
+                && LineStub.IsEdgeLine(selectedLine)
+                    ? pathFinderService.GetPathLineIds()
+                    : null
+            );
         RepLineService.Sync(model, tileZoom, reveal);
 
         // The problems GetTile checked the cache against, so the tile matches them.

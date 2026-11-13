@@ -86,7 +86,7 @@ static class NodeLinesSvg
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            if (LineStub.IsStub(line, IsLineOnPath(line, context)))
+            if (LineStub.IsEdgeLine(line) && LineStub.IsStub(line, IsLineOnPath(line, context)))
                 (stubs ??= []).Add((line, false));
             else
                 yield return (line, false);
@@ -109,7 +109,7 @@ static class NodeLinesSvg
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                if (LineStub.IsStub(line, IsLineOnPath(line, context)))
+                if (LineStub.IsEdgeLine(line) && LineStub.IsStub(line, IsLineOnPath(line, context)))
                     (stubs ??= []).Add((line, IsLineCyclic(line, context)));
                 else
                     yield return (line, IsLineCyclic(line, context));

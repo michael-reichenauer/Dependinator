@@ -48,7 +48,7 @@ static class LineEmphasis
         if (line.IsFocused)
             return false;
         if (selection.Line is { } selectedLine)
-            return line != selectedLine && !(line.IsRevealed && LineStub.IsEdgeLine(selectedLine));
+            return line != selectedLine && !line.IsRevealed;
         if (selection.Node is not { } node)
             return false;
         if (IsNodeLine(line, node))

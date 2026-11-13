@@ -57,10 +57,6 @@ public class LineEmphasisDimTests
         Assert.False(LineEmphasis.IsLineDimmed(itsLine, selection));
         Assert.True(LineEmphasis.IsLineDimmed(other, selection));
         Assert.True(LineEmphasis.IsLineLit(itsLine, selection));
-
-        // Only a stub has lines of its own: beside another selected line (one of a node's lines,
-        // clicked) a line that shares its ends is dimmed like the rest.
-        Assert.True(LineEmphasis.IsLineDimmed(itsLine, new RenderSelection(null, other)));
     }
 
     [Fact]
