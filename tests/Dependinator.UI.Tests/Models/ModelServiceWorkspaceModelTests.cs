@@ -26,6 +26,8 @@ public class ModelServiceWorkspaceModelTests
     readonly Mock<IPersistenceService> persistenceService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
     readonly List<SolutionParseOptions> parsedOptions = [];
+    bool isParserUnreachable; // The parse fails as a whole
+    TaskCompletionSource? parseGate; // A parse waits for it
 
     // What the parser answers for each source that is asked for: its items, or null when it fails
     readonly Dictionary<string, IReadOnlyList<Item>?> sourceItems = new()
@@ -45,27 +47,30 @@ public class ModelServiceWorkspaceModelTests
         persistenceService.Setup(p => p.ReadAsync(ModelPath)).ReturnsAsync(new Error("no cached model"));
         parserService
             .Setup(p => p.ParseAsync(ModelPath, It.IsAny<SolutionParseOptions>()))
-            .ReturnsAsync(
-                (string _, SolutionParseOptions options) =>
-                {
-                    parsedOptions.Add(options);
-                    return WorkspaceItems.Combine(
-                        ModelPath,
-                        [
-                            .. options.Sources.Select(source =>
-                                (
-                                    source,
-                                    sourceItems[source] is { } items
-                                        ? (Result<IReadOnlyList<Item>>)items
-                                        : new Error("It failed.")
-                                )
-                            ),
-                        ],
-                        options.KnownSources,
-                        options.HasOtherSources
-                    );
-                }
-            );
+            .Returns((string _, SolutionParseOptions options) => ParseAsync(options));
+    }
+
+    async Task<Result<IReadOnlyList<Item>>> ParseAsync(SolutionParseOptions options)
+    {
+        parsedOptions.Add(options);
+        if (parseGate is not null)
+            await parseGate.Task;
+        if (isParserUnreachable)
+            return new Error("The parser did not answer.");
+
+        return WorkspaceItems.Combine(
+            ModelPath,
+            [
+                .. options.Sources.Select(source =>
+                    (
+                        source,
+                        sourceItems[source] is { } items ? (Result<IReadOnlyList<Item>>)items : new Error("It failed.")
+                    )
+                ),
+            ],
+            options.KnownSources,
+            options.HasOtherSources
+        );
     }
 
     ModelService CreateModelService() =>
@@ -480,6 +485,67 @@ public class ModelServiceWorkspaceModelTests
 
         Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
         Assert.Equal([true, true, false], modelMgr.WithModel(m => m.WorkspaceSources).Select(s => s.IsInModel));
+    }
+
+    // Such a model was saved by an earlier version, or its only parse failed.
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldRemoveASourceTakenOut_WhenTheModelDoesNotSayWhichItHas()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        modelMgr.WithModel(m =>
+            m.WorkspaceSources = [.. m.WorkspaceSources.Select(source => source with { IsInModel = false })]
+        );
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(false, false, false)));
+
+        Assert.Single(parsedOptions);
+        Assert.Empty(ParsedNodeNames());
+    }
+
+    // A refresh that fails as a whole says nothing about the model: the source the user added
+    // is still to be parsed, whatever kind of file changes next.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldParseAnAddedSource_AfterARefreshThatFailed()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        isParserUnreachable = true;
+        AssertError(await modelService.SetSourceChoicesAsync(Choices(true, true, true)));
+        Assert.Equal([true, true, false], modelMgr.WithModel(m => m.WorkspaceSources).Select(s => s.IsInModel));
+
+        isParserUnreachable = false;
+        AssertOk(await modelService.RefreshChangedAsync(["code"]));
+
+        Assert.Equal([Solution, Web, Sample], parsedOptions[^1].Sources);
+        Assert.Contains("sample.index*ts", ParsedNodeNames());
+        Assert.Equal([true, true, true], modelMgr.WithModel(m => m.WorkspaceSources).Select(s => s.IsInModel));
+    }
+
+    // A refresh plans from the sources the one before left in the model, and removes what it
+    // did not update itself, so two never run at the same time.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldWait_WhileAnotherRefreshRuns()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        parseGate = new TaskCompletionSource();
+        var first = modelService.RefreshChangedAsync(["script"]);
+        var second = modelService.SetSourceChoicesAsync(Choices(true, true, true));
+        await Task.Delay(200);
+        Assert.Equal(2, parsedOptions.Count); // Only the first refresh has got to the parser
+
+        parseGate.SetResult();
+        AssertOk(await first);
+        AssertOk(await second);
+
+        Assert.Equal([Web], parsedOptions[1].Sources);
+        Assert.Equal([Web, Sample], parsedOptions[2].Sources);
+        Assert.Equal(
+            ["App*sln", "Core", "Core.Type", "sample", "sample.index*ts", "web", "web.main*ts"],
+            ParsedNodeNames()
+        );
     }
 
     [Fact]

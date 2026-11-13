@@ -76,6 +76,7 @@ class ModelService : IModelService, IDisposable
     readonly IVsCodeSendService vsCodeSendService;
     readonly ISaveStatusService saveStatusService;
 
+    readonly SemaphoreSlim refreshGate = new(1, 1);
     readonly Debouncer saveDebouncer = new();
     readonly Debouncer viewSaveDebouncer = new();
 
@@ -287,7 +288,22 @@ class ModelService : IModelService, IDisposable
     public Task<Result> RefreshChangedAsync(IReadOnlyCollection<string> changedKinds) => RefreshAsync(changedKinds);
 
     // changedKinds: the kinds of files that changed, or null to parse everything.
+    // Refreshes run one at a time: each plans from what the one before left in the model (the
+    // sources it has), and removes what it did not update.
     async Task<Result> RefreshAsync(IReadOnlyCollection<string>? changedKinds)
+    {
+        await refreshGate.WaitAsync();
+        try
+        {
+            return await RefreshModelAsync(changedKinds);
+        }
+        finally
+        {
+            refreshGate.Release();
+        }
+    }
+
+    async Task<Result> RefreshModelAsync(IReadOnlyCollection<string>? changedKinds)
     {
         var path = modelMgr.ModelPath;
         if (ModelPaths.IsDesignModel(path))
@@ -578,10 +594,14 @@ class ModelService : IModelService, IDisposable
     )
     {
         IReadOnlyList<SourceChoice> included = [.. sources.Where(c => c.IsIncluded)];
-        if (changedKinds is null)
-            return new SourcePlan(included, [], false);
-
         var saved = model.WorkspaceSources;
+
+        // A model that does not say which sources it has (it was saved by an earlier version,
+        // or its only parse failed) is parsed as a whole. When the user then takes a source
+        // out, there is no saying what the model has of it, so all that is not parsed goes.
+        if (changedKinds is null || !saved.Any(s => s.IsInModel))
+            return new SourcePlan(included, [], HasRemoved: changedKinds is { Count: 0 });
+
         var added = included.Where(c => SourceChoices.Saved(saved, c.Key)?.IsInModel != true).Select(c => c.Path);
         var removed = saved
             .Where(s => s.IsInModel && !included.Any(c => IsSameKey(c.Key, s.Path)))
@@ -617,16 +637,12 @@ class ModelService : IModelService, IDisposable
 
         // The choice as it is now: the user can have changed it while the parse ran.
         var choices = SourceChoicesOf(model);
-        var inModelKeys = choices
-            .Where(c => parsedPaths.Contains(c.Path) || keptPaths.Contains(c.Path))
-            .Select(c => c.Key)
-            .ToList();
-        model.WorkspaceSources =
-        [
-            .. SourceChoices
-                .ToSaved(choices, model.WorkspaceSources, rootNames)
-                .Select(source => source with { IsInModel = inModelKeys.Any(key => IsSameKey(key, source.Path)) }),
-        ];
+        model.WorkspaceSources = SourceChoices.ToSaved(
+            choices,
+            model.WorkspaceSources,
+            rootNames,
+            inModelPaths: [.. parsedPaths, .. keptPaths]
+        );
 
         bool IsFailed(SourceChoice c) => parsedPaths.Contains(c.Path) && !rootNames.ContainsKey(c.Path);
         foreach (var choice in choices.Where(c => IsFailed(c) || keptPaths.Contains(c.Path)))

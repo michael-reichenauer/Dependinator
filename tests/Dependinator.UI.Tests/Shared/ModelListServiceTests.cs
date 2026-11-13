@@ -170,6 +170,12 @@ public class ModelListServiceTests
         await service.RefreshWorkspaceSourcesAsync();
         Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
         Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
+
+        // And so does a listing that fails: it runs before a parse, which must not fail for it
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ThrowsAsync(new IOException("No connection"));
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
     }
 
     [Theory]

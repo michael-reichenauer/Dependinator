@@ -257,14 +257,22 @@ class ModelListService(
 
     public async Task RefreshWorkspaceSourcesAsync()
     {
-        // (No answer is not "no sources": what was found before stands.)
-        workspaceSourcePaths = HasWorkspace
-            ? await workspaceFileService.GetModelFilePathsAsync() ?? workspaceSourcePaths
-            : [];
-        workspaceFolder =
-            !HasWorkspace ? ""
-            : await workspaceFileService.GetWorkspaceFoldersAsync() is { } folders ? folders.FirstOrDefault() ?? ""
-            : workspaceFolder;
+        // (No answer is not "no sources": what was found before stands. That holds for a call
+        // that fails too, since this runs before a parse, which must not fail for the list.)
+        try
+        {
+            workspaceSourcePaths = HasWorkspace
+                ? await workspaceFileService.GetModelFilePathsAsync() ?? workspaceSourcePaths
+                : [];
+            workspaceFolder =
+                !HasWorkspace ? ""
+                : await workspaceFileService.GetWorkspaceFoldersAsync() is { } folders ? folders.FirstOrDefault() ?? ""
+                : workspaceFolder;
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to list the workspace's sources");
+        }
 
         // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
         // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).

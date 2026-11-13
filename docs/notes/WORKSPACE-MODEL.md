@@ -90,8 +90,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   is removed without a parse, and a change that leaves the model as it is does nothing at all.
   When every source of such a parse fails, that is a problem of each
   (`SolutionParseOptions.HasOtherSources`), not a failed refresh. Parsed in full: the Parse
-  button, opening the model, Retry, and a model saved before phase 2 (it does not say which
-  sources it has, so each counts as new).
+  button, opening the model, Retry, and a model that does not say which sources it has (saved
+  before phase 2, or its only parse failed). Refreshes run one at a time
+  (`ModelService.refreshGate`): each plans from the sources the one before left in the model.
 - **A new source is noticed.** The extension adds "sources" to the kinds when a file that can
   make a source is added or removed (a solution, a Bicep file, a script project's config, a
   script file), or when a file that says which files are sources changes: a Bicep file (the
