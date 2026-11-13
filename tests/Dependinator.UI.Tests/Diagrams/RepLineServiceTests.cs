@@ -855,6 +855,131 @@ public class RepLineServiceTests
         Assert.False(focused.IsRevealed);
     }
 
+    // A busy stub's lines end at a far container that is out of the tile, or whose children
+    // would be tiny on screen: one line per container instead of one per far end.
+    [Fact]
+    public void Sync_SelectedStub_ShouldEndAtAFarContainerOutsideTheArea_UntilItIsInIt()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var other = AddNode(model, "Other", parentB);
+        AddLink(model, source, target);
+        AddLink(model, source, other);
+        var stub = GetLine(model, "Source", "ParentA");
+
+        // The tile shows ParentA only: one line to ParentB, with both links.
+        var aOnly = SelectedStub(stub) with { Area = new Rect(-50, -50, 300, 300) };
+        RepLineService.Sync(model, ContainerZoom, aOnly);
+
+        var line = GetLine(model, "Source", "ParentB");
+        Assert.True(line.IsActiveRep);
+        Assert.True(line.IsRevealed);
+        Assert.Equal(2, line.Links.Count);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+        Assert.True(stub.IsActiveRep);
+
+        // A tile that reaches ParentB (panned there) splits the line, at the same zoom.
+        var both = SelectedStub(stub) with { Area = new Rect(-50, -50, 1100, 300) };
+        RepLineService.Sync(model, ContainerZoom, both);
+
+        Assert.False(line.IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Other").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectedStub_ShouldKeepItsLines_OnATileWhereNoFarEndChanges()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var stub = GetLine(model, "Source", "ParentA");
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(-50, -50, 300, 300) });
+
+        // The next tile still leaves ParentB out: the same lines (the memo walks only the stub's
+        // links to see that).
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(250, -50, 300, 300) });
+
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(stub.IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+
+        // And the tile after it reaches ParentB.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(550, -50, 600, 300) });
+
+        Assert.False(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectedStub_ShouldSplitTheLineOfAFarContainerALayoutMovesIntoTheTile()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var reveal = SelectedStub(GetLine(model, "Source", "ParentA")) with { Area = new Rect(-50, -50, 300, 300) };
+        RepLineService.Sync(model, ContainerZoom, reveal);
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+
+        // The same tile and zoom, but ParentB moved into it.
+        parentB.Boundary = new Rect(120, 0, 100, 100);
+        NodeLayout.BumpGeneration();
+        RepLineService.Sync(model, ContainerZoom, reveal);
+
+        Assert.False(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectedStub_ShouldEndAtAFarContainerWithTinyChildren_UntilZoomedIn()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var reveal = SelectedStub(GetLine(model, "Source", "ParentA"));
+
+        // ParentB is open, but a child of the default size would be about 12 pixels.
+        parentB.ContainerZoom = 1.0 / 80;
+        Assert.True(NodeViewPolicy.IsChildrenShown(parentB, ContainerZoom));
+        RepLineService.Sync(model, ContainerZoom, reveal);
+
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+
+        // Zoomed in, the same selection draws the line to the child: no node opened or closed,
+        // so this must not be skipped as an unchanged sync.
+        RepLineService.Sync(model, ContainerZoom / 2, reveal);
+
+        Assert.False(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+    }
+
+    [Fact]
+    public void GetCanvasArea_ShouldBeTheTileWithItsMargin_InCanvasUnits()
+    {
+        var area = SvgService.GetCanvasArea(new Rect(1000, 500, 100, 50), new Rect(-60, -30, 220, 110), 2);
+
+        Assert.Equal(new Rect(1880, 940, 440, 220), area);
+    }
+
     [Fact]
     public void Sync_SelectedStubsLines_ShouldNotBeLeftOutByTheLinkCount()
     {

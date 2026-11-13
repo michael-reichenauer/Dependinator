@@ -91,8 +91,20 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     in the demo). Known and left: a stub therefore also lies over the handles of a selected
     hand-routed line whose point is right at it, and a selected stub's own lines end at its
     anchor and lie over it (a second click on the selected stub can select one of its lines).
-  Still open: one line per container for far ends that are off screen or tiny (a hub's stub can
-  light dozens of lines), and a wider touch area for a stub if it is fiddly on the iPad.
+- **One line per far container (Nov 13, Michael).** A selected stub's far side opens no container
+  that lies outside the tile (`LineReveal.Area`, the tile's canvas area with its margin, set in
+  `SvgService.CreateModelTile`) or whose default-size child would be below
+  `RepLineService.MinFarEndSize` (20 px) on screen (`IsWorthOpening`): its lines end at that
+  container, one line for all of them. So the lines depend on the tile, not just the zoom: the Area
+  is part of the reveal. With a stub selected, a new tile, zoom or layout re-walks only the stub's
+  own links (`IsEveryStubFarEndUnchanged` against the memo's `StubFarEnds`) and syncs everything
+  only when one of their far ends changed: a full sync each time took 40 to 70 ms per tile on the
+  dev host for the demo's Utils stub (the browser app is about 10x slower), against 2 to 5 ms. The Area is
+  where the tile draws nodes (`RenderContext.IsInTile`), so a container the tile draws has its lines
+  split unless its children are tiny, and one up to about a screen outside the view may be split
+  too, depending on the tile. The lines' `IsActiveRep` hold the newest tile's state, also while an
+  older cached tile is shown (as for tiles at another zoom).
+  Still open: a wider touch area for a stub if it is fiddly on the iPad.
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:

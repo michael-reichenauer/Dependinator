@@ -193,7 +193,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   stub draws its lines all the way to the nodes at the other end, as deep as they are open, also
   across containers: what uses the node from outside, or what it uses outside. (The first
   version drew them for a selected node too; dropped the same day, since a node is selected all
-  the time and the lines came unasked.) The stub keeps the line's hover card ("outside X →
+  the time and the lines came unasked.) A busy stub draws one line per container for the far
+  ends that are out of view or too small to tell apart (a hub such as Utils: 9 lines, one per
+  assembly, instead of 35); panning there or zooming in splits that line. The stub keeps the line's hover card ("outside X →
   child"), selection and rule colour; a labelled or hand-routed line and the dependency path are
   still drawn in full.
 - **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a

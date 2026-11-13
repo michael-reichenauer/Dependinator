@@ -154,6 +154,8 @@ open menu overlay swallows them).
 - `Demo.Core.CloudSync` has a stub on each side (used from Demo.Lsp, Demo.Web and Demo.UI; uses
   types of `Shared`), and its line back to `Utils` runs under its incoming stub. `Demo.Core.Parsing`
   has only the incoming one.
+- Framed by a go to, `Demo.Core.Utils`'s incoming stub draws 9 lines, one per other assembly
+  (`Demo.UI (dll)→Demo.Core.Utils (553)`): they are all out of view (one line per far container).
 - Cycles are picked by name, never `.First`: the `Result ↔ Result<T>` pair is the accept case in
   test mode, a "TaskExtensions" cycle the break case.
 
