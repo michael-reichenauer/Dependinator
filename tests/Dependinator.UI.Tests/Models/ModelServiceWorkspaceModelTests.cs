@@ -577,8 +577,27 @@ public class ModelServiceWorkspaceModelTests
         AssertOk(await modelService.LoadAsync(ModelPath));
 
         AssertSolutionLayout("App*sln");
+        // The layout is kept, not done again on first render
+        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].IsChildrenLayoutRequired));
         // The web project had no model of its own
         Assert.Equal(Rect.None, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web.main*ts")].Boundary));
+    }
+
+    // A node that is new since the source's model was saved gets a place by the layout
+    [Fact]
+    public async Task LoadAsync_ShouldLayOutANodeTheSourcesOwnModelHasNot()
+    {
+        sourceItems[Solution] = [.. sourceItems[Solution]!, Node("Core.New")];
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        modelMgr.WithModel(m =>
+        {
+            Assert.True(m.Nodes[NodeId.FromName("Core")].IsChildrenLayoutRequired);
+            Assert.Equal(new Rect(0, 0, 60, 60), m.Nodes[NodeId.FromName("Core.Type")].Boundary);
+        });
     }
 
     // A source taken in later brings its layout too, also when its root had to be renamed

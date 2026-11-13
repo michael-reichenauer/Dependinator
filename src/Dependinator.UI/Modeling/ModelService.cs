@@ -364,14 +364,6 @@ class ModelService : IModelService, IDisposable
         if (await ParseAndUpdateAsync(path) is Error e)
             return e;
 
-        // Rendering during the progressive parse may have laid out nodes before all their
-        // children's links had arrived; re-flag them so the next render lays out each node
-        // with the complete dependency graph.
-        using (var model = modelMgr.UseModel())
-        {
-            RequireChildrenLayout(model);
-        }
-
         return new ModelInfo(path, Rect.None, 0);
     }
 
@@ -536,14 +528,6 @@ class ModelService : IModelService, IDisposable
                 return e;
             }
 
-            // A refresh whose model was closed while it parsed (another one was opened) is not
-            // of the model that is open now.
-            if (isRefresh && modelMgr.ModelPath != path)
-            {
-                Log.Info("Another model was opened while parsing, refresh dropped", path);
-                return false;
-            }
-
             // The sources that are new in a workspace model bring the layout of their own model
             var newRoots = isWorkspace
                 ? modelMgr.WithModel(m =>
@@ -555,6 +539,14 @@ class ModelService : IModelService, IDisposable
                 )
                 : [];
             var sourceLayouts = await ReadSourceModelsAsync(newRoots);
+
+            // A refresh whose model was closed while it parsed (another one was opened) is not
+            // of the model that is open now.
+            if (isRefresh && modelMgr.ModelPath != path)
+            {
+                Log.Info("Another model was opened while parsing, refresh dropped", path);
+                return false;
+            }
 
             using (var model = modelMgr.UseModel())
             {
@@ -575,6 +567,12 @@ class ModelService : IModelService, IDisposable
             {
                 if (isWorkspace)
                     UpdateWorkspaceSources(model, parseOptions.Sources, [.. keptSources.Select(c => c.Path)], items);
+                // Rendering during the progressive parse of a new model may have laid out nodes
+                // before all their children's links had arrived; re-flag them so the next render
+                // lays out each node with the complete dependency graph (before the sources'
+                // own layouts are brought in, which are kept).
+                if (!isRefresh)
+                    RequireChildrenLayout(model);
                 foreach (var (rootName, sourceModel) in sourceLayouts)
                     SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
                 PassThroughService.UpdatePassThroughFlags(model);
@@ -607,13 +605,16 @@ class ModelService : IModelService, IDisposable
         IReadOnlyList<Parsing.ParsedSource> sources
     )
     {
-        List<(string, ModelDto)> models = [];
-        foreach (var source in sources)
+        var models = await Task.WhenAll(
+            sources.Select(async source => (source.RootName, Model: await persistenceService.ReadAsync(source.Path)))
+        );
+        List<(string, ModelDto)> found = [];
+        foreach (var (rootName, result) in models)
         {
-            if (await persistenceService.ReadAsync(source.Path) is ModelDto model)
-                models.Add((source.RootName, model));
+            if (result is ModelDto model)
+                found.Add((rootName, model));
         }
-        return models;
+        return found;
     }
 
     static readonly Result<IReadOnlyList<Parsing.Item>> NoItems = new List<Parsing.Item>();

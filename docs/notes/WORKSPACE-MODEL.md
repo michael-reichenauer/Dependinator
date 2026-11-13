@@ -145,6 +145,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - A source's own layout comes along only when its root is new in the workspace model: a
   workspace model saved before phase 3 keeps what it has. A line label that waits for a split
   line, and the labels and routes of lines between two sources or to Externals, do not come.
+  The root's content zoom comes from its own model: a root the user resized there fits its
+  content less well in the workspace model until it is fitted again.
 - **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
   been lived with.
 - Links between languages (the extension starting the language server) are not made: each

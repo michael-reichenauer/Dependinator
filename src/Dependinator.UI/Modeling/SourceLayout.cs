@@ -1,5 +1,6 @@
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Modeling;
 
@@ -33,7 +34,7 @@ static class SourceLayout
                 if (inRoot.Contains(name))
                     node.SetFromDto(WithLayout(node.ToDto(), dto, isRoot: node == root));
             }
-            else if (dto.IsManual && names.ToWorkspace(dto.ParentName) is var parentName && HasNode(model, parentName))
+            else if (dto.IsManual && names.ToWorkspace(dto.ParentName) is var parentName && inRoot.Contains(parentName))
             {
                 structure.SetNodeDto(model, dto with { Name = name, ParentName = parentName });
                 inRoot.Add(name);
@@ -51,11 +52,16 @@ static class SourceLayout
                 structure.SetLinkDto(model, dto with { SourceName = source, TargetName = target });
         }
 
-        ApplyLines(model, structure, sourceModel, names, inRoot, sourceNames);
+        ApplyLines(model, structure, sourceModel, names, inRoot);
 
         var nodes = root.DescendantsAndSelfPreOrder().ToList();
         foreach (var node in nodes)
+        {
             MemberCard.RestoreLayoutState(node);
+            // A node that is new since the source's model was saved has no place yet
+            if (node.Children.Any(child => child.Boundary == Rect.None))
+                node.IsChildrenLayoutRequired = true;
+        }
         ModelService.RequireChildrenLayoutIfOlder(nodes, sourceModel.LayoutVersion);
         model.BumpVisibilityVersion();
         model.BumpStructureVersion();
@@ -123,8 +129,7 @@ static class SourceLayout
         IStructureService structure,
         ModelDto sourceModel,
         NameMap names,
-        IReadOnlySet<string> inRoot,
-        IReadOnlySet<string> sourceNames
+        IReadOnlySet<string> inRoot
     )
     {
         var lines = sourceModel.Lines.DistinctBy(l => l.LineId).ToDictionary(l => l.LineId);
@@ -149,6 +154,7 @@ static class SourceLayout
                 dto with
                 {
                     LineId = line.Id.Value,
+                    Description = null, // Parsed, so taken from this parse only
                     Source = dto.Source is null ? null : line.Source.Name,
                     Target = dto.Target is null ? null : line.Target.Name,
                 }
@@ -161,12 +167,20 @@ static class SourceLayout
         {
             if (dto.Label is null && dto.LabelDescription is null)
                 continue;
-            if (sourceNames.Contains(dto.Source ?? "") && sourceNames.Contains(dto.Target ?? ""))
-                structure.SetLineLayoutDto(model, dto with { SegmentPoints = [] });
+            if (model.Lines.ContainsKey(LineId.FromId(dto.LineId)))
+                continue; // A line of the workspace model that is not in the root
+            if (inRoot.Contains(dto.Source ?? "") && inRoot.Contains(dto.Target ?? ""))
+                structure.SetLineLayoutDto(
+                    model,
+                    dto with
+                    {
+                        SegmentPoints = [],
+                        IsSegmentsUserSet = false,
+                        Description = null,
+                    }
+                );
         }
     }
-
-    static bool HasNode(IModel model, string name) => model.Nodes.ContainsKey(NodeId.FromName(name));
 
     // The names under a root that the workspace renamed: the root and the names it prefixes.
     sealed record NameMap(string SourceRootName, string RootName)
