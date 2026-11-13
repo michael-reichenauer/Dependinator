@@ -29,6 +29,7 @@ readonly record struct LineReveal(RowFilter Rows, bool HideMemberLines)
     public bool LeavesOut(Node node) => Rows.Hides(node.Type) || (HideMemberLines && node.Type.IsMember);
 
     // Without a selected line the filters make no difference, so toggling them causes no sync.
+    // (Every member compares by value or by identity: a list member would need its own test.)
     public bool IsSameAs(LineReveal other) => (IsEmpty && other.IsEmpty) || this == other;
 }
 
@@ -221,7 +222,6 @@ static class RepLineService
                 }
             }
 
-            // A link of the selection descends on the far side as deep as the nodes are open.
             var isSourceRevealed = false;
             var isTargetRevealed = false;
             var isRevealedLink = false;
@@ -244,8 +244,9 @@ static class RepLineService
             {
                 // One of the selected stub's links (a child can have a second stub on the same
                 // side, for inheritance, with links of its own). Those that cross the container's
-                // border are pinned at the child and descend on the far side; a link between
-                // the child and the container itself stays in the stub.
+                // border are pinned at the child and descend on the far side as deep as the
+                // nodes are open; a link between the child and the container itself stays in
+                // the stub.
                 if (isStubIncoming && link.Source != stubContainer)
                 {
                     targetPin = stubChild;

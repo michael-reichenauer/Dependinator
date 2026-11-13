@@ -24,19 +24,23 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         // (each with its ring) stay.
         await App.NavigateToNodeAsync(Parsing);
         ILocator rings = Page.Locator("#svgcanvas circle.line-stub-ring");
+        ILocator incoming = App.Line("Demo.Core", Parsing);
+        ILocator litIncoming = incoming.Locator("xpath=..").Locator("g.line-lit");
+        await Expect(litIncoming).ToHaveCountAsync(1); // Drawn for the selection: its stub is lit
         await Expect(rings).Not.ToHaveCountAsync(0);
         await Expect(App.CousinLines).ToHaveCountAsync(0);
 
         // A stub is its line drawn short: the line between the container and the child is still
         // there, with the hit target a click needs.
-        ILocator incoming = App.Line("Demo.Core", Parsing);
         await Expect(StubRing(incoming)).ToHaveCountAsync(1);
         await Expect(AppPage.LineHitTarget(incoming)).ToHaveCountAsync(1);
 
         // The same with nothing selected, and with the node selected by a click.
         await App.DeselectAsync();
+        await Expect(litIncoming).ToHaveCountAsync(0);
         await Expect(App.CousinLines).ToHaveCountAsync(0);
         await App.SelectNodeByFullNameAsync(Parsing);
+        await Expect(litIncoming).ToHaveCountAsync(1);
         await Expect(StubRing(incoming)).ToHaveCountAsync(1);
         await Expect(App.CousinLines).ToHaveCountAsync(0);
 

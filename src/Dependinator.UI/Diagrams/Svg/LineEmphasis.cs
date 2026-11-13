@@ -134,8 +134,8 @@ static class LineEmphasis
         if (filter.HideExternal && (line.Source.IsExternal() || line.Target.IsExternal()))
             return true;
 
-        // The selection's own lines are drawn end to end, one per node at the far end: a line
-        // of several links becomes several thin lines, which the link count must not drop.
+        // A selected stub's lines are drawn end to end, one per node at the far end: a line of
+        // several links becomes several thin lines, which the link count must not drop.
         return !line.IsRevealed && line.Links.Count < filter.MinLinkCount;
     }
 }

@@ -662,6 +662,27 @@ public class RepLineServiceTests
     static LineReveal SelectedStub(Line stub) => LineReveal.None with { Stub = stub };
 
     [Fact]
+    public void Sync_SelectedNode_ShouldLeaveTheFunnelAsItIs()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        source.IsSelected = true;
+
+        // What a selected node asks of the lines: nothing. Its stubs are there to click.
+        var reveal = NodeTreeSvg.GetLineReveal(LineEmphasis.FindSelection(model), RowFilter.None, LineFilter.None);
+        RepLineService.Sync(model, ContainerZoom, reveal);
+
+        Assert.DoesNotContain(model.Lines.Values, line => line.IsCousin || line.IsRevealed);
+        Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
+        Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "ParentB", "Target").IsActiveRep);
+    }
+
+    [Fact]
     public void Sync_SelectedStub_ShouldLeaveTheOtherChildrensLinksInTheFunnel()
     {
         using var model = NewModel();
@@ -749,7 +770,7 @@ public class RepLineServiceTests
     }
 
     [Fact]
-    public void Sync_SelectedLineOfASelection_ShouldStayBetweenItsEnds()
+    public void Sync_ClickedLineOfAStub_ShouldStayBetweenItsEnds()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -775,7 +796,7 @@ public class RepLineServiceTests
     }
 
     [Fact]
-    public void Sync_SelectedLineOfASelection_ShouldNotKeepItsInheritanceTwin()
+    public void Sync_ClickedLineOfAStub_ShouldNotKeepItsInheritanceTwin()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -835,7 +856,7 @@ public class RepLineServiceTests
     }
 
     [Fact]
-    public void Sync_SelectionsLines_ShouldNotBeLeftOutByTheLinkCount()
+    public void Sync_SelectedStubsLines_ShouldNotBeLeftOutByTheLinkCount()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);

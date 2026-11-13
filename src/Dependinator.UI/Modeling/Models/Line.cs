@@ -60,9 +60,10 @@ class Line : IItem
     // subject's lines stand out from the aggregated ones. Not persisted.
     public bool IsFocused { get; set; }
 
-    // Transient render state: the line represents links of the selection, drawn end to end (see
-    // RepLineService's LineReveal). The selection asked for these lines, so the link count
-    // filter does not leave them out. Not persisted.
+    // Transient render state: the line represents links of a selected stub, drawn end to end, or
+    // it is one of those lines, clicked and kept (see RepLineService's LineReveal). The user
+    // asked for these lines, so the link count filter does not leave them out and they are not
+    // dimmed beside the selected line. Not persisted.
     public bool IsRevealed { get; set; }
 
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
