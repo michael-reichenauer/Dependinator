@@ -575,6 +575,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hovering it shows the line's card, a click selects the line, a double-click in edit mode
   edits it, and an edit-mode drag slides it along the line (saved as a fraction of the line's
   length, so it follows when nodes move; undo, and "To the middle" in the label dialog).
+- **Calmer node and line toolbars (Nov 13).** The toolbars over a selected node, note or line
+  are one white (or dark grey) card with grey icons that turn purple under the pointer, thin
+  dividers between groups of buttons instead of a purple line between every button, and
+  larger 28 px buttons for touch. The node toolbar groups its buttons (lines, size,
+  appearance, arranging) and its menu moved to the end as a "more" button, whose tooltip no
+  longer stays over the open menu. The line toolbar lost "Show source code" (VS Code only).
 
 ## Models, cloud sync and sign-in
 

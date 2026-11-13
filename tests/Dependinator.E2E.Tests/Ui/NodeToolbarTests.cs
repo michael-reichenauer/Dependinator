@@ -24,6 +24,21 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NodeMenu_ShouldNotCoverItsItemsWithTheButtonTooltip()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        // The menu button keeps the pointer (and the focus) after the click that opened the
+        // menu: its "More" tooltip once stayed over the menu's first item.
+        ILocator firstItem = await App.OpenNodeMenuItemAsync("node-menu-about");
+        await App.NodeToolbarMenu.HoverAsync();
+        await Page.WaitForTimeoutAsync(1000); // longer than the tooltip's delay
+        await Expect(firstItem).ToBeVisibleAsync();
+        await Expect(Page.Locator(".mud-tooltip").Filter(new() { HasTextString = "More" })).ToBeHiddenAsync();
+    }
+
+    [E2EFact]
     public async Task NodeToolbar_ShouldSetAndClearIconColor()
     {
         await App.GotoMainPageAsync();
