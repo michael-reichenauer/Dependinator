@@ -75,6 +75,7 @@ class InteractionService(
     IReadOnlyCollection<NodeId>? zoneDragIds;
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
+    bool isDraggingLineLabel = false;
     bool isDraggingLink = false;
     bool isAreaSelecting = false;
 
@@ -536,6 +537,8 @@ class InteractionService(
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
+        isDraggingLineLabel = false;
+        lineEditService.EndLabelMove();
         isDraggingLink = false;
 
         // Shift+press starts a rubber band that selects the nodes inside it (a Shift+click
@@ -580,7 +583,7 @@ class InteractionService(
     }
 
     // Routes a left-button drag to exactly one gesture. The branch order is the gesture
-    // priority: link-handle drag → line-point drag → selected-node content pan (edit mode) →
+    // priority: link-handle drag → line-point drag → line-label drag → selected-node content pan (edit mode) →
     // resize-handle drag → selected-node move → canvas pan (the fallback for everything else).
     // Each editing branch marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
@@ -619,6 +622,15 @@ class InteractionService(
         {
             isDraggingSelectedLinePoint = true;
             lineEditService.MoveSegmentPoint(e, Zoom, mouseDownId);
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
+        // A line's label slides along its line (any labelled line, selected or not).
+        if (viewOptions.IsEditingEnabled && mouseDownId.IsLineLabel)
+        {
+            isDraggingLineLabel = true;
+            lineEditService.MoveLabel(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }
@@ -689,6 +701,13 @@ class InteractionService(
             lineEditService.SnapSegmentPointToGrid(mouseDownId);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedLinePoint = false;
+        }
+
+        if (isDraggingLineLabel)
+        {
+            lineEditService.EndLabelMove();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
+            isDraggingLineLabel = false;
         }
 
         if (isResizingSelectedNode && mouseDownId.IsResize)

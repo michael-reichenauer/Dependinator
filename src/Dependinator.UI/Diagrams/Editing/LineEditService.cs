@@ -13,6 +13,11 @@ interface ILineEditService
     Task RemoveSegmentPoint(LineId lineId, Pos screenPos);
     void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId);
     void SnapSegmentPointToGrid(PointerId pointerId);
+
+    // Slides a line's label along the line under an edit-mode drag (pointerId.IsLineLabel), and
+    // ends the drag.
+    void MoveLabel(PointerEvent e, double zoom, PointerId pointerId);
+    void EndLabelMove();
 }
 
 [Scoped]
@@ -128,6 +133,41 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
 
         commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
+
+    // Where the pointer is during a label drag, in the line owner's children-local space. It
+    // follows the pointer freely (the label is put at the closest point of the line), so the
+    // label keeps up with the pointer however far it strays from the line.
+    Pos labelDragPos = Pos.None;
+
+    public void MoveLabel(PointerEvent e, double zoom, PointerId pointerId)
+    {
+        if (!pointerId.IsLineLabel)
+            return;
+
+        double position;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(pointerId.LineId, out var line) || !line.HasLabel)
+                return;
+            if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
+                return;
+            var points = LinePathGeometry.GetLocalPolylinePoints(line);
+            if (points.Count < 2)
+                return;
+
+            if (labelDragPos == Pos.None)
+                labelDragPos = LinePathGeometry.PointAt(points, line.LabelPosition);
+            var localZoom = GetChildrenLocalZoom(owner) * zoom;
+            labelDragPos = new Pos(labelDragPos.X + e.MovementX * localZoom, labelDragPos.Y + e.MovementY * localZoom);
+            position = LinePathGeometry.FractionAt(points, labelDragPos);
+            if (Math.Abs(position - line.LabelPosition) < 0.001)
+                return;
+        }
+
+        commandService.Do(new LineLabelPositionCommand(pointerId.LineId) { Position = position });
+    }
+
+    public void EndLabelMove() => labelDragPos = Pos.None;
 
     static double GetChildrenLocalZoom(Node owner) => owner.GetZoom() / owner.ContainerZoom;
 

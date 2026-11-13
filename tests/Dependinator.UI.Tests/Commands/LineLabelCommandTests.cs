@@ -130,4 +130,38 @@ public class LineLabelCommandTests
         new LineLabelCommand(line.Id) { Label = "", Description = "" }.Execute(model);
         Assert.False(line.HasLabel);
     }
+
+    [Fact]
+    public void LineLabelPositionCommand_ShouldMoveTheLabel_AndRevertRestoreThePreviousPlace()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+
+        var command = new LineLabelPositionCommand(line.Id) { Position = 0.2 };
+        command.Execute(model);
+        Assert.Equal(0.2, line.LabelPosition);
+        Assert.True(line.IsLabelMoved);
+
+        command.Revert(model);
+        Assert.Equal(Line.DefaultLabelPosition, line.LabelPosition);
+        Assert.False(line.IsLabelMoved);
+
+        command.Execute(model);
+        Assert.Equal(0.2, line.LabelPosition);
+    }
+
+    [Fact]
+    public void SetLabelPosition_ShouldKeepTheLabelOffTheLineEnds()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+
+        line.SetLabelPosition(0);
+        Assert.Equal(0.05, line.LabelPosition);
+        line.SetLabelPosition(2);
+        Assert.Equal(0.95, line.LabelPosition);
+        line.SetLabelPosition(double.NaN);
+        Assert.Equal(Line.DefaultLabelPosition, line.LabelPosition);
+    }
 }

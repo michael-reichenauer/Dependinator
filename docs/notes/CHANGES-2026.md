@@ -41,6 +41,7 @@ project works.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram.
   Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
+  Line labels that are quieter and limited in length, and can be dragged along their line.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -558,6 +559,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - Line labels, with a description under the label.
   - Display aliases, shown in labels and search.
   - A View › Rows filter that leaves out whole kinds of rows.
+- **Line labels, polished (Nov 13).** Labels and their descriptions are smaller than node texts
+  and stop growing earlier when zooming in. The description keeps the user's line breaks and
+  shows at most three rows; a long label is cut to one row; the hover card shows both in full.
+  With soft lines a label rests stronger than its faint line. The label is part of its line:
+  hovering it shows the line's card, a click selects the line, a double-click in edit mode
+  edits it, and an edit-mode drag slides it along the line (saved as a fraction of the line's
+  length, so it follows when nodes move; undo, and "To the middle" in the label dialog).
 
 ## Models, cloud sync and sign-in
 

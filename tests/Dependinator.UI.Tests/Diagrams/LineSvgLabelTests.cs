@@ -1,6 +1,7 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Svg;
@@ -231,4 +232,40 @@ public class LineSvgLabelTests
                 .Value,
             System.Globalization.CultureInfo.InvariantCulture
         );
+
+    [Fact]
+    public void GetLineSvg_ShouldDrawTheLabel_WhereTheUserMovedIt()
+    {
+        var line = CreateLine();
+        line.SetLabel("orders");
+        line.SetLabelPosition(0.25);
+
+        var svg = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
+
+        // A quarter of the way from the right edge of a (100) to the left edge of b (300).
+        Assert.Matches("class=\"lineLabel\" x=\"150\"", svg);
+    }
+
+    [Fact]
+    public void GetLineLabelSvg_ShouldGiveTheLabelAHitTarget_ThatIsItsLine()
+    {
+        var line = CreateLine();
+        line.SetLabel("orders", "to the API");
+
+        var svg = LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false);
+
+        // The group carries the line's id (the hover card), the rect the label's own (the drag).
+        Assert.Contains($"<g class=\"hoverable\" id=\"{PointerId.FromLine(line.Id).ElementId}\">", svg);
+        Assert.Contains($"<rect id=\"{PointerId.LineLabelElementId(line.Id)}\"", svg);
+        Assert.Contains(LineSvg.LabelHitClass, svg);
+        Assert.DoesNotContain("pointer-events=\"none\" /></g>", svg);
+
+        // On a selected line with bend points the label lets presses through to the handles.
+        line.SetSegmentPoints([new Pos(200, 50)]);
+        line.IsSelected = true;
+        Assert.Contains(
+            "pointer-events=\"none\" /></g>",
+            LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false)
+        );
+    }
 }

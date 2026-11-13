@@ -164,19 +164,18 @@ static class LinePathGeometry
             || endpoints.X1 >= endpoints.X2 && endpoints.Y1 <= endpoints.Y2;
     }
 
-    // The point halfway along the polyline's length: where a line's label sits.
-    public static Pos MidPoint(IReadOnlyList<Pos> points)
+    // The point halfway along the polyline's length.
+    public static Pos MidPoint(IReadOnlyList<Pos> points) => PointAt(points, 0.5);
+
+    // The point at the given fraction (0 to 1) of the polyline's length: where a line's label sits.
+    public static Pos PointAt(IReadOnlyList<Pos> points, double fraction)
     {
         if (points.Count == 0)
             return Pos.None;
         if (points.Count == 1)
             return points[0];
 
-        var total = 0.0;
-        for (var i = 1; i < points.Count; i++)
-            total += Distance(points[i - 1], points[i]);
-
-        var remaining = total / 2;
+        var remaining = Length(points) * Math.Clamp(fraction, 0, 1);
         for (var i = 1; i < points.Count; i++)
         {
             var length = Distance(points[i - 1], points[i]);
@@ -193,7 +192,49 @@ static class LinePathGeometry
         return points[^1];
     }
 
+    // The fraction of the polyline's length at the point of the polyline closest to pos (the
+    // inverse of PointAt): where a dragged label lands.
+    public static double FractionAt(IReadOnlyList<Pos> points, Pos pos)
+    {
+        var total = Length(points);
+        if (points.Count < 2 || total <= 0)
+            return 0.5;
+
+        var bestDistance = double.MaxValue;
+        var bestAlong = 0.0;
+        var along = 0.0;
+        for (var i = 1; i < points.Count; i++)
+        {
+            var projected = ProjectPointOnSegment(pos, points[i - 1], points[i]);
+            var distance = Distance(projected, pos);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestAlong = along + Distance(points[i - 1], projected);
+            }
+            along += Distance(points[i - 1], points[i]);
+        }
+        return bestAlong / total;
+    }
+
+    static double Length(IReadOnlyList<Pos> points)
+    {
+        var total = 0.0;
+        for (var i = 1; i < points.Count; i++)
+            total += Distance(points[i - 1], points[i]);
+        return total;
+    }
+
     static double Distance(Pos a, Pos b) => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+
+    // The line's points in its owner's children-local space (see TryGetOwnerNode).
+    public static IReadOnlyList<Pos> GetLocalPolylinePoints(Line line)
+    {
+        if (!TryGetLocalEndpoints(line, out var endpoints))
+            return [];
+
+        return [new Pos(endpoints.X1, endpoints.Y1), .. line.SegmentPoints, new Pos(endpoints.X2, endpoints.Y2)];
+    }
 
     public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom)
     {

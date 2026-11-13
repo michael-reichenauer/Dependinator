@@ -87,6 +87,9 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
                     + $".line-vis.line-text {{ opacity: {Px(SoftLabelOpacity)}; }} .line-text.line-lit {{ opacity: 1; }} "
                     + $".line-text.line-dim {{ opacity: {Px(SoftLabelDimOpacity)}; }} "
                 : "";
+            // In edit mode a line's label can be dragged along its line (LineSvg.LabelHitSvg).
+            if (viewOptions.IsEditingEnabled)
+                css += $".{Svg.LineSvg.LabelHitClass} {{ cursor: move; }} ";
             // Calls inside a type (LineSvg.IsInnerMemberLine) show only when lit or hover-previewed.
             return css
                 + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }} "
