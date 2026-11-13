@@ -53,14 +53,22 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   - Clicking one of these lines moves the selection to the line, which ends the node's reveal:
     `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes under
     the click.
+  - The click must also survive the repaint: `SelectionService` measures a clicked line
+    (`GetBoundingRectangle`) before it clears the old selection and raises no event in
+    between. Deselecting the node first worked in the dev host and failed in the browser app
+    (Wasm repaints before the interop call returns, so the line was gone and the click only
+    deselected the node; Michael found it on the PR's test site). The chromium e2e run on the
+    dev host cannot see this kind of bug: check selection changes in a published
+    `Dependinator.Wasm` too (see the Layout section for how to serve one).
   - One line of 7 links becomes 7 lines of one link, which a minimum link count would drop: the
     selection's lines are flagged `Line.IsRevealed` and skip that filter.
   - No reveal while cycles are shown: the cycle lines are the sibling lines (`CycleService`
     ids), and a split line would lose its cycle colour.
   - `SvgService.CreateModelTile` syncs the lines before it reads the view flags: a Sync can
     create lines, and the rule and path line id sets must already hold them.
-  Not built yet: the same on hover (the lines are not in the tile at rest, so CSS alone cannot
-  do it) and one line per container for far ends that are off screen or tiny (a hub such as
+  Next (Michael, Nov 13): selecting a stub shows only that stub's lines (what uses the node, or
+  what it uses), not the node's other stub's. Hover was dropped by him: selecting is enough.
+  Still open: one line per container for far ends that are off screen or tiny (a hub such as
   Demo.Core.Utils lights 45 lines).
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
