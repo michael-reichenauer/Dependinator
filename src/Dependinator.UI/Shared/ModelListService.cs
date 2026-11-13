@@ -165,6 +165,7 @@ class ModelListService(
     public string? HomePath =>
         (lastWorkspacePath is { } last && IsWorkspacePath(last) ? last : null)
         ?? recentPaths.FirstOrDefault(IsWorkspacePath)
+        ?? (Build.IsVsCodeExtWasm ? ListedWorkspaceModelPath : null) // Where VS Code starts too
         ?? workspacePaths.FirstOrDefault();
 
     // Whether two model paths are of one model: paths are compared as the cloud names them, so
@@ -285,7 +286,8 @@ class ModelListService(
         sourceModelPaths = sourceModelPaths.Distinct().ToList();
 
         // The workspace model is a local model too (it is parsed here), but it comes last: the
-        // first local path is the model a new workspace starts on, which stays a single source.
+        // first local path is the working solution in the dev host (VS Code starts a new
+        // workspace on the whole workspace: WorkspaceStartupPath).
         localPaths = ListedWorkspaceModelPath is { } workspaceModelPath
             ? [.. sourceModelPaths, workspaceModelPath]
             : sourceModelPaths;

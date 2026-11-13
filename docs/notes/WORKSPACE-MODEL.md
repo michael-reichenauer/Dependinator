@@ -151,6 +151,10 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   line, and the labels and routes of lines between two sources or to Externals, do not come.
   The root's content zoom comes from its own model: a root the user resized there fits its
   content less well in the workspace model until it is fitted again.
+- VS Code starts on the whole workspace whenever no model of this workspace is among the
+  recent paths, which are shared by all workspaces and hold five: after five models of other
+  workspaces it starts there again rather than on the source used before. A workspace model
+  whose first parse fails as a whole asks for its sources again at the next start.
 - Links between languages (the extension starting the language server) are not made: each
   parser sees only its own source.
 - A workspace with several folders uses the first as the workspace folder (the editor's order,
