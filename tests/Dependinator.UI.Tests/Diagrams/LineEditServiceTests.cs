@@ -142,4 +142,18 @@ public class LineEditServiceTests
         Assert.Equal([new Pos(150, 100), new Pos(250, 100)], line.SegmentPoints);
         Assert.True(line.IsSegmentsUserSet);
     }
+
+    [Fact]
+    public async Task StraightenLine_ShouldBeAnUndoStepOfItsOwn_RightAfterABend()
+    {
+        var (service, commands, line) = Create();
+
+        var pointId = service.InsertSegmentPoint(PointerId.FromLineMidPoint(line.Id, 0), 3, 43, 1);
+        service.EndSegmentPointMove(pointId!, 1);
+        service.StraightenLine(line.Id);
+        Assert.Empty(line.SegmentPoints);
+
+        await commands.Undo();
+        Assert.Equal([new Pos(200, 100)], line.SegmentPoints);
+    }
 }

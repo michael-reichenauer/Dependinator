@@ -13,7 +13,9 @@ interface ILineEditService
     // the drag so far (in screen pixels), and returns the new point's pointer id for the rest of
     // the drag; null when the line has no such segment.
     PointerId? InsertSegmentPoint(PointerId midPointId, double screenDx, double screenDy, double zoom);
-    void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId);
+
+    // Moves a bend point under a drag by the pointer's movement in screen pixels.
+    void MoveSegmentPoint(double movementX, double movementY, double zoom, PointerId pointerId);
 
     // Ends a bend-point drag: a point dragged back onto the straight line between its neighbours
     // is removed, any other is snapped to the grid.
@@ -69,7 +71,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILin
         return PointerId.FromLinePoint(midPointId.LineId, segmentIndex);
     }
 
-    public void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId)
+    public void MoveSegmentPoint(double movementX, double movementY, double zoom, PointerId pointerId)
     {
         if (!pointerId.IsLinePoint)
             return;
@@ -85,8 +87,8 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILin
                 return;
 
             var localZoom = GetChildrenLocalZoom(owner) * zoom;
-            var dx = e.MovementX * localZoom;
-            var dy = e.MovementY * localZoom;
+            var dx = movementX * localZoom;
+            var dy = movementY * localZoom;
             var points = line.SegmentPoints.ToList();
             var point = points[pointerId.LinePointIndex];
             points[pointerId.LinePointIndex] = point with { X = point.X + dx, Y = point.Y + dy };
@@ -144,7 +146,9 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILin
             updatedPoints = line.SegmentPoints.Where((_, i) => i != pointerId.LinePointIndex).ToList();
         }
 
-        commandService.Do(new LineEditCommand(pointerId.LineId) { SegmentPoints = updatedPoints });
+        commandService.Do(
+            new LineEditCommand(pointerId.LineId) { SegmentPoints = updatedPoints, IsOwnUndoStep = true }
+        );
     }
 
     public void StraightenLine(LineId lineId)
@@ -155,7 +159,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILin
                 return;
         }
 
-        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = [] });
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = [], IsOwnUndoStep = true });
     }
 
     // Whether the bend point lies within StraightTolerance screen pixels of the straight line

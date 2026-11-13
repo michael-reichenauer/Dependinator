@@ -15,7 +15,7 @@ record PointerId
     // The hollow handle on a selected line's segment (sub-id "lm{i}_{percent}": segment i runs
     // from point i to point i + 1 of the line's polyline, and the handle sits that far along it,
     // usually halfway). An edit-mode drag on it adds a bend point there (see
-    // LineSvg.SelectedLineSvg); otherwise it is the line.
+    // LineSvg.SelectedLineSvg); otherwise it is the line (IsLine).
     public int LineMidPointIndex { get; init; } = -1;
     public double LineMidPointFraction { get; init; } = 0.5;
 
@@ -102,7 +102,10 @@ record PointerId
     public bool IsLinkHandle => SubId == "lh";
     public bool IsPrivateToggle => SubId == "pt";
     public bool IsResize => NodeResizeType != NodeResizeType.None;
-    public bool IsLine => SubId == "l";
+
+    // A segment handle lies on its line and is the line to everything but a drag (menus, hover
+    // card, double-click).
+    public bool IsLine => SubId == "l" || IsLineMidPoint;
     public bool IsLinePoint => LinePointIndex >= 0;
     public bool IsLineMidPoint => LineMidPointIndex >= 0;
 

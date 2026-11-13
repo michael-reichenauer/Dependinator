@@ -559,8 +559,9 @@ static class LineSvg
             );
         }
 
+        // A ring filled with the light selection color: it reads as hollow next to the solid bend
+        // handles and covers the line under it on any background (the canvas or a container's tint).
         var color = DColors.Selected;
-        var fill = DColors.CanvasBackground;
         var handles = new StringBuilder();
         for (var index = 0; index < polylinePoints.Count - 1; index++)
         {
@@ -580,7 +581,7 @@ static class LineSvg
                     CultureInfo.InvariantCulture,
                     $"""
                     <g class="selectpoint segment-handle">
-                      <circle cx="{p.X:0.##}" cy="{p.Y:0.##}" r="{circleRadius:0.##}" fill="{fill}" stroke="{color}" stroke-width="1.5" />
+                      <circle cx="{p.X:0.##}" cy="{p.Y:0.##}" r="{circleRadius:0.##}" fill="{DColors.LineSelected}" stroke="{color}" stroke-width="1.5" />
                       <circle id="{elementId}" cx="{p.X:0.##}" cy="{p.Y:0.##}" r="{hitRadius:0.##}" fill="black" fill-opacity="0" />
                     </g>
                     """

@@ -77,6 +77,7 @@ class InteractionService(
     bool isDraggingSelectedLinePoint = false;
     bool isDraggingLineLabel = false;
     Pos labelDragClient = Pos.None;
+    Pos pointDragClient = Pos.None;
     bool isDraggingLink = false;
     bool isAreaSelecting = false;
 
@@ -479,17 +480,14 @@ class InteractionService(
             return;
         }
 
-        // Double-click on a bend point of the selected line in edit mode removes it; on a
-        // segment handle it is a double-click on the line.
+        // Double-click on a bend point of the selected line in edit mode removes it (a segment
+        // handle is the line, below).
         if (viewOptions.IsEditingEnabled && pointerId.IsLinePoint)
         {
             lineEditService.RemoveSegmentPoint(pointerId);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             return;
         }
-        if (pointerId.IsLineMidPoint)
-            pointerId = PointerId.FromLine(pointerId.LineId);
-
         // Double-click on a line in edit mode edits its label.
         if (viewOptions.IsEditingEnabled && pointerId.IsLine)
         {
@@ -631,14 +629,19 @@ class InteractionService(
                 e.ClientY - mouseDownClient.Y,
                 Zoom
             );
+            // A segment that is gone (the line changed under the press) leaves a pan.
+            mouseDownId = pointId ?? PointerId.Empty;
             if (pointId is null)
                 return;
-            mouseDownId = pointId;
+            pointDragClient = new Pos(e.ClientX, e.ClientY);
             isDraggingSelectedLinePoint = true;
             selectionService.HideSelectedPosition();
             return;
         }
 
+        // A bend point moves once the pointer has moved a few pixels, so a click or double-click
+        // on it does not nudge it (a nudge back onto the straight line would remove it). Steps
+        // are taken between client positions, as for a label.
         if (
             viewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
@@ -646,8 +649,12 @@ class InteractionService(
             && mouseDownId.Id == selectionService.SelectedId.Id
         )
         {
+            if (!isDraggingSelectedLinePoint && !IsBeyondDragThreshold(e))
+                return;
+            var from = isDraggingSelectedLinePoint ? pointDragClient : mouseDownClient;
+            pointDragClient = new Pos(e.ClientX, e.ClientY);
             isDraggingSelectedLinePoint = true;
-            lineEditService.MoveSegmentPoint(e, Zoom, mouseDownId);
+            lineEditService.MoveSegmentPoint(e.ClientX - from.X, e.ClientY - from.Y, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }

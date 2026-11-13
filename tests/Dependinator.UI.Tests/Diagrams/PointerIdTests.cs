@@ -69,7 +69,7 @@ public class PointerIdTests
         Assert.Equal(2, parsed.LineMidPointIndex);
         Assert.Equal(0.25, parsed.LineMidPointFraction);
         Assert.Equal(lineId, parsed.LineId);
-        Assert.False(parsed.IsLine);
+        Assert.True(parsed.IsLine); // it lies on the line: menus and hover cards are the line's
         Assert.False(parsed.IsLinePoint);
         Assert.NotEqual(PointerId.FromLineMidPoint(lineId, 2), parsed);
     }

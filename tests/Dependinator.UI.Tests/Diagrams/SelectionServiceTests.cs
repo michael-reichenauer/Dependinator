@@ -292,8 +292,6 @@ public class SelectionServiceTests
         Assert.True(stub.IsSelected);
         Assert.False(second.IsSelected);
         Assert.False(stub.IsExplored);
-        // Not where the stub was clicked: a pan or zoom since then would make that spot wrong.
-        Assert.Equal(Pos.None, service.SelectedLineClickPosition);
         Assert.False(service.TrySelectExploredStub());
 
         // A line that was not drawn for the stub ends it, and so does a node.

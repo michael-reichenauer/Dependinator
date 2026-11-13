@@ -14,7 +14,6 @@ interface ISelectionService
     Pos SelectedPosition { get; }
     Pos SelectedNodePosition { get; }
     Pos SelectedLinePosition { get; }
-    Pos SelectedLineClickPosition { get; }
 
     // Every selected node: the primary one (SelectedId, which anchors the toolbar) plus the
     // ones added with Shift/Ctrl+click. Group actions (move, hide, color, size, delete) apply
@@ -63,7 +62,6 @@ class SelectionService(
     const double MaxCover = 0.8;
 
     Pos selectedPosition = Pos.None;
-    Pos selectedLineClickPosition = Pos.None;
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
@@ -94,7 +92,6 @@ class SelectionService(
     public Pos SelectedPosition => IsSelected ? selectedPosition : Pos.None;
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
-    public Pos SelectedLineClickPosition => selectedId.IsLine ? selectedLineClickPosition : Pos.None;
 
     public void HideSelectedPosition()
     {
@@ -229,6 +226,10 @@ class SelectionService(
 
     public async Task Select(PointerId pointerId, PointerEvent e)
     {
+        // A click on a segment handle is a click on its line (measured by the line's element).
+        if (pointerId.IsLineMidPoint)
+            pointerId = PointerId.FromLine(pointerId.LineId);
+
         if (IsSelected && selectedId.Id == pointerId.Id)
         {
             if (pointerId.IsLine)
@@ -274,7 +275,6 @@ class SelectionService(
             {
                 selectedId = pointerId;
                 this.isEditMode = false;
-                selectedLineClickPosition = Pos.None;
                 applicationEvents.TriggerModelChanged();
                 await UpdateSelectedPositionAsync();
             }
@@ -325,7 +325,6 @@ class SelectionService(
         exploredStub = null;
         selectedId = PointerId.Empty;
         this.isEditMode = false;
-        selectedLineClickPosition = Pos.None;
         // Forget the toolbar position too: UpdateSelectedPositionAsync skips the repaint when
         // the position is unchanged, so re-selecting the same node at the same spot would
         // otherwise select it in the model without ever showing it (no border, no toolbar).
@@ -356,7 +355,6 @@ class SelectionService(
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);
-        selectedLineClickPosition = new Pos(x, y);
 
         using (var model = modelMgr.UseModel())
         {

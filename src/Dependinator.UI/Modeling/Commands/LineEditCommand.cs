@@ -10,8 +10,12 @@ class LineEditCommand(LineId lineId) : Command
 {
     readonly LineId lineId = lineId;
 
-    // Only edits to the same line merge into one undo step (e.g. dragging a segment point).
-    public override string MergeKey => lineId.Value;
+    // Only edits to the same line merge into one undo step (e.g. dragging a segment point); an
+    // edit that is a step of its own (Straighten, removing a bend) merges with none.
+    public override string MergeKey => IsOwnUndoStep ? ownStepKey : lineId.Value;
+
+    public bool IsOwnUndoStep { get; init; }
+    readonly string ownStepKey = Guid.NewGuid().ToString();
 
     public IReadOnlyList<Pos>? SegmentPoints { get; set; }
     public IReadOnlyList<Pos>? SegmentPointsCopy { get; private set; }
