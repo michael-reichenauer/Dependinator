@@ -69,6 +69,14 @@ public sealed class AppPage
     // aggregated default view.
     public ILocator CousinLines => page.Locator("#svgcanvas polyline[marker-end='url(#arrow-cousin)']");
 
+    // The crossing lines whose source's long name starts with the prefix ("Demo.UI.Main." for
+    // the lines of Main's members): a line's group holds both its drawn polyline and the hover
+    // group with the "Source→Target (n)" data-name.
+    public ILocator CousinLinesFrom(string sourcePrefix) =>
+        page.Locator(
+            $"#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']):has(g.hoverable[data-name^={Css(sourcePrefix)}])"
+        );
+
     // The explorer subject's lines (Line.IsFocused): accent colored like the explorer's pair
     // lines, but dotted instead of dashed. Present only while the explorer shows lines.
     public ILocator FocusLines =>
