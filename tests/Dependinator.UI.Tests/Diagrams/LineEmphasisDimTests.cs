@@ -41,6 +41,25 @@ public class LineEmphasisDimTests
     }
 
     [Fact]
+    public void IsLineDimmed_ShouldKeepTheLinesDrawnForTheSelectedLine()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "A");
+        var b = AddNode(root, "B");
+        var c = AddNode(root, "C");
+        var stub = new Line(root, b); // From the container's edge to its child
+        var itsLine = new Line(c, b) { IsRevealed = true }; // Drawn for the selected stub
+        var other = new Line(a, c);
+
+        var selection = new RenderSelection(null, stub);
+
+        Assert.False(LineEmphasis.IsLineDimmed(stub, selection));
+        Assert.False(LineEmphasis.IsLineDimmed(itsLine, selection));
+        Assert.True(LineEmphasis.IsLineDimmed(other, selection));
+        Assert.True(LineEmphasis.IsLineLit(itsLine, selection));
+    }
+
+    [Fact]
     public void IsLineDimmed_ShouldDimLinesBetweenTheSelectedNodesChildren()
     {
         var root = CreateRoot();

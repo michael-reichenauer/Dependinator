@@ -253,6 +253,24 @@ public class LineStubTests
     }
 
     [Fact]
+    public void RenderNodeLines_ShouldDrawStubsOnTopOfTheOtherLines()
+    {
+        var scene = new Scene();
+        // "b" uses "a" at its left: that line starts at b's right side and runs back under "b"
+        // and the stub into it, so the stub must be the later element to get the click.
+        var incoming = scene.Incoming(scene.B);
+        scene.Parent.SourceLines.Add(incoming);
+        var back = scene.Sibling(scene.B, scene.A);
+        var context = new RenderContext(Pos.None, 1, new Rect(0, 0, 1000, 1000), Pos.None, new ViewFlags());
+
+        var svg = string.Concat(NodeLinesSvg.RenderNodeLines(scene.Parent, Pos.None, 1, context));
+
+        var stubAt = svg.IndexOf(PointerId.FromLine(incoming.Id).ElementId, StringComparison.Ordinal);
+        var backAt = svg.IndexOf(PointerId.FromLine(back.Id).ElementId, StringComparison.Ordinal);
+        Assert.True(backAt >= 0 && stubAt > backAt, $"stub at {stubAt}, line at {backAt}");
+    }
+
+    [Fact]
     public void GetLineSvg_ShouldDrawAnIncomingStub_WithARingInPlaceOfTheStartCircle()
     {
         var scene = new Scene();

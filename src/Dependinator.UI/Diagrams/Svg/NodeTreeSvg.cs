@@ -34,17 +34,22 @@ static class NodeTreeSvg
         return content;
     }
 
-    // The selected nodes' links are drawn end to end (see RepLineService). A selected line that
-    // crosses containers is kept as it is: it may be one of those lines, clicked.
-    internal static LineReveal GetLineReveal(RenderSelection selection, RowFilter rows, LineFilter filter)
+    // A selected stub's links are drawn end to end (see RepLineService); not those of an edge
+    // line that is drawn in full (labelled, routed with line points or on the shown path), which
+    // is selected for itself. A selected line that crosses containers is kept as it is: it may be
+    // one of the stub's lines, clicked. A selected node asks for nothing: its stubs are there to
+    // click.
+    internal static LineReveal GetLineReveal(
+        RenderSelection selection,
+        RowFilter rows,
+        LineFilter filter,
+        IReadOnlySet<LineId>? pathLines = null
+    )
     {
-        if (selection.Node is { } node)
-        {
-            IReadOnlyList<Node> nodes = selection.OtherNodes is { } others ? [node, .. others] : [node];
-            return new LineReveal(nodes, rows, filter.HideMember);
-        }
         if (selection.Line is { IsCousin: true } line)
-            return new LineReveal(null, rows, filter.HideMember) { KeptLine = line };
+            return new LineReveal(rows, filter.HideMember) { KeptLine = line };
+        if (selection.Line is { } edgeLine && LineStub.IsStub(edgeLine, pathLines?.Contains(edgeLine.Id) == true))
+            return new LineReveal(rows, filter.HideMember) { Stub = edgeLine };
         return LineReveal.None;
     }
 

@@ -167,25 +167,39 @@ public class SelectionServiceTests
         Assert.True(b.IsSelected);
     }
 
-    // A selected node's lines are drawn end to end only while it is selected, so the line is on
-    // screen (can be measured) until the node is deselected and the diagram repainted.
+    // A selected stub's lines are drawn end to end only while it is selected, so one of them is
+    // on screen (can be measured) until the stub is deselected and the diagram repainted.
     [Fact]
-    public async Task Select_ShouldSelectALineOfTheSelectedNode_ThoughDeselectingTheNodeTakesItOffScreen()
+    public async Task Select_ShouldSelectALineOfTheSelectedStub_ThoughDeselectingTheStubTakesItOffScreen()
     {
-        Node a;
+        Line stub;
         Line line;
         using (var model = modelMgr.UseModel())
         {
-            a = AddNode(model, "A", model.Root);
+            var a = AddNode(model, "A", model.Root);
             var b = AddNode(model, "B", model.Root);
-            line = new Line(a, b);
+            var child = AddNode(model, "Child", b);
+            stub = new Line(b, child); // From the container's edge into its child
+            line = new Line(a, child); // One of the stub's lines, from the node that uses the child
+            model.TryAddLine(stub);
             model.TryAddLine(line);
         }
+        var stubPointer = PointerId.FromLine(stub.Id);
         var linePointer = PointerId.FromLine(line.Id);
+        var onScreen = new ElementBoundingRectangle
+        {
+            X = 10,
+            Y = 10,
+            Width = 100,
+            Height = 50,
+            Right = 110,
+            Bottom = 60,
+        };
+        screenService.Setup(s => s.GetBoundingRectangle(stubPointer.ElementId)).ReturnsAsync(onScreen);
         screenService
             .Setup(s => s.GetBoundingRectangle(linePointer.ElementId))
             .ReturnsAsync(() =>
-                a.IsSelected || line.IsSelected
+                stub.IsSelected || line.IsSelected
                     ? new ElementBoundingRectangle
                     {
                         X = 10,
@@ -198,14 +212,15 @@ public class SelectionServiceTests
                     : (Result<ElementBoundingRectangle>)new Error("Not on screen")
             );
         var service = CreateService();
-        await service.Select(a.Id);
+        await service.Select(stubPointer, new PointerEvent { ClientX = 60, ClientY = 35 });
+        Assert.True(stub.IsSelected);
         applicationEvents.Invocations.Clear();
 
         await service.Select(linePointer, new PointerEvent { ClientX = 60, ClientY = 35 });
 
         Assert.Equal(linePointer, service.SelectedId);
         Assert.True(line.IsSelected);
-        Assert.False(a.IsSelected);
+        Assert.False(stub.IsSelected);
         Assert.Empty(service.SelectedNodeIds);
         applicationEvents.Verify(e => e.TriggerModelChanged(), Times.AtLeastOnce);
         applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.AtLeastOnce);

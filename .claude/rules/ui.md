@@ -43,33 +43,56 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `LineStub.GetDirection` turns one aside when a sibling line leaves the same anchor that way.
   The length is in the container's units (so the two stubs between neighbours stay apart at the
   layout's 60-unit gap) within pixel limits.
-- **The selection's lines.** `RepLineService.Sync` takes a `LineReveal` (the selected nodes, from
-  `NodeTreeSvg.GetLineReveal`): a link of a selected node is pinned at that node and descends on
-  its far side as deep as the nodes are open, so the selection's lines run end to end as cousin
-  lines (lit by `LineEmphasis.IsNodeLine`). The reveal is part of the Sync memo, the lines it
-  creates are inactive again after the selection (never pruned, never saved), and an export has
-  no selection. It leaves out what View › Rows and "hide member lines" hide. Traps the review
-  of the first version found:
-  - Clicking one of these lines moves the selection to the line, which ends the node's reveal:
-    `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes under
-    the click.
+- **A selected stub's lines (Nov 13, Michael).** Selecting a stub draws that stub's lines end
+  to end: what uses the node from outside its container, or what it uses outside, not the lines
+  of the node's other stub. `RepLineService.Sync` takes a `LineReveal` (from
+  `NodeTreeSvg.GetLineReveal`): `Stub` for a selected `LineStub.IsStub` line (an edge line drawn
+  in full for its label, its line points or the shown path is selected for itself and gets no
+  lines). The stub's own links (`stub.Contains(link)`) that cross the border are pinned at the
+  child and descend on the far side as deep as the nodes are open, as cousin lines flagged
+  `Line.IsRevealed`; the stub itself stays active as the selected line when the reveal took its
+  links (`Sync` sets `IsActiveRep`; not when the explorer's focus took them), and
+  `LineEmphasis.IsLineDimmed` keeps the `IsRevealed` lines undimmed beside a selected line. The
+  reveal is part of the Sync memo, the lines it creates are inactive again after the selection
+  (never pruned, never saved), and an export has no selection. It leaves out what View › Rows
+  and "hide member lines" hide.
+- **A selected node draws no such lines (Michael, Nov 13).** The first version (PR #220) drew a
+  selected node's lines end to end too. Michael dropped it after trying it: a node is selected
+  all the time (a search, a go to, moving it), so the lines came unasked and often (a hub such
+  as Demo.Core.Utils lit 45), while clicking a stub does the job and feels natural. A selected
+  node still lights its own lines and its stubs (`LineEmphasis.IsNodeLine`). Don't re-propose
+  the node's lines, or lines on hover (dropped by him the same day: selecting is enough).
+- Traps the reviews of the stub lines found:
+  - Clicking one of a stub's lines moves the selection to that line, which ends the stub's
+    reveal: `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes
+    under the click.
   - The click must also survive the repaint: `SelectionService` measures a clicked line
     (`GetBoundingRectangle`) before it clears the old selection and raises no event in
-    between. Deselecting the node first worked in the dev host and failed in the browser app
-    (Wasm repaints before the interop call returns, so the line was gone and the click only
-    deselected the node; Michael found it on the PR's test site). The chromium e2e run on the
-    dev host cannot see this kind of bug: check selection changes in a published
-    `Dependinator.Wasm` too (see the Layout section for how to serve one).
+    between. Deselecting first worked in the dev host and failed in the browser app (Wasm
+    repaints before the interop call returns, so the line was gone and the click only
+    deselected; Michael found it on the PR's test site). The chromium e2e run on the dev host
+    cannot see this kind of bug: check selection changes in a published `Dependinator.Wasm`
+    too (see the Layout section for how to serve one).
   - One line of 7 links becomes 7 lines of one link, which a minimum link count would drop: the
-    selection's lines are flagged `Line.IsRevealed` and skip that filter.
+    revealed lines (`Line.IsRevealed`) skip that filter.
   - No reveal while cycles are shown: the cycle lines are the sibling lines (`CycleService`
     ids), and a split line would lose its cycle colour.
   - `SvgService.CreateModelTile` syncs the lines before it reads the view flags: a Sync can
     create lines, and the rule and path line id sets must already hold them.
-  Next (Michael, Nov 13): selecting a stub shows only that stub's lines (what uses the node, or
-  what it uses), not the node's other stub's. Hover was dropped by him: selecting is enough.
-  Still open: one line per container for far ends that are off screen or tiny (a hub such as
-  Demo.Core.Utils lights 45 lines).
+  - Usage and inheritance between the same two nodes are two lines (`RepPair.IsInheritance`,
+    `LineService.AddDirectLine`), so a node can have two stubs on one side, and a clicked line
+    can have a twin. Picking links by direction or by the ends alone drew both: go by the
+    stub's own links, and by `IsInheritanceBetween` for the kept line.
+  - Beside a selected line only its own lines may be `IsRevealed` (that is what keeps the dim
+    rule to one test): a reveal that flags more lights them.
+  - Stubs are drawn after a container's other lines (`NodeLinesSvg.DrawnNodeLines` yields them
+    last): a line back to a node on the left starts at its node's right side and runs level
+    under the node and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils
+    in the demo). Known and left: a stub therefore also lies over the handles of a selected
+    hand-routed line whose point is right at it, and a selected stub's own lines end at its
+    anchor and lie over it (a second click on the selected stub can select one of its lines).
+  Still open: one line per container for far ends that are off screen or tiny (a hub's stub can
+  light dozens of lines), and a wider touch area for a stub if it is fiddly on the iPad.
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:

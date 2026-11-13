@@ -8,7 +8,7 @@ namespace Dependinator.UI.Diagrams.Lines;
 // All such lines of a container used to meet at the middle of its left and right edge, long
 // lines over the siblings that could not be followed through that point anyway. They are now
 // drawn as a stub at the child: a short arrow into its left side or out of its right side, with
-// a ring at the far end for "continues outside the container". Selecting the child shows where
+// a ring at the far end for "continues outside the container". Selecting a stub shows where
 // its lines really go (see RepLineService).
 //
 // A stub is the same line, only drawn short: its element id, tooltip, selection and styling

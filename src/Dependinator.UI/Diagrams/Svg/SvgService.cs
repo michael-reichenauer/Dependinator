@@ -166,14 +166,24 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        // The selection's lines are drawn end to end, except while cycles are shown: the cycle
+        // A selected stub's lines are drawn end to end, except while cycles are shown: the cycle
         // lines are the lines between siblings, which must then stay as they are. The lines are
         // synced before the flags are read, since a selection can create lines and the rule
         // and path line sets below must hold them.
         var selection = LineEmphasis.FindSelection(model);
         var reveal = viewOptions.IsCyclesShown
             ? LineReveal.None
-            : NodeTreeSvg.GetLineReveal(selection, viewOptions.RowFilter, viewOptions.LineFilter);
+            : NodeTreeSvg.GetLineReveal(
+                selection,
+                viewOptions.RowFilter,
+                viewOptions.LineFilter,
+                // Only a selected edge line asks, and that line exists before the Sync.
+                selection.Line
+                    is { } selectedLine
+                && LineStub.IsEdgeLine(selectedLine)
+                    ? pathFinderService.GetPathLineIds()
+                    : null
+            );
         RepLineService.Sync(model, tileZoom, reveal);
 
         // The problems GetTile checked the cache against, so the tile matches them.
