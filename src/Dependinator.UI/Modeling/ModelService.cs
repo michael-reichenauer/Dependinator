@@ -364,14 +364,6 @@ class ModelService : IModelService, IDisposable
         if (await ParseAndUpdateAsync(path) is Error e)
             return e;
 
-        // Rendering during the progressive parse may have laid out nodes before all their
-        // children's links had arrived; re-flag them so the next render lays out each node
-        // with the complete dependency graph.
-        using (var model = modelMgr.UseModel())
-        {
-            RequireChildrenLayout(model);
-        }
-
         return new ModelInfo(path, Rect.None, 0);
     }
 
@@ -536,6 +528,18 @@ class ModelService : IModelService, IDisposable
                 return e;
             }
 
+            // The sources that are new in a workspace model bring the layout of their own model
+            var newRoots = isWorkspace
+                ? modelMgr.WithModel(m =>
+                    items
+                        .Select(i => i.Source)
+                        .OfType<Parsing.ParsedSource>()
+                        .Where(s => !m.Nodes.ContainsKey(NodeId.FromName(s.RootName)))
+                        .ToList()
+                )
+                : [];
+            var sourceLayouts = await ReadSourceModelsAsync(newRoots);
+
             // A refresh whose model was closed while it parsed (another one was opened) is not
             // of the model that is open now.
             if (isRefresh && modelMgr.ModelPath != path)
@@ -563,6 +567,14 @@ class ModelService : IModelService, IDisposable
             {
                 if (isWorkspace)
                     UpdateWorkspaceSources(model, parseOptions.Sources, [.. keptSources.Select(c => c.Path)], items);
+                // Rendering during the progressive parse of a new model may have laid out nodes
+                // before all their children's links had arrived; re-flag them so the next render
+                // lays out each node with the complete dependency graph (before the sources'
+                // own layouts are brought in, which are kept).
+                if (!isRefresh)
+                    RequireChildrenLayout(model);
+                foreach (var (rootName, sourceModel) in sourceLayouts)
+                    SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
                 PassThroughService.UpdatePassThroughFlags(model);
             }
 
@@ -586,6 +598,24 @@ class ModelService : IModelService, IDisposable
             modelListService.WorkspaceSourcePaths,
             model.WorkspaceSources
         );
+
+    // The saved models of the sources, by their root names in the workspace model; a source
+    // that was never opened on its own has none.
+    async Task<IReadOnlyList<(string RootName, ModelDto Model)>> ReadSourceModelsAsync(
+        IReadOnlyList<Parsing.ParsedSource> sources
+    )
+    {
+        var models = await Task.WhenAll(
+            sources.Select(async source => (source.RootName, Model: await persistenceService.ReadAsync(source.Path)))
+        );
+        List<(string, ModelDto)> found = [];
+        foreach (var (rootName, result) in models)
+        {
+            if (result is ModelDto model)
+                found.Add((rootName, model));
+        }
+        return found;
+    }
 
     static readonly Result<IReadOnlyList<Parsing.Item>> NoItems = new List<Parsing.Item>();
 
@@ -872,13 +902,17 @@ class ModelService : IModelService, IDisposable
     // shown), except in the containers the user arranged; the flags are saved with the model
     // until each container is laid out. Member rows are never arranged by hand (their card
     // keeps them in order), so containers with members are laid out again even when arranged.
-    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
+    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion) =>
+        RequireChildrenLayoutIfOlder(model.Nodes.Values, layoutVersion);
+
+    internal static void RequireChildrenLayoutIfOlder(IEnumerable<Node> nodes, int layoutVersion)
     {
         if (layoutVersion >= NodeLayout.CurrentLayoutVersion)
             return;
-        RequireChildrenLayout(model);
-        foreach (var node in model.Nodes.Values)
+        foreach (var node in nodes)
         {
+            if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
+                node.IsChildrenLayoutRequired = true;
             if (node.IsChildrenLayoutCustomized && NodeLayout.HasMemberChildren(node))
                 node.IsChildrenLayoutRequired = true;
             // Before version 4 nested types sat right of a type's card; now they go below it.

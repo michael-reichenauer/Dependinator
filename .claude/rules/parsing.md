@@ -69,6 +69,11 @@ paths:
     the model has is saved (`WorkspaceSource.IsInModel`), never inferred from its nodes: a
     root can stay for a note the user put in it, a failed source has no nodes, and node stamps
     are in flux while a parse runs (all three were tried and found in review, Nov 13).
+  - A source's own model's layout is copied by name (`SourceLayout`): a node keeps the name
+    of its own model except under a root the workspace renamed (`WorkspaceItems.Renamed`, by
+    prefix). A C# project's nodes are not named by their solution, so what is in a root is
+    found by the tree, never by a name prefix (the first version took only prefixed names and
+    missed every project).
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
     with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):

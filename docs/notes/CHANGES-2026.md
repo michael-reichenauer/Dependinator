@@ -151,7 +151,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   choice is saved with the model. In this repository the solution, the VS Code extension and
   the TypeScript helper make one diagram. A refresh parses only the sources whose kind of
   file changed (editing a `.ts` file no longer parses the solution again), and VS Code
-  notices a source that is added or removed without a restart (Nov 13, phase 2). Design and
+  notices a source that is added or removed without a restart (Nov 13, phase 2). A source
+  brings what the user did in its own model: where its nodes are, their display names, colors,
+  icons and hidden nodes, its notes and zones, and its routed and labelled lines (Nov 13,
+  phase 3). Design and
   what is left (starting on it in VS Code) in `WORKSPACE-MODEL.md`.
 
 ## Viewing, navigation and analysis

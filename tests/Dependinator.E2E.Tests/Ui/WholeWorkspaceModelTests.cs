@@ -73,6 +73,41 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
     }
 
+    // What the user did in a source's own model comes along when the source is taken into the
+    // workspace model: here a display name.
+    [E2EFact]
+    public async Task WorkspaceModel_ShouldBringWhatWasDoneInASourcesOwnModel()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+
+        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
+        await App.MenuItem("menu-model-item")
+            .Filter(new() { Has = Page.GetByText("shop", new() { Exact = true }) })
+            .ClickAsync();
+        await Expect(App.Node("shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
+        await App.EnableEditModeAsync();
+        await App.SelectNodeByFullNameAsync("shop");
+        await App.ClickNodeMenuItemAsync("node-menu-alias");
+        ILocator field = Page.GetByTestId("node-alias-text");
+        await Expect(field).ToBeVisibleAsync();
+        await App.FillReliablyAsync(field, "The shop");
+        await Page.GetByTestId("node-alias-save").ClickAsync();
+        await Expect(App.NodeLabel("The shop")).ToBeVisibleAsync();
+        await App.WaitForSavedAsync();
+
+        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
+        await App.ClickUntilVisibleAsync(App.MenuItem("menu-workspace-model"), Page.GetByTestId("sources-dialog"));
+        foreach (ILocator source in await Page.GetByTestId("sources-check").AllAsync())
+            await SetTickedAsync(source, false);
+        await SetTickedAsync(Source("main.bicep"), true);
+        await SetTickedAsync(Source("shop"), true);
+        await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
+
+        await Expect(App.NodeLabel("The shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
+        await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
+    }
+
     // The checkbox of a source in the sources dialog, by the source's whole name ("webshop.bicep"
     // has "shop" in it too).
     ILocator Source(string name) =>

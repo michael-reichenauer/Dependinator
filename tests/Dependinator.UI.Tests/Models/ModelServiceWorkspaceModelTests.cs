@@ -1,7 +1,9 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Modeling;
+using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
+using Dependinator.UI.Shared.Types;
 using Dependinator.UI.Shared.VsCode;
 using Item = Dependinator.Core.Parsing.Item;
 using ParsedLink = Dependinator.Core.Parsing.Link;
@@ -78,7 +80,7 @@ public class ModelServiceWorkspaceModelTests
             modelMgr,
             modelListService.Object,
             parserService.Object,
-            new StructureService(Mock.Of<ILineService>()),
+            new StructureService(new LineService()),
             persistenceService.Object,
             applicationEvents.Object,
             Mock.Of<IProgressService>(),
@@ -564,6 +566,208 @@ public class ModelServiceWorkspaceModelTests
         AssertOk(await refresh);
         Assert.Equal("/other/Other.sln", modelMgr.ModelPath);
     }
+
+    // The user laid out the solution in its own model before making the workspace model
+    [Fact]
+    public async Task LoadAsync_ShouldBringTheLayoutOfASourcesOwnModel()
+    {
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        AssertSolutionLayout("App*sln");
+        // The layout is kept, not done again on first render
+        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].IsChildrenLayoutRequired));
+        // The web project had no model of its own
+        Assert.Equal(Rect.None, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web.main*ts")].Boundary));
+    }
+
+    // A node that is new since the source's model was saved gets a place by the layout
+    [Fact]
+    public async Task LoadAsync_ShouldLayOutANodeTheSourcesOwnModelHasNot()
+    {
+        sourceItems[Solution] = [.. sourceItems[Solution]!, Node("Core.New")];
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        modelMgr.WithModel(m =>
+        {
+            Assert.True(m.Nodes[NodeId.FromName("Core")].IsChildrenLayoutRequired);
+            Assert.Equal(new Rect(0, 0, 60, 60), m.Nodes[NodeId.FromName("Core.Type")].Boundary);
+        });
+    }
+
+    // A source taken in later brings its layout too, also when its root had to be renamed
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldBringTheLayoutOfAnAddedSource_UnderItsNewName()
+    {
+        sourceItems[Sample] = [Root("App*sln"), Node("App*sln.Tool")];
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        persistenceService.Setup(p => p.ReadAsync(Sample)).ReturnsAsync(SampleModel());
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, true, true)));
+
+        modelMgr.WithModel(m =>
+        {
+            var tool = m.Nodes[NodeId.FromName("App*sln (tests∕sample).Tool")];
+            Assert.Equal(new Rect(40, 40, 100, 100), tool.Boundary);
+            Assert.Equal("The tool", tool.Alias);
+            // The solution that was there first keeps what the workspace model has
+            Assert.Null(m.Nodes[NodeId.FromName("Core")].Alias);
+        });
+    }
+
+    // What the workspace model has of a source stays its own: the source's model is read only
+    // for a source that is new in it.
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepTheWorkspaceLayout_OfASourceItHas()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        persistenceService.Invocations.Clear();
+
+        AssertOk(await modelService.RefreshAsync());
+
+        Assert.Null(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("Core")].Alias));
+        persistenceService.Verify(p => p.ReadAsync(Solution), Times.Never);
+    }
+
+    // A line the user routed in the solution's own model keeps its points
+    [Fact]
+    public async Task LoadAsync_ShouldBringTheRoutedLinesOfASourcesOwnModel()
+    {
+        sourceItems[Solution] =
+        [
+            .. sourceItems[Solution]!,
+            Node("Other", parent: "App*sln"),
+            Link("Core.Type", "Other"),
+        ];
+        using (var firstService = CreateModelService())
+            AssertOk(await firstService.LoadAsync(ModelPath));
+        var lineId = modelMgr.WithModel(m =>
+            m.Lines.Values.Single(l => l.Source.Name == "Core" && l.Target.Name == "Other").Id
+        );
+        Pos[] points = [new(10, 10), new(30, 10)];
+        persistenceService
+            .Setup(p => p.ReadAsync(Solution))
+            .ReturnsAsync(
+                SolutionModel("App*sln") with
+                {
+                    Lines =
+                    [
+                        new LineDto
+                        {
+                            LineId = lineId.Value,
+                            SegmentPoints = points,
+                            IsSegmentsUserSet = true,
+                        },
+                    ],
+                }
+            );
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        Assert.Equal(points, modelMgr.WithModel(m => m.Lines[lineId].SegmentPoints.ToArray()));
+    }
+
+    void AssertSolutionLayout(string rootName) =>
+        modelMgr.WithModel(m =>
+        {
+            var core = m.Nodes[NodeId.FromName("Core")];
+            Assert.Equal(new Rect(20, 20, 100, 100), core.Boundary);
+            Assert.Equal("The core", core.Alias);
+            Assert.Equal(NodeVisibility.Dimmed, m.Nodes[NodeId.FromName("Core.Type")].UserVisibility);
+            Assert.True(core.IsChildrenLayoutCustomized);
+            // The root keeps its place among the sources
+            Assert.NotEqual(new Rect(500, 500, 100, 100), m.Nodes[NodeId.FromName(rootName)].Boundary);
+            // The note the user put in the solution
+            var note = m.Nodes[NodeId.FromName($"{rootName}.Note")];
+            Assert.True(note.IsNote);
+            Assert.Equal(rootName, note.Parent.Name);
+        });
+
+    static ModelDto SolutionModel(string rootName) =>
+        new()
+        {
+            Name = Solution,
+            LayoutVersion = NodeLayout.CurrentLayoutVersion,
+            Nodes =
+            [
+                new NodeDto
+                {
+                    Name = rootName,
+                    ParentName = "",
+                    Type = "Solution",
+                    Boundary = new Rect(500, 500, 100, 100),
+                },
+                new NodeDto
+                {
+                    Name = "Core",
+                    ParentName = rootName,
+                    Type = "ClassType",
+                    Boundary = new Rect(20, 20, 100, 100),
+                    Alias = "The core",
+                    IsChildrenLayoutCustomized = true,
+                },
+                new NodeDto
+                {
+                    Name = "Core.Type",
+                    ParentName = "Core",
+                    Type = "ClassType",
+                    Boundary = new Rect(0, 0, 60, 60),
+                    Visibility = nameof(NodeVisibility.Dimmed),
+                },
+                new NodeDto
+                {
+                    Name = $"{rootName}.Note",
+                    ParentName = rootName,
+                    Type = "None",
+                    Boundary = new Rect(200, 20, 60, 60),
+                    IsManual = true,
+                    IsNote = true,
+                },
+                // Not of the source: the workspace has its own Externals
+                new NodeDto
+                {
+                    Name = "fs",
+                    ParentName = "",
+                    Type = "Externals",
+                    Alias = "Not this",
+                },
+            ],
+            Links = [],
+        };
+
+    static ModelDto SampleModel() =>
+        new()
+        {
+            Name = Sample,
+            LayoutVersion = NodeLayout.CurrentLayoutVersion,
+            Nodes =
+            [
+                new NodeDto
+                {
+                    Name = "App*sln",
+                    ParentName = "",
+                    Type = "Solution",
+                },
+                new NodeDto
+                {
+                    Name = "App*sln.Tool",
+                    ParentName = "App*sln",
+                    Type = "ClassType",
+                    Boundary = new Rect(40, 40, 100, 100),
+                    Alias = "The tool",
+                },
+            ],
+            Links = [],
+        };
 
     [Fact]
     public async Task SetSourceChoicesAsync_ShouldReturnError_ForAnotherKindOfModel()
