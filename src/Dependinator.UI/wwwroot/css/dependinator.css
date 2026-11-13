@@ -1431,16 +1431,85 @@ button.dep-rules__node:hover {
     --mud-palette-secondary: #5e35b1; /* DeepPurple Darken1 — menu item icons */
 }
 
-/* Compact floating toolbars (node/note/line): MudBlazor's smallest button-group
-   preset yields ~35px buttons (its override-styles rule sets padding 6px 8px and
-   a 5-class rule sets the icon to 1.422rem); shrink both to get ~20px buttons.
-   The doubled .dep-mini-toolbar outweighs those rules regardless of stylesheet
-   load order. */
-.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root {
-    padding: 2px;
+/* The floating toolbars over a selected node, note or line (NodeToolbar.razor, LineToolbar.razor):
+   one card with grey icons that turn purple under the pointer, and thin dividers between the
+   button groups only (Michael, Nov 13 2026; the earlier MudButtonGroup put a purple divider
+   between every button). Buttons are 28 px, also for touch on the iPad. */
+.dep-float-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 3px;
+    background: #ffffff;
+    border: 1px solid rgba(24, 20, 48, 0.1);
+    border-radius: 9px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(30, 20, 60, 0.12);
 }
-.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root .mud-icon-root {
-    font-size: 1rem;
+
+:root[data-theme="dark"] .dep-float-toolbar {
+    background: #25272c;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.dep-float-toolbar .mud-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+}
+
+.dep-float-toolbar .mud-icon-button .mud-icon-root {
+    font-size: 18px;
+}
+
+/* Grey at rest; error (delete) and warning (done arranging) buttons keep their color. */
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text) {
+    color: #4a4d57;
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text) {
+    color: #c9ccd4;
+}
+
+.dep-float-toolbar .mud-icon-button:hover,
+.dep-float-toolbar .mud-icon-button:focus-visible {
+    background: rgba(94, 53, 177, 0.1);
+}
+
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):hover,
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):focus-visible {
+    color: #5e35b1;
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:hover,
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:focus-visible {
+    background: rgba(179, 157, 219, 0.18);
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):hover,
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):focus-visible {
+    color: #d1c4e9;
+}
+
+/* A divider between two groups of buttons. Groups come and go with the selection and the edit
+   mode, so a divider with no group before or after it is not drawn. */
+.dep-toolbar-sep {
+    flex: none;
+    width: 1px;
+    height: 18px;
+    margin: 0 4px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="dark"] .dep-toolbar-sep {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.dep-toolbar-sep:first-child,
+.dep-toolbar-sep:last-child,
+.dep-toolbar-sep + .dep-toolbar-sep {
+    display: none;
 }
 
 /* Cloud sync indicator: while the app is determining the cloud auth state on

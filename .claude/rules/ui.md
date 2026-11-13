@@ -152,6 +152,17 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   go to's node that is selected gets no brackets; a group marks every member, selected or not.
   Michael picked the brackets over a glowing halo and a spotlight.
 
+## Floating toolbars (Nov 13 2026, Michael)
+
+- The node, note and line toolbars are a plain `div.dep-float-toolbar` (not a `MudButtonGroup`,
+  whose purple divider between every button Michael found rough): grey icons, purple on hover,
+  28 px buttons. Groups are split by `span.dep-toolbar-sep`; a divider with no group on one side
+  is hidden by CSS (first, last, or next to another divider), so a conditional group needs no
+  `@if` around its divider.
+- A `MudTooltip` around a `MudMenu` stays over the open menu (the button keeps the pointer and
+  the focus): give it `Disabled` while the menu is open (`OpenChanged`) and `ShowOnFocus="false"`.
+- The node menu is the last button ("more", ⋮), References and Dependencies come first.
+
 ## Rendering performance
 
 - Keep `WheelZoomSpeed` below `TileKey.ZoomFactor` (1.3), or every wheel tick rebuilds all tiles.

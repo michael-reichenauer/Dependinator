@@ -15,7 +15,6 @@ interface IInteractionService
     // The selected node is an open UML card: its rows are not panned or zoomed inside it.
     bool IsCard { get; }
     bool CanShowSource { get; }
-    bool CanShowLineSource { get; }
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
@@ -145,19 +144,6 @@ class InteractionService(
             if (!model.Nodes.TryGetValue(NodeId.FromId(selectionService.SelectedId.Id), out var node))
                 return false;
             return node.FileSpanOrParentSpan is not null;
-        }
-    }
-
-    // A line has no own source location; "show source" navigates to the line's source node.
-    public bool CanShowLineSource
-    {
-        get
-        {
-            if (!Build.IsVsCodeExtWasm || !selectionService.SelectedId.IsLine)
-                return false;
-            if (!dependenciesService.TryGetLine(LineId.FromId(selectionService.SelectedId.Id), out var line))
-                return false;
-            return line.Source.FileSpanOrParentSpan is not null;
         }
     }
 

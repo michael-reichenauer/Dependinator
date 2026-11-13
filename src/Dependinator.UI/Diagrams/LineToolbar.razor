@@ -4,14 +4,12 @@
 
 
 @inject IApplicationEvents applicationEvents
-@inject IInteractionService interactionService
 @inject ISelectionService selectionService
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
 @inject ILineLabelService lineLabelService
 @inject IManualEditService manualEditService
-@inject INavigationService navigationService
 @inject IViewOptions viewOptions
 @inject IKeyboardService keyboardService
 @implements IDisposable
@@ -19,8 +17,7 @@
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
-                        Class="dep-mini-toolbar dep-toolbar-card" data-testid="line-toolbar">
+        <div class="dep-float-toolbar" data-testid="line-toolbar">
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
             </MudTooltip>
@@ -30,6 +27,7 @@
             @* A line the dependency explorer draws for its subject can end deep inside another
                container, so it offers a jump to either end; an aggregated line runs between
                nodes that are both in view. *@
+            <span class="dep-toolbar-sep"></span>
             @if (IsSelectedLineFocused)
             {
                 <MudTooltip Text="Go to source node">
@@ -39,6 +37,7 @@
                     <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
                 </MudTooltip>
             }
+            <span class="dep-toolbar-sep"></span>
             @* Labels and line points change the (saved) line, so they are edit-mode actions like dragging them. *@
             @if (viewOptions.IsEditingEnabled)
             {
@@ -67,14 +66,7 @@
                     </MudTooltip>
                 }
             }
-            @if (interactionService.CanShowLineSource)
-            {
-                <MudTooltip Text="Show source node source code">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
-                                   data-testid="line-show-source" />
-                </MudTooltip>
-            }
-        </MudButtonGroup>
+        </div>
     </MudStack>
 }
 
@@ -83,7 +75,8 @@
     bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
 
     double left => selectionService.SelectedLinePosition.X - 10;
-    double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 22);
+    // The toolbar (36 px high) ends a little above the spot where the line was clicked.
+    double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 38);
     string containerPosition =>
         FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");
 
@@ -135,13 +128,6 @@
         if (!TryGetSelectedLine(out var line))
             return;
         SelectNode(line.Source);
-    }
-
-    async Task ShowSourceAsync()
-    {
-        if (!TryGetSelectedLine(out var line) || !interactionService.CanShowLineSource)
-            return;
-        await navigationService.ShowEditor(line.Source.Id);
     }
 
     void PanToTarget()
