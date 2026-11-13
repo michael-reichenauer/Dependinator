@@ -66,17 +66,9 @@
             _ => MudBlazor.Icons.Material.Filled.ArrowForward,
         };
 
-    // The view lands on the node a moment after the go to returns (the canvas repaints), so the
-    // toolbar and the tags are placed again once it has.
-    async Task GoToAsync(Modeling.Models.NodeId nodeId)
-    {
-        await navigationService.ShowNodeAsync(nodeId);
-        for (var i = 0; i < 3; i++)
-        {
-            await Task.Delay(150);
-            await selectionService.UpdateSelectedPositionAsync();
-        }
-    }
+    // The view change re-places the toolbar and the tags once it settles (InteractionService's
+    // ViewChanged handling), with the line still selected.
+    Task GoToAsync(Modeling.Models.NodeId nodeId) => navigationService.ShowNodeAsync(nodeId);
 
     protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
 

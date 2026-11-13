@@ -124,6 +124,7 @@ class SelectionService(
         if (await screenService.GetBoundingRectangle(id) is not ElementBoundingRectangle bound)
         {
             // Selected Element is not visible on the screen
+            (sourceTag, targetTag) = (null, null);
             if (selectedPosition != Pos.None)
             {
                 selectedPosition = Pos.None;
@@ -143,8 +144,8 @@ class SelectionService(
 
         if (selectedId.IsLine)
         {
-            // A stub, drawn short at its child: the toolbar keeps to the stub's measured box.
-            // Calculate the clicked relative position on the line, to show the toolbar at the clicked position on the line
+            // A stub, drawn short at its child: the toolbar goes at the clicked relative position
+            // in the stub's measured box.
             x = bound.X + clickedRelativePosition * bound.Width - ToolbarOffsetX;
             y = bound.Y + clickedRelativePosition * bound.Height - ToolbarOffsetY;
 
@@ -418,6 +419,16 @@ class SelectionService(
                 Unselect(); // Clicked on a line that is no longer on the screen
             return false;
         }
+        // Where along the line it was clicked, for its toolbar. Measured before the selection is
+        // cleared below: nothing may be awaited between that and selecting the line (a repaint
+        // there takes a stub's lines off the screen). A press on the label, which lies beside
+        // the line, leaves the toolbar where it is.
+        if (isNewSelection || !pointerId.IsLineLabel)
+        {
+            lineClickFraction = await GetLineOnScreenAsync(pointerId.LineId) is { } onScreen
+                ? LinePathGeometry.FractionAt(onScreen.Points, new Pos(e.ClientX, e.ClientY))
+                : 0.5;
+        }
         var stubToExplore = isNewSelection ? GetStubToExplore(pointerId.LineId) : null;
         var stubRelativePosition =
             exploredStub is { } explored && explored.StubId == stubToExplore
@@ -428,10 +439,6 @@ class SelectionService(
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);
-        lineClickFraction = await GetLineOnScreenAsync(pointerId.LineId) is { } onScreen
-            ? LinePathGeometry.FractionAt(onScreen.Points, new Pos(x, y))
-            : 0.5;
-
         using (var model = modelMgr.UseModel())
         {
             if (model.Lines.TryGetValue(pointerId.LineId, out var line))

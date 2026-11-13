@@ -61,7 +61,7 @@ public class LineToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.LineEndTargetTag).ToHaveCountAsync(0);
     }
 
-    // The toolbar's groups come and go (the jumps above, the edit-mode actions), and a divider
+    // The toolbar's groups come and go (the edit-mode actions), and a divider
     // that no longer has a group on both sides is hidden (the dep-toolbar-sep CSS).
     [E2EFact]
     public async Task OrdinaryLine_ShouldShowNoDivider_WithOnlyTheExploreActions()
