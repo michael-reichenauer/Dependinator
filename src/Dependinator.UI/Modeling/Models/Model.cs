@@ -18,6 +18,9 @@ interface IModel : IDisposable
     // Whether test projects are included when this model's solution is parsed.
     bool IncludeTestProjects { get; set; }
 
+    // For a workspace model: the user's choice of the sources it is made of (empty until chosen).
+    IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; }
+
     // Monotonic counter of structural changes (nodes/links added or removed, or view state that
     // changes how links resolve to lines, see BumpStructureVersion); lets consumers detect that
     // cached, structure-derived state (e.g. representative lines) is still valid. Line changes
@@ -116,6 +119,7 @@ class Model : IModel
     public double Zoom { get; set; } = 0;
     public Pos Offset { get; set; } = Pos.None;
     public bool IncludeTestProjects { get; set; }
+    public IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; } = [];
 
     public Node Root { get; private set; } = null!;
 
@@ -236,6 +240,15 @@ class Model : IModel
             Offset = Offset,
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
+            WorkspaceSources =
+            [
+                .. WorkspaceSources.Select(s => new WorkspaceSourceDto
+                {
+                    Path = s.Path,
+                    IsIncluded = s.IsIncluded,
+                    RootName = s.RootName,
+                }),
+            ],
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
             Rules = [.. rules.Where(r => r.Kind == RuleKind.MustNotUse).Select(ToDto)],
             KindRules = [.. rules.Where(r => r.Kind != RuleKind.MustNotUse).Select(ToDto)],
@@ -321,6 +334,10 @@ class Model : IModel
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
+        WorkspaceSources =
+        [
+            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(s.Path, s.IsIncluded, s.RootName)),
+        ];
         rules.Clear();
         rules.AddRange(
             modelDto
@@ -462,6 +479,7 @@ class Model : IModel
         // Must reset: Clear runs before a model is loaded, and on the uncached path the parse
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
+        WorkspaceSources = [];
         rules.Clear();
         dismissedRules.Clear();
         allowedViolations.Clear();

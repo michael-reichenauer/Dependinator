@@ -16,10 +16,25 @@ interface IModelService
 {
     // Loads the model at the path (cached layout if any, else a fresh parse). includeTestProjects
     // sets the parse flag for a model that has no persisted value yet, i.e. the retry after a
-    // first parse failed because the solution only has test projects.
-    Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null);
+    // first parse failed because the solution only has test projects. sourceChoices likewise is
+    // the choice of sources for a workspace model that has none saved yet.
+    Task<Result<ModelInfo>> LoadAsync(
+        string path,
+        bool? includeTestProjects = null,
+        IReadOnlyList<SourceChoice>? sourceChoices = null
+    );
     Task<Result> RefreshAsync();
     Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects);
+
+    // Whether the model has been opened here before, so that its layout and settings are saved.
+    Task<bool> HasSavedModelAsync(string path);
+
+    // The sources found in the workspace, each with whether it is in the workspace model at the
+    // path: its saved choice when that model is the open one, else the choice that is proposed.
+    IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath);
+
+    // Changes which sources the open workspace model is made of, and parses it again.
+    Task<Result> SetSourceChoicesAsync(IReadOnlyList<SourceChoice> choices);
 
     // Source files changed since the last successful parse, as reported while automatic refresh
     // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
@@ -148,11 +163,17 @@ class ModelService : IModelService, IDisposable
         return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
-    public async Task<Result<ModelInfo>> LoadAsync(string path, bool? includeTestProjects = null)
+    public async Task<Result<ModelInfo>> LoadAsync(
+        string path,
+        bool? includeTestProjects = null,
+        IReadOnlyList<SourceChoice>? sourceChoices = null
+    )
     {
         Clear();
         if (includeTestProjects is { } include)
             modelMgr.WithModel(m => m.IncludeTestProjects = include);
+        if (sourceChoices is not null)
+            modelMgr.WithModel(m => m.WorkspaceSources = SourceChoices.ToSaved(sourceChoices, []));
 
         Log.Info("Loading ...", path);
         using var _ = Timing.Start($"Load model {path}");
@@ -312,9 +333,49 @@ class ModelService : IModelService, IDisposable
 
     public bool IsParsedFrom(string sourceKinds)
     {
-        var kind = ModelPaths.IsTypeScript(modelMgr.ModelPath) ? "script" : "code";
-        return sourceKinds.Split(',').Contains(kind);
+        var path = modelMgr.ModelPath;
+        var kinds = sourceKinds.Split(',');
+        if (!ModelPaths.IsWorkspace(path))
+            return kinds.Contains(WorkspaceSources.ChangeKind(path));
+
+        // A workspace model is parsed from the files of every source in it.
+        return GetSourceChoices(path)
+            .Where(choice => choice.IsIncluded)
+            .Any(choice => kinds.Contains(WorkspaceSources.ChangeKind(choice.Path)));
     }
+
+    public Task<bool> HasSavedModelAsync(string path) => persistenceService.ExistsAsync(path);
+
+    public IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath)
+    {
+        IReadOnlyList<WorkspaceSource> saved = modelMgr.WithModel(m =>
+            IsSamePath(m.Path, workspaceModelPath) ? m.WorkspaceSources : []
+        );
+        return SourceChoices.Of(modelListService.WorkspaceFolder, modelListService.WorkspaceSourcePaths, saved);
+    }
+
+    public async Task<Result> SetSourceChoicesAsync(IReadOnlyList<SourceChoice> choices)
+    {
+        if (!ModelPaths.IsWorkspace(modelMgr.ModelPath))
+            return new Error("The open model is not a workspace model.");
+
+        modelMgr.WithModel(m => m.WorkspaceSources = SourceChoices.ToSaved(choices, m.WorkspaceSources));
+
+        // Save before refreshing, as for the test projects below: the refresh can fail.
+        applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
+
+        return await RefreshAsync();
+    }
+
+    static bool IsSamePath(string path1, string? path2) =>
+        !string.IsNullOrWhiteSpace(path1)
+        && !string.IsNullOrWhiteSpace(path2)
+        && string.Equals(
+            global::Shared.CloudModelPath.Normalize(path1),
+            global::Shared.CloudModelPath.Normalize(path2),
+            StringComparison.OrdinalIgnoreCase
+        );
 
     public async Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects)
     {
@@ -339,9 +400,21 @@ class ModelService : IModelService, IDisposable
         int coveredSourceChanges = sourceChanges;
         // Read before any model-lock block is opened; the model lock is thread-affine and must
         // never be held across the parse await.
+        var isWorkspace = ModelPaths.IsWorkspace(path);
+        if (isWorkspace && !IsSamePath(path, modelListService.WorkspaceModelPath))
+        {
+            // Its sources are another folder's: the ones found here would make another model.
+            var error = new Error("This workspace model is of another folder than the one that is open.");
+            applicationEvents.TriggerErrorReported(
+                $"Failed to parse '{ModelPaths.DisplayName(path)}'. {error.Message}"
+            );
+            return error;
+        }
+
         var parseOptions = modelMgr.WithModel(m => new Parsing.SolutionParseOptions
         {
             IncludeTestProjects = m.IncludeTestProjects,
+            Sources = isWorkspace ? [.. SourceChoicesOf(m).Where(c => c.IsIncluded).Select(c => c.Path)] : [],
         });
         using (
             var progress = isRefresh
@@ -393,6 +466,8 @@ class ModelService : IModelService, IDisposable
 
             using (var model = modelMgr.UseModel())
             {
+                if (isWorkspace)
+                    UpdateWorkspaceSources(model, parseOptions.Sources, items);
                 PassThroughService.UpdatePassThroughFlags(model);
             }
 
@@ -404,6 +479,37 @@ class ModelService : IModelService, IDisposable
         CheckLineVisibility();
 
         return Result.Ok;
+    }
+
+    IReadOnlyList<SourceChoice> SourceChoicesOf(IModel model) =>
+        SourceChoices.Of(
+            modelListService.WorkspaceFolder,
+            modelListService.WorkspaceSourcePaths,
+            model.WorkspaceSources
+        );
+
+    // After a parse of a workspace model: saves each parsed source's root node with the choice
+    // of sources, and keeps what the model had from a source that could not be parsed this time
+    // (its problem item says why), so a failure does not empty that part of the diagram.
+    void UpdateWorkspaceSources(IModel model, IReadOnlyList<string> parsedPaths, IReadOnlyList<Parsing.Item> items)
+    {
+        var rootNames = items
+            .Select(i => i.Source)
+            .OfType<Parsing.ParsedSource>()
+            .GroupBy(source => source.Path)
+            .ToDictionary(group => group.Key, group => group.First().RootName);
+
+        // The choice as it is now: the user can have changed it while the parse ran.
+        var choices = SourceChoicesOf(model);
+        var saved = model.WorkspaceSources;
+        model.WorkspaceSources = SourceChoices.ToSaved(choices, saved, rootNames);
+
+        foreach (var source in model.WorkspaceSources)
+        {
+            var path = choices.First(choice => choice.Key == source.Path).Path;
+            if (source.RootName is { } rootName && parsedPaths.Contains(path) && !rootNames.ContainsKey(path))
+                modelStructureService.KeepNodeTree(model, rootName);
+        }
     }
 
     async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)

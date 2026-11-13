@@ -38,6 +38,19 @@ interface IModelListService
     bool IsWorkspacePath(string path);
     IReadOnlyList<WorkspaceModel> GetWorkspaceModels();
 
+    // The model of the whole workspace: the sources found in the workspace folder that the user
+    // chose, in one diagram. Null without a workspace, and with fewer than two sources, where it
+    // would be the same as the one source's own model.
+    string? WorkspaceModelPath { get; }
+
+    // The sources found in the workspace (solutions, Bicep deployments, script projects), which
+    // its workspace model can be made of, and the folder their keys are relative to.
+    IReadOnlyList<string> WorkspaceSourcePaths { get; }
+    string WorkspaceFolder { get; }
+
+    // Lists the workspace's sources again: a project can have been added since the start.
+    Task RefreshWorkspaceSourcesAsync();
+
     // The model that is open when it is none of the workspace's (null in a host without a
     // workspace), and the workspace model to go back to from it: the one used last.
     ModelItem? GetVisitedModel(string currentPath);
@@ -62,6 +75,8 @@ class ModelListService(
     IReadOnlyList<string> localPaths = [];
     IReadOnlyList<string> cloudPaths = [];
     IReadOnlyList<string> workspacePaths = [];
+    IReadOnlyList<string> workspaceSourcePaths = [];
+    string workspaceFolder = "";
     HashSet<string> workspaceKeys = new(StringComparer.OrdinalIgnoreCase);
     string? lastWorkspacePath;
 
@@ -97,25 +112,39 @@ class ModelListService(
     public bool IsWorkspacePath(string path) =>
         !string.IsNullOrWhiteSpace(path) && workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path));
 
+    public string? WorkspaceModelPath =>
+        HasWorkspace && workspaceFolder != "" && workspaceSourcePaths.Count >= 2
+            ? ModelPaths.WorkspacePath(workspaceFolder)
+            : null;
+
+    public IReadOnlyList<string> WorkspaceSourcePaths => workspaceSourcePaths;
+    public string WorkspaceFolder => workspaceFolder;
+
     public IReadOnlyList<WorkspaceModel> GetWorkspaceModels()
     {
         var items = GetModelItems();
         var folders = WorkspaceModels.RelativeFolders(workspacePaths);
-        return workspacePaths
-            .Select(
-                (path, index) =>
-                    // The workspace's own spelling of the path, not that of an equal recent path:
-                    // parsing and the startup model compare paths exactly.
-                    new WorkspaceModel(
-                        (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
-                        {
-                            Path = path,
-                            DisplayName = ModelPaths.DisplayName(path),
-                        },
-                        folders[index]
-                    )
-            )
-            .ToList();
+
+        // The workspace's own spelling of the path, not that of an equal recent path:
+        // parsing and the startup model compare paths exactly.
+        WorkspaceModel ToModel(string path, string folder) =>
+            new(
+                (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
+                {
+                    Path = path,
+                    DisplayName = ModelPaths.DisplayName(path),
+                },
+                folder
+            );
+
+        // The model of the whole workspace comes first, before the models of its single sources.
+        return
+        [
+            .. WorkspaceModelPath is { } workspaceModelPath
+                ? new[] { ToModel(workspaceModelPath, WorkspaceModels.WholeWorkspace) }
+                : [],
+            .. workspacePaths.Select((path, index) => ToModel(path, folders[index])),
+        ];
     }
 
     public ModelItem? GetVisitedModel(string currentPath)
@@ -197,22 +226,7 @@ class ModelListService(
     {
         recentPaths = (await configService.GetAsync()).RecentPaths;
         cloudPaths = GetCloudPaths();
-        // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
-        // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
-        localPaths =
-            Build.IsVsCodeExtWasm ? await workspaceFileService.GetModelFilePathsAsync()
-            : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. await workspaceFileService.GetModelFilePathsAsync()]
-            : [];
-        localPaths = localPaths.Distinct().ToList();
-        // The test host opens the embedded demo instead of parsing the working solution, so there
-        // the demo stands in for it as the workspace's first model.
-        workspacePaths =
-            !HasWorkspace ? []
-            : Build.IsTestMode ? [DemoModel.Path, .. localPaths]
-            : localPaths;
-        workspaceKeys = workspacePaths
-            .Select(global::Shared.CloudModelPath.Normalize)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        await RefreshWorkspaceSourcesAsync();
 
         // Seed recent paths with the first available model (cloud for standalone Wasm)
         if (!recentPaths.Any())
@@ -223,6 +237,39 @@ class ModelListService(
         }
 
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
+    }
+
+    public async Task RefreshWorkspaceSourcesAsync()
+    {
+        workspaceSourcePaths = HasWorkspace ? await workspaceFileService.GetModelFilePathsAsync() ?? [] : [];
+        workspaceFolder = HasWorkspace
+            ? (await workspaceFileService.GetWorkspaceFoldersAsync())?.FirstOrDefault() ?? ""
+            : "";
+
+        // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
+        // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
+        IReadOnlyList<string> sourceModelPaths =
+            Build.IsVsCodeExtWasm ? workspaceSourcePaths
+            : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. workspaceSourcePaths]
+            : [];
+        sourceModelPaths = sourceModelPaths.Distinct().ToList();
+
+        // The workspace model is a local model too (it is parsed here), but it comes last: the
+        // first local path is the model a new workspace starts on, which stays a single source.
+        localPaths = WorkspaceModelPath is { } workspaceModelPath
+            ? [.. sourceModelPaths, workspaceModelPath]
+            : sourceModelPaths;
+
+        // The test host opens the embedded demo instead of parsing the working solution, so there
+        // the demo stands in for it as the workspace's first model.
+        workspacePaths =
+            !HasWorkspace ? []
+            : Build.IsTestMode ? [DemoModel.Path, .. sourceModelPaths]
+            : sourceModelPaths;
+        workspaceKeys = workspacePaths
+            .Concat(WorkspaceModelPath is { } path ? [path] : [])
+            .Select(global::Shared.CloudModelPath.Normalize)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task AddModelAsync(string path)
