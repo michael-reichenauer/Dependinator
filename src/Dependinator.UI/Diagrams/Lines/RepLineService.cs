@@ -133,6 +133,7 @@ static class RepLineService
             state is not null
             && state.StructureVersion == model.StructureVersion
             && state.StubFarEnds is { } lastFarEnds
+            && reveal.KeptLine is null
             && state.Reveal.IsSameButArea(reveal)
             && AllExpansionStatesUnchanged(state.ExpansionStates, zoom)
             && IsEveryStubFarEndUnchanged(model, zoom, reveal, lastFarEnds)
