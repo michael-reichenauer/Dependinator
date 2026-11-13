@@ -11,7 +11,6 @@
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @inject IModelListService modelListService
-@inject IWorkspaceSourcesService workspaceSourcesService
 @inject IConfigService configService
 @inject IModelService modelService
 @inject IDialogService dialogService
@@ -280,16 +279,6 @@
                 @if (modelListService.HasWorkspace)
                 {
                     <MudDivider />
-
-                    @if (workspaceSourcesService.CanChoose)
-                    {
-                        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Checklist"
-                                     OnClick="() => workspaceSourcesService.ChooseAsync()"
-                                     title="Which of the workspace's solutions, Bicep files and script projects this model shows."
-                                     data-testid="menu-choose-sources">
-                            Choose Sources …
-                        </MudMenuItem>
-                    }
 
                     <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
                                  title="Cloud, design and demo models, and models of other folders."

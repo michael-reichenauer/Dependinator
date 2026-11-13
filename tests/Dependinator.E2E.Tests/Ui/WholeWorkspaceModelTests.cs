@@ -4,8 +4,8 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// The model of the whole workspace: the first entry of the Models menu in a host with a workspace
-// (this test host's workspace is the repository). Opened for the first time it asks which of the
+// The model of the whole workspace: in a section of its own at the top of the Models menu in a
+// host with a workspace (this test host's workspace is the repository). Opened for the first time it asks which of the
 // sources found in the workspace it is made of, and shows the chosen ones in one diagram, each
 // parsed by its own parser; the choice can be changed later (Models › Choose Sources …).
 public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(output)
@@ -17,8 +17,10 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await App.WaitForModelRenderedAsync();
 
         await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
-        ILocator workspaceModel = App.MenuItem("menu-model-item").Filter(new() { HasText = "whole workspace" });
+        ILocator workspaceModel = App.MenuItem("menu-workspace-model");
         await Expect(workspaceModel).ToHaveCountAsync(1);
+        // Apart from the models of its single sources
+        await Expect(Page.GetByTestId("menu-models-header")).ToHaveTextAsync(["Whole workspace", "Single sources"]);
         // Not offered for another model than the workspace's
         await Expect(App.MenuItem("menu-choose-sources")).ToHaveCountAsync(0);
         await App.ClickUntilVisibleAsync(workspaceModel, Page.GetByTestId("sources-dialog"));
@@ -46,7 +48,7 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
 
         await App.ExpectSubMenuAsync("menu-models", "menu-choose-sources", async timeout =>
         {
-            await Expect(App.MenuItem("menu-model-item").Filter(new() { HasText = "whole workspace" }))
+            await Expect(App.MenuItem("menu-workspace-model"))
                 .ToHaveAttributeAsync("data-checked", "true", new() { Timeout = timeout });
             await Expect(App.MenuItem("menu-visited-model")).ToHaveCountAsync(0, new() { Timeout = timeout });
         });

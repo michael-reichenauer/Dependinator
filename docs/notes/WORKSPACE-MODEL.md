@@ -8,18 +8,22 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 
 ## What the user sees
 
-- The Models menu and the Models dialog list the workspace model first under "This workspace",
-  named after the workspace folder with "whole workspace" beside it. It is there only when the
-  workspace has at least two sources; with one it would be that source's own model. A model
-  that is open when the workspace gets down to one source stays what it is: it still refreshes
-  and its sources can be chosen, it is only no longer offered in the list.
+- The Models menu has the workspace model in a section of its own, "Whole workspace", named
+  after the workspace folder, with "Choose Sources …" right below it while it is open; the
+  models of the sources follow under "Single sources" (Michael's idea, Nov 13). The Models
+  dialog lists it first under "This workspace" with "whole workspace" beside it. It is there
+  only when the workspace has at least two sources; with one it would be that source's own
+  model (and the menu has its one list, "This workspace"). A model that is open when the
+  workspace gets down to one source stays what it is: it still refreshes and its sources can
+  be chosen, it is only no longer offered in the list.
 - The first time it is opened, "What is in this model?" lists the found sources by kind with a
   checkbox each. The proposal ticks everything that is not in a folder named `test`, `tests`,
   `sample`, `samples`, `example` or `examples`. Cancel leaves the open model as it was; with no
   model open yet (the app is starting on it) the proposal is used.
-- "Choose Sources …" (Models menu and Settings) changes the choice later and parses again. A
-  source found since the choice was saved is marked "new" and follows the proposal rule. A
-  source that is not found for a while (another branch is checked out) keeps its choice.
+- "Choose Sources …" (below the model in the Models menu, and in Settings) changes the choice
+  later and parses again. A source found since the choice was saved is marked "new" and
+  follows the proposal rule. A source that is not found for a while (another branch is checked
+  out) keeps its choice.
 - The diagram has one root node per source and one Externals. A source that cannot be parsed is
   a problem in the problem indicator, and its part of the diagram stays as it was.
 - The model is beside the per-source models, not instead of them, and a host does not start on

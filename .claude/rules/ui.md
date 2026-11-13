@@ -171,6 +171,10 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - In test mode the embedded demo stands in for the working solution as the first workspace
   model (`workspacePaths`), but `LocalPaths` is unchanged: `ModelService.RefreshAsync` only
   re-parses a local path, and the demo must stay out of that.
+- The menu's sections (decided with Michael, Nov 13): "Whole workspace" with the workspace
+  model and "Choose Sources …" right below it (only while that model is open), then "Single
+  sources" with the model of each source. Without a workspace model (fewer than two sources)
+  there is the one list "This workspace". A submenu for the single models was the alternative.
 - A component with no parameters inside the app bar's menu (`ModelMenuItems`) is not re-rendered
   with its parent: it subscribes to `UIStateChanged` and the cloud sync's `Changed` itself.
 - The model of the whole workspace (`WorkspaceModelPath`, `docs/notes/WORKSPACE-MODEL.md`) is
