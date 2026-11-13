@@ -90,23 +90,18 @@ class ModelListService(
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
     // The model to show when the app starts. Browser hosts resume the most recently used
-    // model, but the VS Code extension is opened for a specific workspace, so it starts on
-    // that workspace's solution instead of a model last used in some other workspace. The
-    // last used model is still kept when it is one of this workspace's solutions, since a
-    // workspace can contain several.
-    public string? StartupPath
-    {
-        get
-        {
-            if (!Build.IsVsCodeExtWasm)
-                return LastUsedPath;
+    // model, but the VS Code extension is opened for a specific workspace (WorkspaceStartupPath).
+    public string? StartupPath => Build.IsVsCodeExtWasm ? WorkspaceStartupPath : LastUsedPath;
 
-            if (LastUsedPath is not null && IsLocalPath(LastUsedPath))
-                return LastUsedPath;
-
-            return localPaths.FirstOrDefault() ?? LastUsedPath;
-        }
-    }
+    // A workspace starts on the model of it that was used last, not on one last used in some
+    // other workspace (the recent paths are shared by all of them). A workspace that has none
+    // starts on the model of the whole workspace, which first asks what it is made of (decided
+    // with Michael, Nov 13 2026), or with a single source on that source.
+    internal string? WorkspaceStartupPath =>
+        recentPaths.FirstOrDefault(IsLocalPath)
+        ?? ListedWorkspaceModelPath
+        ?? localPaths.FirstOrDefault()
+        ?? LastUsedPath;
 
     public bool IsLocalPath(string path) => LocalPaths.Contains(path) || IsUsableWorkspaceModel(path);
 
@@ -170,6 +165,7 @@ class ModelListService(
     public string? HomePath =>
         (lastWorkspacePath is { } last && IsWorkspacePath(last) ? last : null)
         ?? recentPaths.FirstOrDefault(IsWorkspacePath)
+        ?? (Build.IsVsCodeExtWasm ? ListedWorkspaceModelPath : null) // Where VS Code starts too
         ?? workspacePaths.FirstOrDefault();
 
     // Whether two model paths are of one model: paths are compared as the cloud names them, so
@@ -244,8 +240,9 @@ class ModelListService(
         cloudPaths = GetCloudPaths();
         await RefreshWorkspaceSourcesAsync();
 
-        // Seed recent paths with the first available model (cloud for standalone Wasm)
-        if (!recentPaths.Any())
+        // Seed recent paths with the first available model (cloud for standalone Wasm). Not in
+        // VS Code: a workspace there starts on the whole workspace (WorkspaceStartupPath).
+        if (!recentPaths.Any() && !Build.IsVsCodeExtWasm)
         {
             var defaultPaths = Build.IsStandaloneWasm ? cloudPaths : localPaths;
             if (defaultPaths.Any())
@@ -289,7 +286,8 @@ class ModelListService(
         sourceModelPaths = sourceModelPaths.Distinct().ToList();
 
         // The workspace model is a local model too (it is parsed here), but it comes last: the
-        // first local path is the model a new workspace starts on, which stays a single source.
+        // first local path is the working solution in the dev host (VS Code starts a new
+        // workspace on the whole workspace: WorkspaceStartupPath).
         localPaths = ListedWorkspaceModelPath is { } workspaceModelPath
             ? [.. sourceModelPaths, workspaceModelPath]
             : sourceModelPaths;

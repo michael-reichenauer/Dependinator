@@ -235,6 +235,36 @@ public class ModelListServiceTests
         Assert.Equal(BicepPath, service.HomePath);
     }
 
+    // The model VS Code starts on: the one of this workspace used last, or else the model of
+    // the whole workspace (its first open asks what is in it).
+    [Fact]
+    public async Task WorkspaceStartupPath_ShouldBeTheWholeWorkspace_InAWorkspaceNotOpenedBefore()
+    {
+        const string WorkspaceModelPath = "/workspaces/Dependinator/.workspace";
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
+        config.RecentPaths = [OtherPath]; // Used last in another workspace
+        var service = await CreateAsync();
+
+        Assert.Equal(WorkspaceModelPath, service.WorkspaceStartupPath);
+
+        // A model of this workspace used since then, also before one of another workspace
+        await service.AddModelAsync(BicepPath);
+        await service.AddModelAsync(OtherPath);
+        Assert.Equal(BicepPath, service.WorkspaceStartupPath);
+    }
+
+    [Fact]
+    public async Task WorkspaceStartupPath_ShouldBeTheSource_InAWorkspaceOfOneSource()
+    {
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath]);
+        config.RecentPaths = [OtherPath];
+        var service = await CreateAsync();
+
+        // (The dev host adds the working solution first, as the first of the sources)
+        Assert.Equal(DemoModel.WorkingSolutionPath, service.WorkspaceStartupPath);
+    }
+
     static string KindOf(ModelItem? item) => WorkspaceModels.VisitKind(Assert.IsType<ModelItem>(item));
 
     static CloudModelMetadata Cloud(string path) =>

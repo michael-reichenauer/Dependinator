@@ -154,8 +154,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   notices a source that is added or removed without a restart (Nov 13, phase 2). A source
   brings what the user did in its own model: where its nodes are, their display names, colors,
   icons and hidden nodes, its notes and zones, and its routed and labelled lines (Nov 13,
-  phase 3). Design and
-  what is left (starting on it in VS Code) in `WORKSPACE-MODEL.md`.
+  phase 3). In VS Code a workspace with several sources that was never opened before starts
+  on the whole workspace (Nov 13, phase 4). Design and what is left in `WORKSPACE-MODEL.md`.
 
 ## Viewing, navigation and analysis
 

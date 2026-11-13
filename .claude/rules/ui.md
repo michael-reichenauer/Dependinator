@@ -252,10 +252,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - A component with no parameters inside the app bar's menu (`ModelMenuItems`) is not re-rendered
   with its parent: it subscribes to `UIStateChanged` and the cloud sync's `Changed` itself.
 - The model of the whole workspace (`WorkspaceModelPath`, `docs/notes/WORKSPACE-MODEL.md`) is
-  first in `GetWorkspaceModels()` but last in `LocalPaths`: the first local path is the model a
-  new workspace starts on, and that stays a single source (decided with Michael, Nov 13: no
-  host starts on the workspace model by itself). `WorkspaceModelPath` is its identity (non-null
-  with a workspace folder, compare with `ModelListService.IsSamePath`, never `==`); it is
+  first in `GetWorkspaceModels()` but last in `LocalPaths`. VS Code starts on the model of the
+  workspace used last (`WorkspaceStartupPath`: the first recent path of this workspace, since
+  the recent paths are shared by all workspaces), else on the whole workspace (decided with
+  Michael, Nov 13, phase 4), so VS Code does not seed the recent paths with the first source.
+  `WorkspaceModelPath` is its identity (non-null with a workspace folder, compare with `ModelListService.IsSamePath`, never `==`); it is
   listed only with two or more sources, but while there is a source `IsWorkspacePath` and
   `IsLocalPath` hold for it either way, so a model that is open keeps refreshing when a source
   is removed. With no source left it is a visit. A model path is not re-spelled on the way in: saved models and the cloud pull go
