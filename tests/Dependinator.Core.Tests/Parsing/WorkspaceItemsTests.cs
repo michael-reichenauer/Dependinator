@@ -42,6 +42,7 @@ public class WorkspaceItemsTests
         var problem = Assert.Single(items.Select(i => i.Problem).OfType<ParseProblem>());
         Assert.Equal("web could not be parsed. Node.js was not found.", problem.Message);
         Assert.Equal(1, problem.ErrorCount);
+        Assert.Equal("web/tsconfig.json", problem.Source); // The key of the source it is of
 
         // No parsed-source item for the failed one: that is how the model knows to keep its nodes
         var parsed = Assert.Single(items.Select(i => i.Source).OfType<ParsedSource>());
@@ -110,7 +111,7 @@ public class WorkspaceItemsTests
         Assert.Equal(Root, items.First(i => i.Node?.Name == $"{Root}.web").Node!.Properties.Parent);
         Assert.Contains(items, i => i.Link is { } link && link.Source == $"{Root}.web" && link.Target == Root);
         Assert.Contains(items, i => i.LineDescription == new LineDescription($"{Root}.web", "$Externals.vnet", "uses"));
-        Assert.Contains(items, i => i.Problem == new ParseProblem("2 errors", 2, Root));
+        Assert.Contains(items, i => i.Problem == new ParseProblem("2 errors", 2, Root, "infra/test.env/main.bicep"));
         Assert.Contains(items, i => i.Source == new ParsedSource("/repo/infra/test.env/main.bicep", Root));
     }
 
@@ -172,7 +173,8 @@ public class WorkspaceItemsTests
         Assert.Equal(["All*sln", "Core", "Tools*sln", "Tool"], NodeNames(items));
         Assert.Equal("All*sln", items.First(i => i.Node?.Name == "Core").Node!.Properties.Parent);
         Assert.Contains(items, i => i.Link is { Source: "Tool", Target: "Core" });
-        Assert.Single(items, i => i.Problem is not null);
+        // The problem of the shared project is the first solution's, like the project
+        Assert.Equal("All.sln", Assert.Single(items, i => i.Problem is not null).Problem!.Source);
     }
 
     // A root keeps the name it had in the last parse, so the nodes of a source do not change

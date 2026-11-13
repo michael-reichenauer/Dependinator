@@ -39,9 +39,19 @@ static class WorkspaceSources
         : ModelPaths.IsBicep(path) ? "Bicep deployments"
         : "TypeScript and JavaScript projects";
 
+    // Among the kinds of changed files the VS Code extension names: a file that is, or can make,
+    // a source (a solution, a Bicep file, a script project's config) was added or removed, so
+    // the sources of the workspace are to be listed again.
+    public const string SourcesChangedKind = "sources";
+
     // What the VS Code extension calls the files a source is parsed from, when it tells which
-    // kinds of files changed: "script" for a script project, "code" for the others.
-    public static string ChangeKind(string path) => ModelPaths.IsTypeScript(path) ? "script" : "code";
+    // kinds of files changed: "script" for a script project, "bicep" for a Bicep deployment and
+    // "code" for a solution. Sources of one kind are parsed together: they can share nodes (a
+    // project of two solutions), and which source such a node is shown in goes by their order.
+    public static string ChangeKind(string path) =>
+        ModelPaths.IsTypeScript(path) ? "script"
+        : ModelPaths.IsBicep(path) ? "bicep"
+        : "code";
 
     static string Normalize(string path) => path.Replace('\\', '/');
 }

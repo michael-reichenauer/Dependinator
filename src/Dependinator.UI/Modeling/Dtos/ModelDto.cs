@@ -72,6 +72,9 @@ record ParseProblemDto
     public required string Message { get; init; }
     public int ErrorCount { get; init; }
     public string? NodeName { get; init; }
+
+    // In a workspace model: the key of the source the problem is of (see ParseProblem).
+    public string? Source { get; init; }
 }
 
 // An architecture rule of its kind: "From" must not depend on "To", only "From" may use "To", or

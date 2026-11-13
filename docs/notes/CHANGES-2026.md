@@ -149,8 +149,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   in their own models. A source that cannot be parsed is a problem in the problem indicator and
   keeps its part of the diagram; a source named like another gets its folder in its name. The
   choice is saved with the model. In this repository the solution, the VS Code extension and
-  the TypeScript helper make one diagram. Design and what is left (refreshing only what
-  changed, starting on it in VS Code) in `WORKSPACE-MODEL.md`.
+  the TypeScript helper make one diagram. A refresh parses only the sources whose kind of
+  file changed (editing a `.ts` file no longer parses the solution again), and VS Code
+  notices a source that is added or removed without a restart (Nov 13, phase 2). Design and
+  what is left (starting on it in VS Code) in `WORKSPACE-MODEL.md`.
 
 ## Viewing, navigation and analysis
 

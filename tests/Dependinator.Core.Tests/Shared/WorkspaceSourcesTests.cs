@@ -38,7 +38,7 @@ public class WorkspaceSourcesTests
 
     [Theory]
     [InlineData("/repo/App.sln", "Solutions", "code")]
-    [InlineData("/repo/main.bicep", "Bicep deployments", "code")]
+    [InlineData("/repo/main.bicep", "Bicep deployments", "bicep")]
     [InlineData("/repo/web/tsconfig.json", "TypeScript and JavaScript projects", "script")]
     [InlineData("/repo/tool/package.json", "TypeScript and JavaScript projects", "script")]
     public void GroupNameAndChangeKind_ShouldFollowTheKindOfSource(string path, string group, string kind)

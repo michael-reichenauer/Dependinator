@@ -62,6 +62,15 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
 
         await Expect(App.Node("shop")).ToHaveCountAsync(0, new() { Timeout = 60_000 });
         await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
+
+        // Put back, only the script project is parsed: the deployment stays as it is
+        await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
+        await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
+        await SetTickedAsync(Source("shop"), true);
+        await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
+
+        await Expect(App.Node("shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
+        await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
     }
 
     // The checkbox of a source in the sources dialog, by the source's whole name ("webshop.bicep"

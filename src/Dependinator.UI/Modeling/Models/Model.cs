@@ -283,6 +283,7 @@ class Model : IModel
                     Message = p.Message,
                     ErrorCount = p.ErrorCount,
                     NodeName = p.NodeName,
+                    Source = p.Source,
                 }),
             ],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
@@ -381,7 +382,7 @@ class Model : IModel
         );
         AcceptedCyclesVersion++;
         SetParseProblems([
-            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
+            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName, p.Source)),
         ]);
         // Nodes and links will be set by model service in separate worker thread
     }

@@ -18,6 +18,7 @@ public class ModelServiceWorkspaceModelTests
     const string Solution = "/repo/App.sln";
     const string Web = "/repo/src/web/tsconfig.json";
     const string Sample = "/repo/tests/sample/tsconfig.json";
+    const string Infra = "/repo/infra/main.bicep"; // Found only in the tests that say so
 
     readonly IModelMgr modelMgr = new ModelMgr(new StateMgr());
     readonly Mock<IModelListService> modelListService = new();
@@ -32,6 +33,7 @@ public class ModelServiceWorkspaceModelTests
         [Solution] = [Root("App*sln"), Node("Core", parent: "App*sln"), Node("Core.Type")],
         [Web] = [Root("web"), Node("web.main*ts"), Link("web.main*ts", "fs")],
         [Sample] = [Root("sample"), Node("sample.index*ts")],
+        [Infra] = [Root("main*bicep"), Node("main*bicep.storage")],
     };
 
     public ModelServiceWorkspaceModelTests()
@@ -242,6 +244,8 @@ public class ModelServiceWorkspaceModelTests
         Assert.False(web.IsNew);
     }
 
+    // The solution stays as it is: only the kind of source that the model gets more or fewer of
+    // is parsed (the script projects).
     [Fact]
     public async Task SetSourceChoicesAsync_ShouldParseAgain_AddingAndRemovingTheNodesOfTheSources()
     {
@@ -254,7 +258,7 @@ public class ModelServiceWorkspaceModelTests
             .ToList();
         AssertOk(await modelService.SetSourceChoicesAsync(choices));
 
-        Assert.Equal([Solution, Sample], parsedOptions[^1].Sources);
+        Assert.Equal([Sample], parsedOptions[^1].Sources);
         Assert.Equal(["App*sln", "Core", "Core.Type", "sample", "sample.index*ts"], ParsedNodeNames());
         Assert.Equal(
             [
@@ -264,6 +268,159 @@ public class ModelServiceWorkspaceModelTests
             ],
             modelMgr.WithModel(m => m.WorkspaceSources)
         );
+    }
+
+    // Taking the only source of its kind out needs no parse: its nodes are removed.
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldNotParse_WhenASourceIsOnlyTakenOut()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, false)));
+
+        Assert.Single(parsedOptions);
+        Assert.Equal(["App*sln", "Core", "Core.Type"], ParsedNodeNames());
+        Assert.DoesNotContain(NodeId.FromName("fs"), modelMgr.WithModel(m => m.Nodes.Keys.ToList()));
+
+        // And the same choice once more has nothing to do
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, false)));
+        Assert.Single(parsedOptions);
+        Assert.Equal(["App*sln", "Core", "Core.Type"], ParsedNodeNames());
+    }
+
+    // After a change of script files only the script projects are parsed: the solution keeps
+    // its nodes and its problems, without the minute it takes to parse.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldParseOnlyTheSourcesOfTheChangedKinds()
+    {
+        sourceItems[Solution] = [.. sourceItems[Solution]!, Problem("2 compile errors in Core", "Core")];
+        sourceItems[Web] = [.. sourceItems[Web]!, Problem("1 error in main.ts", "web.main*ts")];
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.Equal(
+            ["App.sln", "src/web/tsconfig.json"],
+            modelMgr.WithModel(m => m.ParseProblems.Select(p => p.Source))
+        );
+
+        // In the code now: the script project has another file and no error, and the solution
+        // (which is not parsed) would have lost a type
+        sourceItems[Web] = [Root("web"), Node("web.other*ts")];
+        sourceItems[Solution] = [Root("App*sln")];
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+
+        Assert.Equal([Web], parsedOptions[^1].Sources);
+        Assert.Equal(
+            [new ParsedSource(Solution, "App*sln"), new ParsedSource(Web, "web")],
+            parsedOptions[^1].KnownSources
+        );
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.other*ts"], ParsedNodeNames());
+        var problem = Assert.Single(modelMgr.WithModel(m => m.ParseProblems));
+        Assert.Equal("2 compile errors in Core", problem.Message);
+        Assert.Equal(["App*sln", "web", null], modelMgr.WithModel(m => m.WorkspaceSources).Select(s => s.RootName));
+
+        // A change of the solution's files parses the solution, and keeps the script project
+        AssertOk(await modelService.RefreshChangedAsync(["code"]));
+
+        Assert.Equal([Solution], parsedOptions[^1].Sources);
+        Assert.Equal(["App*sln", "web", "web.other*ts"], ParsedNodeNames());
+        Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
+    }
+
+    // A source that failed keeps its nodes and its problem while only other kinds are parsed.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldKeepAFailedSourceAsItIs_WhenItsKindIsNotParsed()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        sourceItems[Web] = null;
+        AssertOk(await modelService.RefreshAsync());
+
+        AssertOk(await modelService.RefreshChangedAsync(["code"]));
+
+        Assert.Equal([Solution], parsedOptions[^1].Sources);
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.main*ts"], ParsedNodeNames());
+        var problem = Assert.Single(modelMgr.WithModel(m => m.ParseProblems));
+        Assert.Equal("web could not be parsed. It failed.", problem.Message);
+    }
+
+    // A source whose first parse fails has only its problem in the model: it is not tried again
+    // for a change of other kinds of files, and taken out, its problem goes without a parse.
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldRemoveTheProblem_OfASourceThatNeverParsed()
+    {
+        sourceItems[Web] = null;
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.Equal("src/web/tsconfig.json", Assert.Single(modelMgr.WithModel(m => m.ParseProblems)).Source);
+
+        AssertOk(await modelService.RefreshChangedAsync(["code"]));
+        Assert.Equal([Solution], parsedOptions[^1].Sources);
+        Assert.Single(modelMgr.WithModel(m => m.ParseProblems));
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, false)));
+
+        Assert.Equal(2, parsedOptions.Count);
+        Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
+        Assert.Equal(["App*sln", "Core", "Core.Type"], ParsedNodeNames());
+    }
+
+    // Nothing in the model is parsed from Bicep files.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldDoNothing_ForAKindTheModelHasNoSourceOf()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        applicationEvents.Invocations.Clear();
+
+        AssertOk(await modelService.RefreshChangedAsync(["bicep"]));
+
+        Assert.Single(parsedOptions);
+        applicationEvents.Verify(e => e.TriggerModelChanged(), Times.Never);
+    }
+
+    // A source that is found later (VS Code tells that the sources changed) is in the model by
+    // the proposal: its kind is parsed, whichever kinds of files changed.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldParseASourceThatIsNew_AndRemoveOneThatIsGone()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.False(modelService.IsParsedFrom("bicep,sources"));
+
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Solution, Web, Sample, Infra]);
+        Assert.True(modelService.IsParsedFrom("bicep,sources"));
+        AssertOk(await modelService.RefreshChangedAsync(["bicep", "sources"]));
+
+        Assert.Equal([Infra], parsedOptions[^1].Sources);
+        Assert.Equal(
+            ["App*sln", "Core", "Core.Type", "main*bicep", "main*bicep.storage", "web", "web.main*ts"],
+            ParsedNodeNames()
+        );
+
+        // The script project is deleted: nothing is parsed, and its nodes go
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Solution, Sample, Infra]);
+        Assert.True(modelService.IsParsedFrom("script,sources"));
+        AssertOk(await modelService.RefreshChangedAsync(["script", "sources"]));
+
+        Assert.Equal(2, parsedOptions.Count);
+        Assert.Equal(["App*sln", "Core", "Core.Type", "main*bicep", "main*bicep.storage"], ParsedNodeNames());
+        Assert.False(modelService.IsParsedFrom("script,sources"));
+    }
+
+    // A model saved before problems named their source: which source a problem is of is not
+    // known, so the first refresh parses every source.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldParseEverySource_WhenAProblemNamesNoSource()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        modelMgr.WithModel(m => m.SetParseProblems([new ParseProblem("2 compile errors in Core", 2, "Core")]));
+
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+
+        Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
+        Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
     }
 
     [Fact]
@@ -283,6 +440,8 @@ public class ModelServiceWorkspaceModelTests
     [InlineData("script", true, true)]
     [InlineData("script", false, false)]
     [InlineData("code,script", false, true)]
+    [InlineData("bicep", true, false)]
+    [InlineData("sources", true, false)] // The sources were listed again, and are the same
     public async Task IsParsedFrom_ShouldFollowTheSourcesInTheModel(string kinds, bool isWebIncluded, bool expected)
     {
         using var modelService = CreateModelService();
@@ -332,4 +491,7 @@ public class ModelServiceWorkspaceModelTests
         new(new ParsedNode(name, new() { Type = NodeType.ClassType, Parent = parent }), null);
 
     static Item Link(string source, string target) => new(null, new ParsedLink(source, target, new()));
+
+    static Item Problem(string message, string nodeName) =>
+        new(null, null, Problem: new ParseProblem(message, 2, nodeName));
 }

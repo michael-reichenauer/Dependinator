@@ -60,6 +60,12 @@ paths:
     also while it fails or is left out. The first version renamed by what came before in the
     list, so a failed first source left the second with the first's name and merged it into
     the nodes kept for the first (found in review).
+  - A refresh after a file change parses only the sources of the changed kinds
+    (`ModelService.PlanSources`). Whatever a parse replaces as a whole in the model must then
+    be kept for the sources that were not parsed: their nodes and links (`KeepNodeTree`) and
+    their problems (`ParseProblem.Source`). A new per-parse list on the model needs the same.
+    Sources of one kind are always parsed together: `WorkspaceItems` decides between them
+    (a shared project, a same-named root) only among the sources of one parse.
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
     with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):
@@ -104,8 +110,9 @@ paths:
     git). A sample folder named `packages` is ignored by the repository's `.gitignore`.
   - In VS Code the parser runs on the editor's own runtime (`initializationOptions.nodePath`,
     `ELECTRON_RUN_AS_NODE=1`). This cannot be tried in a cloud session.
-  - The extension tells the UI the kinds of the changed files ("script", "code"); a new source
-    kind that is watched needs its kind in `IModelService.IsParsedFrom`.
+  - The extension tells the UI the kinds of the changed files ("script", "bicep", "code", and
+    "sources" when the workspace can have got or lost a source); a new source kind that is
+    watched needs its kind in `WorkspaceSources.ChangeKind` and the extension's `changeKindOf`.
 - **C# member names** (decided Oct 2026):
   - Extension members keep `Ext.extension(global::Ns.T).Member`. `NodeName` treats `()`, `[]`
     and `<>` as bracket groups whose dots don't split, and a bracket counts only once it closes,

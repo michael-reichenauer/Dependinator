@@ -82,7 +82,7 @@ public class ModelTests
     public void ParseProblems_ShouldRoundTripThroughDto_AndBeClearedWithTheModel()
     {
         var modelMgr = new ModelMgr(new StateMgr());
-        var problem = new Dependinator.Core.Parsing.ParseProblem("49 compile errors in Api", 49, "Api");
+        var problem = new Dependinator.Core.Parsing.ParseProblem("49 compile errors in Api", 49, "Api", "src/My.sln");
         var dto = modelMgr.WithModel(m =>
         {
             m.SetParseProblems([problem]);

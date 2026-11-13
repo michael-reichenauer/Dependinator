@@ -37,7 +37,10 @@ record LineDescription(string Source, string Target, string Text);
 // and links) or in a Bicep file. One brief summary per project or file, not each error, which the
 // editor lists. NodeName is the node to show for it (a project's assembly node), if any.
 // Errors only, for now: warnings are common and many never get fixed.
-record ParseProblem(string Message, int ErrorCount, string? NodeName = null);
+// In a workspace model, Source is the key of the source the problem is of (WorkspaceSources.Key,
+// set when the sources are combined): a refresh that parses only some of the sources keeps the
+// problems of the others.
+record ParseProblem(string Message, int ErrorCount, string? NodeName = null, string? Source = null);
 
 // One source of a workspace model that was parsed, with the name of its root node, under which
 // all its nodes are. One item per parsed source, so a source without one failed (its problem
