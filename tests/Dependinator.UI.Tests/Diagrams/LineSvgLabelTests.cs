@@ -268,10 +268,16 @@ public class LineSvgLabelTests
         Assert.Contains(LineSvg.LabelHitClass, svg);
         Assert.DoesNotContain("pointer-events=\"none\" /></g>", svg);
 
-        // On a selected line with bend points the label lets presses through to the handles.
-        line.SetSegmentPoints([new Pos(200, 50)]);
+        // On a selected line the label lets presses through to a bend point's handle under it,
+        // and keeps them where no handle is near (a double-click there still edits the label).
         line.IsSelected = true;
+        line.SetSegmentPoints([new Pos(200, 50)]);
         Assert.Contains(
+            "pointer-events=\"none\" /></g>",
+            LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false)
+        );
+        line.SetSegmentPoints([new Pos(150, 80)]);
+        Assert.DoesNotContain(
             "pointer-events=\"none\" /></g>",
             LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false)
         );

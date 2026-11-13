@@ -25,6 +25,7 @@ static class LineSvg
     const double SelectedCircleExtraRadius = 3;
     const double HandleExtraRadius = 1;
     const double HandleTouchExtraRadius = 8;
+    const double HandleReachStrokeWidth = 4; // A label lets presses through to handles of lines up to this width
 
     // Length of the hollow inheritance arrow head in marker units; markers scale with stroke
     // width, so the on-screen length is this value times the line's stroke width (must match
@@ -371,19 +372,20 @@ static class LineSvg
                 ? firstRowY + (rows.Count - 1) * rowHeight + descriptionFontSize * 0.6
                 : labelY + fontSize * 0.6;
         var box = new Rect(at.X - width / 2, top, width, bottom - top);
-        return (labelSvg + descriptionSvg, LabelHitSvg(line, box, fontSize));
+        return (labelSvg + descriptionSvg, LabelHitSvg(line, box, fontSize, polylinePoints));
     }
 
     // A transparent rect over the label's texts, so the label is part of its line: hovering it
     // shows the line's card (the group's id is the line's), a click selects the line, a
     // double-click in edit mode edits the label, and an edit-mode drag moves it along the line
     // (the rect's own id, PointerId.LineLabelElementId). The texts themselves take no pointer
-    // events. On a selected line with bend points the rect lets presses through, since the label
-    // can lie on a point's handle, which it would otherwise cover (deselect to drag the label).
-    static string LabelHitSvg(Line line, Rect box, double fontSize)
+    // events. On a selected line the rect lets presses through when a bend point's handle lies
+    // under it, which it would otherwise cover (deselect to drag the label); elsewhere it stays,
+    // so a double-click on the label still edits it once the first click has selected the line.
+    static string LabelHitSvg(Line line, Rect box, double fontSize, IReadOnlyList<Pos> polylinePoints)
     {
         var padding = fontSize * 0.3;
-        var pointerEvents = line.IsSelected && line.SegmentPoints.Count > 0 ? " pointer-events=\"none\"" : "";
+        var pointerEvents = IsHandleUnderLabel(line, box, padding, polylinePoints) ? " pointer-events=\"none\"" : "";
         var groupId = PointerId.FromLine(line.Id).ElementId;
         var rectId = PointerId.LineLabelElementId(line.Id);
         return string.Create(
@@ -392,6 +394,25 @@ static class LineSvg
                 - padding:0.##}" y="{box.Y - padding:0.##}" width="{box.Width + 2 * padding:0.##}" height="{box.Height
                 + 2 * padding:0.##}" fill="black" fill-opacity="0"{pointerEvents} /></g>"""
         );
+    }
+
+    // Whether a selected line's bend-point handle (the inner polyline points, with the handle's
+    // touch radius for a stroke of up to HandleReachStrokeWidth) reaches into the label's rect.
+    static bool IsHandleUnderLabel(Line line, Rect box, double padding, IReadOnlyList<Pos> polylinePoints)
+    {
+        if (!line.IsSelected || line.SegmentPoints.Count == 0)
+            return false;
+
+        var reach = padding + HandleReachStrokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
+        return polylinePoints
+            .Skip(1)
+            .SkipLast(1)
+            .Any(p =>
+                p.X >= box.X - reach
+                && p.X <= box.X + box.Width + reach
+                && p.Y >= box.Y - reach
+                && p.Y <= box.Y + box.Height + reach
+            );
     }
 
     static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth, bool hasHandles)
