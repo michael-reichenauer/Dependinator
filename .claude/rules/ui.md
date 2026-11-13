@@ -31,6 +31,25 @@ Lines are the aggregated funnel by default. Descent is opt-in through `Node.Line
 toolbar +/−, both directions, pass-through nodes don't count as a level) and `Model.LineFocus`
 (the explorer splits lines into its expanded rows, `Line.IsFocused`), both read by
 `RepLineService.Sync`.
+- **Stubs (Nov 13 2026, Michael's idea).** The lines between a container's edge and its children
+  (`LineStub.IsEdgeLine`) are drawn as a short arrow with a ring at the child, not as the long
+  fan to the middle of the container's edge. A stub is the same line drawn short (`LineSvg`
+  swaps the points): same element id, hover card, selection and rule colour. Drawn in full
+  still: an edge line on the dependency path being shown, one with a label, one the user routed
+  with line points (adding a point to a stub brings the full line back). Stubs are level (upright
+  at an inheritance end) because stubs in the old line's direction looked like a hedgehog;
+  `LineStub.GetDirection` turns one aside when a sibling line leaves the same anchor that way.
+  The length is in the container's units (so the two stubs between neighbours stay apart at the
+  layout's 60-unit gap) within pixel limits.
+- **The selection's lines.** `RepLineService.Sync` takes a `LineReveal` (the selected nodes, from
+  `NodeTreeSvg.GetLineReveal`): a link of a selected node is pinned at that node and descends on
+  its far side as deep as the nodes are open, so the selection's lines run end to end as cousin
+  lines (lit by `LineEmphasis.IsNodeLine`). The reveal is part of the Sync memo, the lines it
+  creates are inactive again after the selection (never pruned, never saved), and an export has
+  no selection. It leaves out what View › Rows and "hide member lines" hide.
+  Not built yet: the same on hover (the lines are not in the tile at rest, so CSS alone cannot
+  do it) and one line per container for far ends that are off screen or tiny (a hub such as
+  Demo.Core.Utils lights 45 lines).
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:
