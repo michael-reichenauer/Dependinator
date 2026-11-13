@@ -97,11 +97,12 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `RepLineService.MinFarEndSize` (20 px) on screen (`IsWorthOpening`): its lines end at that
   container, one line for all of them. So the lines depend on the tile, not just the zoom: the
   Area is part of the reveal. With a stub selected, a new tile, zoom or layout re-walks only
-  the stub's own links (`GetStubFarEnds`, kept in the Sync memo) and syncs everything only when
-  one of their far ends changed: a full sync each time took 40 to 70 ms per tile on the dev
+  the stub's own links (`IsEveryStubFarEndUnchanged` against the memo's `StubFarEnds`) and syncs
+  everything only when one of their far ends changed: a full sync each time took 40 to 70 ms per tile on the dev
   host for the demo's Utils stub (10x that in the browser app), against 2 to 5 ms. The Area is where the tile draws
-  nodes (`RenderContext.IsInTile`), so a container the tile draws has its lines split, and one
-  up to a screen outside the view may be split too, depending on the tile. The lines' `IsActiveRep`
+  nodes (`RenderContext.IsInTile`), so a container the tile draws has its lines split unless its
+  children are tiny, and one up to about a screen outside the view may be split too, depending
+  on the tile. The lines' `IsActiveRep`
   hold the newest tile's state, also while an older cached tile is shown (as for tiles at
   another zoom).
   Still open: a wider touch area for a stub if it is fiddly on the iPad.

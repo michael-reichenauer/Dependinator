@@ -81,7 +81,7 @@ static class RepLineService
         long LayoutGeneration,
         List<KeyValuePair<Node, bool>> ExpansionStates,
         LineReveal Reveal,
-        List<Node>? StubFarEnds
+        Dictionary<Link, Node>? StubFarEnds
     );
 
     sealed class LinkGroup
@@ -100,7 +100,9 @@ static class RepLineService
     // same expansion state at the new zoom. Geometry changes (a layout, a resize, a container
     // zoom edit) keep the structure version but bump NodeLayout.Generation: since whether a node
     // opens depends on its size, the expansion states are then re-checked at the same zoom too.
-    // A changed selection (or a filter that limits its reveal) always syncs again.
+    // A changed selection (or a filter that limits its reveal) always syncs again. A selected
+    // stub's far ends also depend on the tile's Area, the zoom and the layout (IsWorthOpening):
+    // StubFarEnds holds where each of its revealed links ended, checked again on a new tile.
     static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IModel, SyncState> lastSync = new();
 
     public static void Sync(IModel model, double zoom, LineReveal reveal = default)
@@ -123,16 +125,17 @@ static class RepLineService
         }
 
         // A selected stub's far side also goes by the places and sizes of the containers
-        // (IsWorthOpening), which no expansion state shows: a new tile, zoom or layout resolves
-        // the far ends of the stub's own links again (a few hundred links at most, where a full
-        // sync takes all of them, ten times the time), and only a changed far end syncs it all.
+        // (IsWorthOpening), which no expansion state shows: a new tile, zoom or layout walks the
+        // far sides of the stub's own links again (where a full sync takes every link in the
+        // model: 40 to 70 ms against 2 to 5 ms per tile for the demo's Utils stub on the dev
+        // host), and only a changed far end syncs it all.
         if (
             state is not null
             && state.StructureVersion == model.StructureVersion
-            && state.StubFarEnds is { } stubFarEnds
+            && state.StubFarEnds is { } lastFarEnds
             && state.Reveal.IsSameButArea(reveal)
             && AllExpansionStatesUnchanged(state.ExpansionStates, zoom)
-            && GetStubFarEnds(zoom, reveal).SequenceEqual(stubFarEnds)
+            && IsEveryStubFarEndUnchanged(model, zoom, reveal, lastFarEnds)
         )
         {
             lastSync.AddOrUpdate(
@@ -154,7 +157,7 @@ static class RepLineService
             line.IsRevealed = false;
         }
 
-        var (groups, isChildrenShownCache) = GroupLinksByRepPair(model, zoom, reveal);
+        var (groups, isChildrenShownCache, stubFarEnds) = GroupLinksByRepPair(model, zoom, reveal);
         foreach (var (pair, group) in groups)
         {
             var id = pair.IsInheritance
@@ -189,7 +192,7 @@ static class RepLineService
                 layoutGeneration,
                 [.. isChildrenShownCache],
                 reveal,
-                reveal.Stub is null ? null : GetStubFarEnds(zoom, reveal)
+                stubFarEnds
             )
         );
     }
@@ -209,11 +212,11 @@ static class RepLineService
 
     readonly record struct RepPair(Node Source, Node Target, bool IsInheritance);
 
-    static (Dictionary<RepPair, LinkGroup> Groups, Dictionary<Node, bool> IsChildrenShownCache) GroupLinksByRepPair(
-        IModel model,
-        double zoom,
-        LineReveal reveal
-    )
+    static (
+        Dictionary<RepPair, LinkGroup> Groups,
+        Dictionary<Node, bool> IsChildrenShownCache,
+        Dictionary<Link, Node>? StubFarEnds
+    ) GroupLinksByRepPair(IModel model, double zoom, LineReveal reveal)
     {
         var isChildrenShownCache = new Dictionary<Node, bool>();
         var groups = new Dictionary<RepPair, LinkGroup>();
@@ -230,6 +233,7 @@ static class RepLineService
             : isStubIncoming ? stub.Source
             : stub.Target;
         var worthOpeningCache = stub is null ? null : new Dictionary<Node, bool>();
+        var stubFarEnds = stub is null ? null : new Dictionary<Link, Node>();
 
         foreach (var link in model.Links.Values)
         {
@@ -290,16 +294,18 @@ static class RepLineService
                 // border are pinned at the child and descend on the far side as deep as the
                 // nodes are open; a link between the child and the container itself stays in
                 // the stub.
-                if (isStubIncoming && link.Source != stubContainer)
+                if (IsCrossingStubLink(link, isStubIncoming, stubContainer!))
                 {
-                    targetPin = stubChild;
-                    isSourceRevealed = true;
-                    isRevealedLink = true;
-                }
-                else if (!isStubIncoming && link.Target != stubContainer)
-                {
-                    sourcePin = stubChild;
-                    isTargetRevealed = true;
+                    if (isStubIncoming)
+                    {
+                        targetPin = stubChild;
+                        isSourceRevealed = true;
+                    }
+                    else
+                    {
+                        sourcePin = stubChild;
+                        isTargetRevealed = true;
+                    }
                     isRevealedLink = true;
                 }
             }
@@ -325,6 +331,12 @@ static class RepLineService
                 worthOpeningCache
             );
 
+            // Where the stub's revealed links end on the far side, for the memo.
+            if (isSourceRevealed)
+                stubFarEnds![link] = sourcePath[sourceRepIndex];
+            else if (isTargetRevealed)
+                stubFarEnds![link] = targetPath[targetRepIndex];
+
             // The funnel segments below the reps render whether or not the reps differ: a link
             // from a node to its own ancestor (or from a parent to its own child) has equal reps
             // and is drawn entirely by its chain segments.
@@ -348,7 +360,7 @@ static class RepLineService
             group.IsRevealed |= isRevealedLink;
         }
 
-        return (groups, isChildrenShownCache);
+        return (groups, isChildrenShownCache, stubFarEnds);
     }
 
     static int CountCommonAncestors(List<Node> sourcePath, List<Node> targetPath)
@@ -360,33 +372,43 @@ static class RepLineService
         return common;
     }
 
-    // Where the selected stub's links that cross its container's border end on the far side,
-    // walked as GroupLinksByRepPair walks them: what the far side's reps depend on beyond the
-    // structure and the expansion states.
-    static List<Node> GetStubFarEnds(double zoom, LineReveal reveal)
+    // A link of the stub that crosses its container's border, where the stub's child is the
+    // near end: a link between the child and the container itself stays in the stub.
+    static bool IsCrossingStubLink(Link link, bool isStubIncoming, Node stubContainer) =>
+        isStubIncoming ? link.Source != stubContainer : link.Target != stubContainer;
+
+    // Walks the far sides of the selected stub's revealed links again, as GroupLinksByRepPair
+    // walks them, and compares where they end with the last sync's far ends.
+    static bool IsEveryStubFarEndUnchanged(IModel model, double zoom, LineReveal reveal, Dictionary<Link, Node> farEnds)
     {
         var stub = reveal.Stub!;
         var isIncoming = LineStub.IsIncoming(stub);
         var container = isIncoming ? stub.Source : stub.Target;
+        var focus = model.LineFocus;
         var cache = new Dictionary<Node, bool>();
         var worthOpeningCache = new Dictionary<Node, bool>();
         var sourcePath = new List<Node>(32);
         var targetPath = new List<Node>(32);
-        var farEnds = new List<Node>(stub.Links.Count);
+        var count = 0;
         foreach (var link in stub.Links)
         {
-            if (isIncoming ? link.Source == container : link.Target == container)
+            if (!IsCrossingStubLink(link, isIncoming, container))
                 continue;
-
             FillAncestorsAndSelf(link.Source, sourcePath);
             FillAncestorsAndSelf(link.Target, targetPath);
+            if (focus is not null && IsFocusLink(focus, link, sourcePath, targetPath))
+                continue; // Drawn for the explorer, not for the stub
+
             int common = CountCommonAncestors(sourcePath, targetPath);
             var farPath = isIncoming ? sourcePath : targetPath;
-            farEnds.Add(
-                farPath[GetRepresentativeIndex(farPath, common, zoom, cache, null, null, reveal, worthOpeningCache)]
-            );
+            var farEnd = farPath[
+                GetRepresentativeIndex(farPath, common, zoom, cache, null, null, reveal, worthOpeningCache)
+            ];
+            if (!farEnds.TryGetValue(link, out var lastFarEnd) || lastFarEnd != farEnd)
+                return false;
+            count++;
         }
-        return farEnds;
+        return count == farEnds.Count;
     }
 
     // Same rule as LineService.AddDirectLine: inheritance styling only where the line touches the

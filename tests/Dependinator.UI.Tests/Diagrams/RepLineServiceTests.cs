@@ -893,6 +893,59 @@ public class RepLineServiceTests
     }
 
     [Fact]
+    public void Sync_SelectedStub_ShouldKeepItsLines_OnATileWhereNoFarEndChanges()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var stub = GetLine(model, "Source", "ParentA");
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(-50, -50, 300, 300) });
+
+        // The next tile still leaves ParentB out: the same lines (the memo walks only the stub's
+        // links to see that).
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(250, -50, 300, 300) });
+
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(stub.IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+
+        // And the tile after it reaches ParentB.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub) with { Area = new Rect(550, -50, 600, 300) });
+
+        Assert.False(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectedStub_ShouldSplitTheLineOfAFarContainerALayoutMovesIntoTheTile()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        parentA.Boundary = new Rect(0, 0, 100, 100);
+        parentB.Boundary = new Rect(1000, 0, 100, 100);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var reveal = SelectedStub(GetLine(model, "Source", "ParentA")) with { Area = new Rect(-50, -50, 300, 300) };
+        RepLineService.Sync(model, ContainerZoom, reveal);
+        Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
+
+        // The same tile and zoom, but ParentB moved into it.
+        parentB.Boundary = new Rect(120, 0, 100, 100);
+        NodeLayout.BumpGeneration();
+        RepLineService.Sync(model, ContainerZoom, reveal);
+
+        Assert.False(GetLine(model, "Source", "ParentB").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
+    }
+
+    [Fact]
     public void Sync_SelectedStub_ShouldEndAtAFarContainerWithTinyChildren_UntilZoomedIn()
     {
         using var model = NewModel();
