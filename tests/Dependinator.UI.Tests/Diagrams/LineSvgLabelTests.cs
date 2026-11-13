@@ -172,6 +172,14 @@ public class LineSvgLabelTests
     }
 
     [Fact]
+    public void GetUserTextLines_ShouldNotLeaveASpaceBeforeTheEllipsis()
+    {
+        var rows = SvgText.GetUserTextLines("One.\nTwo.\nThree :\nFour.", 38, 3);
+
+        Assert.Equal(["One.", "Two.", "Three…"], rows);
+    }
+
+    [Fact]
     public void GetLineSvg_ShouldClipALongLabel_ToOneRow()
     {
         var line = CreateLine();

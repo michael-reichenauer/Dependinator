@@ -137,7 +137,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
     // Where the pointer is during a label drag, in the line owner's children-local space. It
     // follows the pointer freely (the label is put at the closest point of the line), so the
     // label keeps up with the pointer however far it strays from the line.
-    Pos labelDragPos = Pos.None;
+    Pos? labelDragPos;
 
     public void MoveLabel(PointerEvent e, double zoom, PointerId pointerId)
     {
@@ -155,19 +155,20 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
             if (points.Count < 2)
                 return;
 
-            if (labelDragPos == Pos.None)
-                labelDragPos = LinePathGeometry.PointAt(points, line.LabelPosition);
+            var from = labelDragPos ?? LinePathGeometry.PointAt(points, line.LabelPosition);
             var localZoom = GetChildrenLocalZoom(owner) * zoom;
-            labelDragPos = new Pos(labelDragPos.X + e.MovementX * localZoom, labelDragPos.Y + e.MovementY * localZoom);
-            position = LinePathGeometry.FractionAt(points, labelDragPos);
-            if (Math.Abs(position - line.LabelPosition) < 0.001)
+            var to = new Pos(from.X + e.MovementX * localZoom, from.Y + e.MovementY * localZoom);
+            labelDragPos = to;
+            // Compared as it would be stored, so a pointer past a clamped end sends nothing.
+            position = Line.ToLabelPosition(LinePathGeometry.FractionAt(points, to));
+            if (position == line.LabelPosition)
                 return;
         }
 
         commandService.Do(new LineLabelPositionCommand(pointerId.LineId) { Position = position });
     }
 
-    public void EndLabelMove() => labelDragPos = Pos.None;
+    public void EndLabelMove() => labelDragPos = null;
 
     static double GetChildrenLocalZoom(Node owner) => owner.GetZoom() / owner.ContainerZoom;
 
@@ -221,9 +222,12 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
 
     static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, LinePathGeometry.LineEndpoints endpoints, Pos hint)
     {
-        var polyline = new List<Pos>(line.SegmentPoints.Count + 2) { new(endpoints.X1, endpoints.Y1) };
-        polyline.AddRange(line.SegmentPoints);
-        polyline.Add(new Pos(endpoints.X2, endpoints.Y2));
+        IReadOnlyList<Pos> polyline =
+        [
+            new Pos(endpoints.X1, endpoints.Y1),
+            .. line.SegmentPoints,
+            new Pos(endpoints.X2, endpoints.Y2),
+        ];
 
         var bestSegmentIndex = 0;
         var bestDistanceSquared = double.MaxValue;

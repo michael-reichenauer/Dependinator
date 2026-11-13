@@ -1931,6 +1931,12 @@ button.dep-rules__node:hover {
     overflow: hidden;
 }
 
+/* A line label's description, which the canvas cuts to a few rows, is shown whole. */
+.dep-tt-desc.dep-tt-full {
+    display: block;
+    -webkit-line-clamp: unset;
+}
+
 .dep-tt-code,
 .dep-tooltip code {
     font-family: "JetBrains Mono", Consolas, monospace;

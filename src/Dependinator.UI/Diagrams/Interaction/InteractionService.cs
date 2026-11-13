@@ -626,9 +626,12 @@ class InteractionService(
             return;
         }
 
-        // A line's label slides along its line (any labelled line, selected or not).
+        // A line's label slides along its line (any labelled line, selected or not), once the
+        // pointer has moved a few pixels: a click or double-click on the label must not move it.
         if (viewOptions.IsEditingEnabled && mouseDownId.IsLineLabel)
         {
+            if (!isDraggingLineLabel && !IsBeyondDragThreshold(e))
+                return;
             isDraggingLineLabel = true;
             lineEditService.MoveLabel(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
@@ -745,6 +748,12 @@ class InteractionService(
             applicationEvents.TriggerUIStateChanged(); // Restore the cursor without waiting for the next event
         }
     }
+
+    const double LabelDragThreshold = 4;
+
+    bool IsBeyondDragThreshold(PointerEvent e) =>
+        Math.Abs(e.ClientX - mouseDownClient.X) > LabelDragThreshold
+        || Math.Abs(e.ClientY - mouseDownClient.Y) > LabelDragThreshold;
 
     // A band can start anywhere except on the edit handles, which have their own drags.
     static bool CanStartRubberBand(PointerId pressedId) =>

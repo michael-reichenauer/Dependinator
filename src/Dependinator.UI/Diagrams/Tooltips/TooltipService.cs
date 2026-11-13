@@ -143,7 +143,10 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         if (line.HtmlLabel is not null)
             html.Append($"<div class=\"dep-tt-desc\"><b>{line.HtmlLabel}</b></div>");
         if (!string.IsNullOrWhiteSpace(line.LabelDescription))
-            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.LabelDescription))}</div>");
+            // In full, unlike the parsed texts: the canvas draws only its first rows.
+            html.Append(
+                $"<div class=\"dep-tt-desc dep-tt-full\">{HttpUtility.HtmlEncode(line.LabelDescription.Trim())}</div>"
+            );
         if (!string.IsNullOrWhiteSpace(line.Description))
             html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.Description))}</div>");
 

@@ -152,6 +152,31 @@ public class LineLabelCommandTests
     }
 
     [Fact]
+    public void Execute_ShouldPutTheLabelBackInTheMiddle_WhenCleared_AndRevertRestoreItsPlace()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+        line.SetLabelPosition(0.2);
+
+        var clear = new LineLabelCommand(line.Id) { Label = "", Description = "" };
+        clear.Execute(model);
+        Assert.False(line.HasLabel);
+        Assert.False(line.IsLabelMoved);
+
+        clear.Revert(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal(0.2, line.LabelPosition);
+    }
+
+    [Fact]
+    public void ToLabelPosition_ShouldRoundAsStored()
+    {
+        Assert.Equal(0.123, Line.ToLabelPosition(0.12345));
+        Assert.Equal(0.05, Line.ToLabelPosition(-1));
+    }
+
+    [Fact]
     public void SetLabelPosition_ShouldKeepTheLabelOffTheLineEnds()
     {
         var (model, line) = CreateModelWithLine();

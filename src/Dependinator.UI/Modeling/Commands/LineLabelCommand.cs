@@ -15,6 +15,7 @@ class LineLabelCommand(LineId lineId) : Command
     public string? Description { get; set; }
     public string? LabelCopy { get; private set; }
     public string? DescriptionCopy { get; private set; }
+    public double? PositionCopy { get; private set; }
 
     public override void Execute(IModel model)
     {
@@ -23,7 +24,11 @@ class LineLabelCommand(LineId lineId) : Command
 
         LabelCopy = line.Label ?? "";
         DescriptionCopy = line.LabelDescription ?? "";
+        PositionCopy = line.LabelPosition;
         line.SetLabel(Label ?? LabelCopy, Description ?? DescriptionCopy);
+        // A removed label takes its place along the line with it: a new one starts at the middle.
+        if (!line.HasLabel)
+            line.SetLabelPosition(Line.DefaultLabelPosition);
     }
 
     public override void Revert(IModel model)
@@ -35,7 +40,9 @@ class LineLabelCommand(LineId lineId) : Command
         Label = line.Label ?? "";
         Description = line.LabelDescription ?? "";
         line.SetLabel(LabelCopy, DescriptionCopy);
+        line.SetLabelPosition(PositionCopy ?? Line.DefaultLabelPosition);
         LabelCopy = null;
         DescriptionCopy = null;
+        PositionCopy = null;
     }
 }

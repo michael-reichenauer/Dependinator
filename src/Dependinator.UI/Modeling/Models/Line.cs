@@ -118,8 +118,11 @@ class Line : IItem
     public double LabelPosition { get; private set; } = DefaultLabelPosition;
     public bool IsLabelMoved => LabelPosition != DefaultLabelPosition;
 
-    public void SetLabelPosition(double position) =>
-        LabelPosition = double.IsFinite(position)
+    public void SetLabelPosition(double position) => LabelPosition = ToLabelPosition(position);
+
+    // A position as it is stored: off the line's ends, rounded.
+    public static double ToLabelPosition(double position) =>
+        double.IsFinite(position)
             ? Math.Round(Math.Clamp(position, MinLabelPosition, MaxLabelPosition), 3)
             : DefaultLabelPosition;
 

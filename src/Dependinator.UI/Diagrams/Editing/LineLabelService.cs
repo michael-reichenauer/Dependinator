@@ -76,12 +76,17 @@ class LineLabelService(
 
         var label = result.Clear ? "" : result.Label;
         var description = result.Clear ? "" : result.Description;
-        if (result.IsPositionReset)
-            commandService.Do(new LineLabelPositionCommand(lineId) { Position = Line.DefaultLabelPosition });
-        if (label == currentLabel && description == currentDescription)
-            return;
+        List<Command> commands = [];
+        if (result.IsPositionReset && !result.Clear)
+            commands.Add(new LineLabelPositionCommand(lineId) { Position = Line.DefaultLabelPosition });
+        if (label != currentLabel || description != currentDescription)
+            commands.Add(new LineLabelCommand(lineId) { Label = label, Description = description });
 
-        commandService.Do(new LineLabelCommand(lineId) { Label = label, Description = description });
+        // One Save is one undo step.
+        if (commands.Count == 1)
+            commandService.Do(commands[0]);
+        else if (commands.Count > 1)
+            commandService.Do(new CompositeCommand([.. commands]));
     }
 
     public async Task<string> GetPromptAsync(LineId lineId)
