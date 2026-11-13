@@ -12,17 +12,31 @@ record PointerId
     public NodeResizeType NodeResizeType { get; init; } = NodeResizeType.None;
     public int LinePointIndex { get; init; } = -1;
 
+    // The hollow handle on a selected line's segment (sub-id "lm{i}_{percent}": segment i runs
+    // from point i to point i + 1 of the line's polyline, and the handle sits that far along it,
+    // usually halfway). An edit-mode drag on it adds a bend point there (see
+    // LineSvg.SelectedLineSvg); otherwise it is the line (IsLine).
+    public int LineMidPointIndex { get; init; } = -1;
+    public double LineMidPointFraction { get; init; } = 0.5;
+
     // A press on a line's label (its hit rect, sub-id "ll"). It is the line in every other
     // respect (select, double-click, menu, hover card); only an edit-mode drag moves the label.
     public bool IsLineLabel { get; init; }
 
-    private PointerId(string id, string subId, NodeResizeType nodeResizeType, int linePointIndex = -1)
+    private PointerId(
+        string id,
+        string subId,
+        NodeResizeType nodeResizeType,
+        int linePointIndex = -1,
+        int lineMidPointIndex = -1
+    )
     {
         ElementId = $"{id}.{subId}";
         Id = id;
         SubId = subId;
         NodeResizeType = nodeResizeType;
         LinePointIndex = linePointIndex;
+        LineMidPointIndex = lineMidPointIndex;
     }
 
     // The id of the svg canvas element itself (drops/clicks on the diagram background).
@@ -42,6 +56,12 @@ record PointerId
     public static PointerId FromLinePoint(LineId lineId, int pointIndex) =>
         new(lineId.Value, $"lp{pointIndex}", NodeResizeType.None, pointIndex);
 
+    public static PointerId FromLineMidPoint(LineId lineId, int segmentIndex, int percent = 50) =>
+        new(lineId.Value, $"lm{segmentIndex}_{percent}", NodeResizeType.None, lineMidPointIndex: segmentIndex)
+        {
+            LineMidPointFraction = percent / 100.0,
+        };
+
     public static PointerId FromNodeResize(NodeId nodeId, NodeResizeType resizeType) =>
         new(nodeId.Value, ToSubId(resizeType), resizeType);
 
@@ -58,6 +78,8 @@ record PointerId
         var subId = parts.Length > 1 ? parts[1] : "";
         if (subId == LineLabelSubId)
             return FromLine(LineId.FromId(id)) with { IsLineLabel = true };
+        if (TryParseLineMidPoint(subId, out var segmentIndex, out var percent))
+            return FromLineMidPoint(LineId.FromId(id), segmentIndex, percent);
         return new(id, subId, ToNodeResizeType(subId), ToLinePointIndex(subId));
     }
 
@@ -68,17 +90,24 @@ record PointerId
         && Id == other.Id
         && SubId == other.SubId
         && NodeResizeType == other.NodeResizeType
-        && LinePointIndex == other.LinePointIndex;
+        && LinePointIndex == other.LinePointIndex
+        && LineMidPointIndex == other.LineMidPointIndex
+        && LineMidPointFraction == other.LineMidPointFraction;
 
-    public override int GetHashCode() => HashCode.Combine(ElementId, Id, SubId, NodeResizeType, LinePointIndex);
+    public override int GetHashCode() =>
+        HashCode.Combine(ElementId, Id, SubId, NodeResizeType, LinePointIndex, LineMidPointIndex);
 
     public bool IsNode => SubId == "n";
     public bool IsCanvas => Id == CanvasElementId;
     public bool IsLinkHandle => SubId == "lh";
     public bool IsPrivateToggle => SubId == "pt";
     public bool IsResize => NodeResizeType != NodeResizeType.None;
-    public bool IsLine => SubId == "l";
+
+    // A segment handle lies on its line and is the line to everything but a drag (menus, hover
+    // card, double-click).
+    public bool IsLine => SubId == "l" || IsLineMidPoint;
     public bool IsLinePoint => LinePointIndex >= 0;
+    public bool IsLineMidPoint => LineMidPointIndex >= 0;
 
     static NodeResizeType ToNodeResizeType(string subId) =>
         subId switch
@@ -96,10 +125,24 @@ record PointerId
 
     static int ToLinePointIndex(string subId)
     {
-        if (!subId.StartsWith("lp"))
+        if (!subId.StartsWith("lp", StringComparison.Ordinal))
             return -1;
 
         return int.TryParse(subId[2..], out var index) ? index : -1;
+    }
+
+    static bool TryParseLineMidPoint(string subId, out int segmentIndex, out int percent)
+    {
+        segmentIndex = -1;
+        percent = 0;
+        if (!subId.StartsWith("lm", StringComparison.Ordinal))
+            return false;
+        var parts = subId[2..].Split('_');
+        return parts.Length == 2
+            && int.TryParse(parts[0], out segmentIndex)
+            && segmentIndex >= 0
+            && int.TryParse(parts[1], out percent)
+            && percent is > 0 and < 100;
     }
 
     static string ToSubId(NodeResizeType resizeType) =>

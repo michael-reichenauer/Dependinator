@@ -94,8 +94,11 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator field = Page.GetByTestId("line-label-text");
         await App.DoubleClickLineAsync(line, field);
         await SaveLabelAsync("uses");
-        ILocator label = LineLabel("uses");
-        await Expect(label).ToBeVisibleAsync();
+        await Expect(LineLabel("uses")).ToBeVisibleAsync();
+        // Measured on the label's hit rect, what a press lands on: WebKit reports the bounds of
+        // SVG text inside the canvas's nested tile SVGs at the wrong place, so a press at the
+        // text's reported center missed the label there.
+        ILocator label = Page.Locator("#svgcanvas rect.line-label-hit").First;
         float middleX = await LabelCenterXAsync(label);
 
         // The label takes the press (not the line under it) and follows the pointer along the line.

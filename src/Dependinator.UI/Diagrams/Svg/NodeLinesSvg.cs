@@ -31,7 +31,8 @@ static class NodeLinesSvg
                 IsLineViolating(line, context),
                 IsLineWeighted(line, context),
                 includeLabel: false,
-                isLit: IsLineLit(line, context)
+                isLit: IsLineLit(line, context),
+                isEditing: context.Flags.IsEditing
             );
         }
     }
@@ -187,7 +188,8 @@ static class NodeLinesSvg
                 IsLineOnPath(directLine, context),
                 IsLineViolating(directLine, context),
                 IsLineWeighted(directLine, context),
-                IsLineLit(directLine, context)
+                IsLineLit(directLine, context),
+                context.Flags.IsEditing
             );
             if (svg.Length > 0)
                 yield return svg;

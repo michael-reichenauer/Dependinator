@@ -55,4 +55,32 @@ public class PointerIdTests
         Assert.Equal(PointerId.FromLine(lineId).ElementId, parsed.ElementId);
         Assert.False(PointerId.FromLine(lineId).IsLineLabel);
     }
+
+    [Fact]
+    public void FromLineMidPoint_ShouldRoundTripThroughParse_WithItsSegmentAndPlace()
+    {
+        var lineId = LineId.FromId("abc");
+        var pointerId = PointerId.FromLineMidPoint(lineId, 2, 25);
+
+        var parsed = PointerId.Parse(pointerId.ElementId);
+
+        Assert.Equal(pointerId, parsed);
+        Assert.True(parsed.IsLineMidPoint);
+        Assert.Equal(2, parsed.LineMidPointIndex);
+        Assert.Equal(0.25, parsed.LineMidPointFraction);
+        Assert.Equal(lineId, parsed.LineId);
+        Assert.True(parsed.IsLine); // it lies on the line: menus and hover cards are the line's
+        Assert.False(parsed.IsLinePoint);
+        Assert.NotEqual(PointerId.FromLineMidPoint(lineId, 2), parsed);
+    }
+
+    [Theory]
+    [InlineData("abc.lm")]
+    [InlineData("abc.lm2")]
+    [InlineData("abc.lm2_0")]
+    [InlineData("abc.lmx_50")]
+    public void Parse_ShouldNotReadAMalformedSegmentHandle(string elementId)
+    {
+        Assert.False(PointerId.Parse(elementId).IsLineMidPoint);
+    }
 }
