@@ -50,6 +50,19 @@ record ModelDto
     // for a model opened from the cache, before (or without) a new parse. Defaulted (no
     // FormatVersion bump).
     public IReadOnlyList<ParseProblemDto> ParseProblems { get; init; } = [];
+
+    // For a workspace model: the sources the user chose it to be made of, and the ones left
+    // out (see WorkspaceSource). Defaulted (no FormatVersion bump).
+    public IReadOnlyList<WorkspaceSourceDto> WorkspaceSources { get; init; } = [];
+}
+
+// A source of a workspace model and whether it is in the model (see Models.WorkspaceSource).
+[Serializable]
+record WorkspaceSourceDto
+{
+    public required string Path { get; init; }
+    public bool IsIncluded { get; init; }
+    public string? RootName { get; init; }
 }
 
 // A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).

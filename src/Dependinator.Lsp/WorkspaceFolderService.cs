@@ -14,24 +14,25 @@ interface IWorkspaceFolderService
 // didChangeWorkspaceFolders) and forwards them to the core file service.
 class WorkspaceFolderService(IWorkspaceFileService workspaceFileService) : IWorkspaceFolderService
 {
-    readonly HashSet<string> roots = new(StringComparer.OrdinalIgnoreCase);
+    // In the order the editor has them: the first folder is the one a workspace model is of.
+    readonly List<string> roots = [];
 
     public void Initialize(InitializeParams initializeParams)
     {
         if (initializeParams.WorkspaceFolders is not null && initializeParams.WorkspaceFolders.Any())
         {
-            GetPaths(initializeParams.WorkspaceFolders).ForEach(path => roots.Add(path));
+            GetPaths(initializeParams.WorkspaceFolders).ForEach(Add);
         }
         else if (initializeParams.RootUri is not null)
         {
             // Fall back to the deprecated rootUri/rootPath fields for older clients.
             var path = initializeParams.RootUri.GetFileSystemPath();
             if (!string.IsNullOrWhiteSpace(path))
-                roots.Add(path);
+                Add(path);
         }
         else if (!string.IsNullOrWhiteSpace(initializeParams.RootPath))
         {
-            roots.Add(initializeParams.RootPath);
+            Add(initializeParams.RootPath);
         }
 
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
@@ -39,15 +40,23 @@ class WorkspaceFolderService(IWorkspaceFileService workspaceFileService) : IWork
 
     public void AddFolders(IEnumerable<WorkspaceFolder> folders)
     {
-        GetPaths(folders).ForEach(path => roots.Add(path));
+        GetPaths(folders).ForEach(Add);
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
     }
 
     public void RemoveFolders(IEnumerable<WorkspaceFolder> folders)
     {
-        GetPaths(folders).ForEach(path => roots.Remove(path));
+        GetPaths(folders).ForEach(path => roots.RemoveAll(root => IsSame(root, path)));
         workspaceFileService.SetWorkspaceFolders(roots.ToList());
     }
+
+    void Add(string path)
+    {
+        if (!roots.Any(root => IsSame(root, path)))
+            roots.Add(path);
+    }
+
+    static bool IsSame(string path1, string path2) => string.Equals(path1, path2, StringComparison.OrdinalIgnoreCase);
 
     static List<string> GetPaths(IEnumerable<WorkspaceFolder> folders)
     {

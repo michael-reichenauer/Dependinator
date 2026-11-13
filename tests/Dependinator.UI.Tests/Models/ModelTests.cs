@@ -105,6 +105,35 @@ public class ModelTests
         Assert.Empty(restored.WithModel(m => m.ParseProblems));
     }
 
+    // The choice of sources of a workspace model is saved with it; an older file has none, and
+    // Clear drops it with the model, so it cannot leak into the parse of the next one.
+    [Fact]
+    public void WorkspaceSources_ShouldRoundTripThroughDto_AndBeClearedWithTheModel()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        WorkspaceSource[] sources = [new("App.sln", true, "App*sln"), new("tests/sample/tsconfig.json", false)];
+        var dto = modelMgr.WithModel(m =>
+        {
+            m.WorkspaceSources = sources;
+            return m.SerializeToDto();
+        });
+
+        var json = Json.Serialize(dto);
+        var restored = new ModelMgr(new StateMgr());
+        restored.WithModel(m =>
+            m.SetFromDto("/repo/.workspace", Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(json)!)
+        );
+        Assert.Equal(sources, restored.WithModel(m => m.WorkspaceSources));
+
+        var old = Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(
+            """{ "FormatVersion": "8", "Name": "My.sln", "Nodes": [], "Links": [] }"""
+        );
+        Assert.Empty(old!.WorkspaceSources);
+
+        restored.WithModel(m => m.Clear());
+        Assert.Empty(restored.WithModel(m => m.WorkspaceSources));
+    }
+
     [Fact]
     public void Clear_ShouldResetIncludeTestProjects()
     {

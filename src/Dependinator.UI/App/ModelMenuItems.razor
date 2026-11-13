@@ -7,17 +7,26 @@
 @inject IAppCloudSyncService appCloudSyncService
 @inject IApplicationEvents applicationEvents
 @inject ISnackbar snackbar
+@inject IWorkspaceSourcesService workspaceSourcesService
 @implements IDisposable
 
 @* The models to switch between, as items of the app bar's Models menu. A host with a workspace
-   (VS Code, the dev host) lists only the workspace's solutions, Bicep files and script projects, each with its
-   folder when there are several; a cloud, design or demo model is opened from the Models dialog
+   (VS Code, the dev host) lists only the workspace's models. The model of the whole workspace
+   has a section of its own, with "Choose Sources …" right below it while it is open; then come
+   the models of its single sources (solutions, Bicep files and script projects), each with its
+   folder when there are several. A cloud, design or demo model is opened from the Models dialog
    ("Other Models …") and, while it is open, named in a "Viewing" row of its own. The browser app
    has no workspace, so there every model is in one list. *@
 @if (modelListService.HasWorkspace)
 {
     ModelItem? visited = modelListService.GetVisitedModel(modelMgr.ModelPath);
     IReadOnlyList<WorkspaceModel> workspaceModels = modelListService.GetWorkspaceModels();
+    WorkspaceModel? wholeWorkspace = workspaceModels.FirstOrDefault(m => ModelPaths.IsWorkspace(m.Item.Path));
+    IReadOnlyList<WorkspaceModel> sourceModels = [.. workspaceModels.Where(m => !ModelPaths.IsWorkspace(m.Item.Path))];
+    // The model of a workspace that is down to one source is no longer listed, but while it is
+    // open its sources can still be chosen.
+    bool canChooseSources = workspaceSourcesService.CanChoose;
+    bool hasWholeWorkspaceSection = wholeWorkspace is not null || canChooseSources;
 
     @if (visited is not null)
     {
@@ -33,28 +42,34 @@
         <MudDivider />
     }
 
-    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">This workspace</MudText>
-    @foreach (WorkspaceModel model in workspaceModels)
+    @if (hasWholeWorkspaceSection)
     {
-        bool isCurrent = visited is null && IsOpen(model.Item);
-        <MudMenuItem IconColor="@ItemIconColor(isCurrent)" Icon="@(isCurrent ? Icons.Material.Outlined.Check : Icons.Material.Outlined.Schema)"
-                     Style="@CurrentItemStyle(isCurrent)" title="@model.Item.Path"
-                     data-checked="@(isCurrent ? "true" : "false")"
-                     OnClick="() => OpenAsync(model.Item)" data-testid="menu-model-item">
-            <span class="dep-model-item">
-                <span>@model.Item.DisplayName</span>
-                @if (model.Folder.Length > 0)
-                {
-                    <span class="dep-model-item__sub" data-testid="menu-model-folder"><bdi>@model.Folder</bdi></span>
-                }
-                @if (model.Item.IsCloud)
-                {
-                    <MudIcon Icon="@Icons.Material.Outlined.CloudDone" Class="dep-model-item__synced" title="Synced to the cloud" />
-                }
-            </span>
-        </MudMenuItem>
+        <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" data-testid="menu-models-header">Whole workspace</MudText>
+        @if (wholeWorkspace is not null)
+        {
+            @ModelRow(wholeWorkspace, visited is null && IsOpen(wholeWorkspace.Item), "menu-workspace-model", "")
+        }
+        @if (canChooseSources)
+        {
+            <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Checklist"
+                         OnClick="() => workspaceSourcesService.ChooseAsync()"
+                         title="Which of the workspace's solutions, Bicep files and script projects this model shows."
+                         data-testid="menu-choose-sources">
+                Choose Sources …
+            </MudMenuItem>
+        }
+
+        <MudDivider />
     }
-    @if (workspaceModels.Count == 0)
+
+    <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" data-testid="menu-models-header">
+        @(hasWholeWorkspaceSection ? "Single sources" : "This workspace")
+    </MudText>
+    @foreach (WorkspaceModel model in sourceModels)
+    {
+        @ModelRow(model, visited is null && IsOpen(model.Item), "menu-model-item", model.Folder)
+    }
+    @if (sourceModels.Count == 0)
     {
         <MudMenuItem Disabled="true">No solution or Bicep file found</MudMenuItem>
     }
@@ -88,6 +103,25 @@ else
 
     void OnChanged() => _ = InvokeAsync(StateHasChanged);
 
+    // A model of the workspace: its name, and at the right edge its folder and whether it is synced.
+    RenderFragment ModelRow(WorkspaceModel model, bool isCurrent, string testId, string folder) =>
+        @<MudMenuItem IconColor="@ItemIconColor(isCurrent)" Icon="@(isCurrent ? Icons.Material.Outlined.Check : WorkspaceItemIcon(model.Item))"
+                      Style="@CurrentItemStyle(isCurrent)" title="@model.Item.Path"
+                      data-checked="@(isCurrent ? "true" : "false")"
+                      OnClick="() => OpenAsync(model.Item)" data-testid="@testId">
+            <span class="dep-model-item">
+                <span>@model.Item.DisplayName</span>
+                @if (folder.Length > 0)
+                {
+                    <span class="dep-model-item__sub" data-testid="menu-model-folder"><bdi>@folder</bdi></span>
+                }
+                @if (model.Item.IsCloud)
+                {
+                    <MudIcon Icon="@Icons.Material.Outlined.CloudDone" Class="dep-model-item__synced" title="Synced to the cloud" />
+                }
+            </span>
+        </MudMenuItem>;
+
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnChanged;
@@ -98,7 +132,9 @@ else
     {
         if (item.IsLocal)
         {
-            await canvasService.LoadAsync(item.Path);
+            // Not awaited: the menu closes when this returns, and a load can take long (a parse)
+            // or first ask what a workspace model is made of. Failures are reported by the load.
+            canvasService.LoadAsync(item.Path).RunInBackground();
             return;
         }
 
@@ -122,6 +158,9 @@ else
     static MudBlazor.Color ItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
 
     static string? CurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
+
+    static string WorkspaceItemIcon(ModelItem item) =>
+        ModelPaths.IsWorkspace(item.Path) ? Icons.Material.Outlined.Workspaces : Icons.Material.Outlined.Schema;
 
     static string VisitedIcon(ModelItem item) =>
         item.IsDemo ? Icons.Material.Outlined.Slideshow

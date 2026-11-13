@@ -95,6 +95,89 @@ public class ModelListServiceTests
         Assert.True(service.IsLocalPath(tools.Item.Path));
     }
 
+    // The model of the whole workspace is listed first, before the models of its single sources,
+    // but it is not what a new workspace starts on or goes back to.
+    [Fact]
+    public async Task GetWorkspaceModels_ShouldListTheModelOfTheWholeWorkspaceFirst()
+    {
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
+        var service = await CreateAsync();
+
+        var models = service.GetWorkspaceModels();
+
+        const string workspaceModelPath = "/workspaces/Dependinator/.workspace";
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
+        Assert.Equal(
+            [workspaceModelPath, DemoModel.WorkingSolutionPath, ToolsPath, BicepPath],
+            models.Select(m => m.Item.Path)
+        );
+        Assert.Equal(["Dependinator", "whole workspace"], [models[0].Item.DisplayName, models[0].Folder]);
+        Assert.Equal(["", "tools", "infra"], models.Skip(1).Select(m => m.Folder));
+
+        Assert.True(service.IsWorkspacePath(workspaceModelPath));
+        Assert.True(service.IsLocalPath(workspaceModelPath));
+        Assert.Null(service.GetVisitedModel(workspaceModelPath));
+        Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
+        Assert.Equal("/workspaces/Dependinator", service.WorkspaceFolder);
+
+        Assert.Equal(DemoModel.WorkingSolutionPath, service.LocalPaths[0]);
+        Assert.Equal(DemoModel.WorkingSolutionPath, service.HomePath);
+
+        // Once it is opened, it is the workspace model to go back to, until it is deleted
+        await service.AddModelAsync(workspaceModelPath);
+        Assert.Equal(workspaceModelPath, service.HomePath);
+        await service.RemoveModelAsync(workspaceModelPath);
+        Assert.Equal(DemoModel.WorkingSolutionPath, service.HomePath);
+    }
+
+    // With one source the model of the workspace would be the same as that source's own model,
+    // so it is not offered. It is still this workspace's model: one that is open (a source was
+    // removed, or it was opened from the recent models) refreshes and is no visit.
+    [Fact]
+    public async Task GetWorkspaceModels_ShouldLeaveOutTheModelOfTheWholeWorkspace_WithFewerThanTwoSources()
+    {
+        const string workspaceModelPath = "/workspaces/Dependinator/.workspace";
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath]);
+        var service = await CreateAsync();
+
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
+        Assert.Equal([DemoModel.WorkingSolutionPath, ToolsPath], service.GetWorkspaceModels().Select(m => m.Item.Path));
+        Assert.DoesNotContain(workspaceModelPath, service.LocalPaths);
+        Assert.True(service.IsLocalPath(workspaceModelPath));
+        Assert.True(service.IsLocalPath("/Workspaces/Dependinator/.workspace"));
+        Assert.True(service.IsWorkspacePath(workspaceModelPath));
+        Assert.Null(service.GetVisitedModel(workspaceModelPath));
+
+        // Without a source there is nothing to parse it from: it is a visit, like a model of
+        // another folder
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([]);
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.False(service.IsLocalPath(workspaceModelPath));
+        Assert.False(service.IsWorkspacePath(workspaceModelPath));
+
+        // A project added later is found when the sources are listed again
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath, BicepPath]);
+        await service.RefreshWorkspaceSourcesAsync();
+
+        Assert.Equal(4, service.GetWorkspaceModels().Count);
+        Assert.Contains(workspaceModelPath, service.LocalPaths);
+
+        // A listing that got no answer leaves what was found
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync((IReadOnlyList<string>)null!);
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
+    }
+
+    [Theory]
+    [InlineData("c:\\repo\\.workspace", "C:/repo/.workspace", true)]
+    [InlineData("/repo/.workspace", "/repo/.workspace", true)]
+    [InlineData("/repo/.workspace", "/other/.workspace", false)]
+    [InlineData("/repo/.workspace", null, false)]
+    [InlineData("", "", false)]
+    public void IsSamePath_ShouldCompareThePathsAsOneModelsPaths(string path1, string? path2, bool expected) =>
+        Assert.Equal(expected, ModelListService.IsSamePath(path1, path2));
+
     [Fact]
     public async Task GetVisitedModel_ShouldBeNull_ForAWorkspaceModel()
     {

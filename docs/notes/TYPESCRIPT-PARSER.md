@@ -150,11 +150,10 @@ names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
 
 ## Parked follow-ups
 
-- **One model for the workspace** (the next piece of work, asked for by Michael on Nov 12): the
-  sources found in the workspace folder put together into one model, the user choosing which are
-  included, so the extension shows beside the C# projects in this repository's own diagram. Each
-  parser's items are already self-contained, so combining is mostly a matter of roots and names;
-  links between languages (the extension starting the language server) are a later step.
+- **One model for the workspace** is built (Nov 13, `WORKSPACE-MODEL.md`): the sources found in
+  the workspace folder side by side in one model, the user choosing which are included, so the
+  extension shows beside the C# projects in this repository's own diagram. Links between
+  languages (the extension starting the language server) are a later step.
 - **Go**, with the same helper approach (`go/packages`).
 - Vue and Svelte single-file components are not parsed (their script blocks need the frameworks'
   own compilers).
