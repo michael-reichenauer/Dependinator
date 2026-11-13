@@ -122,12 +122,15 @@ partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRu
         // A line between a container's edge and one of its children (drawn as a stub at the
         // child) stands for the links that cross the container's border, so the container's end
         // reads "outside X"; the links listed below name the real ends.
-        var sourceName = LineStub.IsIncoming(line)
-            ? $"<span class=\"dep-tt-outside\">outside</span> {line.Source.HtmlDisplayName}"
-            : line.Source.HtmlDisplayName;
-        var targetName = LineStub.IsOutgoing(line)
-            ? $"<span class=\"dep-tt-outside\">outside</span> {line.Target.HtmlDisplayName}"
-            : line.Target.HtmlDisplayName;
+        var crossesBorder = LineStub.CrossesBorder(line);
+        var sourceName =
+            crossesBorder && LineStub.IsIncoming(line)
+                ? $"<span class=\"dep-tt-outside\">outside</span> {line.Source.HtmlDisplayName}"
+                : line.Source.HtmlDisplayName;
+        var targetName =
+            crossesBorder && LineStub.IsOutgoing(line)
+                ? $"<span class=\"dep-tt-outside\">outside</span> {line.Target.HtmlDisplayName}"
+                : line.Target.HtmlDisplayName;
         html.Append(
             $"<div class=\"dep-tt-name\">{sourceName}<span class=\"dep-tt-arrow\">→</span><wbr>{targetName}</div>"
         );

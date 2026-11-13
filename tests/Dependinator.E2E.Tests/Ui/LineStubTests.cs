@@ -38,5 +38,12 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         // Selected again: the lines are back.
         await App.SelectNodeByFullNameAsync(Parsing);
         await Expect(App.CousinLines).Not.ToHaveCountAsync(0);
+
+        // Clicking one of them selects it: that line stays (the others belonged to the node's
+        // selection and are stubs again).
+        await App.SelectLineAsync(
+            Page.Locator("#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']) g.hoverable").First
+        );
+        await Expect(App.CousinLines).ToHaveCountAsync(1);
     }
 }

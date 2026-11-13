@@ -25,7 +25,7 @@ static class NodeTreeSvg
         var content = "";
         for (var round = 0; round < MaxRenderRounds; round++)
         {
-            RepLineService.Sync(model, zoom, GetLineReveal(rootContext.Flags));
+            RepLineService.Sync(model, zoom, rootContext.Flags.Reveal);
             var generation = NodeLayout.Generation;
             content = RenderNodeContent(model.Root, rootContext);
             if (NodeLayout.Generation == generation)
@@ -34,15 +34,18 @@ static class NodeTreeSvg
         return content;
     }
 
-    // The selected nodes' links are drawn end to end (see RepLineService); an export has no
-    // selection and draws the lines at rest.
-    static LineReveal GetLineReveal(ViewFlags flags)
+    // The selected nodes' links are drawn end to end (see RepLineService). A selected line that
+    // crosses containers is kept as it is: it may be one of those lines, clicked.
+    internal static LineReveal GetLineReveal(RenderSelection selection, RowFilter rows, LineFilter filter)
     {
-        var selection = flags.Selection;
-        if (selection.Node is not { } node)
-            return LineReveal.None;
-        IReadOnlyList<Node> nodes = selection.OtherNodes is { } others ? [node, .. others] : [node];
-        return new LineReveal(nodes, flags.Rows, flags.Filter.HideMember);
+        if (selection.Node is { } node)
+        {
+            IReadOnlyList<Node> nodes = selection.OtherNodes is { } others ? [node, .. others] : [node];
+            return new LineReveal(nodes, rows, filter.HideMember);
+        }
+        if (selection.Line is { IsCousin: true } line)
+            return new LineReveal(null, rows, filter.HideMember) { KeptLine = line };
+        return LineReveal.None;
     }
 
     static string RenderNodeContent(Node node, RenderContext context)

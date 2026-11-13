@@ -6,16 +6,30 @@ namespace Dependinator.UI.Diagrams.Lines;
 // What the selection asks of the lines: the links of the selected nodes are drawn end to end.
 // The view's filters limit how deep: a line into a row the view leaves out would not be drawn at
 // all, so such a link stays on the row's container.
+//
+// Clicking one of these lines moves the selection from the node to the line. KeptLine is that
+// line: its links stay between its two ends, or the line would vanish under the click.
 readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter Rows, bool HideMemberLines)
 {
     public static readonly LineReveal None = new(null, RowFilter.None, false);
 
+    public Line? KeptLine { get; init; }
+
     public IReadOnlyList<Node> Nodes => SelectedNodes ?? [];
+
+    public bool IsEmpty => Nodes.Count == 0 && KeptLine is null;
 
     public bool LeavesOut(Node node) => Rows.Hides(node.Type) || (HideMemberLines && node.Type.IsMember);
 
+    // Without a selection the filters make no difference, so toggling them causes no sync.
     public bool IsSameAs(LineReveal other) =>
-        Rows == other.Rows && HideMemberLines == other.HideMemberLines && Nodes.SequenceEqual(other.Nodes);
+        (IsEmpty && other.IsEmpty)
+        || (
+            Rows == other.Rows
+            && HideMemberLines == other.HideMemberLines
+            && KeptLine == other.KeptLine
+            && Nodes.SequenceEqual(other.Nodes)
+        );
 }
 
 // Resolves which lines are rendered at a given zoom. By default every link is drawn as the
@@ -59,6 +73,7 @@ static class RepLineService
     {
         public List<Link> Links { get; } = [];
         public bool IsFocused { get; set; }
+        public bool IsRevealed { get; set; }
     }
 
     // Last synced state per model: tiles are re-created far more often than the reps actually
@@ -96,6 +111,7 @@ static class RepLineService
         {
             line.IsActiveRep = false;
             line.IsFocused = false;
+            line.IsRevealed = false;
         }
 
         var (groups, isChildrenShownCache) = GroupLinksByRepPair(model, zoom, reveal);
@@ -109,6 +125,7 @@ static class RepLineService
             {
                 line.IsActiveRep = true;
                 line.IsFocused = group.IsFocused;
+                line.IsRevealed = group.IsRevealed;
                 if (line.IsCousin)
                     ReconcileLinks(line, group.Links);
             }
@@ -159,6 +176,7 @@ static class RepLineService
         var sourcePath = new List<Node>(32);
         var targetPath = new List<Node>(32);
         var focus = model.LineFocus;
+        HashSet<Node>? selected = reveal.Nodes.Count > 0 ? [.. reveal.Nodes] : null;
 
         foreach (var link in model.Links.Values)
         {
@@ -201,14 +219,28 @@ static class RepLineService
             // other end is selected too, as deep as the nodes are open on the other side.
             var isSourceRevealed = false;
             var isTargetRevealed = false;
-            if (!isFocusLink && reveal.Nodes.Count > 0)
+            var isRevealedLink = false;
+            if (!isFocusLink && selected is not null)
             {
-                var selectedSource = DeepestSelected(sourcePath, targetPath, reveal.Nodes);
-                var selectedTarget = DeepestSelected(targetPath, sourcePath, reveal.Nodes);
+                var selectedSource = DeepestSelected(sourcePath, targetPath, selected);
+                var selectedTarget = DeepestSelected(targetPath, sourcePath, selected);
                 sourcePin = selectedSource;
                 targetPin = selectedTarget;
                 isSourceRevealed = selectedSource is null && selectedTarget is not null;
                 isTargetRevealed = selectedTarget is null && selectedSource is not null;
+                isRevealedLink = selectedSource is not null || selectedTarget is not null;
+            }
+            else if (
+                !isFocusLink
+                && reveal.KeptLine is { } kept
+                && IndexOf(sourcePath, kept.Source) != int.MaxValue
+                && IndexOf(targetPath, kept.Target) != int.MaxValue
+            )
+            {
+                // The selected line of an earlier selection: its links stay between its ends.
+                sourcePin = kept.Source;
+                targetPin = kept.Target;
+                isRevealedLink = true;
             }
 
             int sourceRepIndex = GetRepresentativeIndex(
@@ -252,6 +284,7 @@ static class RepLineService
             }
             group.Links.Add(link);
             group.IsFocused |= isFocusLink;
+            group.IsRevealed |= isRevealedLink;
         }
 
         return (groups, isChildrenShownCache);
@@ -270,16 +303,14 @@ static class RepLineService
 
     // The selected node the link's end on path lies at or inside, when the other end lies
     // outside it: the deepest such node, so a selected node inside a selected container counts.
-    static Node? DeepestSelected(List<Node> path, List<Node> otherPath, IReadOnlyList<Node> selected)
+    static Node? DeepestSelected(List<Node> path, List<Node> otherPath, HashSet<Node> selected)
     {
-        var deepest = int.MaxValue;
-        for (int i = 0; i < selected.Count; i++)
+        for (int i = 0; i < path.Count; i++)
         {
-            var index = IndexOf(path, selected[i]);
-            if (index < deepest && IndexOf(otherPath, selected[i]) == int.MaxValue)
-                deepest = index;
+            if (selected.Contains(path[i]) && IndexOf(otherPath, path[i]) == int.MaxValue)
+                return path[i];
         }
-        return deepest == int.MaxValue ? null : path[deepest];
+        return null;
     }
 
     static void FillAncestorsAndSelf(Node node, List<Node> path)
@@ -415,6 +446,7 @@ static class RepLineService
             RenderAncestor = renderAncestor,
             IsActiveRep = true,
             IsFocused = group.IsFocused,
+            IsRevealed = group.IsRevealed,
         };
 
         renderAncestor.AddDirectLine(line);

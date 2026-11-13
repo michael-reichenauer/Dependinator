@@ -1,5 +1,6 @@
 using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Lines;
+using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
@@ -795,6 +796,63 @@ public class RepLineServiceTests
 
         Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
         Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
+    }
+
+    [Fact]
+    public void Sync_SelectedLineOfASelection_ShouldStayBetweenItsEnds()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var other = AddNode(model, "Other", parentB);
+        AddLink(model, source, target);
+        AddLink(model, source, other);
+        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        var clicked = GetLine(model, "Source", "Target");
+
+        // Clicking the line moves the selection from the node to the line.
+        RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = clicked });
+
+        Assert.True(clicked.IsActiveRep);
+        Assert.Single(clicked.Links);
+
+        // The node's other line is back in the funnel.
+        Assert.False(GetLine(model, "Source", "Other").IsActiveRep);
+        Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
+        Assert.True(GetLine(model, "ParentB", "Other").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_SelectionsLines_ShouldNotBeLeftOutByTheLinkCount()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        var other = AddNode(model, "Other", parentB);
+        AddLink(model, source, target);
+        AddLink(model, source, other);
+        var atLeastTwo = LineFilter.None with { MinLinkCount = 2 };
+
+        // At rest the two links share lines, which pass the filter.
+        RepLineService.Sync(model, ContainerZoom);
+        var bundle = GetLine(model, "ParentA", "ParentB");
+        Assert.False(bundle.IsRevealed);
+        Assert.False(LineEmphasis.IsLineFilteredOut(bundle, atLeastTwo));
+
+        // Selected, they are two lines of one link each, and both are still drawn.
+        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        var line = GetLine(model, "Source", "Target");
+        Assert.True(line.IsRevealed);
+        Assert.False(LineEmphasis.IsLineFilteredOut(line, atLeastTwo));
+
+        // Deselected, a line is judged by its link count again.
+        RepLineService.Sync(model, ContainerZoom);
+        Assert.False(line.IsRevealed);
+        Assert.True(LineEmphasis.IsLineFilteredOut(line, atLeastTwo));
     }
 
     static IModel NewModel() => new ModelMgr(new StateMgr()).UseModel();

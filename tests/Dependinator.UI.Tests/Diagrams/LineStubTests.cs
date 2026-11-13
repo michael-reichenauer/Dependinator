@@ -21,6 +21,7 @@ public class LineStubTests
         public Node Parent { get; }
         public Node A { get; }
         public Node B { get; }
+        public Node Outside { get; }
 
         public Scene(NodeType childType = NodeType.ClassType)
         {
@@ -36,11 +37,24 @@ public class LineStubTests
             B = new Node("p.b", Parent) { Boundary = new Rect(400, 400, 100, 100), Type = childType };
             Parent.AddChild(A);
             Parent.AddChild(B);
+            Outside = new Node("q", root) { Boundary = new Rect(2000, 0, 100, 100), Type = childType };
+            root.AddChild(Outside);
         }
 
-        public Line Incoming(Node child) => Active(new Line(Parent, child));
+        // The edge lines carry a link that crosses the container's border, as the funnel's do.
+        public Line Incoming(Node child)
+        {
+            var line = Active(new Line(Parent, child));
+            line.Add(new Link(Outside, child));
+            return line;
+        }
 
-        public Line Outgoing(Node child) => Active(new Line(child, Parent));
+        public Line Outgoing(Node child)
+        {
+            var line = Active(new Line(child, Parent));
+            line.Add(new Link(child, Outside));
+            return line;
+        }
 
         public Line Sibling(Node source, Node target)
         {
@@ -75,6 +89,25 @@ public class LineStubTests
         Assert.True(LineStub.IsStub(scene.Outgoing(scene.A), isOnPath: false));
         Assert.False(LineStub.IsStub(scene.Sibling(scene.A, scene.B), isOnPath: false));
         Assert.False(LineStub.IsStub(new Line(scene.Parent, scene.A, isDirect: true), isOnPath: false));
+    }
+
+    [Fact]
+    public void IsStub_ShouldNotBeALine_WhoseLinksAllEndAtTheContainerItself()
+    {
+        var scene = new Scene();
+
+        // "a" uses its own container, and the container uses "a": nothing crosses the border.
+        var toContainer = new Line(scene.A, scene.Parent);
+        toContainer.Add(new Link(scene.A, scene.Parent));
+        var fromContainer = new Line(scene.Parent, scene.A);
+        fromContainer.Add(new Link(scene.Parent, scene.A));
+
+        Assert.False(LineStub.IsStub(toContainer, isOnPath: false));
+        Assert.False(LineStub.IsStub(fromContainer, isOnPath: false));
+
+        // One link out of the container is enough for the stub.
+        toContainer.Add(new Link(scene.A, scene.Outside));
+        Assert.True(LineStub.IsStub(toContainer, isOnPath: false));
     }
 
     [Fact]

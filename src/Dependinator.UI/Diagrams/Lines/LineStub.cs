@@ -12,8 +12,9 @@ namespace Dependinator.UI.Diagrams.Lines;
 // its lines really go (see RepLineService).
 //
 // A stub is the same line, only drawn short: its element id, tooltip, selection and styling
-// are those of the line. An edge line the user has labelled or routed with line points, and one
-// on the dependency path being shown, is still drawn in full.
+// are those of the line. An edge line the user has labelled or routed with line points, one on
+// the dependency path being shown, and one whose links all end at the container itself, is
+// still drawn in full.
 static class LineStub
 {
     // The stub's length in the container's units, within these limits in tile pixels: like the
@@ -50,7 +51,20 @@ static class LineStub
     public static bool IsEdgeLine(Line line) => IsIncoming(line) || IsOutgoing(line);
 
     public static bool IsStub(Line line, bool isOnPath) =>
-        IsEdgeLine(line) && !isOnPath && !line.HasLabel && !line.IsSegmentsUserSet;
+        !isOnPath && !line.HasLabel && !line.IsSegmentsUserSet && CrossesBorder(line);
+
+    // Whether the edge line stands for a link that crosses the container's border. A link
+    // between the container itself and something inside it (a method that uses its own type)
+    // also runs along an edge line, but it ends at the container: such a line continues nowhere,
+    // so it is no stub and its container end is not "outside".
+    public static bool CrossesBorder(Line line)
+    {
+        if (IsIncoming(line))
+            return line.Links.Any(link => link.Source != line.Source);
+        if (IsOutgoing(line))
+            return line.Links.Any(link => link.Target != line.Target);
+        return false;
+    }
 
     // The child the edge line belongs to (the stub is drawn at it).
     public static Node Child(Line line) => IsIncoming(line) ? line.Target : line.Source;

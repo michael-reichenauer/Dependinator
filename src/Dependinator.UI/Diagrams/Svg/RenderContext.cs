@@ -18,6 +18,10 @@ readonly record struct ViewFlags(bool IsEditing, bool RevealHidden, bool DimUnre
     public LineFilter Filter { get; init; } = LineFilter.None;
     public RowFilter Rows { get; init; } = RowFilter.None;
 
+    // What the selection asks of the lines (the selected nodes' lines drawn end to end); none
+    // in an export and while cycles are shown.
+    public LineReveal Reveal { get; init; } = LineReveal.None;
+
     // Sibling lines that are part of a circular dependency; null while cycles are not shown.
     public IReadOnlySet<LineId>? CyclicLines { get; init; }
 
