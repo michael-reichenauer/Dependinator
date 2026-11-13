@@ -98,4 +98,30 @@ public class ModelPathsTests
         Assert.True(ModelPaths.IsDesignModel(path));
         Assert.False(ModelPaths.IsParseable(path));
     }
+
+    [Theory]
+    [InlineData("/workspaces/App", "/workspaces/App/.workspace", "App")]
+    [InlineData("/workspaces/App/", "/workspaces/App/.workspace", "App")]
+    [InlineData(@"C:\Code\App", @"C:\Code\App\.workspace", "App")]
+    public void WorkspacePath_ShouldNameTheModelOfAWorkspaceFolder(string folder, string expected, string name)
+    {
+        var path = ModelPaths.WorkspacePath(folder);
+
+        Assert.Equal(expected, path);
+        Assert.True(ModelPaths.IsWorkspace(path));
+        Assert.True(ModelPaths.IsParseable(path));
+        Assert.False(ModelPaths.IsSource(path));
+        Assert.False(ModelPaths.IsDesignModel(path));
+        Assert.Equal(folder.TrimEnd('/'), ModelPaths.WorkspaceFolder(path));
+        Assert.Equal(name, ModelPaths.DisplayName(path));
+        Assert.Equal(name, ModelPaths.BaseName(path));
+        Assert.Equal("workspace", ModelPaths.KindName(path));
+    }
+
+    [Theory]
+    [InlineData("/workspaces/App/App.sln")]
+    [InlineData("/workspaces/App/web/tsconfig.json")]
+    [InlineData("/workspaces/App/my.workspace")]
+    [InlineData("My Design")]
+    public void IsWorkspace_ShouldBeFalse_ForOtherPaths(string path) => Assert.False(ModelPaths.IsWorkspace(path));
 }

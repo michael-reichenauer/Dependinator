@@ -1,6 +1,12 @@
 namespace Dependinator.Core.Parsing;
 
-record Item(Node? Node, Link? Link, LineDescription? LineDescription = null, ParseProblem? Problem = null);
+record Item(
+    Node? Node,
+    Link? Link,
+    LineDescription? LineDescription = null,
+    ParseProblem? Problem = null,
+    ParsedSource? Source = null
+);
 
 // Per-model options controlling what a solution parse includes. Crosses the [Rpc] boundary of
 // IParserService, so keep it JSON-round-trippable: init properties with defaults, so that future
@@ -10,6 +16,11 @@ record SolutionParseOptions
     public static readonly SolutionParseOptions Default = new();
 
     public bool IncludeTestProjects { get; init; }
+
+    // For a workspace model (ModelPaths.IsWorkspace): the paths of the sources to parse into it,
+    // each a solution, a Bicep deployment or a script project. They travel with the request
+    // because the choice is saved with the model, which only the UI has.
+    public IReadOnlyList<string> Sources { get; init; } = [];
 }
 
 record Link(string Source, string Target, LinkProperties Properties);
@@ -22,6 +33,11 @@ record LineDescription(string Source, string Target, string Text);
 // editor lists. NodeName is the node to show for it (a project's assembly node), if any.
 // Errors only, for now: warnings are common and many never get fixed.
 record ParseProblem(string Message, int ErrorCount, string? NodeName = null);
+
+// One source of a workspace model that was parsed, with the name of its root node, under which
+// all its nodes are. One item per parsed source, so a source without one failed (its problem
+// item says why) and the model keeps what it had from it.
+record ParsedSource(string Path, string RootName);
 
 record Node(string Name, NodeProperties Properties);
 
@@ -46,6 +62,20 @@ class NodeProperties
     // null keeps the node-type default icon, NoValue.String clears a previously parsed icon.
     // A user-selected custom icon in the UI always takes precedence over this.
     public string? IconName { get; init; }
+
+    // A copy with another parent. Every property above is copied: add a new one here too.
+    public NodeProperties WithParent(string parent) =>
+        new()
+        {
+            Type = Type,
+            Description = Description,
+            Parent = parent,
+            IsPrivate = IsPrivate,
+            Signature = Signature,
+            IsExecutable = IsExecutable,
+            FileSpan = FileSpan,
+            IconName = IconName,
+        };
 }
 
 class LinkProperties
