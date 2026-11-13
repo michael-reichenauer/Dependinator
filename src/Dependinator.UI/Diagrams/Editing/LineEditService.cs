@@ -38,14 +38,15 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
-            if (!LinePathGeometry.TryGetLocalEndpoints(line, out _))
-                return;
             if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
+                return;
+            var polyline = LinePathGeometry.GetLocalPolylinePoints(line);
+            if (polyline.Count < 2)
                 return;
 
             var localHint = ToOwnerChildrenLocal(owner, worldHint);
 
-            updatedPoints = InsertPointAtClosestSegment(line, localHint);
+            updatedPoints = InsertPointAtClosestSegment(line, polyline, localHint);
         }
 
         commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
@@ -220,12 +221,8 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         return bestIndex;
     }
 
-    static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, Pos hint)
+    static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, IReadOnlyList<Pos> polyline, Pos hint)
     {
-        var polyline = LinePathGeometry.GetLocalPolylinePoints(line);
-        if (polyline.Count < 2)
-            return line.SegmentPoints;
-
         var bestSegmentIndex = 0;
         var bestDistanceSquared = double.MaxValue;
         Pos projectedPoint = polyline[0];

@@ -76,6 +76,7 @@ class InteractionService(
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
     bool isDraggingLineLabel = false;
+    Pos labelDragClient = Pos.None;
     bool isDraggingLink = false;
     bool isAreaSelecting = false;
 
@@ -632,13 +633,12 @@ class InteractionService(
         {
             if (!isDraggingLineLabel && !IsBeyondDragThreshold(e))
                 return;
-            // The first step covers the whole way from the press, so the label keeps up with
-            // the pointer instead of lagging by the threshold.
-            var (dx, dy) = isDraggingLineLabel
-                ? (e.MovementX, e.MovementY)
-                : (e.ClientX - mouseDownClient.X, e.ClientY - mouseDownClient.Y);
+            // Steps are taken between client positions, the first from the press, so the label
+            // keeps up with the pointer (movementX can be in device pixels on some browsers).
+            var from = isDraggingLineLabel ? labelDragClient : mouseDownClient;
+            labelDragClient = new Pos(e.ClientX, e.ClientY);
             isDraggingLineLabel = true;
-            lineEditService.MoveLabel(dx, dy, Zoom, mouseDownId);
+            lineEditService.MoveLabel(e.ClientX - from.X, e.ClientY - from.Y, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }

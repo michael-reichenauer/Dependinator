@@ -228,26 +228,21 @@ static class LinePathGeometry
     static double Distance(Pos a, Pos b) => Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
 
     // The line's points in its owner's children-local space (see TryGetOwnerNode).
-    public static IReadOnlyList<Pos> GetLocalPolylinePoints(Line line)
+    public static IReadOnlyList<Pos> GetLocalPolylinePoints(Line line) => GetPolylinePoints(line, p => p);
+
+    public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom) =>
+        GetPolylinePoints(line, p => ToRendered(p, nodeCanvasPos, childrenZoom));
+
+    // Start, bend points, end, each mapped; empty when the line has no endpoints.
+    static List<Pos> GetPolylinePoints(Line line, Func<Pos, Pos> map)
     {
         if (!TryGetLocalEndpoints(line, out var endpoints))
             return [];
 
-        return [new Pos(endpoints.X1, endpoints.Y1), .. line.SegmentPoints, new Pos(endpoints.X2, endpoints.Y2)];
-    }
-
-    public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom)
-    {
-        if (!TryGetLocalEndpoints(line, out var endpoints))
-            return [];
-
-        var points = new List<Pos>(line.SegmentPoints.Count + 2)
-        {
-            ToRendered(new Pos(endpoints.X1, endpoints.Y1), nodeCanvasPos, childrenZoom),
-        };
+        var points = new List<Pos>(line.SegmentPoints.Count + 2) { map(new Pos(endpoints.X1, endpoints.Y1)) };
         foreach (var point in line.SegmentPoints)
-            points.Add(ToRendered(point, nodeCanvasPos, childrenZoom));
-        points.Add(ToRendered(new Pos(endpoints.X2, endpoints.Y2), nodeCanvasPos, childrenZoom));
+            points.Add(map(point));
+        points.Add(map(new Pos(endpoints.X2, endpoints.Y2)));
         return points;
     }
 

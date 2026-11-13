@@ -295,7 +295,7 @@ static class LineSvg
     // description under it in a smaller italic. The texts are quieter than node names (a label
     // annotates a line, it is not a node): smaller, and they stop growing with the zoom earlier.
     // What is drawn is limited, one clipped row for the label and a few wrapped rows for the
-    // description (the user's own line breaks kept); the line's hover card shows both in full. The
+    // description (the user's own line breaks kept); the line's hover card shows them in full (up to 20 description rows). The
     // lineLabel/lineDescription classes draw a background-colored halo (paint-order) so the text
     // stays legible over the line and whatever it crosses.
     internal const double LabelFontSize = 6.5;
@@ -404,7 +404,10 @@ static class LineSvg
         if (!line.IsSelected || line.SegmentPoints.Count == 0 || polylinePoints.Count != line.SegmentPoints.Count + 2)
             return "";
 
-        var radius = PlainStrokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
+        // The handle's own radius depends on how the line is drawn (weighted, on a path), which
+        // the label layer does not know: take the widest it can be.
+        var strokeWidth = Math.Max(Math.Max(PlainStrokeWidth, PathMinStrokeWidth), line.WeightedStrokeWidth);
+        var radius = strokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
         var circles = new StringBuilder();
         for (var index = 0; index < line.SegmentPoints.Count; index++)
         {
