@@ -15,6 +15,11 @@ interface ISelectionService
     Pos SelectedNodePosition { get; }
     Pos SelectedLinePosition { get; }
 
+    // Where the selected line leaves the view toward its source or target node, when that end
+    // is out of view (the line-end tags, LineEndTags.razor); null otherwise.
+    LineOnScreen.EndTag? SelectedLineSourceTag { get; }
+    LineOnScreen.EndTag? SelectedLineTargetTag { get; }
+
     // Every selected node: the primary one (SelectedId, which anchors the toolbar) plus the
     // ones added with Shift/Ctrl+click. Group actions (move, hide, color, size, delete) apply
     // to all of them.
@@ -62,6 +67,12 @@ class SelectionService(
     const double MaxCover = 0.8;
 
     Pos selectedPosition = Pos.None;
+
+    // How far along the selected line it was clicked (0 to 1), where its toolbar goes while that
+    // spot is in view (LineOnScreen.GetAnchor).
+    double lineClickFraction = 0.5;
+    LineOnScreen.EndTag? sourceTag;
+    LineOnScreen.EndTag? targetTag;
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
@@ -92,6 +103,8 @@ class SelectionService(
     public Pos SelectedPosition => IsSelected ? selectedPosition : Pos.None;
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
+    public LineOnScreen.EndTag? SelectedLineSourceTag => SelectedLinePosition != Pos.None ? sourceTag : null;
+    public LineOnScreen.EndTag? SelectedLineTargetTag => SelectedLinePosition != Pos.None ? targetTag : null;
 
     public void HideSelectedPosition()
     {
@@ -111,6 +124,7 @@ class SelectionService(
         if (await screenService.GetBoundingRectangle(id) is not ElementBoundingRectangle bound)
         {
             // Selected Element is not visible on the screen
+            (sourceTag, targetTag) = (null, null);
             if (selectedPosition != Pos.None)
             {
                 selectedPosition = Pos.None;
@@ -120,9 +134,18 @@ class SelectionService(
         }
         (double x, double y) = (bound.X, bound.Y);
 
+        if (selectedId.IsLine && await TryUpdateLinePositionAsync())
+            return;
+        if (sourceTag is not null || targetTag is not null)
+        {
+            (sourceTag, targetTag) = (null, null);
+            applicationEvents.TriggerUIStateChanged();
+        }
+
         if (selectedId.IsLine)
         {
-            // Calculate the clicked relative position on the line, to show the toolbar at the clicked position on the line
+            // A stub, drawn short at its child: the toolbar goes at the clicked relative position
+            // in the stub's measured box.
             x = bound.X + clickedRelativePosition * bound.Width - ToolbarOffsetX;
             y = bound.Y + clickedRelativePosition * bound.Height - ToolbarOffsetY;
 
@@ -142,6 +165,57 @@ class SelectionService(
 
         selectedPosition = new Pos(x, y);
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Places the selected line's toolbar on the line, at the clicked spot or on the part in view,
+    // and its end tags where it leaves the view; false for a line drawn as a stub, which is
+    // shorter than the line's geometry.
+    async Task<bool> TryUpdateLinePositionAsync()
+    {
+        if (await GetLineOnScreenAsync(selectedId.LineId) is not { } onScreen)
+            return false;
+        var (points, view) = onScreen;
+
+        var anchor = LineOnScreen.GetAnchor(points, view, lineClickFraction);
+        var position = anchor is { } a ? new Pos(a.X - ToolbarOffsetX, a.Y - ToolbarOffsetY) : Pos.None;
+        var source = LineOnScreen.GetEndTag(points, view, isTargetEnd: false);
+        var target = LineOnScreen.GetEndTag(points, view, isTargetEnd: true);
+        if (position == selectedPosition && source == sourceTag && target == targetTag)
+            return true;
+
+        (selectedPosition, sourceTag, targetTag) = (position, source, target);
+        applicationEvents.TriggerUIStateChanged();
+        return true;
+    }
+
+    // Margin inside the view's edges for the toolbar's spot and the end tags.
+    const double ViewMargin = 4;
+
+    // The line in client pixels and the part of the canvas in view (below the app bar and the
+    // breadcrumb); null for a stub or a line that is gone.
+    async Task<(IReadOnlyList<Pos> Points, Rect View)?> GetLineOnScreenAsync(LineId lineId)
+    {
+        if (await screenService.GetBoundingRectangle(PointerId.CanvasElementId) is not ElementBoundingRectangle svg)
+            return null;
+
+        IReadOnlyList<Pos> points;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line) || LineStub.IsStub(line, isOnPath: false))
+                return null;
+            points = LineOnScreen.ToScreen(line, model.Offset, model.Zoom, new Pos(svg.X, svg.Y));
+        }
+        if (points.Count < 2)
+            return null;
+
+        var top = Math.Max(svg.Y, ToolbarPositioning.ChromeBottom) + ViewMargin;
+        var view = new Rect(
+            svg.X + ViewMargin,
+            top,
+            Math.Max(0, svg.Width - 2 * ViewMargin),
+            Math.Max(0, svg.Y + svg.Height - ViewMargin - top)
+        );
+        return (points, view);
     }
 
     public void SetEditMode(bool isEditMode)
@@ -345,6 +419,16 @@ class SelectionService(
                 Unselect(); // Clicked on a line that is no longer on the screen
             return false;
         }
+        // Where along the line it was clicked, for its toolbar. Measured before the selection is
+        // cleared below: nothing may be awaited between that and selecting the line (a repaint
+        // there takes a stub's lines off the screen). A press on the label, which lies beside
+        // the line, leaves the toolbar where it is.
+        if (isNewSelection || !pointerId.IsLineLabel)
+        {
+            lineClickFraction = await GetLineOnScreenAsync(pointerId.LineId) is { } onScreen
+                ? LinePathGeometry.FractionAt(onScreen.Points, new Pos(e.ClientX, e.ClientY))
+                : 0.5;
+        }
         var stubToExplore = isNewSelection ? GetStubToExplore(pointerId.LineId) : null;
         var stubRelativePosition =
             exploredStub is { } explored && explored.StubId == stubToExplore
@@ -355,7 +439,6 @@ class SelectionService(
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);
-
         using (var model = modelMgr.UseModel())
         {
             if (model.Lines.TryGetValue(pointerId.LineId, out var line))
@@ -439,6 +522,7 @@ class SelectionService(
         }
         selectedId = PointerId.FromLine(explored.StubId);
         clickedRelativePosition = explored.RelativePosition;
+        lineClickFraction = 0.5;
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         UpdateSelectedPositionAsync().RunInBackground(); // The toolbar follows once the stub is measured

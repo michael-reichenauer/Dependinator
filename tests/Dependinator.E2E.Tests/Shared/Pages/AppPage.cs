@@ -91,11 +91,11 @@ public sealed class AppPage
     public ILocator Line(string sourceName, string targetName) =>
         page.Locator($"#svgcanvas g.hoverable[data-name^={Css($"{sourceName}→{targetName} (")}]");
 
-    // The selected-line toolbar (LineToolbar.razor) and its jumps to the line's ends, offered on
-    // direct lines and on the lines the dependency explorer draws for its subject.
+    // The selected-line toolbar (LineToolbar.razor), and the tags at the edge of the view that go
+    // to a selected line's ends when they are out of view (LineEndTags.razor).
     public ILocator LineToolbar => page.GetByTestId("line-toolbar");
-    public ILocator LinePanSourceButton => page.GetByTestId("line-pan-source");
-    public ILocator LinePanTargetButton => page.GetByTestId("line-pan-target");
+    public ILocator LineEndSourceTag => page.GetByTestId("line-end-tag-source");
+    public ILocator LineEndTargetTag => page.GetByTestId("line-end-tag-target");
 
     // The expand arrows of the explorer tree rows (MudTreeViewItem), in document order.
     public ILocator ExplorerExpandButtons => page.Locator(".mud-treeview button.mud-treeview-item-expand-button");
@@ -883,7 +883,11 @@ public sealed class AppPage
     // A screen point on the line's visible part, read until it stops moving between two reads:
     // the canvas pans/zooms with animations, and a re-render can momentarily detach the line's
     // SVG group (same approach as WaitForStableNodeBoxAsync).
-    async Task<(float X, float Y)> WaitForStableLinePointAsync(ILocator line, float fraction, float timeoutSeconds = 15)
+    public async Task<(float X, float Y)> WaitForStableLinePointAsync(
+        ILocator line,
+        float fraction,
+        float timeoutSeconds = 15
+    )
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();

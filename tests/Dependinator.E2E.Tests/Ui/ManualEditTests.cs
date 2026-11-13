@@ -107,11 +107,11 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.ClickAsync(box.X + 60, box.Y + box.Height - 40);
         await App.SelectLineAsync(line);
 
-        // A line showing only a manual link exposes Delete; deleting removes the line. An
-        // ordinary line like this one has no jumps to its ends (direct and explorer lines do).
+        // A line showing only a manual link exposes Delete; deleting removes the line. Both its
+        // ends are in view, so it has no end tags.
         await Expect(Page.GetByTestId("line-delete")).ToBeVisibleAsync();
-        await Expect(App.LinePanSourceButton).ToHaveCountAsync(0);
-        await Expect(App.LinePanTargetButton).ToHaveCountAsync(0);
+        await Expect(App.LineEndSourceTag).ToHaveCountAsync(0);
+        await Expect(App.LineEndTargetTag).ToHaveCountAsync(0);
         await Page.GetByTestId("line-delete").ClickAsync();
         await Expect(line).ToHaveCountAsync(0);
     }
