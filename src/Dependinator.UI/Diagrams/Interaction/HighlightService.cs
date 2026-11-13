@@ -22,8 +22,10 @@ interface IHighlightService
     // ids outlive a model load, the node's flag does not. Null for none or several.
     NodeId? SingleHighlightedId { get; }
 
-    // Highlights these nodes, replacing any earlier highlight. A selected node is left as it is:
-    // its selection already marks it.
+    // Highlights these nodes, replacing any earlier highlight. A single node that is selected is
+    // left as it is: its selection already marks it. In a group (a cycle, a violation) every node
+    // is marked, so a selected member does not leave the others looking like a single go to,
+    // which would light every line of the one left (LineEmphasis.FindSelection).
     void Highlight(IReadOnlyList<NodeId> nodeIds);
     void Clear();
 }
@@ -51,9 +53,12 @@ class HighlightService(IModelMgr modelMgr, IApplicationEvents applicationEvents)
         using (var model = modelMgr.UseModel())
         {
             ClearFlags(model);
-            foreach (var nodeId in nodeIds.Distinct())
+            var ids = nodeIds.Distinct().ToList();
+            foreach (var nodeId in ids)
             {
-                if (!model.Nodes.TryGetValue(nodeId, out var node) || node.IsRoot || node.IsSelected)
+                if (!model.Nodes.TryGetValue(nodeId, out var node) || node.IsRoot)
+                    continue;
+                if (ids.Count == 1 && node.IsSelected)
                     continue;
                 node.IsHighlighted = true;
                 highlighted.Add(nodeId);

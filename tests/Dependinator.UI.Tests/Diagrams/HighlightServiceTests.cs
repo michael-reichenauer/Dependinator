@@ -55,15 +55,29 @@ public class HighlightServiceTests
     public void Highlight_ShouldLeaveASelectedNodeToItsSelection()
     {
         var a = AddNode("A");
-        var b = AddNode("B");
         a.IsSelected = true;
+        var service = CreateService();
+
+        service.Highlight([a.Id]);
+
+        Assert.False(a.IsHighlighted);
+        Assert.True(a.IsSelected);
+        Assert.Empty(service.HighlightedIds);
+    }
+
+    [Fact]
+    public void Highlight_ShouldMarkEveryNodeOfAGroup_AlsoASelectedOne()
+    {
+        var a = AddNode("A");
+        var b = AddNode("B");
+        a.IsSelected = true; // One end of a rule violation the user had selected
         var service = CreateService();
 
         service.Highlight([a.Id, b.Id]);
 
-        Assert.False(a.IsHighlighted);
-        Assert.True(a.IsSelected);
+        Assert.True(a.IsHighlighted);
         Assert.True(b.IsHighlighted);
+        Assert.Null(service.SingleHighlightedId); // Not a single go to: B's lines are not lit
     }
 
     [Fact]

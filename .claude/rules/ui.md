@@ -148,8 +148,9 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 - Cleared on the release of any canvas press (`InteractionService.OnMouseUp`), never on the
   press: an inner member line can be hit only while lit (`LineSvg`), so a repaint between press
   and release (always in Wasm) took a click on the marked node's inner line. Also cleared by any
-  key, view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A node that is
-  selected gets no brackets. Michael picked the brackets over a glowing halo and a spotlight.
+  key, view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A single
+  go to's node that is selected gets no brackets; a group marks every member, selected or not.
+  Michael picked the brackets over a glowing halo and a spotlight.
 
 ## Rendering performance
 
