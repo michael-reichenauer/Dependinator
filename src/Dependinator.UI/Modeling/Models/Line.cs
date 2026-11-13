@@ -109,6 +109,23 @@ class Line : IItem
     public string? HtmlLabelDescription { get; private set; }
     public bool HasLabel => Label is not null || LabelDescription is not null;
 
+    // Where along the line its label sits, as a fraction of the line's length: the middle unless
+    // the user dragged it. A fraction (not a point) keeps the label on its line when nodes move or
+    // the line is rerouted.
+    public const double DefaultLabelPosition = 0.5;
+    const double MinLabelPosition = 0.05;
+    const double MaxLabelPosition = 0.95;
+    public double LabelPosition { get; private set; } = DefaultLabelPosition;
+    public bool IsLabelMoved => LabelPosition != DefaultLabelPosition;
+
+    public void SetLabelPosition(double position) => LabelPosition = ToLabelPosition(position);
+
+    // A position as it is stored: off the line's ends, rounded.
+    public static double ToLabelPosition(double position) =>
+        double.IsFinite(position)
+            ? Math.Round(Math.Clamp(position, MinLabelPosition, MaxLabelPosition), 3)
+            : DefaultLabelPosition;
+
     // Follows the nodes at the ends of its links (LineVisibility): dimmed or hidden lines are
     // drawn faintly or left out like those nodes.
     public NodeVisibility Visibility

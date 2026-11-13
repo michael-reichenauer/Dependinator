@@ -98,7 +98,23 @@ interface IModel : IDisposable
 }
 
 // A line label waiting for its line; the endpoint names say whether it can still come back.
-record PendingLineLabel(string? Label, string? Description, string? SourceName, string? TargetName);
+record PendingLineLabel(
+    string? Label,
+    string? Description,
+    string? SourceName,
+    string? TargetName,
+    double? Position = null
+)
+{
+    public static PendingLineLabel From(Line line, string? sourceName, string? targetName) =>
+        new(line.Label, line.LabelDescription, sourceName, targetName, line.IsLabelMoved ? line.LabelPosition : null);
+
+    public void ApplyTo(Line line)
+    {
+        line.SetLabel(Label, Description);
+        line.SetLabelPosition(Position ?? Line.DefaultLabelPosition);
+    }
+}
 
 class Model : IModel
 {
@@ -303,6 +319,7 @@ class Model : IModel
                         Description = l.Description,
                         Label = l.Label,
                         LabelDescription = l.LabelDescription,
+                        LabelPosition = l.HasLabel && l.IsLabelMoved ? l.LabelPosition : null,
                         Source = l.HasLabel ? l.Source.Name : null,
                         Target = l.HasLabel ? l.Target.Name : null,
                     }),
@@ -316,6 +333,7 @@ class Model : IModel
                         SegmentPoints = [],
                         Label = p.Value.Label,
                         LabelDescription = p.Value.Description,
+                        LabelPosition = p.Value.Position,
                         Source = p.Value.SourceName,
                         Target = p.Value.TargetName,
                     }),
@@ -468,7 +486,7 @@ class Model : IModel
             return;
         lines[line.Id] = line;
         if (pendingLineLabels.Remove(line.Id, out var pending))
-            line.SetLabel(pending.Label, pending.Description);
+            pending.ApplyTo(line);
     }
 
     public void Clear()
@@ -530,12 +548,7 @@ class Model : IModel
         // The label waits for the line to come back (its node moved, a link changed kind, a
         // delete was undone); it is dropped at save time once one of its nodes is gone.
         if (line.HasLabel)
-            pendingLineLabels[line.Id] = new PendingLineLabel(
-                line.Label,
-                line.LabelDescription,
-                line.Source.Name,
-                line.Target.Name
-            );
+            pendingLineLabels[line.Id] = PendingLineLabel.From(line, line.Source.Name, line.Target.Name);
         lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);

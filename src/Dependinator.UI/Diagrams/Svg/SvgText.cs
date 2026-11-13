@@ -123,15 +123,37 @@ static partial class SvgText
         if (text.Length == 0)
             return [];
 
-        var lines = WrapText(text, maxWidth);
+        return TakeLines(WrapText(text, maxWidth), maxWidth, maxLines);
+    }
+
+    // Wrapped like a description, but keeping the user's own line breaks (a line label's
+    // description is typed in a multi-line field); blank rows are dropped.
+    internal static IReadOnlyList<string> GetUserTextLines(string? text, int maxWidth, int maxLines)
+    {
+        if (string.IsNullOrWhiteSpace(text) || maxLines <= 0)
+            return [];
+
+        var lines = text.Split('\n')
+            .Select(row => WhitespaceRegex().Replace(row, " ").Trim())
+            .Where(row => row.Length > 0)
+            .SelectMany(row => WrapText(row, maxWidth))
+            .ToList();
+        return TakeLines(lines, maxWidth, maxLines, ['.', ',', ';', ':']);
+    }
+
+    // Truncate to maxLines and mark the last kept line with an ellipsis, which replaces any of
+    // the given characters at its end ("path.…" reads as a typo).
+    static IReadOnlyList<string> TakeLines(List<string> lines, int maxWidth, int maxLines, char[]? replaced = null)
+    {
         if (lines.Count <= maxLines)
             return lines;
 
-        // Truncate to maxLines and mark the last kept line with an ellipsis.
         lines = lines.Take(maxLines).ToList();
         var last = lines[^1];
         if (last.Length + 1 > maxWidth)
             last = last[..(maxWidth - 1)].TrimEnd();
+        if (replaced is not null)
+            last = last.TrimEnd([.. replaced, ' ']);
         lines[^1] = last + "…";
         return lines;
     }

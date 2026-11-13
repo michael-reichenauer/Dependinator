@@ -10,7 +10,7 @@ namespace Dependinator.UI.Diagrams.Editing;
 
 // Result returned by LineLabelDialog: the (possibly edited) label and description, or a request
 // to remove them.
-record LineLabelDialogResult(string Label, string Description, bool Clear);
+record LineLabelDialogResult(string Label, string Description, bool Clear, bool IsPositionReset = false);
 
 // Edits a line's user label (the short text drawn on the line) through a small dialog; the
 // change is one undoable command. Reached from the line toolbar, the line's right-click menu
@@ -41,12 +41,14 @@ class LineLabelService(
     {
         string currentLabel;
         string currentDescription;
+        bool isMoved;
         using (var model = modelMgr.UseModel())
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
             currentLabel = line.Label ?? "";
             currentDescription = line.LabelDescription ?? "";
+            isMoved = line.HasLabel && line.IsLabelMoved;
         }
 
         Func<AiSource, Action<SuggestStep>, Task<Result<LineLabelSuggestion>>>? suggest = aiService.IsAvailable
@@ -57,6 +59,7 @@ class LineLabelService(
             { d => d.Label, currentLabel },
             { d => d.Description, currentDescription },
             { d => d.HasLabel, currentLabel.Length > 0 || currentDescription.Length > 0 },
+            { d => d.IsMoved, isMoved },
             { d => d.GetPrompt, () => GetPromptAsync(lineId) },
             { d => d.Suggest, suggest },
         };
@@ -73,10 +76,17 @@ class LineLabelService(
 
         var label = result.Clear ? "" : result.Label;
         var description = result.Clear ? "" : result.Description;
-        if (label == currentLabel && description == currentDescription)
-            return;
+        List<Command> commands = [];
+        if (result.IsPositionReset && !result.Clear)
+            commands.Add(new LineLabelPositionCommand(lineId) { Position = Line.DefaultLabelPosition });
+        if (label != currentLabel || description != currentDescription)
+            commands.Add(new LineLabelCommand(lineId) { Label = label, Description = description });
 
-        commandService.Do(new LineLabelCommand(lineId) { Label = label, Description = description });
+        // One Save is one undo step.
+        if (commands.Count == 1)
+            commandService.Do(commands[0]);
+        else if (commands.Count > 1)
+            commandService.Do(new CompositeCommand([.. commands]));
     }
 
     public async Task<string> GetPromptAsync(LineId lineId)

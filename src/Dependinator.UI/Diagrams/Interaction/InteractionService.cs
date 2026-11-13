@@ -76,6 +76,8 @@ class InteractionService(
     IReadOnlyCollection<NodeId>? zoneDragIds;
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
+    bool isDraggingLineLabel = false;
+    Pos labelDragClient = Pos.None;
     bool isDraggingLink = false;
     bool isAreaSelecting = false;
 
@@ -538,6 +540,8 @@ class InteractionService(
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
+        isDraggingLineLabel = false;
+        lineEditService.EndLabelMove();
         isDraggingLink = false;
 
         // Shift+press starts a rubber band that selects the nodes inside it (a Shift+click
@@ -582,7 +586,7 @@ class InteractionService(
     }
 
     // Routes a left-button drag to exactly one gesture. The branch order is the gesture
-    // priority: link-handle drag → line-point drag → selected-node content pan (edit mode) →
+    // priority: link-handle drag → line-point drag → line-label drag → selected-node content pan (edit mode) →
     // resize-handle drag → selected-node move → canvas pan (the fallback for everything else).
     // Each editing branch marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
@@ -621,6 +625,22 @@ class InteractionService(
         {
             isDraggingSelectedLinePoint = true;
             lineEditService.MoveSegmentPoint(e, Zoom, mouseDownId);
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
+        // A line's label slides along its line (any labelled line, selected or not), once the
+        // pointer has moved a few pixels: a click or double-click on the label must not move it.
+        if (viewOptions.IsEditingEnabled && mouseDownId.IsLineLabel)
+        {
+            if (!isDraggingLineLabel && !IsBeyondDragThreshold(e))
+                return;
+            // Steps are taken between client positions, the first from the press, so the label
+            // keeps up with the pointer (movementX can be in device pixels on some browsers).
+            var from = isDraggingLineLabel ? labelDragClient : mouseDownClient;
+            labelDragClient = new Pos(e.ClientX, e.ClientY);
+            isDraggingLineLabel = true;
+            lineEditService.MoveLabel(e.ClientX - from.X, e.ClientY - from.Y, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }
@@ -699,6 +719,13 @@ class InteractionService(
             isDraggingSelectedLinePoint = false;
         }
 
+        if (isDraggingLineLabel)
+        {
+            lineEditService.EndLabelMove();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
+            isDraggingLineLabel = false;
+        }
+
         if (isResizingSelectedNode && mouseDownId.IsResize)
         {
             nodeEditService.SnapResizedSelectedNodeToGrid(mouseDownId);
@@ -734,6 +761,12 @@ class InteractionService(
             applicationEvents.TriggerUIStateChanged(); // Restore the cursor without waiting for the next event
         }
     }
+
+    const double LabelDragThreshold = 4;
+
+    bool IsBeyondDragThreshold(PointerEvent e) =>
+        Math.Abs(e.ClientX - mouseDownClient.X) > LabelDragThreshold
+        || Math.Abs(e.ClientY - mouseDownClient.Y) > LabelDragThreshold;
 
     // A band can start anywhere except on the edit handles, which have their own drags.
     static bool CanStartRubberBand(PointerId pressedId) =>

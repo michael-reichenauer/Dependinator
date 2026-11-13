@@ -12,6 +12,10 @@ record PointerId
     public NodeResizeType NodeResizeType { get; init; } = NodeResizeType.None;
     public int LinePointIndex { get; init; } = -1;
 
+    // A press on a line's label (its hit rect, sub-id "ll"). It is the line in every other
+    // respect (select, double-click, menu, hover card); only an edit-mode drag moves the label.
+    public bool IsLineLabel { get; init; }
+
     private PointerId(string id, string subId, NodeResizeType nodeResizeType, int linePointIndex = -1)
     {
         ElementId = $"{id}.{subId}";
@@ -30,6 +34,11 @@ record PointerId
 
     public static PointerId FromLine(LineId nodeId) => new(nodeId.Value, "l", NodeResizeType.None);
 
+    // The element id of a line label's hit rect, which Parse reads back as the line with IsLineLabel.
+    public static string LineLabelElementId(LineId lineId) => $"{lineId.Value}.{LineLabelSubId}";
+
+    const string LineLabelSubId = "ll";
+
     public static PointerId FromLinePoint(LineId lineId, int pointIndex) =>
         new(lineId.Value, $"lp{pointIndex}", NodeResizeType.None, pointIndex);
 
@@ -47,8 +56,21 @@ record PointerId
 
         var id = parts[0];
         var subId = parts.Length > 1 ? parts[1] : "";
+        if (subId == LineLabelSubId)
+            return FromLine(LineId.FromId(id)) with { IsLineLabel = true };
         return new(id, subId, ToNodeResizeType(subId), ToLinePointIndex(subId));
     }
+
+    // A press on the label is the same target as a press on its line (IsLineLabel is left out).
+    public virtual bool Equals(PointerId? other) =>
+        other is not null
+        && ElementId == other.ElementId
+        && Id == other.Id
+        && SubId == other.SubId
+        && NodeResizeType == other.NodeResizeType
+        && LinePointIndex == other.LinePointIndex;
+
+    public override int GetHashCode() => HashCode.Combine(ElementId, Id, SubId, NodeResizeType, LinePointIndex);
 
     public bool IsNode => SubId == "n";
     public bool IsCanvas => Id == CanvasElementId;

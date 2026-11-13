@@ -1931,6 +1931,11 @@ button.dep-rules__node:hover {
     overflow: hidden;
 }
 
+/* A line label's description, which the canvas cuts to three rows, is shown up to 20. */
+.dep-tt-desc.dep-tt-full {
+    -webkit-line-clamp: 20;
+}
+
 .dep-tt-code,
 .dep-tooltip code {
     font-family: "JetBrains Mono", Consolas, monospace;

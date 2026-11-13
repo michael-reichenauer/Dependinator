@@ -38,4 +38,21 @@ public class PointerIdTests
         Assert.True(parsed.IsNode);
         Assert.False(parsed.IsLinkHandle);
     }
+
+    [Fact]
+    public void Parse_LineLabel_ShouldBeTheLine_MarkedAsItsLabel()
+    {
+        var lineId = LineId.FromId("abc");
+
+        var parsed = PointerId.Parse(PointerId.LineLabelElementId(lineId));
+
+        Assert.True(parsed.IsLineLabel);
+        Assert.True(parsed.IsLine);
+        Assert.Equal(lineId, parsed.LineId);
+        // The same target as the line itself: selecting, menus and hover cards treat it so.
+        Assert.Equal(PointerId.FromLine(lineId), parsed);
+        Assert.Equal(PointerId.FromLine(lineId).GetHashCode(), parsed.GetHashCode());
+        Assert.Equal(PointerId.FromLine(lineId).ElementId, parsed.ElementId);
+        Assert.False(PointerId.FromLine(lineId).IsLineLabel);
+    }
 }

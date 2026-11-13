@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Modeling.Models;
@@ -98,9 +99,9 @@ static class LineSvg
             return "";
 
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
-        var text = LabelSvg(line, polylinePoints, childrenZoom);
-        var labelClass = "line-vis" + (isDimmed ? " line-dim" : "") + (isLit ? " line-lit" : "");
-        return $"""<g class="{labelClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">{text}</g>""";
+        var (text, hit) = LabelSvg(line, polylinePoints, childrenZoom);
+        var labelClass = "line-vis line-text" + (isDimmed ? " line-dim" : "") + (isLit ? " line-lit" : "");
+        return $"""<g class="{labelClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">{text}</g>{hit}""";
     }
 
     public static string GetDirectLineSvg(
@@ -225,7 +226,7 @@ static class LineSvg
                 $"""<circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />"""
             )
             : "";
-        var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
+        var (labelSvg, labelHitSvg) = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : ("", "");
 
         // The hover group's data-name, "Source→Target (n)" with the long names, is what the e2e
         // locators match; the tooltip itself is the hover card (TooltipService, initTooltips in jsInterop.js).
@@ -279,6 +280,7 @@ static class LineSvg
                 + HitTargetExtraWidth:0.##}" stroke="black" stroke-opacity="0" stroke-linecap="round" stroke-linejoin="round"{hitPointerEvents} />
               <polyline class="{HoverClass}" points="{points}" fill="none" pointer-events="none" />
             </g>
+            {labelHitSvg}
             {selectedSvg}
             </g>
             """
@@ -289,43 +291,144 @@ static class LineSvg
     internal static bool IsInnerMemberLine(Line line) =>
         line.Source.Type.IsMember && line.Target.Type.IsMember && line.Source.Parent == line.Target.Parent;
 
-    // The user's label at the line's middle, with its description under it in the smaller italic
-    // used for node descriptions. The lineLabel/lineDescription classes draw a background-colored
-    // halo (paint-order) so the text stays legible over the line and whatever it crosses; the
-    // font follows the node names.
-    static string LabelSvg(Line line, IReadOnlyList<Pos> polylinePoints, double childrenZoom)
+    // The user's label on the line (at its middle unless dragged: Line.LabelPosition), with its
+    // description under it in a smaller italic. The texts are quieter than node names (a label
+    // annotates a line, it is not a node): smaller, and they stop growing with the zoom earlier.
+    // What is drawn is limited, one clipped row for the label and a few wrapped rows for the
+    // description (the user's own line breaks kept); the line's hover card shows them in full (up to 20 description rows). The
+    // lineLabel/lineDescription classes draw a background-colored halo (paint-order) so the text
+    // stays legible over the line and whatever it crosses.
+    internal const double LabelFontSize = 6.5;
+    internal const double LabelDescriptionFontSize = 5.5;
+    internal const double LabelMaxTextZoom = 2.2;
+    internal const int LabelMaxChars = 32;
+    internal const int LabelDescriptionMaxChars = 38;
+    internal const int LabelDescriptionMaxLines = 3;
+
+    // Class of a label's hit rect (see LabelHitSvg).
+    internal const string LabelHitClass = "line-label-hit";
+
+    // Class of a bend-point handle's hit circle copied above a label (see LabelHitSvg).
+    internal const string LabelHandleClass = "line-label-handle";
+
+    // Offset (in em) from a row's middle down to its alphabetic baseline: the description's rows
+    // are <tspan>s, which WebKit and Firefox do not center with dominant-baseline.
+    const double MiddleToBaselineFactor = 0.35;
+
+    // The label's texts, and its hit target (see LabelHitSvg); both "" without a label.
+    static (string Text, string Hit) LabelSvg(Line line, IReadOnlyList<Pos> polylinePoints, double childrenZoom)
     {
         if (!line.HasLabel)
-            return "";
+            return ("", "");
 
-        var middle = LinePathGeometry.MidPoint(polylinePoints);
-        var textZoom = SvgText.TextZoom(childrenZoom);
-        var fontSize = SvgText.FontSize * textZoom;
-        var descriptionFontSize = SvgText.DescriptionFontSize * textZoom;
+        var at = LinePathGeometry.PointAt(polylinePoints, line.LabelPosition);
+        var textZoom = Math.Min(childrenZoom, LabelMaxTextZoom);
+        var fontSize = LabelFontSize * textZoom;
+        var descriptionFontSize = LabelDescriptionFontSize * textZoom;
+        var rowHeight = descriptionFontSize * SvgText.DescriptionLineHeightFactor;
         var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
-        // With both texts the pair is centered on the line: the label just above, the
-        // description just below; a single text sits on the line itself.
-        var hasBoth = line.HtmlLabel is not null && line.HtmlLabelDescription is not null;
-        var labelY = hasBoth ? middle.Y - fontSize * 0.55 : middle.Y;
-        var descriptionY = hasBoth ? middle.Y + descriptionFontSize * 0.75 : middle.Y;
+        var labelText = line.Label is null ? null : SvgText.Clip(line.Label, LabelMaxChars);
+        var rows = SvgText.GetUserTextLines(line.LabelDescription, LabelDescriptionMaxChars, LabelDescriptionMaxLines);
 
-        var labelSvg = line.HtmlLabel is null
+        // With both texts the line runs between them: the label just above, the description's
+        // rows below. A single text is centered on the line itself.
+        var hasBoth = labelText is not null && rows.Count > 0;
+        var labelY = hasBoth ? at.Y - fontSize * 0.6 : at.Y;
+        var firstRowY = hasBoth ? at.Y + descriptionFontSize * 0.75 : at.Y - (rows.Count - 1) * rowHeight / 2;
+        var firstBaselineY = firstRowY + descriptionFontSize * MiddleToBaselineFactor;
+
+        var labelSvg = labelText is null
             ? ""
             : string.Create(
                 CultureInfo.InvariantCulture,
-                $"""<text class="lineLabel" x="{middle.X:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabel}</text>"""
+                $"""<text class="lineLabel" x="{at.X:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{SvgText.Encode(
+                    labelText
+                )}</text>"""
             );
-        var descriptionSvg = line.HtmlLabelDescription is null
-            ? ""
-            : string.Create(
-                CultureInfo.InvariantCulture,
-                $"""<text class="lineDescription" x="{middle.X:0.##}" y="{descriptionY:0.##}" font-size="{descriptionFontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabelDescription}</text>"""
-            );
-        return labelSvg + descriptionSvg;
+
+        var tspans = string.Concat(
+            rows.Select(
+                (row, i) =>
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"""<tspan x="{at.X:0.##}" dy="{(i == 0 ? 0 : rowHeight):0.##}">{SvgText.Encode(row)}</tspan>"""
+                    )
+            )
+        );
+        var descriptionSvg =
+            rows.Count == 0
+                ? ""
+                : string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"""<text class="lineDescription" x="{at.X:0.##}" y="{firstBaselineY:0.##}" font-size="{descriptionFontSize:0.##}px" text-anchor="middle"{opacity}>{tspans}</text>"""
+                );
+
+        // The box around the drawn texts, from the rough text widths.
+        var width = Math.Max(
+            SvgText.EstimateTextWidth(labelText ?? "", fontSize),
+            rows.Select(row => SvgText.EstimateTextWidth(row, descriptionFontSize)).DefaultIfEmpty(0).Max()
+        );
+        var top = labelText is not null ? labelY - fontSize * 0.6 : firstRowY - descriptionFontSize * 0.6;
+        var bottom =
+            rows.Count > 0
+                ? firstRowY + (rows.Count - 1) * rowHeight + descriptionFontSize * 0.6
+                : labelY + fontSize * 0.6;
+        var box = new Rect(at.X - width / 2, top, width, bottom - top);
+        return (labelSvg + descriptionSvg, LabelHitSvg(line, box, fontSize, polylinePoints));
     }
 
-    // hasHandles is false for a stub: it is not drawn along the line's points, so it shows none.
+    // A transparent rect over the label's texts, so the label is part of its line: hovering it
+    // shows the line's card (the group's id is the line's), a click selects the line, a
+    // double-click in edit mode edits the label, and an edit-mode drag moves it along the line
+    // (the rect's own id, PointerId.LineLabelElementId). The texts themselves take no pointer
+    // events. Labels are drawn above the nodes, a selected line's bend-point handles with the
+    // line below them, so a handle under the label gets a transparent copy of its hit circle
+    // above the rect (same id): the handle stays draggable and the rest of the label clickable.
+    static string LabelHitSvg(Line line, Rect box, double fontSize, IReadOnlyList<Pos> polylinePoints)
+    {
+        var padding = fontSize * 0.3;
+        var hitBox = new Rect(box.X - padding, box.Y - padding, box.Width + 2 * padding, box.Height + 2 * padding);
+        var groupId = PointerId.FromLine(line.Id).ElementId;
+        var rectId = PointerId.LineLabelElementId(line.Id);
+        var rect = string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<g class="hoverable" id="{groupId}"><rect id="{rectId}" class="{HitClass} {LabelHitClass}" x="{hitBox.X:0.##}" y="{hitBox.Y:0.##}" width="{hitBox.Width:0.##}" height="{hitBox.Height:0.##}" fill="black" fill-opacity="0" /></g>"""
+        );
+        return rect + HandlesOverLabelSvg(line, hitBox, polylinePoints);
+    }
+
+    // Hit circles for a selected line's bend-point handles that reach into the label's rect.
+    static string HandlesOverLabelSvg(Line line, Rect hitBox, IReadOnlyList<Pos> polylinePoints)
+    {
+        if (!line.IsSelected || line.SegmentPoints.Count == 0 || polylinePoints.Count != line.SegmentPoints.Count + 2)
+            return "";
+
+        // The handle's own radius depends on how the line is drawn (weighted, on a path), which
+        // the label layer does not know: take the widest it can be.
+        var strokeWidth = Math.Max(Math.Max(PlainStrokeWidth, PathMinStrokeWidth), line.WeightedStrokeWidth);
+        var radius = strokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
+        var circles = new StringBuilder();
+        for (var index = 0; index < line.SegmentPoints.Count; index++)
+        {
+            var p = polylinePoints[index + 1];
+            var isUnderLabel =
+                p.X >= hitBox.X - radius
+                && p.X <= hitBox.X + hitBox.Width + radius
+                && p.Y >= hitBox.Y - radius
+                && p.Y <= hitBox.Y + hitBox.Height + radius;
+            if (!isUnderLabel)
+                continue;
+
+            var elementId = PointerId.FromLinePoint(line.Id, index).ElementId;
+            circles.Append(
+                CultureInfo.InvariantCulture,
+                $"""<circle id="{elementId}" class="{LabelHandleClass}" cx="{p.X:0.##}" cy="{p.Y:0.##}" r="{radius:0.##}" fill="black" fill-opacity="0" />"""
+            );
+        }
+        return circles.ToString();
+    }
+
     static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth, bool hasHandles)
     {
         if (!line.IsSelected)

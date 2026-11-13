@@ -72,6 +72,8 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     const double SoftOpacity = 0.4;
     const double SoftDimOpacity = 0.1;
     const double NormalDimOpacity = 0.18;
+    const double SoftLabelOpacity = 0.75;
+    const double SoftLabelDimOpacity = 0.3;
 
     string LineCss
     {
@@ -86,7 +88,14 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
             var css = soft
                 ? $".line-vis {{ opacity: {Px(SoftOpacity)}; }} "
                     + ".line-lit, .line-accent, .line-cycle, .line-path, .line-rule { opacity: 1; } "
+                    // A label is text to read, so it rests stronger than its faint line and is
+                    // still readable when dimmed.
+                    + $".line-vis.line-text {{ opacity: {Px(SoftLabelOpacity)}; }} .line-text.line-lit {{ opacity: 1; }} "
+                    + $".line-text.line-dim {{ opacity: {Px(SoftLabelDimOpacity)}; }} "
                 : "";
+            // In edit mode a line's label can be dragged along its line (LineSvg.LabelHitSvg).
+            if (viewOptions.IsEditingEnabled)
+                css += $".{Svg.LineSvg.LabelHitClass} {{ cursor: move; }} ";
             // Calls inside a type (LineSvg.IsInnerMemberLine) show only when lit or hover-previewed.
             return css
                 + $".line-dim {{ opacity: {Px(dim)}; }} #svgcanvas {{ --line-preview-dim: {Px(previewDim)}; }} "
