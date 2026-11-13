@@ -4,7 +4,7 @@ A workspace model shows several of a workspace's sources (solutions, Bicep deplo
 TypeScript and JavaScript projects) in one diagram, each parsed by its own parser. In this
 repository that is the solution, the VS Code extension and the TypeScript parser's helper side by
 side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2yT13DngeXdu
-(Nov 12 2026); Michael took all five recommendations (Nov 13). Phases 1 to 3 are built.
+(Nov 12 2026); Michael took all five recommendations (Nov 13). Phases 1 to 4 are built.
 
 ## What the user sees
 
@@ -26,8 +26,11 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   out) keeps its choice.
 - The diagram has one root node per source and one Externals. A source that cannot be parsed is
   a problem in the problem indicator, and its part of the diagram stays as it was.
-- The model is beside the per-source models, not instead of them, and a host does not start on
-  it by itself: once opened it is the last used model like any other.
+- The model is beside the per-source models, not instead of them. VS Code starts a workspace
+  on the model of it that was used last; a workspace with none (never opened in Dependinator)
+  starts on the whole workspace, so the sources dialog comes first (phase 4, Michael's choice
+  Nov 13 over a setting or a separate question). Cancelling it opens the proposal. A workspace
+  of one source starts on that source, and the browser hosts resume the last used model.
 
 ## How it is built
 
@@ -38,8 +41,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - **The sources** are what `IWorkspaceFileService.GetModelFilePathsAsync` finds.
   `ModelListService` keeps them (`WorkspaceSourcePaths`, `WorkspaceFolder` from the new
   `GetWorkspaceFoldersAsync`, `WorkspaceModelPath`) and lists them again before the dialog
-  opens. The workspace model is last in `LocalPaths`, so the model a new workspace starts on
-  stays a single source. `WorkspaceModelPath` says which path is this workspace's model
+  opens. The workspace model is last in `LocalPaths` (the first local path is the working
+  solution in the dev host); `ModelListService.WorkspaceStartupPath` picks it for a new
+  workspace in VS Code, which no longer seeds the recent paths with the first source. `WorkspaceModelPath` says which path is this workspace's model
   (whenever there is a workspace folder, compared with `ModelListService.IsSamePath`, since a
   recent or cloud path can spell it another way). It is listed with two or more sources;
   listed or not it is a workspace path, and a local path (so it refreshes) while there is a
@@ -147,8 +151,6 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   line, and the labels and routes of lines between two sources or to Externals, do not come.
   The root's content zoom comes from its own model: a root the user resized there fits its
   content less well in the workspace model until it is fitted again.
-- **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
-  been lived with.
 - Links between languages (the extension starting the language server) are not made: each
   parser sees only its own source.
 - A workspace with several folders uses the first as the workspace folder (the editor's order,
