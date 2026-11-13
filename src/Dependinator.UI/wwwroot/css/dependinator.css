@@ -1512,6 +1512,61 @@ button.dep-rules__node:hover {
     display: none;
 }
 
+/* A selected line's end tag (LineEndTags.razor): at the edge of the view where the line leaves
+   toward an end that is out of view, naming that end's node; a click goes there. Drawn like the
+   floating toolbars, moved into the view by its own size on the side the line leaves by. */
+.dep-line-end-tag {
+    position: fixed;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 220px;
+    padding: 3px 9px;
+    font: 500 12px/18px var(--mud-typography-default-family, sans-serif);
+    color: #4a4d57;
+    background: #ffffff;
+    border: 1px solid rgba(24, 20, 48, 0.12);
+    border-radius: 13px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(30, 20, 60, 0.12);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dep-line-end-tag:hover,
+.dep-line-end-tag:focus-visible {
+    color: #5e35b1;
+    border-color: rgba(94, 53, 177, 0.4);
+    outline: none;
+}
+
+:root[data-theme="dark"] .dep-line-end-tag {
+    color: #c9ccd4;
+    background: #25272c;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="dark"] .dep-line-end-tag:hover,
+:root[data-theme="dark"] .dep-line-end-tag:focus-visible {
+    color: #d1c4e9;
+    border-color: rgba(179, 157, 219, 0.5);
+}
+
+.dep-line-end-tag .mud-icon-root {
+    font-size: 15px;
+}
+
+.dep-line-end-tag-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dep-line-end-tag-left { transform: translate(0, -50%); }
+.dep-line-end-tag-right { transform: translate(-100%, -50%); }
+.dep-line-end-tag-top { transform: translate(-50%, 0); }
+.dep-line-end-tag-bottom { transform: translate(-50%, -100%); }
+
 /* Cloud sync indicator: while the app is determining the cloud auth state on
    startup (waiting for Clerk.js to load and the first /auth/me call), the cloud
    icon gently pulses to signal that it is working rather than "not signed in". */

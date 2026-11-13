@@ -5,20 +5,19 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the selected-line toolbar (LineToolbar.razor): the lines the dependency explorer
-// draws for its subject (Line.IsFocused) offer the "go to source/target node" jumps that direct
-// lines have, since their far end can lie deep inside another container, while they keep the
-// explore actions of an ordinary line.
+// Exercises the selected-line toolbar (LineToolbar.razor) and the line-end tags
+// (LineEndTags.razor): a selected line whose end is out of view gets a tag at the edge of the
+// view naming that end's node, which goes there and keeps the line selected.
 public class LineToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
-    public async Task ExplorerLine_ShouldOfferGoToSourceAndTarget()
+    public async Task ExplorerLine_ShouldGoToItsFarEnd_ByTheEndTag()
     {
         await App.GotoMainPageAsync();
 
-        // Same setup as the explorer test in NodeToolbarTests: "Main" as a container, then its
-        // dependencies explorer draws Main's own line to the Externals container (a demo-model
-        // fact), which exists only while the explorer shows lines.
+        // "Main" as a container, then its dependencies explorer draws Main's own line to the
+        // Externals container (a demo-model fact), which exists only while the explorer shows
+        // lines; Externals lies far outside the view.
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.SelectContainerNodeAsync("Demo.UI.Main");
@@ -26,16 +25,40 @@ public class LineToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator line = App.Line("Demo.UI.Main", "Externals");
         await Expect(line).ToHaveCountAsync(1);
 
-        // The explorer line keeps the explore actions and adds the jumps to its ends.
         await App.SelectLineAsync(line);
-        await Expect(App.LinePanSourceButton).ToBeVisibleAsync();
-        await Expect(App.LinePanTargetButton).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("line-references")).ToBeVisibleAsync();
+        await Expect(App.LineEndTargetTag).ToContainTextAsync("Externals");
 
-        // Going to the target navigates to the far end and selects it (the breadcrumb chain
-        // ends at the selected node).
-        await App.LinePanTargetButton.ClickAsync();
+        // Going to the target lands on it (the breadcrumb ends at it). The line is not drawn
+        // there (its source, deep inside Demo.UI, is not shown at that zoom), so its toolbar goes.
+        await App.LineEndTargetTag.ClickAsync();
         await Expect(Page.GetByTestId("breadcrumb-item").Last).ToHaveTextAsync("Externals");
+    }
+
+    [E2EFact]
+    public async Task LineEndTag_ShouldGoToTheEndOutOfView_AndKeepTheLineSelected()
+    {
+        // Demo.UI's line to Shared, two projects of the demo solution (a demo-model fact).
+        await App.GotoMainPageAsync();
+        await App.NavigateToNodeWithoutSelectingAsync("Demo.UI (dll)");
+        ILocator line = App.Line("Demo.UI (dll)", "Shared (dll)");
+        await App.SelectLineAsync(line);
+        await Expect(App.LineEndTargetTag).ToHaveCountAsync(0);
+
+        // Zoom in at the source end until the target end is out of view.
+        (float x, float y) = await App.WaitForStableLinePointAsync(line, 0.1f);
+        await Page.Mouse.MoveAsync(x, y);
+        for (int i = 0; i < 14; i++)
+        {
+            await Page.Mouse.WheelAsync(0, -200);
+            await Task.Delay(50);
+        }
+        await Expect(App.LineEndTargetTag).ToContainTextAsync("Shared (dll)");
+        await Expect(App.LineEndSourceTag).ToHaveCountAsync(0);
+
+        await App.LineEndTargetTag.ClickAsync();
+        await Expect(App.LineToolbar).ToBeVisibleAsync();
+        await Expect(App.LineEndTargetTag).ToHaveCountAsync(0);
     }
 
     // The toolbar's groups come and go (the jumps above, the edit-mode actions), and a divider

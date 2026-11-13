@@ -1,0 +1,86 @@
+@using Dependinator.UI.Diagrams.Lines
+@using Dependinator.UI.Diagrams.Dependencies
+
+@inject IApplicationEvents applicationEvents
+@inject ISelectionService selectionService
+@inject IDependenciesService dependenciesService
+@inject INavigationService navigationService
+@implements IDisposable
+
+@* A selected line whose end is out of view gets a tag at the edge of the view where it leaves,
+   naming the node at that end: a click goes there (the node gets go to's amber marks) and keeps
+   the line selected, so the other end's tag then leads back. *@
+@foreach (var (tag, isTarget) in Tags())
+{
+    @if (TryGetEndNode(isTarget, out var node))
+    {
+        <button class="@($"dep-line-end-tag dep-line-end-tag-{tag.Side.ToString().ToLowerInvariant()}")"
+                style="@Position(tag)" title="@($"Go to the {(isTarget ? "target" : "source")}, {node.LongName}")"
+                @onclick="() => GoToAsync(node.Id)"
+                data-testid="@(isTarget ? "line-end-tag-target" : "line-end-tag-source")">
+            @if (tag.Side is LineOnScreen.Side.Left or LineOnScreen.Side.Top)
+            {
+                <MudIcon Icon="@ArrowIcon(tag.Side)" Size="Size.Small" />
+            }
+            <span class="dep-line-end-tag-name">@node.DisplayName</span>
+            @if (tag.Side is LineOnScreen.Side.Right or LineOnScreen.Side.Bottom)
+            {
+                <MudIcon Icon="@ArrowIcon(tag.Side)" Size="Size.Small" />
+            }
+        </button>
+    }
+}
+
+@code {
+    IEnumerable<(LineOnScreen.EndTag Tag, bool IsTarget)> Tags()
+    {
+        if (selectionService.SelectedLineSourceTag is { } source)
+            yield return (source, false);
+        if (selectionService.SelectedLineTargetTag is { } target)
+            yield return (target, true);
+    }
+
+    bool TryGetEndNode(bool isTarget, out Modeling.Models.Node node)
+    {
+        node = null!;
+        if (!selectionService.SelectedId.IsLine)
+            return false;
+        if (!dependenciesService.TryGetLine(selectionService.SelectedId.LineId, out var line) || line is null)
+            return false;
+        node = isTarget ? line.Target : line.Source;
+        return true;
+    }
+
+    // At the crossing, moved into the view by its own size on the side it leaves by (the
+    // dep-line-end-tag-<side> classes).
+    static string Position(LineOnScreen.EndTag tag) =>
+        FormattableString.Invariant($"left:{tag.At.X:0.##}px; top:{tag.At.Y:0.##}px");
+
+    static string ArrowIcon(LineOnScreen.Side side) =>
+        side switch
+        {
+            LineOnScreen.Side.Left => MudBlazor.Icons.Material.Filled.ArrowBack,
+            LineOnScreen.Side.Top => MudBlazor.Icons.Material.Filled.ArrowUpward,
+            LineOnScreen.Side.Right => MudBlazor.Icons.Material.Filled.ArrowForward,
+            LineOnScreen.Side.Bottom => MudBlazor.Icons.Material.Filled.ArrowDownward,
+            _ => MudBlazor.Icons.Material.Filled.ArrowForward,
+        };
+
+    // The view lands on the node a moment after the go to returns (the canvas repaints), so the
+    // toolbar and the tags are placed again once it has.
+    async Task GoToAsync(Modeling.Models.NodeId nodeId)
+    {
+        await navigationService.ShowNodeAsync(nodeId);
+        for (var i = 0; i < 3; i++)
+        {
+            await Task.Delay(150);
+            await selectionService.UpdateSelectedPositionAsync();
+        }
+    }
+
+    protected override void OnInitialized() => applicationEvents.UIStateChanged += OnUiStateChanged;
+
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => applicationEvents.UIStateChanged -= OnUiStateChanged;
+}

@@ -170,6 +170,12 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   press) become a bend on a drag past the 4 px threshold (`LineEditService.InsertSegmentPoint`,
   one undo step with the drag); a bend released within 6 screen px of straight, or
   double-clicked, is removed; "Straighten line" clears all.
+- Line-end tags (`LineEndTags.razor`, Nov 13) replace the go to source/target buttons:
+  `SelectionService` places a non-stub line's toolbar and tags from the model geometry
+  (`LineOnScreen`: the line in client pixels, clipped to the canvas below `ChromeBottom`), not
+  the line's measured box; stubs keep the measured box. A tag goes with `ShowNodeAsync` and
+  re-places the selection after. An explorer line to a far end inside another container is not
+  drawn once there (its source is not shown at that zoom), so its toolbar goes; known, accepted.
 
 ## Rendering performance
 

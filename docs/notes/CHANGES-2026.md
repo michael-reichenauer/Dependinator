@@ -586,6 +586,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   bends the line there. A bend dragged back onto the straight line, or double-clicked, goes
   away, and "Straighten line" in the toolbar removes them all. The odd + and − buttons, which
   acted at the spot where the line had been clicked, are gone.
+- **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
+  the edge of the view where the line leaves names the node at that end; a click goes there
+  (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.
+  They replace the toolbar's "go to source/target node" buttons, which only explorer lines had.
+  The line toolbar now sits on the line itself, at the clicked spot while it is in view and on
+  the part in view otherwise, instead of on the line's bounding box.
 
 ## Models, cloud sync and sign-in
 
