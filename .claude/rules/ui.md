@@ -68,15 +68,24 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     create lines, and the rule and path line id sets must already hold them.
 - **A selected stub's lines (Nov 13, Michael).** Selecting a stub shows only that stub's lines:
   what uses the node from outside its container, or what it uses outside, not the lines of the
-  node's other stub (`LineReveal.Stub`, set by `GetLineReveal` for a selected edge line that
-  crosses the border). Only the links that cross the border in the stub's direction are pinned
-  at the child; the stub itself stays active as the selected line (`Sync` sets `IsActiveRep`,
-  all its links having moved to the cousin lines), and `LineEmphasis.IsLineDimmed` keeps the
-  `IsRevealed` lines undimmed beside a selected line. Clicking one of them is the `KeptLine`
-  case above.
-  - Stubs are drawn after a container's other lines (`NodeLinesSvg.RenderNodeLines`): a line
-    back to a node on the left starts at its node's right side and runs level under the node
-    and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils in the demo).
+  node's other stub (`LineReveal.Stub`, set by `GetLineReveal` for a selected `LineStub.IsStub`
+  line; an edge line drawn in full for its label or line points is selected to edit those and
+  gets no lines). The stub's own links (`stub.Contains(link)`) that cross the border are pinned
+  at the child; the stub itself stays active as the selected line when the reveal took its
+  links (`Sync` sets `IsActiveRep`), and `LineEmphasis.IsLineDimmed` keeps the `IsRevealed`
+  lines undimmed beside a selected edge line. Clicking one of them is the `KeptLine` case
+  above. Traps the review found:
+  - A node can have two stubs on one side: usage and inheritance are separate edge lines
+    (`LineService.AddDirectLine`). Picking links by direction alone drew both stubs' lines and
+    made the unselected one vanish: go by the stub's own links.
+  - Only a selected stub keeps `IsRevealed` lines undimmed. Beside a selected cousin line (the
+    `KeptLine` case) the inheritance twin between the same ends is flagged too and must dim.
+  - Stubs are drawn after a container's other lines (`NodeLinesSvg.DrawnNodeLines` yields them
+    last): a line back to a node on the left starts at its node's right side and runs level
+    under the node and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils
+    in the demo). Known and left: a stub therefore also lies over the handles of a selected
+    hand-routed line whose point is right at it, and a selected stub's own lines end at its
+    anchor and lie over it (a second click on the selected stub can select one of its lines).
   Hover was dropped by Michael (Nov 13): selecting is enough. Don't re-propose it.
   Still open: one line per container for far ends that are off screen or tiny (a hub such as
   Demo.Core.Utils lights 45 lines).

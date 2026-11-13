@@ -35,8 +35,9 @@ static class NodeTreeSvg
     }
 
     // The selected nodes' links are drawn end to end (see RepLineService), and so are a selected
-    // stub's. A selected line that crosses containers is kept as it is: it may be one of those
-    // lines, clicked.
+    // stub's; not those of an edge line that is drawn in full for its label or line points, which
+    // is selected to edit them. A selected line that crosses containers is kept as it is: it may
+    // be one of those lines, clicked.
     internal static LineReveal GetLineReveal(RenderSelection selection, RowFilter rows, LineFilter filter)
     {
         if (selection.Node is { } node)
@@ -46,7 +47,7 @@ static class NodeTreeSvg
         }
         if (selection.Line is { IsCousin: true } line)
             return new LineReveal(null, rows, filter.HideMember) { KeptLine = line };
-        if (selection.Line is { } edgeLine && LineStub.CrossesBorder(edgeLine))
+        if (selection.Line is { } edgeLine && LineStub.IsStub(edgeLine, isOnPath: false))
             return new LineReveal(null, rows, filter.HideMember) { Stub = edgeLine };
         return LineReveal.None;
     }

@@ -19,12 +19,7 @@ static class NodeLinesSvg
         RenderContext context
     )
     {
-        // Stubs are drawn last, on top: a sibling line can run across a stub (a line back to a
-        // node on the left starts at its node's right side and passes under the node and the stub
-        // into it), and the stub is the short one of the two, so it gets the click and the hover.
-        var lines = DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context)
-            .OrderBy(drawn => LineStub.IsStub(drawn.Line, IsLineOnPath(drawn.Line, context)));
-        foreach (var (line, isCyclic) in lines)
+        foreach (var (line, isCyclic) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
         {
             yield return LineSvg.GetLineSvg(
                 line,
@@ -63,6 +58,10 @@ static class NodeLinesSvg
     }
 
     // The lines of this container that are drawn in this tile, with whether each is cyclic.
+    // Stubs come last, so they are drawn on top: a sibling line can run across a stub (a line
+    // back to a node on the left starts at its node's right side and passes under the node and
+    // the stub into it), and the stub is the short one of the two, so it gets the click and the
+    // hover.
     static IEnumerable<(Line Line, bool IsCyclic)> DrawnNodeLines(
         Node node,
         Pos nodeCanvasPos,
@@ -73,6 +72,7 @@ static class NodeLinesSvg
         // Parent-to-child segments are the fan-out of incoming links inside this container
         // (and direct parent-to-child links); only the segments below the links' current
         // target representative are active (see RepLineService).
+        List<(Line Line, bool IsCyclic)>? stubs = null;
         var parentToChildrenLines = node.SourceLines.Where(l => l.Target.Parent == node);
         foreach (var line in parentToChildrenLines)
         {
@@ -86,7 +86,10 @@ static class NodeLinesSvg
                 continue;
             if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                 continue;
-            yield return (line, false);
+            if (LineStub.IsStub(line, IsLineOnPath(line, context)))
+                (stubs ??= []).Add((line, false));
+            else
+                yield return (line, false);
         }
 
         // All sibling lines and children to parent lines
@@ -106,9 +109,17 @@ static class NodeLinesSvg
                     continue;
                 if (!IsEitherEndpointRendered(line, node, nodeCanvasPos, childrenZoom, context))
                     continue;
-                yield return (line, IsLineCyclic(line, context));
+                if (LineStub.IsStub(line, IsLineOnPath(line, context)))
+                    (stubs ??= []).Add((line, IsLineCyclic(line, context)));
+                else
+                    yield return (line, IsLineCyclic(line, context));
             }
         }
+
+        if (stubs is null)
+            yield break;
+        foreach (var stub in stubs)
+            yield return stub;
     }
 
     // A line is drawn while at least one of its endpoint nodes is rendered in this tile; a line

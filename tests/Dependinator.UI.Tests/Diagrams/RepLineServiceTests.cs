@@ -928,6 +928,40 @@ public class RepLineServiceTests
     }
 
     [Fact]
+    public void Sync_SelectedStub_ShouldLeaveTheChildsInheritanceStubAlone()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var user = AddNode(model, "User", parentA);
+        var subtype = AddNode(model, "Subtype", parentA);
+        var node = AddNode(model, "Node", parentB);
+        AddLink(model, user, node);
+        AddLink(model, subtype, node, isInheritance: true);
+
+        // Used and inherited from outside: two stubs into the node, each with its own links.
+        var stub = GetLine(model, "ParentB", "Node");
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("ParentB", "Node"), out var inheritanceStub));
+        Assert.True(LineStub.IsStub(inheritanceStub!, isOnPath: false));
+
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub));
+
+        Assert.True(GetLine(model, "User", "Node").IsRevealed);
+        Assert.False(model.Lines.ContainsKey(LineId.FromInheritance("Subtype", "Node")));
+        Assert.True(inheritanceStub!.IsActiveRep);
+
+        // And the other way around.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(inheritanceStub));
+
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Subtype", "Node"), out var inherits));
+        Assert.True(inherits!.IsActiveRep);
+        Assert.True(inherits.IsRevealed);
+        Assert.False(GetLine(model, "User", "Node").IsActiveRep);
+        Assert.True(stub.IsActiveRep);
+        Assert.True(inheritanceStub.IsActiveRep);
+    }
+
+    [Fact]
     public void GetLineReveal_ShouldAskForAStubsLines_AndKeepACrossingLine()
     {
         using var model = NewModel();
@@ -945,6 +979,11 @@ public class RepLineServiceTests
         Assert.Same(crossing, Reveal(new RenderSelection(null, crossing)).KeptLine);
         Assert.True(Reveal(new RenderSelection(null, between)).IsEmpty); // An ordinary line
         Assert.Equal([source], Reveal(new RenderSelection(source, null)).Nodes);
+
+        // An edge line drawn in full for its line points is selected to move them, not to see
+        // where it goes.
+        stub.IsSegmentsUserSet = true;
+        Assert.True(Reveal(new RenderSelection(null, stub)).IsEmpty);
 
         static LineReveal Reveal(RenderSelection selection) =>
             NodeTreeSvg.GetLineReveal(selection, RowFilter.None, LineFilter.None);

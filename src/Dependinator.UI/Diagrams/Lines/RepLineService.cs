@@ -144,7 +144,8 @@ static class RepLineService
 
         // The selected stub's links now run along their own lines, which would leave the stub
         // without a link to be drawn for: it stays as the selected line those lines belong to.
-        if (reveal.Stub is { } selectedStub)
+        // Not when its links left it for another reason (the explorer's focus lines).
+        if (reveal.Stub is { } selectedStub && groups.Values.Any(group => group.IsRevealed))
             selectedStub.IsActiveRep = true;
 
         lastSync.AddOrUpdate(
@@ -189,6 +190,15 @@ static class RepLineService
         var targetPath = new List<Node>(32);
         var focus = model.LineFocus;
         HashSet<Node>? selected = reveal.Nodes.Count > 0 ? [.. reveal.Nodes] : null;
+
+        // A selected stub: its child, the child's container and its direction.
+        var stub = reveal.Stub;
+        var isStubIncoming = stub is not null && LineStub.IsIncoming(stub);
+        var stubChild = stub is null ? null : LineStub.Child(stub);
+        var stubContainer =
+            stub is null ? null
+            : isStubIncoming ? stub.Source
+            : stub.Target;
 
         foreach (var link in model.Links.Values)
         {
@@ -254,28 +264,21 @@ static class RepLineService
                 targetPin = kept.Target;
                 isRevealedLink = true;
             }
-            else if (!isFocusLink && reveal.Stub is { } stub)
+            else if (!isFocusLink && stub is not null && stub.Contains(link))
             {
-                // A selected stub's links: at or inside its child at one end, outside the child's
-                // container at the other, in the stub's direction. Like a selected node's, they
-                // are pinned at the child and descend on the far side.
-                if (
-                    LineStub.IsIncoming(stub)
-                    && IndexOf(targetPath, stub.Target) != int.MaxValue
-                    && IndexOf(sourcePath, stub.Source) == int.MaxValue
-                )
+                // One of the selected stub's links (a child can have a second stub on the same
+                // side, for inheritance, with links of its own). Those that cross the container's
+                // border are pinned at the child and descend on the far side, like a selected
+                // node's; a link between the child and the container itself stays in the stub.
+                if (isStubIncoming && IndexOf(sourcePath, stubContainer!) == int.MaxValue)
                 {
-                    targetPin = stub.Target;
+                    targetPin = stubChild;
                     isSourceRevealed = true;
                     isRevealedLink = true;
                 }
-                else if (
-                    LineStub.IsOutgoing(stub)
-                    && IndexOf(sourcePath, stub.Source) != int.MaxValue
-                    && IndexOf(targetPath, stub.Target) == int.MaxValue
-                )
+                else if (!isStubIncoming && IndexOf(targetPath, stubContainer!) == int.MaxValue)
                 {
-                    sourcePin = stub.Source;
+                    sourcePin = stubChild;
                     isTargetRevealed = true;
                     isRevealedLink = true;
                 }
