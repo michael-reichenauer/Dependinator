@@ -75,7 +75,8 @@
     bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
 
     double left => selectionService.SelectedLinePosition.X - 10;
-    // The toolbar (36 px high) ends a little above the spot where the line was clicked.
+    // SelectedLinePosition is already up and left of the click (SelectionService's toolbar
+    // offsets); this puts the toolbar (36 px high, from the dep-float-toolbar CSS) a little higher, clear of the line.
     double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 38);
     string containerPosition =>
         FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");

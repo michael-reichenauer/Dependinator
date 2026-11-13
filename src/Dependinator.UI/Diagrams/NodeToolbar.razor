@@ -478,6 +478,16 @@ else if (HasSelectedLine)
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
+  // A menu that leaves the page while open (the selection went away, a drag hid the toolbar)
+  // never reports its close, so its button's tooltip would stay disabled.
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (HasSelectedLine)
+      return;
+    isMenuOpen = false;
+    isColorMenuOpen = false;
+  }
+
   public void Dispose()
   {
     applicationEvents.UIStateChanged -= OnUiStateChanged;

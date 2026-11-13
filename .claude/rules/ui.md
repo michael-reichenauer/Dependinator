@@ -156,11 +156,13 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
 
 - The node, note and line toolbars are a plain `div.dep-float-toolbar` (not a `MudButtonGroup`,
   whose purple divider between every button Michael found rough): grey icons, purple on hover,
-  28 px buttons. Groups are split by `span.dep-toolbar-sep`; a divider with no group on one side
-  is hidden by CSS (first, last, or next to another divider), so a conditional group needs no
-  `@if` around its divider.
+  28 px buttons. Groups are split by `span.dep-toolbar-sep`; a divider with no button before or
+  after it (a run of dividers included) is hidden by CSS (`:has`), so a conditional group needs
+  no `@if` around its divider. The 36 px height is assumed by `NodeToolbar.ToolbarOffset` and
+  `LineToolbar`'s top: change them with the CSS.
 - A `MudTooltip` around a `MudMenu` stays over the open menu (the button keeps the pointer and
-  the focus): give it `Disabled` while the menu is open (`OpenChanged`) and `ShowOnFocus="false"`.
+  the focus): give it `Disabled` while the menu is open (`OpenChanged`) and `ShowOnFocus="false"`,
+  and reset the flag when the toolbar is gone (a menu removed while open never reports its close).
 - The node menu is the last button ("more", ⋮), References and Dependencies come first.
 
 ## Rendering performance

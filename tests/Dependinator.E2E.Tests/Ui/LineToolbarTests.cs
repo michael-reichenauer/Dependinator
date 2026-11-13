@@ -37,4 +37,18 @@ public class LineToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.LinePanTargetButton.ClickAsync();
         await Expect(Page.GetByTestId("breadcrumb-item").Last).ToHaveTextAsync("Externals");
     }
+
+    // The toolbar's groups come and go (the jumps above, the edit-mode actions), and a divider
+    // that no longer has a group on both sides is hidden (the dep-toolbar-sep CSS).
+    [E2EFact]
+    public async Task OrdinaryLine_ShouldShowNoDivider_WithOnlyTheExploreActions()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+
+        await App.SelectLineAsync(App.Line("Demo.sln", "Externals"));
+
+        await Expect(Page.GetByTestId("line-dependencies")).ToBeVisibleAsync();
+        await Expect(App.LineToolbar.Locator(".dep-toolbar-sep:visible")).ToHaveCountAsync(0);
+    }
 }
