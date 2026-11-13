@@ -194,8 +194,8 @@ class SvgService : ISvgService
                     ? pathFinderService.GetPathLineIds()
                     : null
             );
-        // A selected stub opens no far container outside the tile (with its margin, which the
-        // view stays inside of until the next tile): its lines end at that container.
+        // A selected stub opens no far container outside the tile with its margin, the area the
+        // tile draws nodes in: its lines end at that container.
         if (reveal.Stub is not null)
             reveal = reveal with { Area = GetCanvasArea(tileRect, tileWithMargin, tileZoom) };
         RepLineService.Sync(model, tileZoom, reveal);

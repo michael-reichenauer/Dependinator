@@ -27,5 +27,9 @@ record Rect(double X, double Y, double Width, double Height)
 {
     public static readonly Rect None = new(0, 0, 0, 0);
 
+    // The two rects share some area (touching edges do not count).
+    public bool Intersects(Rect other) =>
+        X < other.X + other.Width && other.X < X + Width && Y < other.Y + other.Height && other.Y < Y + Height;
+
     public override string ToString() => $"({X:0.##},{Y:0.##},{Width:0.##},{Height:0.##})";
 }

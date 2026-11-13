@@ -458,7 +458,7 @@ class NodeLayout
                 ),
                 belowCard
             );
-            var overlapping = placed.Where(c => Intersects(c.Boundary, cardBand)).ToList();
+            var overlapping = placed.Where(c => c.Boundary.Intersects(cardBand)).ToList();
             if (overlapping.Count > 0)
             {
                 var shift = SnapToGrid(belowCard - overlapping.Min(c => c.Boundary.Y) + NodeGrid.SnapSize / 2);
@@ -731,9 +731,6 @@ class NodeLayout
         var zoom = Math.Clamp(Math.Min(zoomX, zoomY), MinimumZoom, MaximumZoom);
         return (zoom, new Pos(-left * zoom, -top * zoom));
     }
-
-    static bool Intersects(Rect a, Rect b) =>
-        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
 
     // Orders siblings so referencing children come before the children they reference: first by
     // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children
