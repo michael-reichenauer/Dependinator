@@ -316,11 +316,11 @@ class SelectionService(
     }
 
     // A newly selected line replaces the current selection here, not in the caller, and only
-    // after it has been measured and without a repaint in between: a selected node's lines are
+    // after it has been measured and without a repaint in between: a selected stub's lines are
     // drawn end to end only while it is selected (RepLineService's LineReveal), so deselecting
-    // the node first takes the clicked line off the screen, and a line that is not on screen
+    // the stub first takes the clicked line off the screen, and a line that is not on screen
     // cannot be selected. (The browser app repaints before the measuring call returns; there the
-    // click only deselected the node.)
+    // click only deselected.)
     async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
     {
         if (await screenService.GetBoundingRectangle(pointerId.ElementId) is not ElementBoundingRectangle bound)

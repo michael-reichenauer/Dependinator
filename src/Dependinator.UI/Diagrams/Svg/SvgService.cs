@@ -166,7 +166,7 @@ class SvgService : ISvgService
         var tileZoom = tileKey.GetTileZoom();
         var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
 
-        // The selection's lines are drawn end to end, except while cycles are shown: the cycle
+        // A selected stub's lines are drawn end to end, except while cycles are shown: the cycle
         // lines are the lines between siblings, which must then stay as they are. The lines are
         // synced before the flags are read, since a selection can create lines and the rule
         // and path line sets below must hold them.

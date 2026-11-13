@@ -39,7 +39,7 @@ project works.
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
   VS Code a Models menu of only the workspace's models, with cloud and demo models as visits.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper.
-  Stubs instead of the fan of lines inside a container, with the selected node's lines drawn end to end.
+  Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -173,11 +173,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   on the right for what the children use), a fan of long lines that all met in one point and
   could not be followed through it. Each child now gets a short arrow with a ring: into its left
   side for "used from outside", out of its right side for "uses something outside". Selecting a
-  node draws its lines all the way to the nodes at the other end, as deep as they are open, also
-  across containers. Selecting a stub draws only that stub's lines: what uses the node from
-  outside, or what it uses outside. The stub keeps the line's hover card ("outside X → child"),
-  selection and rule colour; a labelled or hand-routed line and the dependency path are still
-  drawn in full.
+  stub draws its lines all the way to the nodes at the other end, as deep as they are open, also
+  across containers: what uses the node from outside, or what it uses outside. (The first
+  version drew them for a selected node too; dropped the same day, since a node is selected all
+  the time and the lines came unasked.) The stub keeps the line's hover card ("outside X →
+  child"), selection and rule colour; a labelled or hand-routed line and the dependency path are
+  still drawn in full.
 - **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
   styled card in the app's theme: a node's kind and container, description, how many nodes it
   uses and is used by (a member counts as its type), its members and its problems (compile errors,

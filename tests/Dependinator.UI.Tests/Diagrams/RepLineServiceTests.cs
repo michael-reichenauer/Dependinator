@@ -656,12 +656,13 @@ public class RepLineServiceTests
         Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
     }
 
-    // The selection's links are drawn end to end: down to the selected node on its side, and
-    // as deep as the nodes are open on the other side.
-    static LineReveal Selected(params Node[] nodes) => new(nodes, RowFilter.None, HideMemberLines: false);
+    // A selected stub's links are drawn end to end: from its child, and as deep as the nodes are
+    // open on the other side. A stub is one half of what crosses its container's border at the
+    // child: the lines into the child, or the lines out of it.
+    static LineReveal SelectedStub(Line stub) => LineReveal.None with { Stub = stub };
 
     [Fact]
-    public void Sync_SelectedChild_ShouldDrawItsLinksEndToEnd()
+    public void Sync_SelectedStub_ShouldLeaveTheOtherChildrensLinksInTheFunnel()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -672,15 +673,14 @@ public class RepLineServiceTests
         AddLink(model, source, target);
         AddLink(model, other, target);
 
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Source", "ParentA")));
 
-        // One line from the selected child straight to what it uses in the other container.
+        // One line from the stub's child straight to what it uses in the other container.
         var line = GetLine(model, "Source", "Target");
         Assert.True(line.IsCousin);
         Assert.True(line.IsActiveRep);
         Assert.False(line.IsFocused);
         Assert.Single(line.Links);
-        Assert.False(GetLine(model, "Source", "ParentA").IsActiveRep);
 
         // The other child's link keeps its funnel.
         Assert.True(GetLine(model, "Other", "ParentA").IsActiveRep);
@@ -689,24 +689,7 @@ public class RepLineServiceTests
     }
 
     [Fact]
-    public void Sync_SelectedTarget_ShouldDrawItsReferencesEndToEnd()
-    {
-        using var model = NewModel();
-        var parentA = AddNode(model, "ParentA", model.Root);
-        var parentB = AddNode(model, "ParentB", model.Root);
-        var source = AddNode(model, "Source", parentA);
-        var target = AddNode(model, "Target", parentB);
-        AddLink(model, source, target);
-
-        RepLineService.Sync(model, ContainerZoom, Selected(target));
-
-        Assert.True(GetLine(model, "Source", "Target").IsActiveRep);
-        Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
-        Assert.False(GetLine(model, "ParentB", "Target").IsActiveRep);
-    }
-
-    [Fact]
-    public void Sync_SelectedChild_ShouldStopAtANodeThatIsNotOpen()
+    public void Sync_SelectedStub_ShouldStopAtANodeThatIsNotOpen()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -717,71 +700,33 @@ public class RepLineServiceTests
         AddLink(model, source, target);
 
         // ParentB shows its children, Middle is one of them and still an icon.
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Source", "ParentA")));
 
         Assert.True(GetLine(model, "Source", "Middle").IsActiveRep);
         Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
     }
 
     [Fact]
-    public void Sync_SelectedContainer_ShouldDrawItsLinksFromItsEdge()
+    public void Sync_SelectedStubOfAContainer_ShouldDrawTheLinksOfWhatIsInsideIt()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
         var parentB = AddNode(model, "ParentB", model.Root);
-        var source = AddNode(model, "Source", parentA);
-        var inner = AddNode(model, "Inner", parentA);
+        var middle = AddNode(model, "Middle", parentA);
+        var source = AddNode(model, "Source", middle);
         var target = AddNode(model, "Target", parentB);
         AddLink(model, source, target);
-        AddLink(model, source, inner);
 
-        RepLineService.Sync(model, ContainerZoom, Selected(parentA));
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Middle", "ParentA")));
 
-        // The container's line goes to the child it uses; inside it nothing changes.
-        Assert.True(GetLine(model, "ParentA", "Target").IsActiveRep);
-        Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
-        Assert.True(GetLine(model, "Source", "Inner").IsActiveRep);
+        // The line leaves from the stub's own node, whatever is inside it.
+        Assert.True(GetLine(model, "Middle", "Target").IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
         Assert.False(GetLine(model, "ParentA", "ParentB").IsActiveRep);
     }
 
     [Fact]
-    public void Sync_BothEndsSelected_ShouldDrawOneLineBetweenThem()
-    {
-        using var model = NewModel();
-        var parentA = AddNode(model, "ParentA", model.Root);
-        var parentB = AddNode(model, "ParentB", model.Root);
-        var source = AddNode(model, "Source", parentA);
-        var middle = AddNode(model, "Middle", parentB);
-        var target = AddNode(model, "Target", middle);
-        AddLink(model, source, target);
-
-        // Middle is selected itself, so the line ends at it whatever is open inside.
-        RepLineService.Sync(model, ContainerZoom, Selected(source, middle));
-
-        Assert.True(GetLine(model, "Source", "Middle").IsActiveRep);
-    }
-
-    [Fact]
-    public void Sync_SelectionCleared_ShouldDrawTheFunnelAgain()
-    {
-        using var model = NewModel();
-        var parentA = AddNode(model, "ParentA", model.Root);
-        var parentB = AddNode(model, "ParentB", model.Root);
-        var source = AddNode(model, "Source", parentA);
-        var target = AddNode(model, "Target", parentB);
-        AddLink(model, source, target);
-
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
-        RepLineService.Sync(model, ContainerZoom);
-
-        Assert.False(GetLine(model, "Source", "Target").IsActiveRep);
-        Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
-        Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
-        Assert.True(GetLine(model, "ParentB", "Target").IsActiveRep);
-    }
-
-    [Fact]
-    public void Sync_SelectedChild_ShouldNotDescendIntoRowsTheViewLeavesOut()
+    public void Sync_SelectedStub_ShouldNotDescendIntoRowsTheViewLeavesOut()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -790,9 +735,14 @@ public class RepLineServiceTests
         var target = AddNode(model, "Target", parentB);
         target.Type = Dependinator.Core.Parsing.NodeType.MethodMember;
         AddLink(model, source, target);
+        var stub = GetLine(model, "Source", "ParentA");
 
         // With member lines hidden, a line to the member row would not be drawn at all.
-        RepLineService.Sync(model, ContainerZoom, new LineReveal([source], RowFilter.None, HideMemberLines: true));
+        RepLineService.Sync(
+            model,
+            ContainerZoom,
+            new LineReveal(RowFilter.None, HideMemberLines: true) { Stub = stub }
+        );
 
         Assert.True(GetLine(model, "Source", "ParentB").IsActiveRep);
         Assert.False(model.Lines.ContainsKey(LineId.From("Source", "Target")));
@@ -809,16 +759,16 @@ public class RepLineServiceTests
         var other = AddNode(model, "Other", parentB);
         AddLink(model, source, target);
         AddLink(model, source, other);
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Source", "ParentA")));
         var clicked = GetLine(model, "Source", "Target");
 
-        // Clicking the line moves the selection from the node to the line.
+        // Clicking the line moves the selection from the stub to the line.
         RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = clicked });
 
         Assert.True(clicked.IsActiveRep);
         Assert.Single(clicked.Links);
 
-        // The node's other line is back in the funnel.
+        // The stub's other line is back in the funnel.
         Assert.False(GetLine(model, "Source", "Other").IsActiveRep);
         Assert.True(GetLine(model, "Source", "ParentA").IsActiveRep);
         Assert.True(GetLine(model, "ParentB", "Other").IsActiveRep);
@@ -836,26 +786,28 @@ public class RepLineServiceTests
         AddLink(model, member, target);
         AddLink(model, source, target, isInheritance: true);
 
-        // The node inherits the target and a member of it uses the target: two lines between
-        // them while the node is selected.
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        // The node inherits the target and a member of it uses the target: a usage stub and an
+        // inheritance stub out of the node, each with a line to the target when selected.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Source", "ParentA")));
         var uses = GetLine(model, "Source", "Target");
-        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out var inherits));
         Assert.True(uses.IsActiveRep);
-        Assert.True(inherits!.IsActiveRep);
 
-        // The usage line clicked: only that line stays, the inheritance is back in the funnel.
+        // The usage line clicked: only that line stays between the two nodes. The inheritance,
+        // which runs between the same two, stays in the funnel.
         RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = uses });
 
         Assert.True(uses.IsActiveRep);
         Assert.True(uses.IsRevealed);
         Assert.Single(uses.Links);
-        Assert.False(inherits.IsActiveRep);
+        Assert.False(model.Lines.ContainsKey(LineId.FromInheritance("Source", "Target")));
 
-        // And the inheritance line clicked.
+        // And the inheritance line, of the other stub, clicked.
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "ParentA"), out var inheritanceStub));
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(inheritanceStub!));
+        Assert.True(model.Lines.TryGetValue(LineId.FromInheritance("Source", "Target"), out var inherits));
         RepLineService.Sync(model, ContainerZoom, LineReveal.None with { KeptLine = inherits });
 
-        Assert.True(inherits.IsActiveRep);
+        Assert.True(inherits!.IsActiveRep);
         Assert.Single(inherits.Links);
         Assert.False(uses.IsActiveRep);
     }
@@ -901,8 +853,8 @@ public class RepLineServiceTests
         Assert.False(bundle.IsRevealed);
         Assert.False(LineEmphasis.IsLineFilteredOut(bundle, atLeastTwo));
 
-        // Selected, they are two lines of one link each, and both are still drawn.
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
+        // With the stub selected they are two lines of one link each, and both are still drawn.
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(GetLine(model, "Source", "ParentA")));
         var line = GetLine(model, "Source", "Target");
         Assert.True(line.IsRevealed);
         Assert.False(LineEmphasis.IsLineFilteredOut(line, atLeastTwo));
@@ -912,10 +864,6 @@ public class RepLineServiceTests
         Assert.False(line.IsRevealed);
         Assert.True(LineEmphasis.IsLineFilteredOut(line, atLeastTwo));
     }
-
-    // A selected stub asks for its own half of what its node would: the lines into the child,
-    // or the lines out of it.
-    static LineReveal SelectedStub(Line stub) => LineReveal.None with { Stub = stub };
 
     [Fact]
     public void Sync_SelectedIncomingStub_ShouldDrawOnlyTheLinesIntoItsChild()
@@ -1020,7 +968,7 @@ public class RepLineServiceTests
     }
 
     [Fact]
-    public void GetLineReveal_ShouldAskForAStubsLines_AndKeepACrossingLine()
+    public void GetLineReveal_ShouldAskForAStubsLines_AndKeepACrossingLine_ButNothingForANode()
     {
         using var model = NewModel();
         var parentA = AddNode(model, "ParentA", model.Root);
@@ -1028,15 +976,18 @@ public class RepLineServiceTests
         var source = AddNode(model, "Source", parentA);
         var target = AddNode(model, "Target", parentB);
         AddLink(model, source, target);
-        RepLineService.Sync(model, ContainerZoom, Selected(source));
         var stub = GetLine(model, "ParentB", "Target");
+        RepLineService.Sync(model, ContainerZoom, SelectedStub(stub));
         var crossing = GetLine(model, "Source", "Target");
         var between = GetLine(model, "ParentA", "ParentB");
 
         Assert.Same(stub, Reveal(new RenderSelection(null, stub)).Stub);
         Assert.Same(crossing, Reveal(new RenderSelection(null, crossing)).KeptLine);
         Assert.True(Reveal(new RenderSelection(null, between)).IsEmpty); // An ordinary line
-        Assert.Equal([source], Reveal(new RenderSelection(source, null)).Nodes);
+
+        // A selected node asks for nothing: its stubs are there to click.
+        Assert.True(Reveal(new RenderSelection(target, null)).IsEmpty);
+        Assert.True(Reveal(new RenderSelection(source, null, [target])).IsEmpty);
 
         // An edge line drawn in full, on the shown path or for its line points, is selected for
         // itself, not to see where it goes.

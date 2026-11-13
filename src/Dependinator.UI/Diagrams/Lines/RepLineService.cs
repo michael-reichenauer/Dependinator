@@ -3,41 +3,33 @@ using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Diagrams.Lines;
 
-// What the selection asks of the lines: the links of the selected nodes are drawn end to end.
-// The view's filters limit how deep: a line into a row the view leaves out would not be drawn at
-// all, so such a link stays on the row's container.
+// What the selection asks of the lines. A selected stub (Stub, see LineStub) has its links drawn
+// end to end: the stub's own links that cross the container's border leave the funnel and run
+// between the stub's child and the nodes at the other end (a node can have a stub on each side,
+// and a second one on a side for inheritance). The stub itself stays, as the selected line the
+// lines belong to. The view's filters limit how deep the far side goes: a line into a row the
+// view leaves out would not be drawn at all, so such a link stays on the row's container.
 //
-// Clicking one of these lines moves the selection from the node to the line. KeptLine is that
+// Clicking one of these lines moves the selection from the stub to the line. KeptLine is that
 // line: its links stay between its two ends, or the line would vanish under the click.
 //
-// A selected stub (Stub, see LineStub) asks for a part of what its node would: only the stub's
-// own links that cross the container's border are drawn end to end (a node can have a stub on
-// each side, and a second one on a side for inheritance). The stub itself stays, as the
-// selected line the lines belong to.
-readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter Rows, bool HideMemberLines)
+// A selected node asks for nothing (Michael, Nov 13 2026): nodes are selected all the time, by
+// a search or a go to, and its lines across the diagram came unasked. Its stubs are there to
+// click.
+readonly record struct LineReveal(RowFilter Rows, bool HideMemberLines)
 {
-    public static readonly LineReveal None = new(null, RowFilter.None, false);
+    public static readonly LineReveal None = new(RowFilter.None, false);
 
     public Line? KeptLine { get; init; }
 
     public Line? Stub { get; init; }
 
-    public IReadOnlyList<Node> Nodes => SelectedNodes ?? [];
-
-    public bool IsEmpty => Nodes.Count == 0 && KeptLine is null && Stub is null;
+    public bool IsEmpty => KeptLine is null && Stub is null;
 
     public bool LeavesOut(Node node) => Rows.Hides(node.Type) || (HideMemberLines && node.Type.IsMember);
 
-    // Without a selection the filters make no difference, so toggling them causes no sync.
-    public bool IsSameAs(LineReveal other) =>
-        (IsEmpty && other.IsEmpty)
-        || (
-            Rows == other.Rows
-            && HideMemberLines == other.HideMemberLines
-            && KeptLine == other.KeptLine
-            && Stub == other.Stub
-            && Nodes.SequenceEqual(other.Nodes)
-        );
+    // Without a selected line the filters make no difference, so toggling them causes no sync.
+    public bool IsSameAs(LineReveal other) => (IsEmpty && other.IsEmpty) || this == other;
 }
 
 // Resolves which lines are rendered at a given zoom. By default every link is drawn as the
@@ -52,10 +44,11 @@ readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter 
 // are flagged IsFocused. Links are grouped by their (source rep, target rep) pair and drawn as
 // one line per pair.
 //
-// The selection is drawn end to end as well (LineReveal): a link with one end at or inside a
-// selected node descends to that node on its side and as deep as the nodes are open on the other
-// side, so selecting a node shows what it really uses and what uses it, instead of lines that end
-// at a container's edge. These lines are ordinary rep pair lines, lit as the selection's own.
+// A selected stub's links are drawn end to end as well (LineReveal): a link of the stub is
+// pinned at the stub's child and descends as deep as the nodes are open on the other side, so
+// selecting a stub shows what really uses its node, or what the node really uses, instead of
+// lines that end at a container's edge. These lines are ordinary rep pair lines, lit as the
+// selection's own.
 //
 // Top-sibling pairs coincide with the sibling chain lines built by LineService (same LineId),
 // so those Line objects are reused with their waypoints and descriptions. Deeper pairs cross
@@ -151,16 +144,7 @@ static class RepLineService
 
         lastSync.AddOrUpdate(
             model,
-            new SyncState(
-                zoom,
-                model.StructureVersion,
-                layoutGeneration,
-                [.. isChildrenShownCache],
-                reveal with
-                {
-                    SelectedNodes = [.. reveal.Nodes],
-                }
-            )
+            new SyncState(zoom, model.StructureVersion, layoutGeneration, [.. isChildrenShownCache], reveal)
         );
     }
 
@@ -190,7 +174,6 @@ static class RepLineService
         var sourcePath = new List<Node>(32);
         var targetPath = new List<Node>(32);
         var focus = model.LineFocus;
-        HashSet<Node>? selected = reveal.Nodes.Count > 0 ? [.. reveal.Nodes] : null;
 
         // A selected stub: its child, the child's container and its direction.
         var stub = reveal.Stub;
@@ -238,22 +221,11 @@ static class RepLineService
                 }
             }
 
-            // A link of the selection descends to the selected node on its side and, unless the
-            // other end is selected too, as deep as the nodes are open on the other side.
+            // A link of the selection descends on the far side as deep as the nodes are open.
             var isSourceRevealed = false;
             var isTargetRevealed = false;
             var isRevealedLink = false;
-            if (!isFocusLink && selected is not null)
-            {
-                var selectedSource = DeepestSelected(sourcePath, targetPath, selected);
-                var selectedTarget = DeepestSelected(targetPath, sourcePath, selected);
-                sourcePin = selectedSource;
-                targetPin = selectedTarget;
-                isSourceRevealed = selectedSource is null && selectedTarget is not null;
-                isTargetRevealed = selectedTarget is null && selectedSource is not null;
-                isRevealedLink = selectedSource is not null || selectedTarget is not null;
-            }
-            else if (
+            if (
                 !isFocusLink
                 && reveal.KeptLine is { } kept
                 && IndexOf(sourcePath, kept.Source) != int.MaxValue
@@ -272,8 +244,8 @@ static class RepLineService
             {
                 // One of the selected stub's links (a child can have a second stub on the same
                 // side, for inheritance, with links of its own). Those that cross the container's
-                // border are pinned at the child and descend on the far side, like a selected
-                // node's; a link between the child and the container itself stays in the stub.
+                // border are pinned at the child and descend on the far side; a link between
+                // the child and the container itself stays in the stub.
                 if (isStubIncoming && link.Source != stubContainer)
                 {
                     targetPin = stubChild;
@@ -349,18 +321,6 @@ static class RepLineService
         return IndexOf(nearPath, focus.NearNode) != int.MaxValue;
     }
 
-    // The selected node the link's end on path lies at or inside, when the other end lies
-    // outside it: the deepest such node, so a selected node inside a selected container counts.
-    static Node? DeepestSelected(List<Node> path, List<Node> otherPath, HashSet<Node> selected)
-    {
-        for (int i = 0; i < path.Count; i++)
-        {
-            if (selected.Contains(path[i]) && IndexOf(otherPath, path[i]) == int.MaxValue)
-                return path[i];
-        }
-        return null;
-    }
-
     static void FillAncestorsAndSelf(Node node, List<Node> path)
     {
         path.Clear();
@@ -372,7 +332,7 @@ static class RepLineService
     // endpoint (index 0). The walk descends into a node only while it has depth budget left,
     // or while the node lies above the focus pin or is a focus-expanded node, and the node
     // shows its children at this zoom; with no split depth and no focus it stops at once, which
-    // is the aggregated funnel. With a reveal (the far side of a selected node's link) it
+    // is the aggregated funnel. With a reveal (the far side of a selected stub's link) it
     // descends as far as the nodes show their children. Pass-through nodes are transparent:
     // they have no chrome of their own, so they neither stop the walk nor consume a level. The
     // depth and focus are checked before the expansion state so nodes that cannot affect the
