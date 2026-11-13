@@ -15,8 +15,9 @@ record SourcesAnswer(bool IsCancelled, IReadOnlyList<SourceChoice>? Choices = nu
 interface IWorkspaceSourcesService
 {
     // Before a model is loaded: asks for the sources when it is this workspace's model and has
-    // none saved yet.
-    Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath);
+    // none saved yet. A retry of a first parse that failed is of the sources chosen for it,
+    // without asking; opened anew, the dialog starts from that choice.
+    Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath, bool isRetry = false);
 
     // Whether the open model is this workspace's model, so its sources can be chosen.
     bool CanChoose { get; }
@@ -34,54 +35,30 @@ class WorkspaceSourcesService(
     IDialogService dialogService
 ) : IWorkspaceSourcesService
 {
-    // The sources chosen for the workspace model while it is not saved yet. The choice is saved
-    // with the model, which is there only after its first parse: when that fails, the dialog
-    // of the next try (Retry, or opening it again) starts from what the user chose.
-    IReadOnlyList<SourceChoice>? unsavedChoices;
-
-    public async Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath)
+    public async Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath, bool isRetry = false)
     {
-        if (!IsWorkspaceModel(modelPath))
+        if (!IsWorkspaceModel(modelPath) || await modelService.HasSavedModelAsync(modelPath))
             return new SourcesAnswer(IsCancelled: false);
-
-        modelPath = ModelListService.WorkspaceSpelling(modelPath, modelListService.WorkspaceModelPath);
-        if (await modelService.HasSavedModelAsync(modelPath))
-        {
-            unsavedChoices = null;
-            return new SourcesAnswer(IsCancelled: false);
-        }
 
         await RefreshSourcesAsync();
-        var earlier = unsavedChoices;
+
+        // The proposal, or what was chosen for a first parse that failed (those are not new)
         var proposed = modelService.GetSourceChoices(modelPath);
-        if (earlier is not null)
-        {
-            proposed =
-            [
-                .. proposed.Select(choice =>
-                    earlier.FirstOrDefault(e => e.Key == choice.Key) is { } chosenBefore
-                        ? choice with
-                        {
-                            IsIncluded = chosenBefore.IsIncluded,
-                            IsNew = false,
-                        }
-                        : choice
-                ),
-            ];
-        }
+        var isChosenBefore = proposed.Any(choice => !choice.IsNew);
+        if (isRetry && proposed.Any(choice => !choice.IsNew && choice.IsIncluded))
+            return new SourcesAnswer(IsCancelled: false, proposed);
 
         var chosen = await WorkspaceSourcesDialog.ShowAsync(
             dialogService,
             ModelPaths.DisplayName(modelPath),
             proposed,
-            isFirstTime: earlier is null
+            isFirstTime: !isChosenBefore
         );
 
         // With no model open (the app is starting), cancelling would leave an empty window, so
         // the proposal is opened: the sources can be changed any time.
         if (chosen is null && modelMgr.ModelPath == "")
-            chosen = proposed;
-        unsavedChoices = chosen ?? unsavedChoices;
+            return new SourcesAnswer(IsCancelled: false, proposed);
         return new SourcesAnswer(IsCancelled: chosen is null, chosen);
     }
 

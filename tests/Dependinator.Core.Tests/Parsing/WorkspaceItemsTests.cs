@@ -280,6 +280,25 @@ public class WorkspaceItemsTests
         Assert.Equal(["main*bicep (prod)"], NodeNames(items));
     }
 
+    // Two sources can have had one root name, each parsed while the other was not found (on
+    // another branch). The one in the model keeps it, not the one that is left out.
+    [Fact]
+    public void Combine_ShouldLetTheSourceInTheModelKeepARootName_ThatALeftOutSourceHadToo()
+    {
+        const string LeftOut = "/repo/a/package.json";
+        const string Included = "/repo/b/package.json";
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [(Included, Source("app", Node("app.main*js")))],
+                [new(LeftOut, "app"), new(Included, "app")]
+            )
+        );
+
+        Assert.Equal(["app", "app.main*js"], NodeNames(items));
+    }
+
     // Within one source a node can be given more than once (a project built for two frameworks),
     // each item adding to it as in the source's own model.
     [Fact]

@@ -11,8 +11,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - The Models menu and the Models dialog list the workspace model first under "This workspace",
   named after the workspace folder with "whole workspace" beside it. It is there only when the
   workspace has at least two sources; with one it would be that source's own model. A model
-  that is in use (opened in this window, or among the recent models) stays when the workspace
-  is down to one source.
+  that is open when the workspace gets down to one source stays what it is: it still refreshes
+  and its sources can be chosen, it is only no longer offered in the list.
 - The first time it is opened, "What is in this model?" lists the found sources by kind with a
   checkbox each. The proposal ticks everything that is not in a folder named `test`, `tests`,
   `sample`, `samples`, `example` or `examples`. Cancel leaves the open model as it was; with no
@@ -36,19 +36,20 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   `GetWorkspaceFoldersAsync`, `WorkspaceModelPath`) and lists them again before the dialog
   opens. The workspace model is last in `LocalPaths`, so the model a new workspace starts on
   stays a single source. `WorkspaceModelPath` says which path is this workspace's model
-  (whenever there is a workspace folder); whether it is listed and a local path (so that it
-  refreshes) is the two-sources-or-in-use rule above. A path that names it in another spelling
-  (a recent path with another case) is opened under the workspace's spelling
-  (`ModelListService.WorkspaceSpelling`), since saved models go by the exact path.
+  (whenever there is a workspace folder, compared with `ModelListService.IsSamePath`, since a
+  recent or cloud path can spell it another way). It is listed with two or more sources;
+  listed or not it is a workspace path, and a local path (so it refreshes) while there is a
+  source.
 - **The choice** is saved with the model: `Model.WorkspaceSources` (`ModelDto.WorkspaceSources`,
   no format bump), one `WorkspaceSource` per source with its key (the path below the workspace
   folder with "/", so it holds wherever the folder is checked out), whether it is included, and
   the name of its root node from the last parse. `SourceChoices.Of` joins the found sources with
   the saved ones; `WorkspaceSources` (Core) has the key and the proposal rule. The choice is
-  saved only once the model has been parsed: until then `WorkspaceSourcesService` holds it, so
-  after a failed first parse the dialog of the next try (Retry, or opening it again) starts
-  from what the user chose, and it can still be changed. A saved source that is not found now
-  is kept (it can be back with another branch); such entries are never removed, they are small.
+  saved only once the model has been parsed: until then `ModelService` holds it
+  (`unparsedSourceChoices`), so after a failed first parse Retry is of the same sources without
+  asking, and opening the model again shows the dialog with what the user chose. A saved
+  source that is not found now is kept (it can be back with another branch); such entries are
+  never removed, they are small.
 - **The parse.** `ModelService` sends the included sources on `SolutionParseOptions.Sources`
   (the parse runs in the LSP in VS Code). `ParserService.ParseWorkspaceAsync` gives each source
   to its own parser: different parsers run at the same time, the sources of one parser one by
@@ -62,7 +63,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
     order, since the layout, the rules and a failed source's kept nodes all go by name. The
     name is held for its source also while that fails or is left out of the model, so a name
     once given stays, and a source added later is the one that is renamed. Only a source whose
-    root has another name now (a package was renamed) gives the old name up;
+    root has another name now (a package was renamed) gives the old name up. Should two sources
+    have had one name (each parsed while the other was not found), one in this parse owns it;
   - a node an earlier source already has is left to that source (a project shared by two
     solutions is shown once). Within one source every item is kept, as in its own model;
   - two C# projects that only share their name (two different `App.Core` in two solutions) are

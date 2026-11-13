@@ -201,19 +201,26 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(["web", SampleRoot], modelMgr.WithModel(m => m.WorkspaceSources).Skip(1).Select(s => s.RootName));
     }
 
-    // The workspace's model is one model however its path is spelled (a recent path can have
-    // another case): it is opened, saved and refreshed under the workspace's spelling.
+    // The choice is saved with the model, which is there only once it is parsed: after a first
+    // parse that failed, the next try starts from what was chosen.
     [Fact]
-    public async Task LoadAsync_ShouldOpenTheWorkspaceModel_UnderTheWorkspacesSpellingOfItsPath()
+    public async Task GetSourceChoices_ShouldBeWhatWasChosen_AfterAFirstParseThatFailed()
     {
+        sourceItems[Web] = null;
         using var modelService = CreateModelService();
+        Assert.All(modelService.GetSourceChoices(ModelPath), c => Assert.True(c.IsNew));
 
-        var modelInfo = AssertOk(await modelService.LoadAsync("\\REPO\\.workspace"));
+        AssertError(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(false, true, false)));
 
-        Assert.Equal(ModelPath, modelInfo.Path);
-        Assert.Equal(ModelPath, modelMgr.ModelPath);
-        AssertOk(await modelService.RefreshAsync());
-        Assert.Equal(2, parsedOptions.Count);
+        var choices = modelService.GetSourceChoices(ModelPath);
+        Assert.Equal([false, true, false], choices.Select(c => c.IsIncluded));
+        Assert.All(choices, c => Assert.False(c.IsNew));
+
+        // Parsed, the choice is the model's: it is not kept for a later first time
+        sourceItems[Web] = [Root("web")];
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: choices));
+        modelMgr.WithModel(m => m.Clear());
+        Assert.All(modelService.GetSourceChoices(ModelPath), c => Assert.True(c.IsNew));
     }
 
     // A source that is not found for a while (another branch is checked out) keeps what the user

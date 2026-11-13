@@ -30,7 +30,8 @@ interface IModelService
     Task<bool> HasSavedModelAsync(string path);
 
     // The sources found in the workspace, each with whether it is in the workspace model at the
-    // path: its saved choice when that model is the open one, else the choice that is proposed.
+    // path: its saved choice when that model is the open one, else the choice that is proposed,
+    // or what was chosen for a first parse that failed (those are not IsNew).
     IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath);
 
     // Changes which sources the open workspace model is made of, and parses it again.
@@ -163,21 +164,25 @@ class ModelService : IModelService, IDisposable
         return persistenceService.WriteAsync(modelPath, modelDto);
     }
 
+    // The sources chosen for a workspace model whose first parse has not succeeded yet. The
+    // choice is saved with the model, which is there only once it is parsed: until then the
+    // next try starts from this (GetSourceChoices).
+    IReadOnlyList<WorkspaceSource> unparsedSourceChoices = [];
+
     public async Task<Result<ModelInfo>> LoadAsync(
         string path,
         bool? includeTestProjects = null,
         IReadOnlyList<SourceChoice>? sourceChoices = null
     )
     {
-        // The workspace's own spelling of its model's path: the saved model and the refresh go
-        // by the exact path.
-        path = ModelListService.WorkspaceSpelling(path, modelListService.WorkspaceModelPath);
-
         Clear();
         if (includeTestProjects is { } include)
             modelMgr.WithModel(m => m.IncludeTestProjects = include);
         if (sourceChoices is not null)
-            modelMgr.WithModel(m => m.WorkspaceSources = SourceChoices.ToSaved(sourceChoices, []));
+        {
+            unparsedSourceChoices = SourceChoices.ToSaved(sourceChoices, []);
+            modelMgr.WithModel(m => m.WorkspaceSources = unparsedSourceChoices);
+        }
 
         Log.Info("Loading ...", path);
         using var _ = Timing.Start($"Load model {path}");
@@ -201,6 +206,8 @@ class ModelService : IModelService, IDisposable
             }
 
             var parsedModelInfo = await ParseNewModelAsync(path);
+            if (parsedModelInfo is ModelInfo)
+                unparsedSourceChoices = [];
             TriggerSave();
             applicationEvents.TriggerModelChanged();
             applicationEvents.TriggerUIStateChanged();
@@ -353,7 +360,7 @@ class ModelService : IModelService, IDisposable
     public IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath)
     {
         IReadOnlyList<WorkspaceSource> saved = modelMgr.WithModel(m =>
-            ModelListService.IsSamePath(m.Path, workspaceModelPath) ? m.WorkspaceSources : []
+            ModelListService.IsSamePath(m.Path, workspaceModelPath) ? m.WorkspaceSources : unparsedSourceChoices
         );
         return SourceChoices.Of(modelListService.WorkspaceFolder, modelListService.WorkspaceSourcePaths, saved);
     }

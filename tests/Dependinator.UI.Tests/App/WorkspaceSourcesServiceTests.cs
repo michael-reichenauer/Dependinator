@@ -127,23 +127,37 @@ public class WorkspaceSourcesServiceTests
         VerifyAsked(Times.Once());
     }
 
-    // The choice is saved with the model, which is only there after its first parse: when that
-    // failed, the next try starts from what the user chose, and can still change it.
+    // The model service holds what was chosen for a first parse that failed (those choices are
+    // not new): a retry is of that choice, without asking again.
     [Fact]
-    public async Task AskBeforeFirstOpenAsync_ShouldStartFromTheEarlierChoice_WhenAskedAgain()
+    public async Task AskBeforeFirstOpenAsync_ShouldAnswerTheEarlierChoice_ForARetry()
     {
-        IReadOnlyList<SourceChoice> chosen = [.. Proposed.Select(c => c with { IsIncluded = !c.IsIncluded })];
-        SetupAnswer(chosen);
-        await service.AskBeforeFirstOpenAsync(ModelPath);
+        IReadOnlyList<SourceChoice> chosenBefore = [.. Proposed.Select(c => c with { IsNew = false })];
+        modelService.Setup(m => m.GetSourceChoices(It.IsAny<string>())).Returns(chosenBefore);
 
-        // The retry, with no model open: cancelling opens what is ticked
-        modelMgr.Setup(m => m.ModelPath).Returns("");
-        SetupAnswer(null);
-        var answer = await service.AskBeforeFirstOpenAsync(ModelPath);
+        var answer = await service.AskBeforeFirstOpenAsync(ModelPath, isRetry: true);
 
         Assert.False(answer.IsCancelled);
-        Assert.Equal([false, true], answer.Choices!.Select(c => c.IsIncluded));
-        Assert.All(answer.Choices!, c => Assert.False(c.IsNew));
+        Assert.Equal(chosenBefore, answer.Choices);
+        VerifyAsked(Times.Never());
+
+        // Opened anew, the user is asked, starting from that choice
+        SetupAnswer(null);
+        Assert.True((await service.AskBeforeFirstOpenAsync(ModelPath)).IsCancelled);
+        VerifyAsked(Times.Once());
+    }
+
+    // A retry of a choice of nothing, or with nothing chosen yet, could only fail the same way.
+    [Fact]
+    public async Task AskBeforeFirstOpenAsync_ShouldAsk_ForARetryWithNothingChosen()
+    {
+        SetupAnswer(Proposed);
+        await service.AskBeforeFirstOpenAsync(ModelPath, isRetry: true);
+        VerifyAsked(Times.Once());
+
+        IReadOnlyList<SourceChoice> nothing = [.. Proposed.Select(c => c with { IsIncluded = false, IsNew = false })];
+        modelService.Setup(m => m.GetSourceChoices(It.IsAny<string>())).Returns(nothing);
+        await service.AskBeforeFirstOpenAsync(ModelPath, isRetry: true);
         VerifyAsked(Times.Exactly(2));
     }
 

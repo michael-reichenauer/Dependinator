@@ -128,7 +128,9 @@ public class ModelListServiceTests
         Assert.Equal(workspaceModelPath, service.HomePath);
     }
 
-    // With one source the model of the workspace would be the same as that source's own model.
+    // With one source the model of the workspace would be the same as that source's own model,
+    // so it is not offered. It is still this workspace's model: one that is open (a source was
+    // removed, or it was opened from the recent models) refreshes and is no visit.
     [Fact]
     public async Task GetWorkspaceModels_ShouldLeaveOutTheModelOfTheWholeWorkspace_WithFewerThanTwoSources()
     {
@@ -139,64 +141,23 @@ public class ModelListServiceTests
 
         Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
         Assert.Equal([DemoModel.WorkingSolutionPath, ToolsPath], service.GetWorkspaceModels().Select(m => m.Item.Path));
+        Assert.DoesNotContain(workspaceModelPath, service.LocalPaths);
+        Assert.True(service.IsLocalPath(workspaceModelPath));
+        Assert.True(service.IsLocalPath("/Workspaces/Dependinator/.workspace"));
+        Assert.True(service.IsWorkspacePath(workspaceModelPath));
+        Assert.Null(service.GetVisitedModel(workspaceModelPath));
+
+        // Without a source there is nothing to parse it from
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([]);
+        await service.RefreshWorkspaceSourcesAsync();
         Assert.False(service.IsLocalPath(workspaceModelPath));
-        Assert.False(service.IsWorkspacePath(workspaceModelPath));
 
         // A project added later is found when the sources are listed again
         workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath, BicepPath]);
         await service.RefreshWorkspaceSourcesAsync();
 
-        Assert.Equal("/workspaces/Dependinator/.workspace", service.WorkspaceModelPath);
         Assert.Equal(4, service.GetWorkspaceModels().Count);
-    }
-
-    // A workspace model that is in use stays when the workspace is down to one source: it must
-    // still refresh, and its sources must still be there to choose.
-    [Fact]
-    public async Task GetWorkspaceModels_ShouldKeepAWorkspaceModelInUse_WhenASourceIsRemoved()
-    {
-        const string workspaceModelPath = "/workspaces/Dependinator/.workspace";
-        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
-        var service = await CreateAsync();
-        await service.AddModelAsync(workspaceModelPath);
-
-        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath]);
-        await service.RefreshWorkspaceSourcesAsync();
-
-        Assert.True(service.IsLocalPath(workspaceModelPath));
-        Assert.True(service.IsWorkspacePath(workspaceModelPath));
-        Assert.Equal(workspaceModelPath, service.GetWorkspaceModels()[0].Item.Path);
-
-        // Also after a restart, while it is among the models used recently
-        var restarted = await CreateAsync();
-        Assert.True(restarted.IsLocalPath(workspaceModelPath));
-        Assert.Equal(workspaceModelPath, restarted.GetWorkspaceModels()[0].Item.Path);
-
-        // Not once it is deleted, or when no source is left
-        await service.RemoveModelAsync(workspaceModelPath);
-        Assert.False(service.IsLocalPath(workspaceModelPath));
-
-        await restarted.AddModelAsync(workspaceModelPath);
-        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([]);
-        await restarted.RefreshWorkspaceSourcesAsync();
-        Assert.False(restarted.IsLocalPath(workspaceModelPath));
-    }
-
-    // Opened in a workspace with one source (from the recent models of an earlier time), the
-    // workspace model is one of the workspace's models from then on.
-    [Fact]
-    public async Task AddModelAsync_ShouldListTheWorkspaceModel_OnceItIsOpened_WithOneSource()
-    {
-        const string workspaceModelPath = "/workspaces/Dependinator/.workspace";
-        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
-        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath]);
-        var service = await CreateAsync();
-
-        await service.AddModelAsync(workspaceModelPath);
-
-        Assert.True(service.IsLocalPath(workspaceModelPath));
-        Assert.True(service.IsWorkspacePath(workspaceModelPath));
-        Assert.Equal(workspaceModelPath, service.HomePath);
+        Assert.Contains(workspaceModelPath, service.LocalPaths);
     }
 
     [Theory]

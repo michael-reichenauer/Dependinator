@@ -34,20 +34,28 @@ static class WorkspaceItems
         HashSet<(string Message, string? NodeName)> problems = [];
         List<Error> errors = [];
 
+        // The root name each parsed source gives itself, before any renaming.
+        Dictionary<string, string?> ownRoots = [];
+        foreach (var (path, result) in sources)
+        {
+            if (result is IReadOnlyList<Item> items)
+                ownRoots.TryAdd(path, RootName(items));
+        }
+
         // The root names the sources had before, each held for its source: also for one that
         // fails this time (the model keeps its nodes) or is not in this parse. A source whose
-        // root has another name now gives its old name up.
+        // root has another name now gives its old name up. Should two sources have had one
+        // name (each was parsed while the other was not found), a source in this parse owns it.
         Dictionary<string, string> knownRoots = [];
         Dictionary<string, string> rootOwners = new(StringComparer.Ordinal);
-        foreach (var known in knownSources ?? [])
+        var sourcePaths = sources.Select(source => source.Path).ToHashSet();
+        foreach (var known in (knownSources ?? []).OrderByDescending(k => sourcePaths.Contains(k.Path)))
         {
-            var isNamedAnew = sources.Any(source =>
-                source.Path == known.Path
-                && source.Result is IReadOnlyList<Item> items
-                && !IsNameOf(known.RootName, RootName(items), WorkspaceSources.Key(folder, known.Path))
-            );
-            if (!isNamedAnew && knownRoots.TryAdd(known.Path, known.RootName))
-                rootOwners.TryAdd(known.RootName, known.Path);
+            var isNamedAnew =
+                ownRoots.TryGetValue(known.Path, out var ownRoot)
+                && !IsNameOf(known.RootName, ownRoot, WorkspaceSources.Key(folder, known.Path));
+            if (!isNamedAnew && rootOwners.TryAdd(known.RootName, known.Path))
+                knownRoots.TryAdd(known.Path, known.RootName);
         }
 
         foreach (var (path, result) in sources)
@@ -64,7 +72,7 @@ static class WorkspaceItems
                 nodeNames.Contains(name) || (rootOwners.TryGetValue(name, out var owner) && owner != path);
 
             var items = parsed;
-            var rootName = RootName(items);
+            var rootName = ownRoots.GetValueOrDefault(path);
             if (rootName is not null)
             {
                 var newRootName =
