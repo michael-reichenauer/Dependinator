@@ -47,6 +47,16 @@ paths:
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.
+- **Workspace models** (`docs/notes/WORKSPACE-MODEL.md`): `ParserService` parses each source in
+  `SolutionParseOptions.Sources` with its own parser and `WorkspaceItems.Combine` makes one list.
+  - Every parser's items must stay self-contained under one root node of type `Solution`: that
+    root is how a source is renamed on a name clash, and how a failed source's nodes are kept
+    (`StructureService.KeepNodeTree`; `ClearNotUpdated` would remove them). A new parser that
+    makes top-level nodes beside its root breaks both.
+  - The sources of one parser are parsed one by one (MSBuild allows one build in a process);
+    only different parsers run at the same time.
+  - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
+    with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):
   - Never import `Bicep.Core.Parsing` or `Bicep.Core.Utils`: they are twins of Dependinator names.
   - JsonPath.Net's root namespace `Json` shadows Core's `Json` helper in every project that

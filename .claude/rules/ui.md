@@ -173,6 +173,16 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   re-parses a local path, and the demo must stay out of that.
 - A component with no parameters inside the app bar's menu (`ModelMenuItems`) is not re-rendered
   with its parent: it subscribes to `UIStateChanged` and the cloud sync's `Changed` itself.
+- The model of the whole workspace (`WorkspaceModelPath`, `docs/notes/WORKSPACE-MODEL.md`) is
+  first in `GetWorkspaceModels()` but last in `LocalPaths`: the first local path is the model a
+  new workspace starts on, and that stays a single source (decided with Michael, Nov 13: no
+  host starts on the workspace model by itself). It exists only with two or more sources.
+- A menu item that opens a model must not await the load (`ModelMenuItems.OpenAsync` runs it
+  in the background): MudBlazor keeps the menu open until the click handler returns, so the
+  menu stayed up behind the sources dialog and through the whole parse.
+- In a cloud session the dev host lists `Dependinator.sln` twice among the workspace's sources
+  (the `/workspaces/Dependinator` symlink and the real path): an artifact of the session, not
+  a bug in the list.
 
 ## iPad home-screen web app (Nov 2026)
 

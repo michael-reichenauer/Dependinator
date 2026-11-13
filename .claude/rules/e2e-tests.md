@@ -110,6 +110,10 @@ page objects). Each rule below comes from a real CI or local failure.
   (the Models dialog), and while it is open the breadcrumb bar is up without a selection (the
   back button and the model with its kind), so `Expect(breadcrumb).ToBeHiddenAsync()` only
   holds on a workspace model.
+- The Models menu's first item is the model of the whole workspace ("whole workspace" beside
+  its name, `WholeWorkspaceModelTests`). Opening it for the first time shows the sources dialog
+  and then parses for real: a test ticks only the small sources (`main.bicep`, the `shop`
+  sample), never the solution, which takes most of a minute.
 
 ## Browsers
 

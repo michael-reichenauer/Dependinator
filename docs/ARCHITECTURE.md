@@ -127,7 +127,11 @@ libraries if it keeps growing.
 Roslyn opens the solution with `MSBuildWorkspace` and walks each project's compilation; the Bicep
 parser compiles the entry file with its local modules and walks the semantic model; the TypeScript
 parser starts its Node.js helper, which builds the compiler's program for the project and resolves
-every reference to its declaration; the demo paths load a pre-parsed file. Every parser returns the same thing, a flat list of **items**: nodes named
+every reference to its declaration; the demo paths load a pre-parsed file. A workspace model
+(several of the workspace's sources in one diagram, `docs/notes/WORKSPACE-MODEL.md`) names its
+sources in the parse options: each goes to its own parser, different parsers at the same time, and
+`WorkspaceItems` puts the results side by side as one list, a source that failed as a parse
+problem. Every parser returns the same thing, a flat list of **items**: nodes named
 by dotted paths (`Dependinator.Core.Parsing.ParserService`), links between names, optional line
 descriptions, and parse problems such as compile errors. This list is the only contract between
 parsing and the rest, and the call is an `[Rpc]` interface, so it crosses a process boundary in VS

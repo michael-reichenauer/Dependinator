@@ -38,7 +38,8 @@ project works.
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
   VS Code a Models menu of only the workspace's models, with cloud and demo models as visits.
-  A third language: TypeScript and JavaScript projects, parsed by a Node.js helper.
+  A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
+  for the whole workspace: the sources the user ticks, each with its own parser, in one diagram.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -136,8 +137,19 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   the member that is called, and out to the packages under Externals. Test files are left out
   unless Settings › Include test files is on. Go to code, hover cards (declarations read like
   TypeScript), the AI prompts and Improve Comments know files and functions. The helper approach
-  is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`. Next:
-  one model for the whole workspace, so the extension shows in this repository's own diagram.
+  is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`.
+- **One model for the whole workspace (Nov 13).** With two or more sources in the workspace
+  (solutions, Bicep deployments, TypeScript and JavaScript projects), the Models menu lists a
+  model of the whole workspace first, beside the model of each source. The first time it is
+  opened, "What is in this model?" lists the sources with a checkbox each, ticked for all that
+  are not in a test, sample or example folder; "Choose Sources …" (Models menu, Settings)
+  changes the choice later. Each source is parsed by its own parser, the parsers at the same
+  time, and the diagram shows the sources side by side with one Externals, their nodes named as
+  in their own models. A source that cannot be parsed is a problem in the problem indicator and
+  keeps its part of the diagram; a source named like another gets its folder in its name. The
+  choice is saved with the model. In this repository the solution, the VS Code extension and
+  the TypeScript helper make one diagram. Design and what is left (refreshing only what
+  changed, starting on it in VS Code) in `WORKSPACE-MODEL.md`.
 
 ## Viewing, navigation and analysis
 
