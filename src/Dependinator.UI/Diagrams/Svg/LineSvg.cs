@@ -99,7 +99,7 @@ static class LineSvg
 
         var polylinePoints = LinePathGeometry.GetRenderedPolylinePoints(line, nodeCanvasPos, childrenZoom);
         var text = LabelSvg(line, polylinePoints, childrenZoom);
-        var labelClass = "line-vis" + (isDimmed ? " line-dim" : "") + (isLit ? " line-lit" : "");
+        var labelClass = "line-vis line-text" + (isDimmed ? " line-dim" : "") + (isLit ? " line-lit" : "");
         return $"""<g class="{labelClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">{text}</g>""";
     }
 
@@ -289,39 +289,68 @@ static class LineSvg
     internal static bool IsInnerMemberLine(Line line) =>
         line.Source.Type.IsMember && line.Target.Type.IsMember && line.Source.Parent == line.Target.Parent;
 
-    // The user's label at the line's middle, with its description under it in the smaller italic
-    // used for node descriptions. The lineLabel/lineDescription classes draw a background-colored
-    // halo (paint-order) so the text stays legible over the line and whatever it crosses; the
-    // font follows the node names.
+    // The user's label at the line's middle, with its description under it in a smaller italic.
+    // The texts are quieter than node names (a label annotates a line, it is not a node): smaller,
+    // and they stop growing with the zoom earlier. What is drawn is limited, one clipped row for
+    // the label and a few wrapped rows for the description (the user's own line breaks kept); the
+    // line's hover card shows both in full. The lineLabel/lineDescription classes draw a
+    // background-colored halo (paint-order) so the text stays legible over the line and whatever
+    // it crosses.
+    internal const double LabelFontSize = 6.5;
+    internal const double LabelDescriptionFontSize = 5.5;
+    internal const double LabelMaxTextZoom = 2.2;
+    internal const int LabelMaxChars = 32;
+    internal const int LabelDescriptionMaxChars = 38;
+    internal const int LabelDescriptionMaxLines = 3;
+
+    // Offset (in em) from a row's middle down to its alphabetic baseline: the description's rows
+    // are <tspan>s, which WebKit and Firefox do not center with dominant-baseline.
+    const double MiddleToBaselineFactor = 0.35;
+
     static string LabelSvg(Line line, IReadOnlyList<Pos> polylinePoints, double childrenZoom)
     {
         if (!line.HasLabel)
             return "";
 
         var middle = LinePathGeometry.MidPoint(polylinePoints);
-        var textZoom = SvgText.TextZoom(childrenZoom);
-        var fontSize = SvgText.FontSize * textZoom;
-        var descriptionFontSize = SvgText.DescriptionFontSize * textZoom;
+        var textZoom = Math.Min(childrenZoom, LabelMaxTextZoom);
+        var fontSize = LabelFontSize * textZoom;
+        var descriptionFontSize = LabelDescriptionFontSize * textZoom;
+        var rowHeight = descriptionFontSize * SvgText.DescriptionLineHeightFactor;
         var opacity = !line.IsVisible ? " opacity=\"0.3\"" : "";
 
-        // With both texts the pair is centered on the line: the label just above, the
-        // description just below; a single text sits on the line itself.
-        var hasBoth = line.HtmlLabel is not null && line.HtmlLabelDescription is not null;
-        var labelY = hasBoth ? middle.Y - fontSize * 0.55 : middle.Y;
-        var descriptionY = hasBoth ? middle.Y + descriptionFontSize * 0.75 : middle.Y;
+        var label = line.Label is null ? null : SvgText.Encode(SvgText.Clip(line.Label, LabelMaxChars));
+        var rows = SvgText.GetUserTextLines(line.LabelDescription, LabelDescriptionMaxChars, LabelDescriptionMaxLines);
 
-        var labelSvg = line.HtmlLabel is null
+        // With both texts the line runs between them: the label just above, the description's
+        // rows below. A single text is centered on the line itself.
+        var hasBoth = label is not null && rows.Count > 0;
+        var labelY = hasBoth ? middle.Y - fontSize * 0.6 : middle.Y;
+        var firstRowY = hasBoth ? middle.Y + descriptionFontSize * 0.75 : middle.Y - (rows.Count - 1) * rowHeight / 2;
+        var firstBaselineY = firstRowY + descriptionFontSize * MiddleToBaselineFactor;
+
+        var labelSvg = label is null
             ? ""
             : string.Create(
                 CultureInfo.InvariantCulture,
-                $"""<text class="lineLabel" x="{middle.X:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabel}</text>"""
+                $"""<text class="lineLabel" x="{middle.X:0.##}" y="{labelY:0.##}" font-size="{fontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{label}</text>"""
             );
-        var descriptionSvg = line.HtmlLabelDescription is null
-            ? ""
-            : string.Create(
-                CultureInfo.InvariantCulture,
-                $"""<text class="lineDescription" x="{middle.X:0.##}" y="{descriptionY:0.##}" font-size="{descriptionFontSize:0.##}px" text-anchor="middle" dominant-baseline="central"{opacity}>{line.HtmlLabelDescription}</text>"""
-            );
+        if (rows.Count == 0)
+            return labelSvg;
+
+        var tspans = string.Concat(
+            rows.Select(
+                (row, i) =>
+                    string.Create(
+                        CultureInfo.InvariantCulture,
+                        $"""<tspan x="{middle.X:0.##}" dy="{(i == 0 ? 0 : rowHeight):0.##}">{SvgText.Encode(row)}</tspan>"""
+                    )
+            )
+        );
+        var descriptionSvg = string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<text class="lineDescription" x="{middle.X:0.##}" y="{firstBaselineY:0.##}" font-size="{descriptionFontSize:0.##}px" text-anchor="middle"{opacity}>{tspans}</text>"""
+        );
         return labelSvg + descriptionSvg;
     }
 

@@ -122,7 +122,7 @@ public class LineSvgLabelTests
 
         Assert.Contains(">orders</text>", svg);
         Assert.Contains("class=\"lineDescription\"", svg);
-        Assert.Contains(">to the API</text>", svg);
+        Assert.Contains(">to the API</tspan></text>", svg);
         var labelY = double.Parse(
             System
                 .Text.RegularExpressions.Regex.Match(svg, "class=\"lineLabel\" x=\"[^\"]*\" y=\"([^\"]*)\"")
@@ -143,6 +143,92 @@ public class LineSvgLabelTests
         line.SetLabel(null, "to the API");
         var only = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
         Assert.DoesNotContain("lineLabel", only);
-        Assert.Contains(">to the API</text>", only);
+        Assert.Contains(">to the API</tspan></text>", only);
     }
+
+    [Fact]
+    public void GetLineSvg_ShouldWrapTheDescription_KeepingTheUsersLineBreaks()
+    {
+        var line = CreateLine();
+        line.SetLabel("orders", "Sent as JSON.\nRetried three times before the order is parked for a later run.");
+
+        var rows = DescriptionRows(LineSvg.GetLineSvg(line, new Pos(0, 0), 1));
+
+        // The user's break ends the first row; the long second row wraps at the width limit.
+        Assert.Equal(["Sent as JSON.", "Retried three times before the order", "is parked for a later run."], rows);
+        Assert.All(rows, row => Assert.True(row.Length <= LineSvg.LabelDescriptionMaxChars));
+    }
+
+    [Fact]
+    public void GetLineSvg_ShouldLimitTheDescriptionRows_AndEndWithAnEllipsis()
+    {
+        var line = CreateLine();
+        line.SetLabel("orders", "One.\nTwo.\nThree.\nFour.\nFive.");
+
+        var rows = DescriptionRows(LineSvg.GetLineSvg(line, new Pos(0, 0), 1));
+
+        Assert.Equal(["One.", "Two.", "Three…"], rows);
+    }
+
+    [Fact]
+    public void GetLineSvg_ShouldClipALongLabel_ToOneRow()
+    {
+        var line = CreateLine();
+        line.SetLabel("a label that is much too long to be drawn on a line in full");
+
+        var svg = LineSvg.GetLineSvg(line, new Pos(0, 0), 1);
+
+        var text = System.Text.RegularExpressions.Regex.Match(svg, "class=\"lineLabel\"[^>]*>([^<]*)<").Groups[1].Value;
+        Assert.Equal(LineSvg.LabelMaxChars, text.Length);
+        Assert.StartsWith("a label that is much too long", text);
+        Assert.EndsWith("…", text);
+    }
+
+    [Fact]
+    public void GetLineSvg_ShouldDrawLabelsSmallerThanNodeNames_AndStopGrowingEarlier()
+    {
+        var line = CreateLine();
+        line.SetLabel("orders", "to the API");
+
+        Assert.True(FontSize(LineSvg.GetLineSvg(line, new Pos(0, 0), 1), "lineLabel") < SvgText.FontSize);
+        // Zoomed far in, the label keeps the size it had at LabelMaxTextZoom.
+        Assert.Equal(
+            LineSvg.LabelFontSize * LineSvg.LabelMaxTextZoom,
+            FontSize(LineSvg.GetLineSvg(line, new Pos(0, 0), 10), "lineLabel"),
+            2
+        );
+        Assert.Equal(
+            LineSvg.LabelDescriptionFontSize * LineSvg.LabelMaxTextZoom,
+            FontSize(LineSvg.GetLineSvg(line, new Pos(0, 0), 10), "lineDescription"),
+            2
+        );
+    }
+
+    static Line CreateLine()
+    {
+        var root = CreateRoot();
+        var source = new Node("a", root) { Boundary = new Rect(0, 0, 100, 100), Type = NodeType.ClassType };
+        var target = new Node("b", root) { Boundary = new Rect(300, 0, 100, 100), Type = NodeType.ClassType };
+        root.AddChild(source);
+        root.AddChild(target);
+        return new Line(source, target);
+    }
+
+    static List<string> DescriptionRows(string svg)
+    {
+        var text = System.Text.RegularExpressions.Regex.Match(svg, "<text class=\"lineDescription\".*?</text>").Value;
+        return System
+            .Text.RegularExpressions.Regex.Matches(text, "<tspan[^>]*>([^<]*)</tspan>")
+            .Select(m => System.Web.HttpUtility.HtmlDecode(m.Groups[1].Value))
+            .ToList();
+    }
+
+    static double FontSize(string svg, string cssClass) =>
+        double.Parse(
+            System
+                .Text.RegularExpressions.Regex.Match(svg, $"class=\"{cssClass}\"[^>]*font-size=\"([0-9.]+)px\"")
+                .Groups[1]
+                .Value,
+            System.Globalization.CultureInfo.InvariantCulture
+        );
 }
