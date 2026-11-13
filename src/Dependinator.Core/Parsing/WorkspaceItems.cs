@@ -5,7 +5,9 @@ namespace Dependinator.Core.Parsing;
 // Makes one model of the items of a workspace model's sources, each parsed by its own parser.
 // The root node of every source ends up side by side under the model's root, with the names its
 // own model has, so what is true of a node there (its source file, a rule, a search) is true here.
-//   - A source that failed is a problem item, and the others still make the model.
+//   - A source that failed is a problem item, and the others still make the model: only when
+//     there are no others, in this parse or in the model, is the parse a failure. Every
+//     problem item names the source it is of.
 //   - A source whose root is named like a node before it (two "main.bicep", two project folders
 //     named "app") gets its folder in the name of its root, and so in the names of all its nodes.
 //     A root keeps the name it had in its last parse (knownSources), whichever of the other
@@ -21,7 +23,8 @@ static class WorkspaceItems
     public static Result<IReadOnlyList<Item>> Combine(
         string workspacePath,
         IReadOnlyList<(string Path, Result<IReadOnlyList<Item>> Result)> sources,
-        IReadOnlyList<ParsedSource>? knownSources = null
+        IReadOnlyList<ParsedSource>? knownSources = null,
+        bool hasOtherSources = false
     )
     {
         if (sources.Count == 0)
@@ -64,7 +67,13 @@ static class WorkspaceItems
             {
                 errors.Add(result.Error);
                 var message = $"{ModelPaths.DisplayName(path)} could not be parsed. {result.Error.Message}";
-                combined.Add(new Item(null, null, Problem: new ParseProblem(message, 1)));
+                combined.Add(
+                    new Item(
+                        null,
+                        null,
+                        Problem: new ParseProblem(message, 1, Source: WorkspaceSources.Key(folder, path))
+                    )
+                );
                 continue;
             }
 
@@ -89,9 +98,11 @@ static class WorkspaceItems
             // Only the nodes of the sources before this one are left out: a parser can give a
             // node more than once (a project built for two frameworks), each adding to it.
             HashSet<string> sourceNodeNames = new(StringComparer.Ordinal);
+            var sourceKey = WorkspaceSources.Key(folder, path);
             foreach (var item in items)
             {
                 var problem = item.Problem;
+                var isItemKept = true;
                 if (item.Node is { } node)
                 {
                     // A node the model already has stays as the earlier source made it; a link
@@ -101,6 +112,7 @@ static class WorkspaceItems
                         if (!IsAnotherProject(node, projectFiles))
                             continue;
                         problem = SameNamedProjectProblem(path, node.Name);
+                        isItemKept = false;
                     }
                     else
                     {
@@ -110,9 +122,18 @@ static class WorkspaceItems
                     }
                 }
 
-                if (problem is not null && !problems.Add((problem.Message, problem.NodeName)))
+                if (problem is null)
+                {
+                    combined.Add(item);
                     continue;
-                combined.Add(problem == item.Problem ? item : new Item(null, null, Problem: problem));
+                }
+
+                // A problem is of the first source that reports it, which the model keeps it
+                // for while that source is not parsed anew.
+                if (!problems.Add((problem.Message, problem.NodeName)))
+                    continue;
+                problem = problem with { Source = sourceKey };
+                combined.Add(isItemKept ? item with { Problem = problem } : new Item(null, null, Problem: problem));
             }
             nodeNames.UnionWith(sourceNodeNames);
 
@@ -120,7 +141,8 @@ static class WorkspaceItems
                 combined.Add(new Item(null, null, Source: new ParsedSource(path, rootName)));
         }
 
-        if (errors.Count == sources.Count)
+        // (hasOtherSources: the model is made of more sources than these, which it keeps.)
+        if (errors.Count == sources.Count && !hasOtherSources)
         {
             return sources.Count == 1
                 ? errors[0]

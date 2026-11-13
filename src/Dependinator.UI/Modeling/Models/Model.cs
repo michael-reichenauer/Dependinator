@@ -247,6 +247,7 @@ class Model : IModel
                     Path = s.Path,
                     IsIncluded = s.IsIncluded,
                     RootName = s.RootName,
+                    IsInModel = s.IsInModel,
                 }),
             ],
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
@@ -283,6 +284,7 @@ class Model : IModel
                     Message = p.Message,
                     ErrorCount = p.ErrorCount,
                     NodeName = p.NodeName,
+                    Source = p.Source,
                 }),
             ],
             Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
@@ -336,7 +338,12 @@ class Model : IModel
         IncludeTestProjects = modelDto.IncludeTestProjects;
         WorkspaceSources =
         [
-            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(s.Path, s.IsIncluded, s.RootName)),
+            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(
+                s.Path,
+                s.IsIncluded,
+                s.RootName,
+                s.IsInModel
+            )),
         ];
         rules.Clear();
         rules.AddRange(
@@ -381,7 +388,7 @@ class Model : IModel
         );
         AcceptedCyclesVersion++;
         SetParseProblems([
-            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
+            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName, p.Source)),
         ]);
         // Nodes and links will be set by model service in separate worker thread
     }

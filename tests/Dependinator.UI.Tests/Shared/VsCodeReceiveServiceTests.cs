@@ -19,7 +19,8 @@ public class VsCodeReceiveServiceTests
             navigation.Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            Mock.Of<IModelService>()
+            Mock.Of<IModelService>(),
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/refresh", "");
@@ -38,7 +39,8 @@ public class VsCodeReceiveServiceTests
             navigation.Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            Mock.Of<IModelService>()
+            Mock.Of<IModelService>(),
+            Mock.Of<IModelListService>()
         );
 
         Task firstCall = sut.ReceivedMessageAsync("ui/refresh", "");
@@ -61,7 +63,8 @@ public class VsCodeReceiveServiceTests
             navigation.Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            Mock.Of<IModelService>()
+            Mock.Of<IModelService>(),
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/ShowNode", "some/file.cs@42");
@@ -79,7 +82,8 @@ public class VsCodeReceiveServiceTests
             navigation.Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            Mock.Of<IModelService>()
+            Mock.Of<IModelService>(),
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/unknown", "message");
@@ -96,7 +100,8 @@ public class VsCodeReceiveServiceTests
             new Mock<INavigationService>().Object,
             new Mock<ICanvasService>().Object,
             events.Object,
-            Mock.Of<IModelService>()
+            Mock.Of<IModelService>(),
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/search", "");
@@ -113,7 +118,8 @@ public class VsCodeReceiveServiceTests
             new Mock<INavigationService>().Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            model.Object
+            model.Object,
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/sourceChanged", "");
@@ -136,7 +142,8 @@ public class VsCodeReceiveServiceTests
             new Mock<INavigationService>().Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            model.Object
+            model.Object,
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync(type, "script");
@@ -145,22 +152,97 @@ public class VsCodeReceiveServiceTests
         model.Verify(m => m.MarkSourceChanged(), Times.Never);
     }
 
+    // The kinds of the changed files go along: a workspace model parses only its sources of them.
     [Fact]
     public async Task ReceivedMessageAsync_ShouldRefresh_ForAChangeOfFilesTheModelIsParsedFrom()
     {
         Mock<ICanvasService> canvas = new();
-        canvas.Setup(c => c.RefreshAsync()).Returns(Task.CompletedTask);
         Mock<IModelService> model = new();
         model.Setup(m => m.IsParsedFrom("code,script")).Returns(true);
         VsCodeReceiveService sut = new(
             new Mock<INavigationService>().Object,
             canvas.Object,
             new Mock<IApplicationEvents>().Object,
-            model.Object
+            model.Object,
+            Mock.Of<IModelListService>()
         );
 
         await sut.ReceivedMessageAsync("ui/refresh", "code,script");
 
+        canvas.Verify(c => c.RefreshChangedAsync(new[] { "code", "script" }), Times.Once);
+        canvas.Verify(c => c.RefreshAsync(), Times.Never);
+    }
+
+    // Changes that arrive while a refresh runs are one refresh after it, of all their kinds;
+    // one that names no kinds (the Refresh command) makes that a refresh of everything.
+    [Fact]
+    public async Task ReceivedMessageAsync_ShouldRefreshAllPendingKindsAfterARunningRefresh()
+    {
+        Mock<ICanvasService> canvas = new();
+        TaskCompletionSource firstRefresh = new();
+        TaskCompletionSource secondRefresh = new();
+        canvas.Setup(c => c.RefreshChangedAsync(new[] { "code" })).Returns(firstRefresh.Task);
+        canvas.Setup(c => c.RefreshChangedAsync(new[] { "script", "bicep" })).Returns(secondRefresh.Task);
+        Mock<IModelService> model = new();
+        model.Setup(m => m.IsParsedFrom(It.IsAny<string>())).Returns(true);
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            new Mock<IApplicationEvents>().Object,
+            model.Object,
+            Mock.Of<IModelListService>()
+        );
+
+        Task firstCall = sut.ReceivedMessageAsync("ui/refresh", "code");
+        await sut.ReceivedMessageAsync("ui/refresh", "script");
+        await sut.ReceivedMessageAsync("ui/refresh", "script,bicep");
+        firstRefresh.SetResult();
+        canvas.Verify(c => c.RefreshChangedAsync(new[] { "script", "bicep" }), Times.Once);
+
+        await sut.ReceivedMessageAsync("ui/refresh", "code");
+        await sut.ReceivedMessageAsync("ui/refresh", "");
+        secondRefresh.SetResult();
+        await firstCall;
+
         canvas.Verify(c => c.RefreshAsync(), Times.Once);
+        canvas.Verify(c => c.RefreshChangedAsync(It.IsAny<IReadOnlyCollection<string>>()), Times.Exactly(2));
+    }
+
+    // A source file was added or removed: the workspace's sources are listed again, for the
+    // Models menu and for a workspace model, before the open model is asked whether it changed.
+    [Theory]
+    [InlineData("ui/refresh")]
+    [InlineData("ui/sourceChanged")]
+    public async Task ReceivedMessageAsync_ShouldListTheSourcesAgain_WhenTheyChanged(string type)
+    {
+        Mock<IModelListService> modelList = new();
+        Mock<IApplicationEvents> events = new();
+        Mock<IModelService> model = new();
+        bool isListed = false;
+        modelList
+            .Setup(m => m.RefreshWorkspaceSourcesAsync())
+            .Callback(() => isListed = true)
+            .Returns(Task.CompletedTask);
+        model.Setup(m => m.IsParsedFrom("code,sources")).Returns(() => isListed);
+        Mock<ICanvasService> canvas = new();
+        VsCodeReceiveService sut = new(
+            new Mock<INavigationService>().Object,
+            canvas.Object,
+            events.Object,
+            model.Object,
+            modelList.Object
+        );
+
+        await sut.ReceivedMessageAsync(type, "code");
+        modelList.Verify(m => m.RefreshWorkspaceSourcesAsync(), Times.Never);
+
+        await sut.ReceivedMessageAsync(type, "code,sources");
+
+        modelList.Verify(m => m.RefreshWorkspaceSourcesAsync(), Times.Once);
+        events.Verify(e => e.TriggerUIStateChanged(), Times.Once);
+        if (type == "ui/refresh")
+            canvas.Verify(c => c.RefreshChangedAsync(new[] { "code", "sources" }), Times.Once);
+        else
+            model.Verify(m => m.MarkSourceChanged(), Times.Once);
     }
 }

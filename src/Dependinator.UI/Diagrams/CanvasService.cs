@@ -28,6 +28,9 @@ interface ICanvasService
     Task InitAsync();
     Task RemoveAsync();
     Task RefreshAsync();
+
+    // Parses the model again after files of the kinds changed (IModelService.RefreshChangedAsync).
+    Task RefreshChangedAsync(IReadOnlyCollection<string> changedKinds);
     void PanZoomToFit();
     Task InitialShowAsync();
 
@@ -207,7 +210,16 @@ class CanvasService(
 
     public async Task RefreshAsync()
     {
+        // A source can have been added or removed since the workspace was listed: only VS Code
+        // tells when that happens, and not of every way it can (a folder that is moved).
+        await recentModelsService.RefreshWorkspaceSourcesAsync();
         await modelService.RefreshAsync();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public async Task RefreshChangedAsync(IReadOnlyCollection<string> changedKinds)
+    {
+        await modelService.RefreshChangedAsync(changedKinds);
         applicationEvents.TriggerUIStateChanged();
     }
 

@@ -43,7 +43,7 @@ class ParserService(IEnumerable<ISourceParser> parsers) : IParserService
     async Task<Result<IReadOnlyList<Parsing.Item>>> ParseWorkspaceAsync(string path, SolutionParseOptions options)
     {
         var sourcePaths = (options.Sources ?? []).Distinct().ToList();
-        var sourceOptions = options with { Sources = [], KnownSources = [] };
+        var sourceOptions = options with { Sources = [], KnownSources = [], HasOtherSources = false };
 
         var parsed = await Task.WhenAll(
             sourcePaths
@@ -64,7 +64,8 @@ class ParserService(IEnumerable<ISourceParser> parsers) : IParserService
         return WorkspaceItems.Combine(
             path,
             [.. parsed.SelectMany(results => results).OrderBy(r => r.Index).Select(r => (r.Path, r.Result))],
-            options.KnownSources ?? []
+            options.KnownSources ?? [],
+            options.HasOtherSources
         );
     }
 

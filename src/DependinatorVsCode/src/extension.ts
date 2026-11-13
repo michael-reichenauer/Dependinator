@@ -113,6 +113,36 @@ function isScriptFile(path: string): boolean {
     return /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(fileName) || scriptFileNames.includes(fileName);
 }
 
+/**
+ * The kind of a changed file, as the UI is told it: "script" for a TypeScript or JavaScript
+ * project's files, "bicep" for Bicep files and "code" for the others (a solution's files).
+ */
+function changeKindOf(path: string): string {
+    if (isScriptFile(path))
+        return "script";
+    return isBicepFile(path) ? "bicep" : "code";
+}
+
+function isBicepFile(path: string): boolean {
+    return /\.(bicep|bicepparam)$/i.test(path);
+}
+
+/**
+ * True when a change to the file can change which sources the workspace has (the models the
+ * UI lists). A file that can make a source and is added or removed: a solution, a Bicep file,
+ * a script project's config, or a script file (a plain JavaScript project is a package.json
+ * with source files). And a change in a file that says which files are sources: a Bicep file
+ * (the deployments are the Bicep files no other one uses as a module) and a script project's
+ * config (the projects among its "references" are not sources of their own).
+ */
+function canChangeSources(path: string, isAddedOrRemoved: boolean): boolean {
+    const lowerPath = path.toLowerCase();
+    const fileName = lowerPath.substring(lowerPath.lastIndexOf("/") + 1);
+    if (fileName.endsWith(".bicep") || scriptFileNames.includes(fileName))
+        return true;
+    return isAddedOrRemoved && (fileName.endsWith(".sln") || isScriptFile(path));
+}
+
 /** True for documents the model is parsed from: C# sources, Bicep files, and TypeScript and JavaScript files. */
 function isSourceDocument(document: vscode.TextDocument): boolean {
     if (document.languageId === "csharp" || document.languageId === "bicep" || scriptLanguageIds.includes(document.languageId))
@@ -178,9 +208,11 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     );
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
     let hasUnrefreshedChanges = false;
-    // The kinds of the changed files, sent with the message: "script" for a TypeScript or
-    // JavaScript project's files and "code" for the others. The UI ignores a change of the kind
-    // its model is not parsed from: a JavaScript build must not re-parse a C# solution.
+    // The kinds of the changed files, sent with the message (changeKindOf). The UI ignores a
+    // change of the kind its model is not parsed from: a JavaScript build must not re-parse a
+    // C# solution, and a model of the whole workspace parses only its sources of those kinds.
+    // "sources" is added when the workspace can have got or lost a source (canChangeSources):
+    // the UI then lists them again.
     const changedKinds = new Set<string>();
     // The kinds the UI was told of while auto refresh was off: refreshed when it is switched on
     const unrefreshedKinds = new Set<string>();
@@ -204,10 +236,12 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
         panel.webview.postMessage({ type: "ui/refresh", message: kinds });
     };
 
-    const onFileEvent = (uri: vscode.Uri): void => {
+    const onFileEvent = (uri: vscode.Uri, isAddedOrRemoved: boolean): void => {
         if (!isAutoRefreshRelevant(uri))
             return;
-        changedKinds.add(isScriptFile(uri.path) ? "script" : "code");
+        changedKinds.add(changeKindOf(uri.path));
+        if (canChangeSources(uri.path, isAddedOrRemoved))
+            changedKinds.add("sources");
 
         const delaySeconds = Math.max(1, config().get<number>("delaySeconds", 3));
         if (pendingTimer)
@@ -235,9 +269,9 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
             refresh();
     });
 
-    watcher.onDidCreate(onFileEvent);
-    watcher.onDidChange(onFileEvent);
-    watcher.onDidDelete(onFileEvent);
+    watcher.onDidCreate(uri => onFileEvent(uri, true));
+    watcher.onDidChange(uri => onFileEvent(uri, false));
+    watcher.onDidDelete(uri => onFileEvent(uri, true));
 
     return new vscode.Disposable(() => {
         if (pendingTimer)

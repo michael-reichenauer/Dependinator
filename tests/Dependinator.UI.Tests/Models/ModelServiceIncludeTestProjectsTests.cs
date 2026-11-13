@@ -98,7 +98,8 @@ public class ModelServiceIncludeTestProjectsTests
     [InlineData("/src/app/tsconfig.json", "code", false)]
     [InlineData("/src/App.sln", "code", true)]
     [InlineData("/src/App.sln", "script", false)]
-    [InlineData("/src/main.bicep", "script,code", true)]
+    [InlineData("/src/main.bicep", "script,bicep", true)]
+    [InlineData("/src/main.bicep", "script,code", false)]
     public async Task IsParsedFrom_ShouldBeTrue_ForTheKindOfFilesTheModelIsMadeFrom(
         string path,
         string changedKinds,

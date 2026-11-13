@@ -163,10 +163,19 @@ public class ModelListServiceTests
         Assert.Equal(4, service.GetWorkspaceModels().Count);
         Assert.Contains(workspaceModelPath, service.LocalPaths);
 
-        // A listing that got no answer leaves what was found
+        // A listing that got no answer leaves what was found: the sources are listed again
+        // whenever one can have been added or removed, and an open workspace model must stay one
         workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync((IReadOnlyList<string>)null!);
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync((IReadOnlyList<string>)null!);
         await service.RefreshWorkspaceSourcesAsync();
         Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
+
+        // And so does a listing that fails: it runs before a parse, which must not fail for it
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ThrowsAsync(new IOException("No connection"));
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
     }
 
     [Theory]

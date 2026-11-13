@@ -140,7 +140,7 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
 ## In VS Code
 
 The extension watches script and project files too. Each change message names the kinds of the
-files that changed ("script", "code"), and the UI ignores the kinds the open model is not parsed
+files that changed ("script", "bicep", "code"), and the UI ignores the kinds the open model is not parsed
 from (`IModelService.IsParsedFrom`), because a JavaScript build writes `.js` files beside a C#
 solution. With auto refresh off, a message carries only the kinds changed since the last one.
 Script files under `dist`, `out`, `build` and `coverage` are not watched (what a

@@ -27,13 +27,16 @@ static class SourceChoices
         ];
 
     // The choices as saved with the model. A source keeps the root node it had (see
-    // WorkspaceSource.RootName) unless the parse gave it another. A saved source that is not
-    // found now is kept as it is: it can be back (another branch was checked out for a while),
-    // and what the user chose about it, and the names of its nodes, should hold then.
+    // WorkspaceSource.RootName) unless the parse gave it another. Whether it is in the model
+    // is what a refresh says (inModelPaths: the sources it parsed or kept), and stays as it
+    // was otherwise. A saved source that is not found now is kept: it can be back (another
+    // branch was checked out for a while), and what the user chose about it, and the names of
+    // its nodes, should hold then.
     public static IReadOnlyList<WorkspaceSource> ToSaved(
         IReadOnlyList<SourceChoice> choices,
         IReadOnlyList<WorkspaceSource> saved,
-        IReadOnlyDictionary<string, string>? parsedRootNames = null
+        IReadOnlyDictionary<string, string>? parsedRootNames = null,
+        IReadOnlyCollection<string>? inModelPaths = null
     )
     {
         // A root name that a parsed source has now is no longer the name of a source that was
@@ -46,13 +49,20 @@ static class SourceChoices
             .. choices.Select(choice => new WorkspaceSource(
                 choice.Key,
                 choice.IsIncluded,
-                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName)
+                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName),
+                inModelPaths?.Contains(choice.Path) ?? Saved(saved, choice.Key)?.IsInModel ?? false
             )),
             .. saved
                 .Where(source =>
                     !choices.Any(choice => string.Equals(choice.Key, source.Path, StringComparison.OrdinalIgnoreCase))
                 )
-                .Select(source => source with { RootName = Kept(source.RootName) }),
+                .Select(source =>
+                    source with
+                    {
+                        RootName = Kept(source.RootName),
+                        IsInModel = inModelPaths is null && source.IsInModel,
+                    }
+                ),
         ];
     }
 
