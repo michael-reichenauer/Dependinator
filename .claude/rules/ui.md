@@ -66,8 +66,18 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     ids), and a split line would lose its cycle colour.
   - `SvgService.CreateModelTile` syncs the lines before it reads the view flags: a Sync can
     create lines, and the rule and path line id sets must already hold them.
-  Next (Michael, Nov 13): selecting a stub shows only that stub's lines (what uses the node, or
-  what it uses), not the node's other stub's. Hover was dropped by him: selecting is enough.
+- **A selected stub's lines (Nov 13, Michael).** Selecting a stub shows only that stub's lines:
+  what uses the node from outside its container, or what it uses outside, not the lines of the
+  node's other stub (`LineReveal.Stub`, set by `GetLineReveal` for a selected edge line that
+  crosses the border). Only the links that cross the border in the stub's direction are pinned
+  at the child; the stub itself stays active as the selected line (`Sync` sets `IsActiveRep`,
+  all its links having moved to the cousin lines), and `LineEmphasis.IsLineDimmed` keeps the
+  `IsRevealed` lines undimmed beside a selected line. Clicking one of them is the `KeptLine`
+  case above.
+  - Stubs are drawn after a container's other lines (`NodeLinesSvg.RenderNodeLines`): a line
+    back to a node on the left starts at its node's right side and runs level under the node
+    and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils in the demo).
+  Hover was dropped by Michael (Nov 13): selecting is enough. Don't re-propose it.
   Still open: one line per container for far ends that are off screen or tiny (a hub such as
   Demo.Core.Utils lights 45 lines).
 - Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on

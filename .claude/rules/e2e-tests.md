@@ -148,6 +148,9 @@ open menu overlay swallows them).
   `Demo.UI.Main→Demo.UI.Shared.IThemeService (7)` (2.4 px with link-count widths on) and
   `Demo.UI.Main→Demo.UI.Diagrams.Canvas (1)` (stays 1 px). A test that looks for a node's
   container-level line must not have the node selected.
+- `Demo.Core.CloudSync` has a stub on each side (used from Demo.Lsp, Demo.Web and Demo.UI; uses
+  types of `Shared`), and its line back to `Utils` runs under its incoming stub. `Demo.Core.Parsing`
+  has only the incoming one.
 - Cycles are picked by name, never `.First`: the `Result ↔ Result<T>` pair is the accept case in
   test mode, a "TaskExtensions" cycle the break case.
 

@@ -19,7 +19,12 @@ static class NodeLinesSvg
         RenderContext context
     )
     {
-        foreach (var (line, isCyclic) in DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context))
+        // Stubs are drawn last, on top: a sibling line can run across a stub (a line back to a
+        // node on the left starts at its node's right side and passes under the node and the stub
+        // into it), and the stub is the short one of the two, so it gets the click and the hover.
+        var lines = DrawnNodeLines(node, nodeCanvasPos, childrenZoom, context)
+            .OrderBy(drawn => LineStub.IsStub(drawn.Line, IsLineOnPath(drawn.Line, context)));
+        foreach (var (line, isCyclic) in lines)
         {
             yield return LineSvg.GetLineSvg(
                 line,

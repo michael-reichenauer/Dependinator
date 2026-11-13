@@ -9,15 +9,21 @@ namespace Dependinator.UI.Diagrams.Lines;
 //
 // Clicking one of these lines moves the selection from the node to the line. KeptLine is that
 // line: its links stay between its two ends, or the line would vanish under the click.
+//
+// A selected stub (Stub, see LineStub) asks for half of what its node would: only the links
+// that cross the container's border in the stub's direction, into the child or out of it, are
+// drawn end to end. The stub itself stays, as the selected line the lines belong to.
 readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter Rows, bool HideMemberLines)
 {
     public static readonly LineReveal None = new(null, RowFilter.None, false);
 
     public Line? KeptLine { get; init; }
 
+    public Line? Stub { get; init; }
+
     public IReadOnlyList<Node> Nodes => SelectedNodes ?? [];
 
-    public bool IsEmpty => Nodes.Count == 0 && KeptLine is null;
+    public bool IsEmpty => Nodes.Count == 0 && KeptLine is null && Stub is null;
 
     public bool LeavesOut(Node node) => Rows.Hides(node.Type) || (HideMemberLines && node.Type.IsMember);
 
@@ -28,6 +34,7 @@ readonly record struct LineReveal(IReadOnlyList<Node>? SelectedNodes, RowFilter 
             Rows == other.Rows
             && HideMemberLines == other.HideMemberLines
             && KeptLine == other.KeptLine
+            && Stub == other.Stub
             && Nodes.SequenceEqual(other.Nodes)
         );
 }
@@ -135,6 +142,11 @@ static class RepLineService
             }
         }
 
+        // The selected stub's links now run along their own lines, which would leave the stub
+        // without a link to be drawn for: it stays as the selected line those lines belong to.
+        if (reveal.Stub is { } selectedStub)
+            selectedStub.IsActiveRep = true;
+
         lastSync.AddOrUpdate(
             model,
             new SyncState(
@@ -241,6 +253,32 @@ static class RepLineService
                 sourcePin = kept.Source;
                 targetPin = kept.Target;
                 isRevealedLink = true;
+            }
+            else if (!isFocusLink && reveal.Stub is { } stub)
+            {
+                // A selected stub's links: at or inside its child at one end, outside the child's
+                // container at the other, in the stub's direction. Like a selected node's, they
+                // are pinned at the child and descend on the far side.
+                if (
+                    LineStub.IsIncoming(stub)
+                    && IndexOf(targetPath, stub.Target) != int.MaxValue
+                    && IndexOf(sourcePath, stub.Source) == int.MaxValue
+                )
+                {
+                    targetPin = stub.Target;
+                    isSourceRevealed = true;
+                    isRevealedLink = true;
+                }
+                else if (
+                    LineStub.IsOutgoing(stub)
+                    && IndexOf(sourcePath, stub.Source) != int.MaxValue
+                    && IndexOf(targetPath, stub.Target) == int.MaxValue
+                )
+                {
+                    sourcePin = stub.Source;
+                    isTargetRevealed = true;
+                    isRevealedLink = true;
+                }
             }
 
             int sourceRepIndex = GetRepresentativeIndex(

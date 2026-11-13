@@ -46,4 +46,43 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         );
         await Expect(App.CousinLines).ToHaveCountAsync(1);
     }
+
+    [E2EFact]
+    public async Task SelectingAStub_ShouldDrawOnlyThatStubsLines()
+    {
+        // Demo.Core.CloudSync is used from outside Demo.Core and uses things outside it, so it
+        // has a stub on each side.
+        const string CloudSync = "Demo.Core.CloudSync";
+        await App.GotoMainPageAsync();
+        await App.NavigateToNodeAsync(CloudSync);
+        await App.DeselectAsync();
+        await Expect(App.CousinLines).ToHaveCountAsync(0);
+        ILocator incoming = App.Line("Demo.Core", CloudSync);
+        ILocator outgoing = App.Line(CloudSync, "Demo.Core");
+        await Expect(StubRing(incoming)).ToHaveCountAsync(1);
+        await Expect(StubRing(outgoing)).ToHaveCountAsync(1);
+
+        // The stub into the node stands for what uses it from outside Demo.Core. Selected, those
+        // lines run from their sources to the node, and the stub stays as the selected line.
+        await App.SelectLineAsync(incoming);
+        ILocator linesIntoNode = Page.Locator(
+            $"#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']) g.hoverable[data-name*='→{CloudSync} (']"
+        );
+        await Expect(linesIntoNode).Not.ToHaveCountAsync(0);
+        await Expect(StubRing(incoming)).ToHaveCountAsync(1);
+
+        // The node's other stub is not part of it: nothing runs out of the node across the border.
+        await Expect(App.CousinLinesFrom(CloudSync + "→")).ToHaveCountAsync(0);
+        await Expect(StubRing(outgoing)).ToHaveCountAsync(1);
+
+        // The stub's lines are lit, like a selected node's.
+        await Expect(linesIntoNode.First.Locator("xpath=..").Locator("g.line-lit")).ToHaveCountAsync(1);
+
+        // Deselected: stubs only.
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(App.CousinLines).ToHaveCountAsync(0);
+    }
+
+    // The ring of the stub that the line (its hover group) is drawn as.
+    static ILocator StubRing(ILocator line) => line.Locator("xpath=..").Locator("circle.line-stub-ring");
 }

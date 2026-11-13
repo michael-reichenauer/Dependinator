@@ -9,7 +9,7 @@ namespace Dependinator.UI.Diagrams.Lines;
 // lines over the siblings that could not be followed through that point anyway. They are now
 // drawn as a stub at the child: a short arrow into its left side or out of its right side, with
 // a ring at the far end for "continues outside the container". Selecting the child shows where
-// its lines really go (see RepLineService).
+// its lines really go, and selecting a stub where that stub's lines go (see RepLineService).
 //
 // A stub is the same line, only drawn short: its element id, tooltip, selection and styling
 // are those of the line. An edge line the user has labelled or routed with line points, one on

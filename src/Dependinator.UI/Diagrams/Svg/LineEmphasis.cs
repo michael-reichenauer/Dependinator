@@ -40,14 +40,15 @@ static class LineEmphasis
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
-    // is not the node's own (see IsNodeLine); for a selected line, every other line. Explorer
-    // focus lines are what the user asked to see and are never dimmed.
+    // is not the node's own (see IsNodeLine); for a selected line, every other line but the ones
+    // drawn for it (a selected stub's lines, Line.IsRevealed). Explorer focus lines are what the
+    // user asked to see and are never dimmed.
     internal static bool IsLineDimmed(Line line, RenderSelection selection)
     {
         if (line.IsFocused)
             return false;
         if (selection.Line is { } selectedLine)
-            return line != selectedLine;
+            return line != selectedLine && !line.IsRevealed;
         if (selection.Node is not { } node)
             return false;
         if (IsNodeLine(line, node))

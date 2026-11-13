@@ -174,8 +174,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   could not be followed through it. Each child now gets a short arrow with a ring: into its left
   side for "used from outside", out of its right side for "uses something outside". Selecting a
   node draws its lines all the way to the nodes at the other end, as deep as they are open, also
-  across containers. The stub keeps the line's hover card ("outside X → child"), selection and
-  rule colour; a labelled or hand-routed line and the dependency path are still drawn in full.
+  across containers. Selecting a stub draws only that stub's lines: what uses the node from
+  outside, or what it uses outside. The stub keeps the line's hover card ("outside X → child"),
+  selection and rule colour; a labelled or hand-routed line and the dependency path are still
+  drawn in full.
 - **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
   styled card in the app's theme: a node's kind and container, description, how many nodes it
   uses and is used by (a member counts as its type), its members and its problems (compile errors,
