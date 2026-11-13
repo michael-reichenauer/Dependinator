@@ -5,6 +5,7 @@ using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
@@ -244,9 +245,16 @@ public class SelectionServiceTests
             var b = AddNode(model, "B", model.Root);
             var child = AddNode(model, "Child", b);
             stub = new Line(b, child);
-            first = new Line(a, child) { RenderAncestor = model.Root, IsRevealed = true };
-            second = new Line(c, child) { RenderAncestor = model.Root, IsRevealed = true };
-            other = new Line(a, c) { RenderAncestor = model.Root }; // Not drawn for the stub
+            first = new Line(a, child) { RenderAncestor = model.Root };
+            second = new Line(c, child) { RenderAncestor = model.Root };
+            other = new Line(a, c) { RenderAncestor = model.Root }; // Not one of the stub's lines
+            var fromA = new Link(a, child);
+            var fromC = new Link(c, child);
+            stub.Add(fromA);
+            stub.Add(fromC);
+            first.Add(fromA);
+            second.Add(fromC);
+            other.Add(new Link(a, c));
             foreach (var line in new[] { stub, first, second, other })
                 model.TryAddLine(line);
         }
@@ -266,7 +274,7 @@ public class SelectionServiceTests
         var service = CreateService();
         var click = new PointerEvent { ClientX = 60, ClientY = 35 };
 
-        await service.Select(PointerId.FromLine(stub.Id), click);
+        await service.Select(PointerId.FromLine(stub.Id), new PointerEvent { ClientX = 20, ClientY = 30 });
         Assert.False(service.TrySelectExploredStub()); // Nothing to step back to
 
         await service.Select(PointerId.FromLine(first.Id), click);
@@ -284,6 +292,7 @@ public class SelectionServiceTests
         Assert.True(stub.IsSelected);
         Assert.False(second.IsSelected);
         Assert.False(stub.IsExplored);
+        Assert.Equal(new Pos(20, 30), service.SelectedLineClickPosition); // Where the stub was clicked
         Assert.False(service.TrySelectExploredStub());
 
         // A line that was not drawn for the stub ends it, and so does a node.
@@ -299,6 +308,51 @@ public class SelectionServiceTests
         await service.Select(a.Id);
         Assert.False(stub.IsExplored);
         Assert.False(first.IsSelected);
+    }
+
+    [Fact]
+    public async Task TrySelectExploredStub_ShouldNotClearTheSelection_WhenTheStubIsGone()
+    {
+        Line stub;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            stub = new Line(b, child);
+            line = new Line(a, child) { RenderAncestor = model.Root };
+            var link = new Link(a, child);
+            stub.Add(link);
+            line.Add(link);
+            model.TryAddLine(stub);
+            model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+        await service.Select(PointerId.FromLine(stub.Id), click);
+        await service.Select(PointerId.FromLine(line.Id), click);
+        Assert.True(stub.IsExplored);
+
+        // A refresh took the stub's line away: Escape has no step back and clears as usual.
+        modelMgr.WithModel(model => model.RemoveLine(stub));
+
+        Assert.False(service.TrySelectExploredStub());
+        Assert.Equal(PointerId.FromLine(line.Id), service.SelectedId);
+        Assert.True(line.IsSelected);
     }
 
     [Fact]

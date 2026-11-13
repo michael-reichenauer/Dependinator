@@ -29,16 +29,10 @@ static class LineEmphasis
         if (node is not null)
             return new RenderSelection(node, null, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
 
-        Line? line = null;
-        Line? exploredStub = null;
-        foreach (var candidate in model.Lines.Values)
-        {
-            if (candidate.IsSelected)
-                line ??= candidate;
-            if (candidate.IsExplored)
-                exploredStub ??= candidate;
-        }
-        return new RenderSelection(null, line, null, line is null ? null : exploredStub);
+        var line = model.Lines.Values.FirstOrDefault(l => l.IsSelected);
+        // Only one of a stub's lines (a cousin line) can be selected while the stub is explored.
+        var exploredStub = line is { IsCousin: true } ? model.Lines.Values.FirstOrDefault(l => l.IsExplored) : null;
+        return new RenderSelection(null, line, null, exploredStub);
     }
 
     // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked

@@ -49,7 +49,14 @@ static class NodeTreeSvg
         // One of a stub's lines, clicked: it stays between its ends, and with the stub still being
         // explored the stub's other lines stay too.
         if (selection.Line is { IsCousin: true } line)
-            return new LineReveal(rows, filter.HideMember) { KeptLine = line, Stub = selection.ExploredStub };
+        {
+            var stub =
+                selection.ExploredStub is { } explored
+                && LineStub.IsStub(explored, pathLines?.Contains(explored.Id) == true)
+                    ? explored
+                    : null;
+            return new LineReveal(rows, filter.HideMember) { KeptLine = line, Stub = stub };
+        }
         if (selection.Line is { } edgeLine && LineStub.IsStub(edgeLine, pathLines?.Contains(edgeLine.Id) == true))
             return new LineReveal(rows, filter.HideMember) { Stub = edgeLine };
         return LineReveal.None;

@@ -93,8 +93,9 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     anchor and lie over it (a second click on the selected stub can select one of its lines).
 - **Exploring a stub's lines (Nov 13, Michael).** Clicking one of a selected stub's lines keeps
   the stub's other lines, so the user goes from line to line and pans and zooms around:
-  `SelectionService` marks the stub `Line.IsExplored` when the clicked line was drawn for it
-  (`IsRevealed`, a cousin line) and keeps it while the next clicked line is one of its lines too;
+  `SelectionService` marks the stub `Line.IsExplored` when the clicked line is one of its lines
+  (a cousin line with only the stub's links; not `IsRevealed`, which holds only the newest
+  tile's lines) and keeps it while the next clicked line is one of its lines too;
   `LineEmphasis.FindSelection` hands it on as `RenderSelection.ExploredStub`, and
   `GetLineReveal` asks for `KeptLine` and `Stub` together (the kept line's links go first, so a
   clicked line to a whole container stays whole while the others split). The stub is
