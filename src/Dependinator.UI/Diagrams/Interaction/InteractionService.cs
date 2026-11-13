@@ -298,6 +298,8 @@ class InteractionService(
             manualEditService.CancelNameEntry();
         else if (selectionService.IsEditMode)
             selectionService.SetEditMode(false);
+        else if (selectionService.TrySelectExploredStub())
+            return; // Back from one of a stub's lines to the stub, its lines still drawn
         else if (selectionService.IsSelected)
             selectionService.Unselect();
         else

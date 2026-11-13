@@ -39,6 +39,10 @@ interface ISelectionService
     Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds);
     void SetEditMode(bool isEditMode);
     void Unselect();
+
+    // With one of a stub's lines selected while the stub's lines are being explored, selects the
+    // stub again, its lines still drawn (Escape's first step); false when there is no such step.
+    bool TrySelectExploredStub();
     void SetSelectedNodesVisibility(NodeVisibility visibility);
 }
 
@@ -63,6 +67,11 @@ class SelectionService(
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
+
+    // The stub whose lines stay drawn while one of them is selected (Line.IsExplored): set when a
+    // line drawn for the selected stub is clicked, kept while the user goes from one of its lines
+    // to another, and cleared by any other selection.
+    LineId? exploredStubId;
 
     // Nodes added to the selection beyond the primary one (insertion order kept).
     readonly List<NodeId> extraSelected = [];
@@ -298,14 +307,17 @@ class SelectionService(
             }
         }
         extraSelected.Clear();
-        if (selectedId.IsLine)
+        if (selectedId.IsLine || exploredStubId is not null)
         {
             using (var model = modelMgr.UseModel())
             {
-                if (model.Lines.TryGetValue(selectedId.LineId, out var line))
+                if (selectedId.IsLine && model.Lines.TryGetValue(selectedId.LineId, out var line))
                     line.IsSelected = false;
+                if (exploredStubId is { } stubId && model.Lines.TryGetValue(stubId, out var stub))
+                    stub.IsExplored = false;
             }
         }
+        exploredStubId = null;
         selectedId = PointerId.Empty;
         this.isEditMode = false;
         selectedLineClickPosition = Pos.None;
@@ -329,6 +341,7 @@ class SelectionService(
                 Unselect(); // Clicked on a line that is no longer on the screen
             return false;
         }
+        var stubToExplore = isNewSelection ? GetStubToExplore(pointerId.LineId) : null;
         if (isNewSelection)
             ClearSelection();
 
@@ -342,6 +355,11 @@ class SelectionService(
             {
                 if (isNewSelection)
                     line.IsSelected = true;
+                if (stubToExplore is { } stubId && model.Lines.TryGetValue(stubId, out var stub))
+                {
+                    stub.IsExplored = true;
+                    exploredStubId = stubId;
+                }
 
                 // Calculate the clicked relative position on the line, this is used to
                 // show the toolbar at the clicked position on the line
@@ -368,6 +386,39 @@ class SelectionService(
         await UpdateSelectedPositionAsync();
         if (isNewSelection)
             applicationEvents.TriggerUIStateChanged(); // Also when the toolbar did not move
+        return true;
+    }
+
+    // The stub to keep exploring when the clicked line is selected: the clicked line was drawn
+    // for the stub (Line.IsRevealed, a line across containers), and the stub is selected now or
+    // is already being explored. Clicking the stub itself selects it as usual.
+    LineId? GetStubToExplore(LineId clickedId)
+    {
+        if (!selectedId.IsLine)
+            return null;
+        using var model = modelMgr.UseModel();
+        if (!model.Lines.TryGetValue(clickedId, out var clicked) || !clicked.IsRevealed || !clicked.IsCousin)
+            return null;
+        return exploredStubId ?? selectedId.LineId;
+    }
+
+    public bool TrySelectExploredStub()
+    {
+        if (exploredStubId is not { } stubId || !selectedId.IsLine || selectedId.LineId == stubId)
+            return false;
+
+        ClearSelection();
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(stubId, out var stub))
+                return false;
+            stub.IsSelected = true;
+        }
+        selectedId = PointerId.FromLine(stubId);
+        clickedRelativePosition = 0.5;
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+        _ = UpdateSelectedPositionAsync(); // The toolbar follows once the stub is measured
         return true;
     }
 

@@ -66,6 +66,10 @@ class Line : IItem
     // dimmed beside the selected line. Not persisted.
     public bool IsRevealed { get; set; }
 
+    // Transient selection state: the stub whose lines stay drawn while one of them is selected
+    // (see SelectionService), so the user can go from line to line. Not persisted.
+    public bool IsExplored { get; internal set; }
+
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);

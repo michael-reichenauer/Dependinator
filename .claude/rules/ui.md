@@ -63,7 +63,7 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   node still lights its own lines and its stubs (`LineEmphasis.IsNodeLine`). Don't re-propose
   the node's lines, or lines on hover (dropped by him the same day: selecting is enough).
 - Traps the reviews of the stub lines found:
-  - Clicking one of a stub's lines moves the selection to that line, which ends the stub's
+  - Clicking one of a stub's lines moves the selection to that line, which would end the stub's
     reveal: `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes
     under the click.
   - The click must also survive the repaint: `SelectionService` measures a clicked line
@@ -91,6 +91,15 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     in the demo). Known and left: a stub therefore also lies over the handles of a selected
     hand-routed line whose point is right at it, and a selected stub's own lines end at its
     anchor and lie over it (a second click on the selected stub can select one of its lines).
+- **Exploring a stub's lines (Nov 13, Michael).** Clicking one of a selected stub's lines keeps
+  the stub's other lines, so the user goes from line to line and pans and zooms around:
+  `SelectionService` marks the stub `Line.IsExplored` when the clicked line was drawn for it
+  (`IsRevealed`, a cousin line) and keeps it while the next clicked line is one of its lines too;
+  `LineEmphasis.FindSelection` hands it on as `RenderSelection.ExploredStub`, and
+  `GetLineReveal` asks for `KeptLine` and `Stub` together (the kept line's links go first, so a
+  clicked line to a whole container stays whole while the others split). The stub is
+  `IsRevealed` too, lit with its lines. Escape first selects the stub again
+  (`TrySelectExploredStub`), then clears; any other selection ends the exploring.
 - **One line per far container (Nov 13, Michael).** A selected stub's far side opens no container
   that lies outside the tile (`LineReveal.Area`, the tile's canvas area with its margin, set in
   `SvgService.CreateModelTile`) or whose default-size child would be below

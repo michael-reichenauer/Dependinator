@@ -226,6 +226,81 @@ public class SelectionServiceTests
         applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.AtLeastOnce);
     }
 
+    // Clicking one of a selected stub's lines keeps the stub's other lines (the stub is explored),
+    // while the user goes from line to line; Escape's first step selects the stub again, and any
+    // other selection ends it.
+    [Fact]
+    public async Task Select_ShouldKeepExploringTheStub_WhileGoingFromLineToLine()
+    {
+        Node a;
+        Line stub;
+        Line first;
+        Line second;
+        Line other;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            var c = AddNode(model, "C", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            stub = new Line(b, child);
+            first = new Line(a, child) { RenderAncestor = model.Root, IsRevealed = true };
+            second = new Line(c, child) { RenderAncestor = model.Root, IsRevealed = true };
+            other = new Line(a, c) { RenderAncestor = model.Root }; // Not drawn for the stub
+            foreach (var line in new[] { stub, first, second, other })
+                model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+
+        await service.Select(PointerId.FromLine(stub.Id), click);
+        Assert.False(service.TrySelectExploredStub()); // Nothing to step back to
+
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(first.IsSelected);
+        Assert.True(stub.IsExplored);
+
+        await service.Select(PointerId.FromLine(second.Id), click);
+        Assert.True(second.IsSelected);
+        Assert.False(first.IsSelected);
+        Assert.True(stub.IsExplored);
+
+        // Escape steps back to the stub, which shows its lines as the selected stub.
+        Assert.True(service.TrySelectExploredStub());
+        Assert.Equal(PointerId.FromLine(stub.Id), service.SelectedId);
+        Assert.True(stub.IsSelected);
+        Assert.False(second.IsSelected);
+        Assert.False(stub.IsExplored);
+        Assert.False(service.TrySelectExploredStub());
+
+        // A line that was not drawn for the stub ends it, and so does a node.
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(stub.IsExplored);
+        await service.Select(PointerId.FromLine(other.Id), click);
+        Assert.False(stub.IsExplored);
+        Assert.True(other.IsSelected);
+
+        await service.Select(PointerId.FromLine(stub.Id), click);
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(stub.IsExplored);
+        await service.Select(a.Id);
+        Assert.False(stub.IsExplored);
+        Assert.False(first.IsSelected);
+    }
+
     [Fact]
     public async Task Select_ShouldClearTheSelection_WhenTheClickedLineIsNotOnScreen()
     {

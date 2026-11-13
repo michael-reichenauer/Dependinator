@@ -8,7 +8,13 @@ using Dependinator.UI.Shared.Types;
 // Decisions only, no SVG: NodeLinesSvg and LineSvg draw what these say.
 namespace Dependinator.UI.Diagrams.Svg;
 
-readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null)
+// ExploredStub: the stub whose lines stay drawn while one of them is the selected Line.
+readonly record struct RenderSelection(
+    Node? Node,
+    Line? Line,
+    IReadOnlyList<Node>? OtherNodes = null,
+    Line? ExploredStub = null
+)
 {
     public bool IsEmpty => Node is null && Line is null;
 }
@@ -20,8 +26,19 @@ static class LineEmphasis
     {
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
         var node = nodes.FirstOrDefault();
-        var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
-        return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+        if (node is not null)
+            return new RenderSelection(node, null, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+
+        Line? line = null;
+        Line? exploredStub = null;
+        foreach (var candidate in model.Lines.Values)
+        {
+            if (candidate.IsSelected)
+                line ??= candidate;
+            if (candidate.IsExplored)
+                exploredStub ??= candidate;
+        }
+        return new RenderSelection(null, line, null, line is null ? null : exploredStub);
     }
 
     // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked
