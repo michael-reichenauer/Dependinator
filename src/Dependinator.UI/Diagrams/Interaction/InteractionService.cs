@@ -632,8 +632,13 @@ class InteractionService(
         {
             if (!isDraggingLineLabel && !IsBeyondDragThreshold(e))
                 return;
+            // The first step covers the whole way from the press, so the label keeps up with
+            // the pointer instead of lagging by the threshold.
+            var (dx, dy) = isDraggingLineLabel
+                ? (e.MovementX, e.MovementY)
+                : (e.ClientX - mouseDownClient.X, e.ClientY - mouseDownClient.Y);
             isDraggingLineLabel = true;
-            lineEditService.MoveLabel(e, Zoom, mouseDownId);
+            lineEditService.MoveLabel(dx, dy, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }

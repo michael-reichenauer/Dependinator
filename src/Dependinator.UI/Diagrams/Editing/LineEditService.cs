@@ -14,9 +14,9 @@ interface ILineEditService
     void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId);
     void SnapSegmentPointToGrid(PointerId pointerId);
 
-    // Slides a line's label along the line under an edit-mode drag (pointerId.IsLineLabel), and
-    // ends the drag.
-    void MoveLabel(PointerEvent e, double zoom, PointerId pointerId);
+    // Slides a line's label along the line under an edit-mode drag (pointerId.IsLineLabel) by the
+    // pointer's movement in screen pixels, and ends the drag.
+    void MoveLabel(double movementX, double movementY, double zoom, PointerId pointerId);
     void EndLabelMove();
 }
 
@@ -38,14 +38,14 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         {
             if (!model.Lines.TryGetValue(lineId, out var line))
                 return;
-            if (!LinePathGeometry.TryGetLocalEndpoints(line, out var endpoints))
+            if (!LinePathGeometry.TryGetLocalEndpoints(line, out _))
                 return;
             if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
                 return;
 
             var localHint = ToOwnerChildrenLocal(owner, worldHint);
 
-            updatedPoints = InsertPointAtClosestSegment(line, endpoints, localHint);
+            updatedPoints = InsertPointAtClosestSegment(line, localHint);
         }
 
         commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
@@ -139,7 +139,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
     // label keeps up with the pointer however far it strays from the line.
     Pos? labelDragPos;
 
-    public void MoveLabel(PointerEvent e, double zoom, PointerId pointerId)
+    public void MoveLabel(double movementX, double movementY, double zoom, PointerId pointerId)
     {
         if (!pointerId.IsLineLabel)
             return;
@@ -157,7 +157,7 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
 
             var from = labelDragPos ?? LinePathGeometry.PointAt(points, line.LabelPosition);
             var localZoom = GetChildrenLocalZoom(owner) * zoom;
-            var to = new Pos(from.X + e.MovementX * localZoom, from.Y + e.MovementY * localZoom);
+            var to = new Pos(from.X + movementX * localZoom, from.Y + movementY * localZoom);
             labelDragPos = to;
             // Compared as it would be stored, so a pointer past a clamped end sends nothing.
             position = Line.ToLabelPosition(LinePathGeometry.FractionAt(points, to));
@@ -220,14 +220,11 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         return bestIndex;
     }
 
-    static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, LinePathGeometry.LineEndpoints endpoints, Pos hint)
+    static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, Pos hint)
     {
-        IReadOnlyList<Pos> polyline =
-        [
-            new Pos(endpoints.X1, endpoints.Y1),
-            .. line.SegmentPoints,
-            new Pos(endpoints.X2, endpoints.Y2),
-        ];
+        var polyline = LinePathGeometry.GetLocalPolylinePoints(line);
+        if (polyline.Count < 2)
+            return line.SegmentPoints;
 
         var bestSegmentIndex = 0;
         var bestDistanceSquared = double.MaxValue;

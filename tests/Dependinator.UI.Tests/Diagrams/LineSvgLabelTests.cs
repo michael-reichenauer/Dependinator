@@ -266,19 +266,19 @@ public class LineSvgLabelTests
         Assert.Contains($"<g class=\"hoverable\" id=\"{PointerId.FromLine(line.Id).ElementId}\">", svg);
         Assert.Contains($"<rect id=\"{PointerId.LineLabelElementId(line.Id)}\"", svg);
         Assert.Contains(LineSvg.LabelHitClass, svg);
-        Assert.DoesNotContain("pointer-events=\"none\" /></g>", svg);
+        Assert.DoesNotContain("pointer-events", svg);
 
-        // On a selected line the label lets presses through to a bend point's handle under it,
-        // and keeps them where no handle is near (a double-click there still edits the label).
+        // On a selected line a bend point's handle under the label gets a hit circle above the
+        // label's rect (same id as the handle); a handle away from the label does not.
         line.IsSelected = true;
+        var handleId = PointerId.FromLinePoint(line.Id, 0).ElementId;
         line.SetSegmentPoints([new Pos(200, 50)]);
-        Assert.Contains(
-            "pointer-events=\"none\" /></g>",
-            LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false)
-        );
+        var withHandle = LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false);
+        Assert.Contains($"<circle id=\"{handleId}\" class=\"{LineSvg.LabelHandleClass}\"", withHandle);
+        Assert.True(withHandle.IndexOf(handleId) > withHandle.IndexOf(PointerId.LineLabelElementId(line.Id)));
         line.SetSegmentPoints([new Pos(150, 80)]);
         Assert.DoesNotContain(
-            "pointer-events=\"none\" /></g>",
+            LineSvg.LabelHandleClass,
             LineSvg.GetLineLabelSvg(line, new Pos(0, 0), 1, isDimmed: false)
         );
     }

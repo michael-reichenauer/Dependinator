@@ -153,7 +153,7 @@ static partial class SvgText
         if (last.Length + 1 > maxWidth)
             last = last[..(maxWidth - 1)].TrimEnd();
         if (replaced is not null)
-            last = last.TrimEnd(replaced).TrimEnd();
+            last = last.TrimEnd([.. replaced, ' ']);
         lines[^1] = last + "…";
         return lines;
     }

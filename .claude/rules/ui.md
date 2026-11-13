@@ -245,11 +245,11 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
     and hover cards treat it as the line); only the edit-mode drag (`InteractionService`,
     `LineEditService.MoveLabel`, `LineLabelPositionCommand`) looks at `IsLineLabel`. Its group
     carries the line's element id (for the hover card) but no `data-name`, so the e2e
-    `App.Line` locator still matches one element. On a selected line the rect lets presses
-    through only when a bend point's handle lies under it (labels are drawn above the nodes, the
-    handles with the line below them). Letting them through on every selected bent line broke
-    the double-click on its label: the first click selects the line, so the second missed it
-    (seen only in the published Wasm app, which re-renders between the two clicks).
+    `App.Line` locator still matches one element. Labels lie above the nodes, a selected line's
+    bend-point handles with the line below them: a handle under a label gets a transparent copy
+    of its hit circle above the rect (`LineSvg.LabelHandleClass`, same id). Letting presses
+    through the whole rect instead broke the double-click on a bent line's label: the first
+    click selects the line, so the second missed it (seen only in the published Wasm app).
 - Alias edits bump `StructureVersion`, because panels cache their rows by it. Tooltips stay
   `"{LongName} ({Alias})"`, because `App.Node(label)` in the e2e tests matches the long-name prefix.
 - `HideNodesCommand` needs its own `MergeKey`: same-type commands within 500 ms merge, which turned

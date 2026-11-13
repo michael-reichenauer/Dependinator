@@ -236,8 +236,20 @@ static class LinePathGeometry
         return [new Pos(endpoints.X1, endpoints.Y1), .. line.SegmentPoints, new Pos(endpoints.X2, endpoints.Y2)];
     }
 
-    public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom) =>
-        [.. GetLocalPolylinePoints(line).Select(p => ToRendered(p, nodeCanvasPos, childrenZoom))];
+    public static IReadOnlyList<Pos> GetRenderedPolylinePoints(Line line, Pos nodeCanvasPos, double childrenZoom)
+    {
+        if (!TryGetLocalEndpoints(line, out var endpoints))
+            return [];
+
+        var points = new List<Pos>(line.SegmentPoints.Count + 2)
+        {
+            ToRendered(new Pos(endpoints.X1, endpoints.Y1), nodeCanvasPos, childrenZoom),
+        };
+        foreach (var point in line.SegmentPoints)
+            points.Add(ToRendered(point, nodeCanvasPos, childrenZoom));
+        points.Add(ToRendered(new Pos(endpoints.X2, endpoints.Y2), nodeCanvasPos, childrenZoom));
+        return points;
+    }
 
     public readonly record struct LineEndpoints(double X1, double Y1, double X2, double Y2);
 }

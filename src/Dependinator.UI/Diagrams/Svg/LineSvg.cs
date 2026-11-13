@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Modeling.Models;
@@ -25,7 +26,6 @@ static class LineSvg
     const double SelectedCircleExtraRadius = 3;
     const double HandleExtraRadius = 1;
     const double HandleTouchExtraRadius = 8;
-    const double HandleReachStrokeWidth = 4; // A label lets presses through to handles of lines up to this width
 
     // Length of the hollow inheritance arrow head in marker units; markers scale with stroke
     // width, so the on-screen length is this value times the line's stroke width (must match
@@ -308,6 +308,9 @@ static class LineSvg
     // Class of a label's hit rect (see LabelHitSvg).
     internal const string LabelHitClass = "line-label-hit";
 
+    // Class of a bend-point handle's hit circle copied above a label (see LabelHitSvg).
+    internal const string LabelHandleClass = "line-label-handle";
+
     // Offset (in em) from a row's middle down to its alphabetic baseline: the description's rows
     // are <tspan>s, which WebKit and Firefox do not center with dominant-baseline.
     const double MiddleToBaselineFactor = 0.35;
@@ -379,40 +382,48 @@ static class LineSvg
     // shows the line's card (the group's id is the line's), a click selects the line, a
     // double-click in edit mode edits the label, and an edit-mode drag moves it along the line
     // (the rect's own id, PointerId.LineLabelElementId). The texts themselves take no pointer
-    // events. On a selected line the rect lets presses through when a bend point's handle lies
-    // under it, which it would otherwise cover (deselect to drag the label); elsewhere it stays,
-    // so a double-click on the label still edits it once the first click has selected the line.
+    // events. Labels are drawn above the nodes, a selected line's bend-point handles with the
+    // line below them, so a handle under the label gets a transparent copy of its hit circle
+    // above the rect (same id): the handle stays draggable and the rest of the label clickable.
     static string LabelHitSvg(Line line, Rect box, double fontSize, IReadOnlyList<Pos> polylinePoints)
     {
         var padding = fontSize * 0.3;
-        var pointerEvents = IsHandleUnderLabel(line, box, padding, polylinePoints) ? " pointer-events=\"none\"" : "";
+        var hitBox = new Rect(box.X - padding, box.Y - padding, box.Width + 2 * padding, box.Height + 2 * padding);
         var groupId = PointerId.FromLine(line.Id).ElementId;
         var rectId = PointerId.LineLabelElementId(line.Id);
-        return string.Create(
+        var rect = string.Create(
             CultureInfo.InvariantCulture,
-            $"""<g class="hoverable" id="{groupId}"><rect id="{rectId}" class="{HitClass} {LabelHitClass}" x="{box.X
-                - padding:0.##}" y="{box.Y - padding:0.##}" width="{box.Width + 2 * padding:0.##}" height="{box.Height
-                + 2 * padding:0.##}" fill="black" fill-opacity="0"{pointerEvents} /></g>"""
+            $"""<g class="hoverable" id="{groupId}"><rect id="{rectId}" class="{HitClass} {LabelHitClass}" x="{hitBox.X:0.##}" y="{hitBox.Y:0.##}" width="{hitBox.Width:0.##}" height="{hitBox.Height:0.##}" fill="black" fill-opacity="0" /></g>"""
         );
+        return rect + HandlesOverLabelSvg(line, hitBox, polylinePoints);
     }
 
-    // Whether a selected line's bend-point handle (the inner polyline points, with the handle's
-    // touch radius for a stroke of up to HandleReachStrokeWidth) reaches into the label's rect.
-    static bool IsHandleUnderLabel(Line line, Rect box, double padding, IReadOnlyList<Pos> polylinePoints)
+    // Hit circles for a selected line's bend-point handles that reach into the label's rect.
+    static string HandlesOverLabelSvg(Line line, Rect hitBox, IReadOnlyList<Pos> polylinePoints)
     {
-        if (!line.IsSelected || line.SegmentPoints.Count == 0)
-            return false;
+        if (!line.IsSelected || line.SegmentPoints.Count == 0 || polylinePoints.Count != line.SegmentPoints.Count + 2)
+            return "";
 
-        var reach = padding + HandleReachStrokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
-        return polylinePoints
-            .Skip(1)
-            .SkipLast(1)
-            .Any(p =>
-                p.X >= box.X - reach
-                && p.X <= box.X + box.Width + reach
-                && p.Y >= box.Y - reach
-                && p.Y <= box.Y + box.Height + reach
+        var radius = PlainStrokeWidth + SelectedCircleExtraRadius + HandleTouchExtraRadius;
+        var circles = new StringBuilder();
+        for (var index = 0; index < line.SegmentPoints.Count; index++)
+        {
+            var p = polylinePoints[index + 1];
+            var isUnderLabel =
+                p.X >= hitBox.X - radius
+                && p.X <= hitBox.X + hitBox.Width + radius
+                && p.Y >= hitBox.Y - radius
+                && p.Y <= hitBox.Y + hitBox.Height + radius;
+            if (!isUnderLabel)
+                continue;
+
+            var elementId = PointerId.FromLinePoint(line.Id, index).ElementId;
+            circles.Append(
+                CultureInfo.InvariantCulture,
+                $"""<circle id="{elementId}" class="{LabelHandleClass}" cx="{p.X:0.##}" cy="{p.Y:0.##}" r="{radius:0.##}" fill="black" fill-opacity="0" />"""
             );
+        }
+        return circles.ToString();
     }
 
     static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth, bool hasHandles)

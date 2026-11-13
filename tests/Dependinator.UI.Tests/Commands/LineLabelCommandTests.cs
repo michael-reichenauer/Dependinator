@@ -170,6 +170,22 @@ public class LineLabelCommandTests
     }
 
     [Fact]
+    public void Revert_ShouldLeaveTheLabelsPlace_WhenOnlyTheTextChanged()
+    {
+        var (model, line) = CreateModelWithLine();
+        using var _ = model;
+        line.SetLabel("orders");
+
+        var edit = new LineLabelCommand(line.Id) { Label = "orders, payments" };
+        edit.Execute(model);
+        line.SetLabelPosition(0.3); // as by a drag, which has its own command
+
+        edit.Revert(model);
+        Assert.Equal("orders", line.Label);
+        Assert.Equal(0.3, line.LabelPosition);
+    }
+
+    [Fact]
     public void ToLabelPosition_ShouldRoundAsStored()
     {
         Assert.Equal(0.123, Line.ToLabelPosition(0.12345));
