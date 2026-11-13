@@ -479,6 +479,17 @@ class InteractionService(
             return;
         }
 
+        // Double-click on a bend point of the selected line in edit mode removes it; on a
+        // segment handle it is a double-click on the line.
+        if (viewOptions.IsEditingEnabled && pointerId.IsLinePoint)
+        {
+            lineEditService.RemoveSegmentPoint(pointerId);
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
+            return;
+        }
+        if (pointerId.IsLineMidPoint)
+            pointerId = PointerId.FromLine(pointerId.LineId);
+
         // Double-click on a line in edit mode edits its label.
         if (viewOptions.IsEditingEnabled && pointerId.IsLine)
         {
@@ -572,7 +583,7 @@ class InteractionService(
     }
 
     // Routes a left-button drag to exactly one gesture. The branch order is the gesture
-    // priority: link-handle drag → line-point drag → line-label drag → selected-node content pan (edit mode) →
+    // priority: link-handle drag → segment-handle drag (adds a line point) → line-point drag → line-label drag → selected-node content pan (edit mode) →
     // resize-handle drag → selected-node move → canvas pan (the fallback for everything else).
     // Each editing branch marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
@@ -598,6 +609,32 @@ class InteractionService(
                 isMoving = true; // Makes OnMouseUp restore the default cursor
             }
             manualEditService.UpdateLinkDrag(new Pos(e.ClientX, e.ClientY));
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
+        // Dragging a selected line's segment handle bends the line there: once the pointer has
+        // moved a few pixels (a click or double-click on it is a click on the line) it becomes a
+        // new bend point under the pointer, and the rest of the drag moves that point.
+        if (
+            viewOptions.IsEditingEnabled
+            && mouseDownId.IsLineMidPoint
+            && selectionService.SelectedId.IsLine
+            && mouseDownId.Id == selectionService.SelectedId.Id
+        )
+        {
+            if (!IsBeyondDragThreshold(e))
+                return;
+            var pointId = lineEditService.InsertSegmentPoint(
+                mouseDownId,
+                e.ClientX - mouseDownClient.X,
+                e.ClientY - mouseDownClient.Y,
+                Zoom
+            );
+            if (pointId is null)
+                return;
+            mouseDownId = pointId;
+            isDraggingSelectedLinePoint = true;
             selectionService.HideSelectedPosition();
             return;
         }
@@ -700,7 +737,7 @@ class InteractionService(
 
         if (isDraggingSelectedLinePoint && mouseDownId.IsLinePoint)
         {
-            lineEditService.SnapSegmentPointToGrid(mouseDownId);
+            lineEditService.EndSegmentPointMove(mouseDownId, Zoom);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedLinePoint = false;
         }
@@ -756,7 +793,7 @@ class InteractionService(
 
     // A band can start anywhere except on the edit handles, which have their own drags.
     static bool CanStartRubberBand(PointerId pressedId) =>
-        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint;
+        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint && !pressedId.IsLineMidPoint;
 
     // Selects the nodes inside the finished rubber band (null when it was canceled or too small).
     async Task CompleteRubberBandAsync(Task<Rect?> selection)

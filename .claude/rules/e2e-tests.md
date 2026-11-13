@@ -136,7 +136,11 @@ trusting a chromium-only run for a release.
 - WebKit keeps a stale `:hover` after a re-render: click hover-revealed buttons with
   `AppPage.ClickRowHoverButtonAsync(row, testId)`.
 - WebKit misreports the box of a standalone canvas `<text>` (offset by its own x/y): click through
-  the `g.hoverable` group box (`App.Node(label)`), never a text box.
+  the `g.hoverable` group box (`App.Node(label)`), never a text box; a line label through its
+  `rect.line-label-hit` (the slide test pressed the empty canvas there, Nov 13).
+- The canvas draws a line in every tile it crosses, so a selected line's handles can be in the
+  page several times: count them by id and press one that `elementFromPoint` reaches
+  (`LineBendTests.HandlesAsync`).
 
 ## State shared between parallel tests
 

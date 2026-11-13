@@ -164,6 +164,12 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   the focus): give it `Disabled` while the menu is open (`OpenChanged`) and `ShowOnFocus="false"`,
   and reset the flag when the toolbar is gone (a menu removed while open never reports its close).
 - The node menu is the last button ("more", ⋮), References and Dependencies come first.
+- Line bends are edited on the line (Nov 13, Michael's pick over the old +/− buttons): edit-mode
+  segment handles (`PointerId.FromLineMidPoint`, sub-id `lm{segment}_{percent}`; the percent is
+  50, or 25/75 when the label's box covers the middle, since the label layer would take the
+  press) become a bend on a drag past the 4 px threshold (`LineEditService.InsertSegmentPoint`,
+  one undo step with the drag); a bend released within 6 screen px of straight, or
+  double-clicked, is removed; "Straighten line" clears all.
 
 ## Rendering performance
 

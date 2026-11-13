@@ -581,6 +581,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   larger 28 px buttons for touch. The node toolbar groups its buttons (lines, size,
   appearance, arranging) and its menu moved to the end as a "more" button, whose tooltip no
   longer stays over the open menu. The line toolbar lost "Show source code" (VS Code only).
+- **Bends made on the line (Nov 13).** In edit mode a selected line shows a small hollow handle
+  on each of its segments (a quarter along when the label sits in the middle): dragging it
+  bends the line there. A bend dragged back onto the straight line, or double-clicked, goes
+  away, and "Straighten line" in the toolbar removes them all. The odd + and − buttons, which
+  acted at the spot where the line had been clicked, are gone.
 
 ## Models, cloud sync and sign-in
 
