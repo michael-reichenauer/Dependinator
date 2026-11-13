@@ -1863,6 +1863,12 @@ button.dep-rules__node:hover {
     margin: 0 4px;
 }
 
+/* "outside" before a container's name, for a line that crosses the container's border. */
+.dep-tt-outside {
+    color: var(--dep-tt-muted);
+    font-weight: 400;
+}
+
 .dep-tt-kind,
 .dep-tt-more {
     color: var(--dep-tt-muted);

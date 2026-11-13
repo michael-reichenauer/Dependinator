@@ -167,6 +167,72 @@ public class SelectionServiceTests
         Assert.True(b.IsSelected);
     }
 
+    // A selected node's lines are drawn end to end only while it is selected, so the line is on
+    // screen (can be measured) until the node is deselected and the diagram repainted.
+    [Fact]
+    public async Task Select_ShouldSelectALineOfTheSelectedNode_ThoughDeselectingTheNodeTakesItOffScreen()
+    {
+        Node a;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            line = new Line(a, b);
+            model.TryAddLine(line);
+        }
+        var linePointer = PointerId.FromLine(line.Id);
+        screenService
+            .Setup(s => s.GetBoundingRectangle(linePointer.ElementId))
+            .ReturnsAsync(() =>
+                a.IsSelected || line.IsSelected
+                    ? new ElementBoundingRectangle
+                    {
+                        X = 10,
+                        Y = 10,
+                        Width = 100,
+                        Height = 50,
+                        Right = 110,
+                        Bottom = 60,
+                    }
+                    : (Result<ElementBoundingRectangle>)new Error("Not on screen")
+            );
+        var service = CreateService();
+        await service.Select(a.Id);
+        applicationEvents.Invocations.Clear();
+
+        await service.Select(linePointer, new PointerEvent { ClientX = 60, ClientY = 35 });
+
+        Assert.Equal(linePointer, service.SelectedId);
+        Assert.True(line.IsSelected);
+        Assert.False(a.IsSelected);
+        Assert.Empty(service.SelectedNodeIds);
+        applicationEvents.Verify(e => e.TriggerModelChanged(), Times.AtLeastOnce);
+        applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Select_ShouldClearTheSelection_WhenTheClickedLineIsNotOnScreen()
+    {
+        Node a;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            line = new Line(a, b);
+            model.TryAddLine(line);
+        }
+        var service = CreateService();
+        await service.Select(a.Id);
+
+        await service.Select(PointerId.FromLine(line.Id), new PointerEvent());
+
+        Assert.False(service.IsSelected);
+        Assert.False(a.IsSelected);
+        Assert.False(line.IsSelected);
+    }
+
     [Fact]
     public async Task IsSelectedNodeMovable_ShouldBeTrueForAZone_HoweverMuchOfTheScreenItCovers()
     {

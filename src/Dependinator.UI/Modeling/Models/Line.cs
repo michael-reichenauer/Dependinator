@@ -60,6 +60,11 @@ class Line : IItem
     // subject's lines stand out from the aggregated ones. Not persisted.
     public bool IsFocused { get; set; }
 
+    // Transient render state: the line represents links of the selection, drawn end to end (see
+    // RepLineService's LineReveal). The selection asked for these lines, so the link count
+    // filter does not leave them out. Not persisted.
+    public bool IsRevealed { get; set; }
+
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.
     public bool HasInheritanceSourceEnd => IsInheritance && links.Values.Any(l => l.Source == Source);

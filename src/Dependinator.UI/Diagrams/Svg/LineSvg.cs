@@ -34,6 +34,12 @@ static class LineSvg
     // A path line is drawn at least this wide so the chain reads even among thin lines.
     const double PathMinStrokeWidth = 2;
 
+    // The line left visible behind a stub's hollow inheritance arrow head.
+    const double StubInheritanceLineLength = 6;
+
+    // The ring at a stub's far end (see LineStub).
+    internal const string StubRingClass = "line-stub-ring";
+
     // Every aggregated line is drawn at this one width; a line only shows its link-count width
     // (Line.WeightedStrokeWidth) while it is emphasized and Settings › Line widths by link count is on
     // (see LineEmphasis.IsLineWeighted), since the counts are only readable when comparing the few
@@ -181,6 +187,29 @@ static class LineSvg
             : !line.IsVisible ? " stroke-dasharray=\"6,4,1,4\""
             : "";
 
+        // A line between a container's edge and one of its children is drawn as a stub at the
+        // child (see LineStub): the same line with its id, classes and tooltip, only short, with
+        // a ring at the far end in place of the start circle there.
+        var isStub = LineStub.IsStub(line, isPath);
+        IReadOnlyList<Pos> hitPolylinePoints = polylinePoints;
+        var ringSvg = "";
+        var hasStartCircle = true;
+        if (isStub)
+        {
+            var isIncoming = LineStub.IsIncoming(line);
+            var anchor = isIncoming ? polylinePoints[^1] : polylinePoints[0];
+            var minLength = isInheritanceHead ? InheritanceMarkerLength * strokeWidth + StubInheritanceLineLength : 0;
+            var stub = LineStub.GetGeometry(line, anchor, childrenZoom, minLength);
+            polylinePoints = [stub.Start, stub.End];
+            hitPolylinePoints = [stub.HitStart, stub.HitEnd];
+            endpoints = new LinePathGeometry.LineEndpoints(stub.Start.X, stub.Start.Y, stub.End.X, stub.End.Y);
+            hasStartCircle = !isIncoming;
+            ringSvg = string.Create(
+                CultureInfo.InvariantCulture,
+                $"""<circle class="{StubRingClass}" cx="{stub.Ring.X:0.##}" cy="{stub.Ring.Y:0.##}" r="{stub.RingRadius:0.##}" fill="none" stroke="{color}" stroke-width="{strokeWidth:0.##}" />"""
+            );
+        }
+
         // The hollow marker starts at the polyline end (refX=0) and extends forward, so the
         // visible line is pulled back by the arrow-head length to keep the tip on the node edge
         // and the stroke out of the hollow triangle. Hit/selection paths keep the full length.
@@ -188,8 +217,14 @@ static class LineSvg
             ? TrimEndForMarker(polylinePoints, InheritanceMarkerLength * strokeWidth)
             : polylinePoints;
         var points = ToPolylinePoints(visiblePoints);
-        var hitPoints = ToPolylinePoints(polylinePoints);
-        var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth);
+        var hitPoints = ToPolylinePoints(hitPolylinePoints);
+        var selectedSvg = SelectedLineSvg(line, polylinePoints, strokeWidth, hasHandles: !isStub);
+        var startCircleSvg = hasStartCircle
+            ? string.Create(
+                CultureInfo.InvariantCulture,
+                $"""<circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />"""
+            )
+            : "";
         var labelSvg = includeLabel ? LabelSvg(line, polylinePoints, childrenZoom) : "";
 
         // The hover group's data-name, "Source→Target (n)" with the long names, is what the e2e
@@ -235,7 +270,8 @@ static class LineSvg
             <g class="line">
             <g class="{visibleClass}" data-n="{line.Source.Id.Value} {line.Target.Id.Value}">
             <polyline points="{points}" fill="none" stroke-width="{strokeWidth:0.##}" stroke="{color}" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#{markerId})"{dashArray} />
-            <circle cx="{endpoints.X1:0.##}" cy="{endpoints.Y1:0.##}" r="{circleRadius:0.##}" fill="{color}" />
+            {startCircleSvg}
+            {ringSvg}
             {labelSvg}
             </g>
             <g class="hoverable" id="{elementId}" data-name="{name}">
@@ -289,7 +325,8 @@ static class LineSvg
         return labelSvg + descriptionSvg;
     }
 
-    static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth)
+    // hasHandles is false for a stub: it is not drawn along the line's points, so it shows none.
+    static string SelectedLineSvg(Line line, IReadOnlyList<Pos> polylinePoints, double strokeWidth, bool hasHandles)
     {
         if (!line.IsSelected)
             return "";
@@ -300,9 +337,10 @@ static class LineSvg
         var points = ToPolylinePoints(polylinePoints);
         var start = polylinePoints.First();
         var end = polylinePoints.Last();
+        var handlePoints = hasHandles ? line.SegmentPoints : [];
         var handlesSvg = string.Join(
             "\n",
-            line.SegmentPoints.Select(
+            handlePoints.Select(
                 (point, index) =>
                 {
                     var renderedPoint = polylinePoints[index + 1];

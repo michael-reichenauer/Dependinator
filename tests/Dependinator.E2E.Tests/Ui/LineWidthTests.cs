@@ -13,6 +13,10 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     const string PlainWidth = "1";
 
+    // Main's lines while it is selected (they end at the nodes inside the open containers).
+    const string MainToThemeService = "Demo.UI.Main→Demo.UI.Shared.IThemeService (7)";
+    const string MainToCanvas = "Demo.UI.Main→Demo.UI.Diagrams.Canvas (1)";
+
     [E2EFact]
     public async Task SelectingANode_ShouldWidenItsLinesByLinkCount_OnlyWhenTurnedOn()
     {
@@ -35,19 +39,20 @@ public class LineWidthTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(allLines).Not.ToHaveCountAsync(0);
         await Expect(wideLines).ToHaveCountAsync(0);
 
-        // Off by default: a selected node's lines keep the plain width too.
+        // Off by default: a selected node's lines keep the plain width too. (The selection's
+        // lines run end to end, so Main's line to Shared now ends at the type it uses there.)
         await App.SelectContainerNodeAsync("Demo.UI.Main");
-        await Expect(LinePolyline("Demo.UI.Main→Demo.UI.Shared (7)")).ToHaveAttributeAsync("stroke-width", PlainWidth);
+        await Expect(LinePolyline(MainToThemeService)).ToHaveAttributeAsync("stroke-width", PlainWidth);
         await Expect(wideLines).ToHaveCountAsync(0);
 
         // Turned on (closing the menu presses Escape, which also clears the selection), Main's
-        // lines show their link counts (demo-model facts: Main → Shared carries 7 links, Main →
-        // Diagrams one); the dimmed lines of the other nodes keep the plain width.
+        // lines show their link counts (demo-model facts: Main → Shared.IThemeService carries 7
+        // links, Main → Diagrams.Canvas one); the dimmed lines of the other nodes keep the plain
+        // width.
         await ToggleWidthsAsync(expectOn: true);
         await App.SelectContainerNodeAsync("Demo.UI.Main");
-        await Expect(LinePolyline("Demo.UI.Main→Demo.UI.Shared (7)")).ToHaveAttributeAsync("stroke-width", "2.4");
-        await Expect(LinePolyline("Demo.UI.Main→Demo.UI.Diagrams (1)"))
-            .ToHaveAttributeAsync("stroke-width", PlainWidth);
+        await Expect(LinePolyline(MainToThemeService)).ToHaveAttributeAsync("stroke-width", "2.4");
+        await Expect(LinePolyline(MainToCanvas)).ToHaveAttributeAsync("stroke-width", PlainWidth);
         await Expect(wideBrightLines).Not.ToHaveCountAsync(0);
         await Expect(wideDimmedLines).ToHaveCountAsync(0);
 

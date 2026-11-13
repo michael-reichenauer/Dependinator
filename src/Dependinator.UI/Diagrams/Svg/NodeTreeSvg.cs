@@ -25,13 +25,27 @@ static class NodeTreeSvg
         var content = "";
         for (var round = 0; round < MaxRenderRounds; round++)
         {
-            RepLineService.Sync(model, zoom);
+            RepLineService.Sync(model, zoom, rootContext.Flags.Reveal);
             var generation = NodeLayout.Generation;
             content = RenderNodeContent(model.Root, rootContext);
             if (NodeLayout.Generation == generation)
                 break;
         }
         return content;
+    }
+
+    // The selected nodes' links are drawn end to end (see RepLineService). A selected line that
+    // crosses containers is kept as it is: it may be one of those lines, clicked.
+    internal static LineReveal GetLineReveal(RenderSelection selection, RowFilter rows, LineFilter filter)
+    {
+        if (selection.Node is { } node)
+        {
+            IReadOnlyList<Node> nodes = selection.OtherNodes is { } others ? [node, .. others] : [node];
+            return new LineReveal(nodes, rows, filter.HideMember);
+        }
+        if (selection.Line is { IsCousin: true } line)
+            return new LineReveal(null, rows, filter.HideMember) { KeptLine = line };
+        return LineReveal.None;
     }
 
     static string RenderNodeContent(Node node, RenderContext context)
