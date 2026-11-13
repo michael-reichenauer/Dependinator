@@ -63,6 +63,7 @@ record WorkspaceSourceDto
     public required string Path { get; init; }
     public bool IsIncluded { get; init; }
     public string? RootName { get; init; }
+    public bool IsInModel { get; init; }
 }
 
 // A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).

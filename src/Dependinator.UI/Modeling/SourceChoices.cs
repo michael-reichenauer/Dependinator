@@ -27,7 +27,8 @@ static class SourceChoices
         ];
 
     // The choices as saved with the model. A source keeps the root node it had (see
-    // WorkspaceSource.RootName) unless the parse gave it another. A saved source that is not
+    // WorkspaceSource.RootName) unless the parse gave it another, and whether it is in the
+    // model, which only a refresh changes. A saved source that is not
     // found now is kept as it is: it can be back (another branch was checked out for a while),
     // and what the user chose about it, and the names of its nodes, should hold then.
     public static IReadOnlyList<WorkspaceSource> ToSaved(
@@ -46,7 +47,8 @@ static class SourceChoices
             .. choices.Select(choice => new WorkspaceSource(
                 choice.Key,
                 choice.IsIncluded,
-                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName)
+                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName),
+                Saved(saved, choice.Key)?.IsInModel ?? false
             )),
             .. saved
                 .Where(source =>

@@ -65,7 +65,10 @@ paths:
     be kept for the sources that were not parsed: their nodes and links (`KeepNodeTree`) and
     their problems (`ParseProblem.Source`). A new per-parse list on the model needs the same.
     Sources of one kind are always parsed together: `WorkspaceItems` decides between them
-    (a shared project, a same-named root) only among the sources of one parse.
+    (a shared project, a same-named root) only among the sources of one parse. Which sources
+    the model has is saved (`WorkspaceSource.IsInModel`), never inferred from its nodes: a
+    root can stay for a note the user put in it, a failed source has no nodes, and node stamps
+    are in flux while a parse runs (all three were tried and found in review, Nov 13).
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
     with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):

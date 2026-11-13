@@ -247,6 +247,7 @@ class Model : IModel
                     Path = s.Path,
                     IsIncluded = s.IsIncluded,
                     RootName = s.RootName,
+                    IsInModel = s.IsInModel,
                 }),
             ],
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
@@ -337,7 +338,12 @@ class Model : IModel
         IncludeTestProjects = modelDto.IncludeTestProjects;
         WorkspaceSources =
         [
-            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(s.Path, s.IsIncluded, s.RootName)),
+            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(
+                s.Path,
+                s.IsIncluded,
+                s.RootName,
+                s.IsInModel
+            )),
         ];
         rules.Clear();
         rules.AddRange(

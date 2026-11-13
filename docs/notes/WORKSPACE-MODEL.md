@@ -84,20 +84,23 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   (`ParseProblem.Source`, the key of the source a problem is of, set by `WorkspaceItems`). The
   kind is the unit, not the source: two solutions can share a project, and which of them it is
   shown in goes by their order in one parse. A kind is also parsed when the model gets a source
-  of it that it has nothing of, or loses one (Choose Sources, a source added or deleted). A
-  source that is only taken out is removed without a parse, and a change that leaves the model
-  as it is does nothing at all. When every source of such a parse fails, that is a problem of
-  each (`SolutionParseOptions.HasOtherSources`), not a failed refresh. Parsed in full: the
-  Parse button, opening the model, Retry, once when the saved model has a problem that names
-  no source (saved before phase 2), and the refresh after one that failed as a whole (the
-  kinds of a failed partial refresh are parsed with the next one).
-- **A new source is noticed.** The extension adds "sources" to the kinds when any watched file
-  is added or removed, or when a file that says which files are sources changes: a Bicep file
-  (the deployments are the Bicep files no other one uses) or a script project's config (its
+  of it, or loses one (Choose Sources, a source added or deleted): which sources the model has
+  is saved with the choice (`WorkspaceSource.IsInModel`, set by every refresh for the sources
+  it parsed, also the ones that failed, and the ones it kept). A source that is only taken out
+  is removed without a parse, and a change that leaves the model as it is does nothing at all.
+  When every source of such a parse fails, that is a problem of each
+  (`SolutionParseOptions.HasOtherSources`), not a failed refresh. Parsed in full: the Parse
+  button, opening the model, Retry, and a model saved before phase 2 (it does not say which
+  sources it has, so each counts as new).
+- **A new source is noticed.** The extension adds "sources" to the kinds when a file that can
+  make a source is added or removed (a solution, a Bicep file, a script project's config, a
+  script file), or when a file that says which files are sources changes: a Bicep file (the
+  deployments are the Bicep files no other one uses) or a script project's config (its
   "references"). `VsCodeReceiveService` then lists the sources again
   (`RefreshWorkspaceSourcesAsync`), so the Models menu shows the new model, and a workspace
-  model takes a new source in by the proposal rule. The dev host has no file watcher: there
-  the Parse button lists the sources again (`CanvasService.RefreshAsync`).
+  model takes a new source in by the proposal rule. The Parse button lists the sources again
+  too (`CanvasService.RefreshAsync`): the dev host has no file watcher, and the extension's
+  does not see everything (a folder that is moved).
 - **A failed source keeps its nodes.** `StructureService.ClearNotUpdated` removes what the
   parse did not stamp, so `ModelService.UpdateWorkspaceSources` re-stamps the subtree of an
   included source that has no `ParsedSource` item (`StructureService.KeepNodeTree`, by the saved
@@ -113,12 +116,13 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 
 - With automatic refresh off in VS Code, the Parse button parses every source: the kinds of
   the changes that were only marked are not kept in the UI.
-- A source whose parse gives nothing (no root node and no problem) counts as new at every
-  refresh, so its kind is parsed each time.
-- A source whose first parse failed has only its problem in the model. It is parsed again when
-  files of its kind change or with the Parse button, not at every refresh (that would parse
-  its whole kind, a second solution too, at every change of any file). When the cause is
-  outside the watched files (`npm install`, a restore), press Parse.
+- A source that failed is parsed again when files of its kind change or with the Parse
+  button, not at every refresh (that would parse its whole kind, a second solution too, at
+  every change of any file). When the cause is outside the watched files (`npm install`, a
+  restore), press Parse.
+- A refresh that fails as a whole (the parser is not reached) leaves the model as it was and
+  says so with Retry, which parses everything. The kinds it was for are not remembered: a
+  later change of another kind parses only that kind.
 - **Phase 3 (optional):** bring the layout along from a source's own model when it is added.
 - **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
   been lived with.

@@ -211,9 +211,8 @@ class CanvasService(
     public async Task RefreshAsync()
     {
         // A source can have been added or removed since the workspace was listed: only VS Code
-        // tells when that happens (and lists them then).
-        if (!Dependinator.Core.Build.IsVsCodeExtWasm)
-            await recentModelsService.RefreshWorkspaceSourcesAsync();
+        // tells when that happens, and not of every way it can (a folder that is moved).
+        await recentModelsService.RefreshWorkspaceSourcesAsync();
         await modelService.RefreshAsync();
         applicationEvents.TriggerUIStateChanged();
     }

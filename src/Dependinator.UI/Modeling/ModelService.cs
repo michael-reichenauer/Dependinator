@@ -183,8 +183,6 @@ class ModelService : IModelService, IDisposable
     )
     {
         Clear();
-        unparsedKinds = [];
-        isAllUnparsed = false;
         if (includeTestProjects is { } include)
             modelMgr.WithModel(m => m.IncludeTestProjects = include);
         if (sourceChoices is not null)
@@ -288,11 +286,6 @@ class ModelService : IModelService, IDisposable
 
     public Task<Result> RefreshChangedAsync(IReadOnlyCollection<string> changedKinds) => RefreshAsync(changedKinds);
 
-    // What a refresh was to parse when it failed as a whole (the parser could not be reached):
-    // the kinds of files, or everything. The next refresh of any kind tries that again.
-    HashSet<string> unparsedKinds = [];
-    bool isAllUnparsed;
-
     // changedKinds: the kinds of files that changed, or null to parse everything.
     async Task<Result> RefreshAsync(IReadOnlyCollection<string>? changedKinds)
     {
@@ -309,21 +302,11 @@ class ModelService : IModelService, IDisposable
             return Result.Ok;
         }
 
-        if (changedKinds is not null)
-            changedKinds = isAllUnparsed ? null : [.. changedKinds.Union(unparsedKinds)];
-
         var before = ModelChangeSummary.Capture(modelMgr);
         var cyclesBefore = CycleChangeSummary.Capture(modelMgr);
         var result = await ParseAndUpdateAsync(path, true, changedKinds);
         if (result is not bool isUpdated)
-        {
-            unparsedKinds = [.. changedKinds ?? []];
-            isAllUnparsed = changedKinds is null;
             return result.Error;
-        }
-
-        unparsedKinds = [];
-        isAllUnparsed = false;
         if (!isUpdated)
             return Result.Ok;
 
@@ -578,16 +561,16 @@ class ModelService : IModelService, IDisposable
 
     // What a refresh of a workspace model does with its sources: the ones it parses, the ones
     // in the model that it does not parse (the model keeps what it has of them), and whether
-    // the model has something of a source that is no longer in it, which is removed.
+    // the model has a source that is no longer in it, of which everything is removed.
     record SourcePlan(IReadOnlyList<SourceChoice> Parsed, IReadOnlyList<SourceChoice> Kept, bool HasRemoved)
     {
         public bool IsNothingToDo => Parsed.Count == 0 && !HasRemoved;
     }
 
     // All included sources are parsed, or after a change of some kinds of files (changedKinds)
-    // only the sources of those kinds. A kind is also parsed when the model gets a source of it
-    // that it has nothing of, or loses one: sources of one kind can share nodes (a project of
-    // two solutions), so they are parsed together.
+    // only the sources of those kinds. A kind is also parsed when the model gets a source of
+    // it, or loses one (WorkspaceSource.IsInModel): sources of one kind can share nodes (a
+    // project of two solutions), so they are parsed together.
     static SourcePlan PlanSources(
         IModel model,
         IReadOnlyList<SourceChoice> sources,
@@ -598,19 +581,12 @@ class ModelService : IModelService, IDisposable
         if (changedKinds is null)
             return new SourcePlan(included, [], false);
 
-        bool IsIncluded(string? key) => included.Any(c => IsSameKey(c.Key, key));
-        // (The stamp: a root that only stays for what the user put in it, a note or a zone,
-        // after its source was taken out is not of the last parse.)
-        bool HasNodes(string key) =>
-            SourceChoices.Saved(model.WorkspaceSources, key)?.RootName is { } rootName
-            && model.Nodes.TryGetValue(NodeId.FromName(rootName), out var root)
-            && root.UpdateStamp == model.UpdateStamp;
-        // A source that failed its first parse has only its problem: it is not parsed again
-        // until its files change, since it would fail the same way.
-        bool HasProblem(string key) => model.ParseProblems.Any(p => IsSameKey(key, p.Source));
-
-        var added = included.Where(c => !HasNodes(c.Key) && !HasProblem(c.Key)).Select(c => c.Path);
-        var removed = model.WorkspaceSources.Where(s => HasNodes(s.Path) && !IsIncluded(s.Path)).Select(s => s.Path);
+        var saved = model.WorkspaceSources;
+        var added = included.Where(c => SourceChoices.Saved(saved, c.Key)?.IsInModel != true).Select(c => c.Path);
+        var removed = saved
+            .Where(s => s.IsInModel && !included.Any(c => IsSameKey(c.Key, s.Path)))
+            .Select(s => s.Path)
+            .ToList();
         var kinds = changedKinds
             .Concat(added.Concat(removed).Select(WorkspaceSources.ChangeKind))
             .ToHashSet(StringComparer.Ordinal);
@@ -619,20 +595,13 @@ class ModelService : IModelService, IDisposable
         [
             .. included.Where(c => kinds.Contains(WorkspaceSources.ChangeKind(c.Path))),
         ];
-        var hasRemoved = removed.Any() || model.ParseProblems.Any(p => p.Source is not null && !IsIncluded(p.Source));
-        var plan = new SourcePlan(parsed, [.. included.Except(parsed)], hasRemoved);
-
-        // A problem saved before problems named their source cannot be kept with its source,
-        // so then every source is parsed (once: the problems of that parse name theirs).
-        return !plan.IsNothingToDo && model.ParseProblems.Any(p => p.Source is null)
-            ? new SourcePlan(included, [], hasRemoved)
-            : plan;
+        return new SourcePlan(parsed, [.. included.Except(parsed)], removed.Count > 0);
     }
 
     // After a parse of a workspace model: saves each parsed source's root node with the choice
-    // of sources, and keeps what the model had from a source that was not parsed this time
-    // (keptPaths) or could not be parsed (its problem item says why), so neither empties that
-    // part of the diagram.
+    // of sources, and which sources the model now has (the parsed and the kept ones). It keeps
+    // what the model had from a source that was not parsed this time (keptPaths) or could not
+    // be parsed (its problem item says why), so neither empties that part of the diagram.
     void UpdateWorkspaceSources(
         IModel model,
         IReadOnlyList<string> parsedPaths,
@@ -648,8 +617,16 @@ class ModelService : IModelService, IDisposable
 
         // The choice as it is now: the user can have changed it while the parse ran.
         var choices = SourceChoicesOf(model);
-        var saved = model.WorkspaceSources;
-        model.WorkspaceSources = SourceChoices.ToSaved(choices, saved, rootNames);
+        var inModelKeys = choices
+            .Where(c => parsedPaths.Contains(c.Path) || keptPaths.Contains(c.Path))
+            .Select(c => c.Key)
+            .ToList();
+        model.WorkspaceSources =
+        [
+            .. SourceChoices
+                .ToSaved(choices, model.WorkspaceSources, rootNames)
+                .Select(source => source with { IsInModel = inModelKeys.Any(key => IsSameKey(key, source.Path)) }),
+        ];
 
         bool IsFailed(SourceChoice c) => parsedPaths.Contains(c.Path) && !rootNames.ContainsKey(c.Path);
         foreach (var choice in choices.Where(c => IsFailed(c) || keptPaths.Contains(c.Path)))

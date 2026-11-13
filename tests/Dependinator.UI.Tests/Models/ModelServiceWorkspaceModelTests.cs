@@ -26,7 +26,6 @@ public class ModelServiceWorkspaceModelTests
     readonly Mock<IPersistenceService> persistenceService = new();
     readonly Mock<IApplicationEvents> applicationEvents = new();
     readonly List<SolutionParseOptions> parsedOptions = [];
-    bool isParserReached = true;
 
     // What the parser answers for each source that is asked for: its items, or null when it fails
     readonly Dictionary<string, IReadOnlyList<Item>?> sourceItems = new()
@@ -50,8 +49,6 @@ public class ModelServiceWorkspaceModelTests
                 (string _, SolutionParseOptions options) =>
                 {
                     parsedOptions.Add(options);
-                    if (!isParserReached)
-                        return new Error("The parser did not answer.");
                     return WorkspaceItems.Combine(
                         ModelPath,
                         [
@@ -95,8 +92,8 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal([Solution, Web], Assert.Single(parsedOptions).Sources);
         Assert.Equal(
             [
-                new WorkspaceSource("App.sln", true, "App*sln"),
-                new WorkspaceSource("src/web/tsconfig.json", true, "web"),
+                new WorkspaceSource("App.sln", true, "App*sln", IsInModel: true),
+                new WorkspaceSource("src/web/tsconfig.json", true, "web", IsInModel: true),
                 new WorkspaceSource("tests/sample/tsconfig.json", false),
             ],
             modelMgr.WithModel(m => m.WorkspaceSources)
@@ -266,9 +263,9 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(["App*sln", "Core", "Core.Type", "sample", "sample.index*ts"], ParsedNodeNames());
         Assert.Equal(
             [
-                new WorkspaceSource("App.sln", true, "App*sln"),
+                new WorkspaceSource("App.sln", true, "App*sln", IsInModel: true),
                 new WorkspaceSource("src/web/tsconfig.json", false, "web"),
-                new WorkspaceSource("tests/sample/tsconfig.json", true, "sample"),
+                new WorkspaceSource("tests/sample/tsconfig.json", true, "sample", IsInModel: true),
             ],
             modelMgr.WithModel(m => m.WorkspaceSources)
         );
@@ -386,31 +383,6 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal("web could not be parsed. It failed.", problem.Message);
     }
 
-    // A refresh that fails as a whole (the parser is not reached) leaves its kinds of sources
-    // as they were: the next refresh, of whatever kind, parses them too.
-    [Fact]
-    public async Task RefreshChangedAsync_ShouldParseTheKindsOfAFailedRefreshAgain()
-    {
-        using var modelService = CreateModelService();
-        AssertOk(await modelService.LoadAsync(ModelPath));
-
-        isParserReached = false;
-        AssertError(await modelService.RefreshChangedAsync(["code"]));
-        isParserReached = true;
-        AssertOk(await modelService.RefreshChangedAsync(["script"]));
-        Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
-
-        AssertOk(await modelService.RefreshChangedAsync(["script"]));
-        Assert.Equal([Web], parsedOptions[^1].Sources);
-
-        // And after a failed refresh of everything, everything
-        isParserReached = false;
-        AssertError(await modelService.RefreshAsync());
-        isParserReached = true;
-        AssertOk(await modelService.RefreshChangedAsync(["bicep"]));
-        Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
-    }
-
     // A note or a zone the user put in a source keeps the source's root in the diagram when
     // the source is taken out. That root is not a source to remove at every refresh.
     [Fact]
@@ -493,19 +465,21 @@ public class ModelServiceWorkspaceModelTests
         Assert.False(modelService.IsParsedFrom("script,sources"));
     }
 
-    // A model saved before problems named their source: which source a problem is of is not
-    // known, so the first refresh parses every source.
+    // A model saved before a refresh could parse only some of its sources does not say which
+    // sources it has: every source counts as new to it, so all of them are parsed.
     [Fact]
-    public async Task RefreshChangedAsync_ShouldParseEverySource_WhenAProblemNamesNoSource()
+    public async Task RefreshChangedAsync_ShouldParseEverySource_WhenTheModelDoesNotSayWhichItHas()
     {
         using var modelService = CreateModelService();
         AssertOk(await modelService.LoadAsync(ModelPath));
-        modelMgr.WithModel(m => m.SetParseProblems([new ParseProblem("2 compile errors in Core", 2, "Core")]));
+        modelMgr.WithModel(m =>
+            m.WorkspaceSources = [.. m.WorkspaceSources.Select(source => source with { IsInModel = false })]
+        );
 
-        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+        AssertOk(await modelService.RefreshChangedAsync(["bicep"]));
 
         Assert.Equal([Solution, Web], parsedOptions[^1].Sources);
-        Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
+        Assert.Equal([true, true, false], modelMgr.WithModel(m => m.WorkspaceSources).Select(s => s.IsInModel));
     }
 
     [Fact]

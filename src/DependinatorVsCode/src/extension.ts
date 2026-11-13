@@ -129,17 +129,18 @@ function isBicepFile(path: string): boolean {
 
 /**
  * True when a change to the file can change which sources the workspace has (the models the
- * UI lists). Any file that is added or removed: a solution, a deployment, a project's config,
- * or the first source file of a plain JavaScript project. And a change in a file that says
- * which files are sources: a Bicep file (the deployments are the Bicep files no other one uses
- * as a module) and a script project's config (its "references" are not projects of their own).
+ * UI lists). A file that can make a source and is added or removed: a solution, a Bicep file,
+ * a script project's config, or a script file (a plain JavaScript project is a package.json
+ * with source files). And a change in a file that says which files are sources: a Bicep file
+ * (the deployments are the Bicep files no other one uses as a module) and a script project's
+ * config (the projects among its "references" are not sources of their own).
  */
 function canChangeSources(path: string, isAddedOrRemoved: boolean): boolean {
-    if (isAddedOrRemoved)
-        return true;
     const lowerPath = path.toLowerCase();
     const fileName = lowerPath.substring(lowerPath.lastIndexOf("/") + 1);
-    return fileName.endsWith(".bicep") || scriptFileNames.includes(fileName);
+    if (fileName.endsWith(".bicep") || scriptFileNames.includes(fileName))
+        return true;
+    return isAddedOrRemoved && (fileName.endsWith(".sln") || isScriptFile(path));
 }
 
 /** True for documents the model is parsed from: C# sources, Bicep files, and TypeScript and JavaScript files. */
