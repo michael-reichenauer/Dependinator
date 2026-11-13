@@ -159,9 +159,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   workspace beside the per-source models, the sources dialog and the combined parse. Phase 2
   (Nov 13): a refresh parses only the sources whose kind of file changed, and VS Code notices
   a new or removed source without a restart (cannot be tried in a cloud session: Michael
-  checks it in VS Code). Phase 3 (optional): bring the layout along from a source's own
-  model. Phase 4: start on it in VS Code. Then the Go parser (the TypeScript helper approach,
-  `go/packages`).
+  checks it in VS Code). Phase 3 (Nov 13): a source new in the workspace model brings the
+  layout of its own model (`SourceLayout`). Phase 4: start on it in VS Code. Then the Go
+  parser (the TypeScript helper approach, `go/packages`).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

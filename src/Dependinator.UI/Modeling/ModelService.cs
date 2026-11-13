@@ -544,6 +544,18 @@ class ModelService : IModelService, IDisposable
                 return false;
             }
 
+            // The sources that are new in a workspace model bring the layout of their own model
+            var newRoots = isWorkspace
+                ? modelMgr.WithModel(m =>
+                    items
+                        .Select(i => i.Source)
+                        .OfType<Parsing.ParsedSource>()
+                        .Where(s => !m.Nodes.ContainsKey(NodeId.FromName(s.RootName)))
+                        .ToList()
+                )
+                : [];
+            var sourceLayouts = await ReadSourceModelsAsync(newRoots);
+
             using (var model = modelMgr.UseModel())
             {
                 model.Path = path;
@@ -563,6 +575,8 @@ class ModelService : IModelService, IDisposable
             {
                 if (isWorkspace)
                     UpdateWorkspaceSources(model, parseOptions.Sources, [.. keptSources.Select(c => c.Path)], items);
+                foreach (var (rootName, sourceModel) in sourceLayouts)
+                    SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
                 PassThroughService.UpdatePassThroughFlags(model);
             }
 
@@ -586,6 +600,21 @@ class ModelService : IModelService, IDisposable
             modelListService.WorkspaceSourcePaths,
             model.WorkspaceSources
         );
+
+    // The saved models of the sources, by their root names in the workspace model; a source
+    // that was never opened on its own has none.
+    async Task<IReadOnlyList<(string RootName, ModelDto Model)>> ReadSourceModelsAsync(
+        IReadOnlyList<Parsing.ParsedSource> sources
+    )
+    {
+        List<(string, ModelDto)> models = [];
+        foreach (var source in sources)
+        {
+            if (await persistenceService.ReadAsync(source.Path) is ModelDto model)
+                models.Add((source.RootName, model));
+        }
+        return models;
+    }
 
     static readonly Result<IReadOnlyList<Parsing.Item>> NoItems = new List<Parsing.Item>();
 
@@ -872,13 +901,17 @@ class ModelService : IModelService, IDisposable
     // shown), except in the containers the user arranged; the flags are saved with the model
     // until each container is laid out. Member rows are never arranged by hand (their card
     // keeps them in order), so containers with members are laid out again even when arranged.
-    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion)
+    internal static void RequireChildrenLayoutIfOlder(IModel model, int layoutVersion) =>
+        RequireChildrenLayoutIfOlder(model.Nodes.Values, layoutVersion);
+
+    internal static void RequireChildrenLayoutIfOlder(IEnumerable<Node> nodes, int layoutVersion)
     {
         if (layoutVersion >= NodeLayout.CurrentLayoutVersion)
             return;
-        RequireChildrenLayout(model);
-        foreach (var node in model.Nodes.Values)
+        foreach (var node in nodes)
         {
+            if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
+                node.IsChildrenLayoutRequired = true;
             if (node.IsChildrenLayoutCustomized && NodeLayout.HasMemberChildren(node))
                 node.IsChildrenLayoutRequired = true;
             // Before version 4 nested types sat right of a type's card; now they go below it.

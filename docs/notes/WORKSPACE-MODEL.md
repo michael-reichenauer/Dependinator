@@ -4,7 +4,7 @@ A workspace model shows several of a workspace's sources (solutions, Bicep deplo
 TypeScript and JavaScript projects) in one diagram, each parsed by its own parser. In this
 repository that is the solution, the VS Code extension and the TypeScript parser's helper side by
 side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2yT13DngeXdu
-(Nov 12 2026); Michael took all five recommendations (Nov 13). Phases 1 and 2 are built.
+(Nov 12 2026); Michael took all five recommendations (Nov 13). Phases 1 to 3 are built.
 
 ## What the user sees
 
@@ -103,6 +103,16 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   model takes a new source in by the proposal rule. The Parse button lists the sources again
   too (`CanvasService.RefreshAsync`): the dev host has no file watcher, and the extension's
   does not see everything (a folder that is moved).
+- **A source brings its own layout (phase 3).** When a source's root is new in the workspace
+  model (its first parse, or the source is added), `ModelService` reads the source's own saved
+  model, if there is one, and `SourceLayout.Apply` copies what the user did in it inside the
+  source's root: node places and container zooms, aliases, colors, icons, hidden and dimmed
+  nodes, the notes, zones and drawn nodes and links, and the routed, described or labelled
+  lines (looked up by the names their ends have in the source's model). The root keeps its
+  place among the sources, and Externals is the workspace's own. What is in the root goes by
+  the tree, not by the name (a C# project's nodes are not named by their solution), and a
+  project another source shows is left alone. A source model with an older layout version gets
+  its automatic layouts redone, as when it is opened.
 - **A failed source keeps its nodes.** `StructureService.ClearNotUpdated` removes what the
   parse did not stamp, so `ModelService.UpdateWorkspaceSources` re-stamps the subtree of an
   included source that has no `ParsedSource` item (`StructureService.KeepNodeTree`, by the saved
@@ -132,7 +142,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   parse of it succeeds.
 - A refresh can still meet a cloud pull of the same model (`ReplaceCurrentModelAsync`), as
   before phase 2.
-- **Phase 3 (optional):** bring the layout along from a source's own model when it is added.
+- A source's own layout comes along only when its root is new in the workspace model: a
+  workspace model saved before phase 3 keeps what it has. A line label that waits for a split
+  line, and the labels and routes of lines between two sources or to Externals, do not come.
 - **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
   been lived with.
 - Links between languages (the extension starting the language server) are not made: each
