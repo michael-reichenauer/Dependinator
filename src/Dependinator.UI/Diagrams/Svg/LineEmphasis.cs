@@ -9,8 +9,10 @@ using Dependinator.UI.Shared.Types;
 namespace Dependinator.UI.Diagrams.Svg;
 
 // ExploredStub: the stub whose lines stay drawn while one of them is the selected Line.
-// Highlighted: the nodes a "go to" marked (Node.IsHighlighted), whose lines are lit like a
-// selected node's, beside whatever is selected.
+// Highlighted: the node a "go to" marked (Node.IsHighlighted), whose lines are lit like a
+// selected node's, beside whatever is selected. Only one: several marked nodes (a cycle, a rule
+// violation, an answer's nodes) only get their brackets, since their panel lights the lines
+// that matter (a picked cycle lights its own lines, not every line of its members).
 readonly record struct RenderSelection(
     Node? Node,
     Line? Line,
@@ -28,8 +30,8 @@ static class LineEmphasis
     // nothing is selected or highlighted.
     internal static RenderSelection FindSelection(IModel model)
     {
-        var highlighted = model.Nodes.Values.Where(n => n.IsHighlighted).ToList();
-        var highlightedOrNull = highlighted.Count > 0 ? highlighted : null;
+        var highlighted = model.Nodes.Values.Where(n => n.IsHighlighted).Take(2).ToList();
+        IReadOnlyList<Node>? highlightedOrNull = highlighted.Count == 1 ? highlighted : null;
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
         var node = nodes.FirstOrDefault();
         if (node is not null)

@@ -139,13 +139,16 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   links, lists, tour, VS Code following the editor) leave the selection alone and mark the nodes
   with `IHighlightService`: `Node.IsHighlighted`, amber corner brackets drawn with the selection
   overlay (`NodeSvg.HighlightSvg`, baked into the tiles, so set and clear raise `ModelChanged`),
-  a CSS pulse while `IsPulsing` (the canvas's `dep-highlight-pulsing` class), the nodes' lines lit
-  (`RenderSelection.Highlighted`, beside any selection), and the breadcrumb chain (it goes before
-  the selection's). Selecting on a go to dropped the user's selection and showed handles and a
+  a CSS pulse while `IsPulsing` (the canvas's `dep-highlight-pulsing` class), a single marked
+  node's lines lit (`RenderSelection.Highlighted`, beside any selection; several marked nodes,
+  such as a picked cycle, only get brackets, or every line of the members would light), and the
+  breadcrumb chain (it goes before the selection's; the ids outlive a model load, so it checks
+  the node's flag). Selecting on a go to dropped the user's selection and showed handles and a
   toolbar unasked; don't bring it back.
-- Cleared by any canvas press (`InteractionService.OnMouseDown`, before the click, so a selected
-  line's click is unaffected: the mark changes dimming only, never which lines exist), any key,
-  view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A node that is
+- Cleared on the release of any canvas press (`InteractionService.OnMouseUp`), never on the
+  press: an inner member line can be hit only while lit (`LineSvg`), so a repaint between press
+  and release (always in Wasm) took a click on the marked node's inner line. Also cleared by any
+  key, view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A node that is
   selected gets no brackets. Michael picked the brackets over a glowing halo and a spotlight.
 
 ## Rendering performance

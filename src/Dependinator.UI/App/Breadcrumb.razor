@@ -3,6 +3,7 @@
 @inject IApplicationEvents applicationEvents
 @inject IViewContextService viewContext
 @inject Dependinator.UI.Diagrams.Interaction.ISelectionService selectionService
+@inject Dependinator.UI.Diagrams.Interaction.IHighlightService highlightService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject INavigationService navigationService
 @inject ICanvasService canvasService
@@ -25,7 +26,9 @@
   var visited = Visited;
   var homePath = visited is null ? null : modelListService.HomePath;
   var chain = viewContext.GetSelectedChain();
-  var isNodeSelected = selectionService.SelectedId.IsNode || chain.Count > 0;
+  // A highlighted solution node has no crumb of its own, but the bar still shows its model.
+  var isNodeSelected =
+    selectionService.SelectedId.IsNode || chain.Count > 0 || highlightService.SingleHighlightedId is not null;
 }
 @if (ModelName.Length > 0 && (isNodeSelected || homePath is not null))
 {

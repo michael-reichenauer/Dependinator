@@ -113,4 +113,18 @@ public class HighlightServiceTests
         Assert.Same(b, selection.Node);
         Assert.Equal([a], selection.Highlighted!);
     }
+
+    [Fact]
+    public void FindSelection_ShouldLightNoLines_ForSeveralHighlightedNodes()
+    {
+        var a = AddNode("A");
+        var b = AddNode("B");
+        CreateService().Highlight([a.Id, b.Id]); // A picked cycle: its panel lights its lines
+
+        using var model = modelMgr.UseModel();
+        var selection = LineEmphasis.FindSelection(model);
+
+        Assert.Null(selection.Highlighted);
+        Assert.True(selection.IsEmpty);
+    }
 }

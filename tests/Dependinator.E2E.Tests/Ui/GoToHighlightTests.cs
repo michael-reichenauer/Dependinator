@@ -35,7 +35,7 @@ public class GoToHighlightTests(ITestOutputHelper output) : E2ETestBase(output)
 
         // Select a member of Main, then go to a node elsewhere.
         await App.NavigateToNodeAsync(AppPage.InsideMain);
-        await App.NavigateToNodeWithoutSelectingAsync("Demo.Core.Utils");
+        await App.NavigateToNodeWithoutSelectingAsync("Demo.Core.Utils", isFromInitialView: false);
 
         // The breadcrumb follows the node just asked for.
         await Expect(App.NodeHighlight).ToHaveCountAsync(1);

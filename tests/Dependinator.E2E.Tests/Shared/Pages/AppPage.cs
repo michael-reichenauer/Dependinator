@@ -1183,9 +1183,10 @@ public sealed class AppPage
     // popover is open, and a just-clicked menu item's popover is still fading out for a moment
     // (a CI run lost the hotkey 260 ms after a menu click), so wait for those to be gone, then
     // verify the dialog opened and press again if the keystroke was dropped anyway.
-    public async Task<SearchDialog> OpenSearchViaHotkeyAsync()
+    public async Task<SearchDialog> OpenSearchViaHotkeyAsync(bool isFromInitialView = true)
     {
-        await WaitForModelRenderedAsync();
+        if (isFromInitialView)
+            await WaitForModelRenderedAsync();
         await Expect(KeyboardOwners).ToHaveCountAsync(0);
         SearchDialog search = new(this, page);
         for (int attempt = 1; ; attempt++)
@@ -1222,10 +1223,11 @@ public sealed class AppPage
     }
 
     // Navigate to a node by its exact full name and wait for its highlight, leaving the selection
-    // as it was.
-    public async Task NavigateToNodeWithoutSelectingAsync(string fullName)
+    // as it was. isFromInitialView: false for a second navigation, as the wait for the rendered
+    // model looks for the solution's label at the initial view.
+    public async Task NavigateToNodeWithoutSelectingAsync(string fullName, bool isFromInitialView = true)
     {
-        SearchDialog search = await OpenSearchViaHotkeyAsync();
+        SearchDialog search = await OpenSearchViaHotkeyAsync(isFromInitialView);
         await search.NavigateToAsync(fullName);
         await Expect(NodeHighlight).ToBeVisibleAsync();
     }

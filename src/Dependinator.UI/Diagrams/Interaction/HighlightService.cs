@@ -18,6 +18,10 @@ interface IHighlightService
     // The highlighted nodes, empty when nothing is highlighted.
     IReadOnlyList<NodeId> HighlightedIds { get; }
 
+    // The one highlighted node (a single go to), while it is still marked in the open model: the
+    // ids outlive a model load, the node's flag does not. Null for none or several.
+    NodeId? SingleHighlightedId { get; }
+
     // Highlights these nodes, replacing any earlier highlight. A selected node is left as it is:
     // its selection already marks it.
     void Highlight(IReadOnlyList<NodeId> nodeIds);
@@ -36,6 +40,11 @@ class HighlightService(IModelMgr modelMgr, IApplicationEvents applicationEvents)
     public bool IsPulsing { get; private set; }
 
     public IReadOnlyList<NodeId> HighlightedIds => highlighted;
+
+    public NodeId? SingleHighlightedId =>
+        highlighted is [var id] && modelMgr.WithModel(m => m.Nodes.TryGetValue(id, out var n) && n.IsHighlighted)
+            ? id
+            : null;
 
     public void Highlight(IReadOnlyList<NodeId> nodeIds)
     {

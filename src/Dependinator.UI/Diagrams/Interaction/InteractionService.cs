@@ -532,9 +532,6 @@ class InteractionService(
 
     void OnMouseDown(PointerEvent e)
     {
-        // A go to's highlight lasts until the user's next action: a click, a tap, the start of a pan.
-        // (A wheel zoom keeps it, so the user can zoom out around the node.)
-        highlightService.Clear();
         // A suppressed click (if any) would have fired before this next press; clear a stale flag
         // from a selection drag that was too long to produce a click event at all.
         suppressNextClick = false;
@@ -673,6 +670,12 @@ class InteractionService(
     // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
+        // A go to's highlight lasts until the user's next action: a click, a tap, a pan (a wheel
+        // zoom keeps it, so the user can zoom out around the node). Cleared on the release, not
+        // the press: it lights its node's lines, and an inner member line can be hit only while
+        // lit, so a repaint between press and release took the click away from such a line. The
+        // click's target is already in this event, so the repaint now comes too late to matter.
+        highlightService.Clear();
         if (isAreaSelecting)
         {
             isAreaSelecting = false;

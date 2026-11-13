@@ -77,6 +77,12 @@
                         animation: dep-highlight-pulse 0.75s ease-in-out 2;
                     }
 
+                    @@media (prefers-reduced-motion: reduce) {
+                        .dep-highlight-pulsing .dep-highlight {
+                            animation: none;
+                        }
+                    }
+
                     @@keyframes dep-highlight-pulse {
                         0%, 100% { opacity: 1; }
                         50% { opacity: 0.15; }

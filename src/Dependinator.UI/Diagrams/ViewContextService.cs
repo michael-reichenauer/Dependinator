@@ -85,19 +85,28 @@ class ViewContextService(
 
     public IReadOnlyList<ViewContextItem> GetSelectedChain()
     {
-        var nodeId =
-            highlightService.HighlightedIds is [var highlightedId] ? highlightedId
-            : selectionService.SelectedId.IsNode ? selectionService.SelectedId.NodeId
-            : null;
-        if (nodeId is null)
-            return [];
-
+        var highlightedId = highlightService.SingleHighlightedId;
         using var model = modelMgr.UseModel();
-        if (!model.Nodes.TryGetValue(nodeId, out var node) || NodeViewPolicy.IsAnnotation(node))
+        // A highlighted note or zone has no chain, and the selection's goes instead.
+        if (
+            highlightedId is not null
+            && model.Nodes.TryGetValue(highlightedId, out var highlighted)
+            && !NodeViewPolicy.IsAnnotation(highlighted)
+        )
+            return Chain(highlighted);
+
+        if (
+            !selectionService.SelectedId.IsNode
+            || !model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node)
+            || NodeViewPolicy.IsAnnotation(node)
+        )
             return [];
 
-        return node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();
+        return Chain(node);
     }
+
+    static List<ViewContextItem> Chain(Node node) =>
+        node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();
 
     // The root is invisible, a pass-through container is drawn as its parent, and the solution
     // node repeats the model's own name (the breadcrumb starts with the model).
