@@ -92,6 +92,22 @@ public class LineStubTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.CousinLines).ToHaveCountAsync(0);
     }
 
+    [E2EFact]
+    public async Task SelectingAHubsStub_ShouldDrawOneLinePerFarContainerOutOfView()
+    {
+        // Demo.Core.Utils is used all over the demo. Framed, the other assemblies are far out of
+        // the view: its stub's lines end at each of them (Demo.UI's 553 links on one line),
+        // instead of running to every node inside them.
+        const string Utils = "Demo.Core.Utils";
+        await App.GotoMainPageAsync();
+        await App.NavigateToNodeAsync(Utils);
+        await App.DeselectAsync();
+
+        await App.SelectLineAsync(App.Line("Demo.Core", Utils));
+        await Expect(App.Line("Demo.UI (dll)", Utils)).ToHaveCountAsync(1);
+        await Expect(App.CousinLinesFrom("Demo.UI.")).ToHaveCountAsync(0);
+    }
+
     // The ring of the stub that the line (its hover group) is drawn as.
     static ILocator StubRing(ILocator line) => line.Locator("xpath=..").Locator("circle.line-stub-ring");
 }

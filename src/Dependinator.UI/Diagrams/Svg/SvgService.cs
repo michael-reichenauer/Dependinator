@@ -153,6 +153,16 @@ class SvgService : ISvgService
         return NodeTreeSvg.RenderRootContent(model, zoom, context);
     }
 
+    // The canvas area (canvas units) a tile renders: its rect with the margin, in level
+    // coordinates, which are canvas coordinates over the level zoom.
+    internal static Rect GetCanvasArea(Rect tileRect, Rect tileWithMargin, double tileZoom) =>
+        new(
+            (tileRect.X + tileWithMargin.X) * tileZoom,
+            (tileRect.Y + tileWithMargin.Y) * tileZoom,
+            tileWithMargin.Width * tileZoom,
+            tileWithMargin.Height * tileZoom
+        );
+
     Tile CreateModelTile(
         IModel model,
         TileKey tileKey,
@@ -184,6 +194,10 @@ class SvgService : ISvgService
                     ? pathFinderService.GetPathLineIds()
                     : null
             );
+        // A selected stub opens no far container outside the tile (with its margin, which the
+        // view stays inside of until the next tile): its lines end at that container.
+        if (reveal.Stub is not null)
+            reveal = reveal with { Area = GetCanvasArea(tileRect, tileWithMargin, tileZoom) };
         RepLineService.Sync(model, tileZoom, reveal);
 
         // The problems GetTile checked the cache against, so the tile matches them.
