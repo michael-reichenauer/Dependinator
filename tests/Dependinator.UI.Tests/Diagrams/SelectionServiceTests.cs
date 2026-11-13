@@ -292,7 +292,8 @@ public class SelectionServiceTests
         Assert.True(stub.IsSelected);
         Assert.False(second.IsSelected);
         Assert.False(stub.IsExplored);
-        Assert.Equal(new Pos(20, 30), service.SelectedLineClickPosition); // Where the stub was clicked
+        // Not where the stub was clicked: a pan or zoom since then would make that spot wrong.
+        Assert.Equal(Pos.None, service.SelectedLineClickPosition);
         Assert.False(service.TrySelectExploredStub());
 
         // A line that was not drawn for the stub ends it, and so does a node.
@@ -310,16 +311,20 @@ public class SelectionServiceTests
         Assert.False(first.IsSelected);
     }
 
-    [Fact]
-    public async Task TrySelectExploredStub_ShouldNotClearTheSelection_WhenTheStubIsGone()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TrySelectExploredStub_ShouldNotClearTheSelection_WhenTheStubIsGone(bool isReplaced)
     {
         Line stub;
         Line line;
+        Node b;
+        Node child;
         using (var model = modelMgr.UseModel())
         {
             var a = AddNode(model, "A", model.Root);
-            var b = AddNode(model, "B", model.Root);
-            var child = AddNode(model, "Child", b);
+            b = AddNode(model, "B", model.Root);
+            child = AddNode(model, "Child", b);
             stub = new Line(b, child);
             line = new Line(a, child) { RenderAncestor = model.Root };
             var link = new Link(a, child);
@@ -347,12 +352,64 @@ public class SelectionServiceTests
         await service.Select(PointerId.FromLine(line.Id), click);
         Assert.True(stub.IsExplored);
 
-        // A refresh took the stub's line away: Escape has no step back and clears as usual.
-        modelMgr.WithModel(model => model.RemoveLine(stub));
+        // A refresh took the stub's line away, or replaced it with a new one that is not explored:
+        // Escape has no step back and clears as usual.
+        modelMgr.WithModel(model =>
+        {
+            model.RemoveLine(stub);
+            if (isReplaced)
+                model.TryAddLine(new Line(b, child));
+        });
 
         Assert.False(service.TrySelectExploredStub());
         Assert.Equal(PointerId.FromLine(line.Id), service.SelectedId);
         Assert.True(line.IsSelected);
+        Assert.False(service.TrySelectExploredStub());
+    }
+
+    // A labelled edge line is drawn as a line, not as a stub with lines of its own, so a line that
+    // carries its links is not one of its lines.
+    [Fact]
+    public async Task Select_ShouldNotExploreALabelledEdgeLine()
+    {
+        Line edge;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            edge = new Line(b, child);
+            edge.SetLabel("uses");
+            line = new Line(a, child) { RenderAncestor = model.Root };
+            var link = new Link(a, child);
+            edge.Add(link);
+            line.Add(link);
+            model.TryAddLine(edge);
+            model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+
+        await service.Select(PointerId.FromLine(edge.Id), click);
+        await service.Select(PointerId.FromLine(line.Id), click);
+
+        Assert.True(line.IsSelected);
+        Assert.False(edge.IsExplored);
+        Assert.False(service.TrySelectExploredStub());
     }
 
     [Fact]

@@ -71,9 +71,12 @@ class SelectionService(
     // The stub whose lines stay drawn while one of them is selected (Line.IsExplored): set when a
     // line drawn for the selected stub is clicked, kept while the user goes from one of its lines
     // to another, and cleared by any other selection.
-    LineId? exploredStubId;
-    Pos exploredStubClickPosition = Pos.None;
-    double exploredStubRelativePosition = 0.5;
+    // Its relative position is where the stub was clicked, for its toolbar when Escape selects it
+    // again. The click's screen position is not kept: after a pan or zoom it would point elsewhere
+    // (add-point goes by it), so the stub comes back as if selected without a click spot.
+    ExploredStub? exploredStub;
+
+    record ExploredStub(LineId StubId, double RelativePosition);
 
     // Nodes added to the selection beyond the primary one (insertion order kept).
     readonly List<NodeId> extraSelected = [];
@@ -309,17 +312,17 @@ class SelectionService(
             }
         }
         extraSelected.Clear();
-        if (selectedId.IsLine || exploredStubId is not null)
+        if (selectedId.IsLine || exploredStub is not null)
         {
             using (var model = modelMgr.UseModel())
             {
                 if (selectedId.IsLine && model.Lines.TryGetValue(selectedId.LineId, out var line))
                     line.IsSelected = false;
-                if (exploredStubId is { } stubId && model.Lines.TryGetValue(stubId, out var stub))
+                if (exploredStub is not null && model.Lines.TryGetValue(exploredStub.StubId, out var stub))
                     stub.IsExplored = false;
             }
         }
-        exploredStubId = null;
+        exploredStub = null;
         selectedId = PointerId.Empty;
         this.isEditMode = false;
         selectedLineClickPosition = Pos.None;
@@ -344,12 +347,10 @@ class SelectionService(
             return false;
         }
         var stubToExplore = isNewSelection ? GetStubToExplore(pointerId.LineId) : null;
-        // Where the stub was clicked, for when Escape selects it again (its toolbar and line
-        // point buttons go by it).
-        var (stubClickPosition, stubRelativePosition) =
-            stubToExplore == exploredStubId
-                ? (exploredStubClickPosition, exploredStubRelativePosition)
-                : (selectedLineClickPosition, clickedRelativePosition);
+        var stubRelativePosition =
+            exploredStub is { } explored && explored.StubId == stubToExplore
+                ? explored.RelativePosition
+                : clickedRelativePosition;
         if (isNewSelection)
             ClearSelection();
 
@@ -366,9 +367,7 @@ class SelectionService(
                 if (stubToExplore is { } stubId && model.Lines.TryGetValue(stubId, out var stub))
                 {
                     stub.IsExplored = true;
-                    exploredStubId = stubId;
-                    exploredStubClickPosition = stubClickPosition;
-                    exploredStubRelativePosition = stubRelativePosition;
+                    exploredStub = new ExploredStub(stubId, stubRelativePosition);
                 }
 
                 // Calculate the clicked relative position on the line, this is used to
@@ -403,15 +402,17 @@ class SelectionService(
     // is already being explored, and the clicked line is one of its lines, a line across
     // containers with only the stub's links. (Not Line.IsRevealed: that holds the newest tile's
     // lines, and a view can show several tiles.) Clicking the stub itself selects it as usual.
+    // The stub must be drawn as one: a labelled or hand-routed edge line draws no stub lines.
     LineId? GetStubToExplore(LineId clickedId)
     {
         if (!selectedId.IsLine)
             return null;
-        var stubId = exploredStubId ?? selectedId.LineId;
+        var stubId = exploredStub?.StubId ?? selectedId.LineId;
         using var model = modelMgr.UseModel();
         if (
             !model.Lines.TryGetValue(stubId, out var stub)
             || !LineStub.IsEdgeLine(stub)
+            || !LineStub.IsStub(stub, isOnPath: false)
             || !model.Lines.TryGetValue(clickedId, out var clicked)
             || !clicked.IsCousin
             || clicked.Links.Count == 0
@@ -423,25 +424,23 @@ class SelectionService(
 
     public bool TrySelectExploredStub()
     {
-        if (exploredStubId is not { } stubId || !selectedId.IsLine || selectedId.LineId == stubId)
+        if (exploredStub is not { } explored || !selectedId.IsLine || selectedId.LineId == explored.StubId)
             return false;
         using (var model = modelMgr.UseModel())
         {
             // The stub's line can be gone (a refresh), or replaced by one that is not explored.
-            if (!model.Lines.TryGetValue(stubId, out var stub) || !stub.IsExplored)
+            if (!model.Lines.TryGetValue(explored.StubId, out var stub) || !stub.IsExplored)
             {
-                exploredStubId = null;
+                exploredStub = null;
                 return false;
             }
+            // In the same lock as the check, so the stub cannot go in between (the lock is
+            // reentrant, ClearSelection takes it too).
+            ClearSelection();
+            stub.IsSelected = true;
         }
-
-        var (clickPosition, relativePosition) = (exploredStubClickPosition, exploredStubRelativePosition);
-        ClearSelection();
-        using (var model = modelMgr.UseModel())
-            model.Lines[stubId].IsSelected = true;
-        selectedId = PointerId.FromLine(stubId);
-        selectedLineClickPosition = clickPosition;
-        clickedRelativePosition = relativePosition;
+        selectedId = PointerId.FromLine(explored.StubId);
+        clickedRelativePosition = explored.RelativePosition;
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         UpdateSelectedPositionAsync().RunInBackground(); // The toolbar follows once the stub is measured
