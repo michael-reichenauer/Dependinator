@@ -6,6 +6,9 @@ namespace Dependinator.UI.Shared;
 // the dev host): where a workspace model is, and what kind of model a visited one is.
 static class WorkspaceModels
 {
+    // What the model of the whole workspace reads where the others read their folder.
+    public const string WholeWorkspace = "whole workspace";
+
     // The folder of each path below the folder they all share ("" for a file in that folder), so
     // two main.bicep files read "infra" and "infra/test". A path without a folder (a built-in demo)
     // gets "" and does not take part in what the others share. A TypeScript or JavaScript project

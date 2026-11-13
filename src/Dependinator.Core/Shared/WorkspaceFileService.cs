@@ -10,6 +10,10 @@ interface IWorkspaceFileService
     Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
 
+    // The folders the model files are searched in: the first one is the folder the workspace
+    // model is named after.
+    Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync();
+
     // The text of a source file a model node points at; only files inside the workspace folders
     // are read, since in VS Code the request comes from the webview.
     Task<Result<string>> ReadSourceFileAsync(string path);
@@ -70,6 +74,8 @@ class WorkspaceFileService : IWorkspaceFileService
         Log.Info("Set workspace folders ", paths);
         rootPaths = paths;
     }
+
+    public Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync() => Task.FromResult(rootPaths);
 
     public async Task<Result<string>> ReadSourceFileAsync(string path)
     {

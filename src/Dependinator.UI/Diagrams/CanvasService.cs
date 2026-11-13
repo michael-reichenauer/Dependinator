@@ -30,7 +30,9 @@ interface ICanvasService
     Task RefreshAsync();
     void PanZoomToFit();
     Task InitialShowAsync();
-    Task LoadAsync(string modelPath, bool? includeTestProjects = null);
+
+    // isRetry: the load is tried again after it failed, with what the user chose for it.
+    Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
@@ -52,7 +54,8 @@ class CanvasService(
     Lazy<IAppCloudSyncService> appCloudSyncServiceLazy,
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory,
-    ICommandService commandService
+    ICommandService commandService,
+    App.IWorkspaceSourcesService workspaceSourcesService
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -132,13 +135,19 @@ class CanvasService(
         await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && DemoModel.IsDemo(startupPath));
     }
 
-    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
+    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false)
     {
+        // The workspace's model, opened for the first time: the user chooses what is in it, and
+        // cancelling leaves the open model as it is.
+        var sources = await workspaceSourcesService.AskBeforeFirstOpenAsync(modelPath, isRetry);
+        if (sources.IsCancelled)
+            return;
+
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
         // Load failures (e.g. a failed parse) are reported to the user by the model service.
-        if (await modelService.LoadAsync(modelPath, includeTestProjects) is not ModelInfo modelInfo)
+        if (await modelService.LoadAsync(modelPath, includeTestProjects, sources.Choices) is not ModelInfo modelInfo)
             return;
 
         viewHistory.Clear(); // Views of the previous model mean nothing here

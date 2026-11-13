@@ -68,7 +68,9 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
   mode (and Claude Code, after *Dependinator: Connect Claude Code*) look up
   nodes, dependencies, paths, cycles and architecture rules of the open diagram.
 - **Multiple models** per workspace, with optional sync across devices and the
-  companion web app at [dependinator.com](https://dependinator.com).
+  companion web app at [dependinator.com](https://dependinator.com). With more
+  than one solution, deployment or project in the workspace, a model of the
+  **whole workspace** shows the ones you tick side by side in one diagram.
 
 ## Requirements
 

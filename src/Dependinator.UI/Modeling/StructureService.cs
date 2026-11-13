@@ -12,6 +12,10 @@ interface IStructureService
     void RenameNode(IModel model, string fromName, string toName);
     void SetLineDescription(IModel model, Parsing.LineDescription lineDescription);
     void ClearNotUpdated(IModel model);
+
+    // Keeps a node, all nodes in it and their links through the next ClearNotUpdated, as if
+    // the parse had just produced them: a source of a workspace model that was not parsed anew.
+    void KeepNodeTree(IModel model, string nodeName);
     void SetNodeDto(IModel model, NodeDto nodeDto);
     void SetLinkDto(IModel model, LinkDto linkDto);
     void SetLineLayoutDto(IModel model, LineDto lineLayoutDto);
@@ -357,6 +361,25 @@ class StructureService(ILineService linesService) : IStructureService
             .ToList();
         foreach (var line in staleDescriptionLines)
             line.ClearDescription();
+    }
+
+    public void KeepNodeTree(IModel model, string nodeName)
+    {
+        if (!model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var root))
+            return;
+
+        foreach (var node in root.DescendantsAndSelfPreOrder())
+        {
+            node.UpdateStamp = model.UpdateStamp;
+            foreach (var link in node.SourceLinks)
+            {
+                // Like a parsed link, which keeps its target (a node outside the tree) alive too
+                link.UpdateStamp = model.UpdateStamp;
+                link.Target.UpdateStamp = model.UpdateStamp;
+                foreach (var line in link.Lines.Where(line => line.Description is not null))
+                    line.SetDescription(line.Description, model.UpdateStamp);
+            }
+        }
     }
 
     void MoveNodeToParent(IModel model, Models.Node node, Models.Node parent)
