@@ -349,7 +349,7 @@ class ModelService : IModelService, IDisposable
     public IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath)
     {
         IReadOnlyList<WorkspaceSource> saved = modelMgr.WithModel(m =>
-            IsSamePath(m.Path, workspaceModelPath) ? m.WorkspaceSources : []
+            ModelListService.IsSamePath(m.Path, workspaceModelPath) ? m.WorkspaceSources : []
         );
         return SourceChoices.Of(modelListService.WorkspaceFolder, modelListService.WorkspaceSourcePaths, saved);
     }
@@ -367,15 +367,6 @@ class ModelService : IModelService, IDisposable
 
         return await RefreshAsync();
     }
-
-    static bool IsSamePath(string path1, string? path2) =>
-        !string.IsNullOrWhiteSpace(path1)
-        && !string.IsNullOrWhiteSpace(path2)
-        && string.Equals(
-            global::Shared.CloudModelPath.Normalize(path1),
-            global::Shared.CloudModelPath.Normalize(path2),
-            StringComparison.OrdinalIgnoreCase
-        );
 
     public async Task<Result> SetIncludeTestProjectsAsync(bool includeTestProjects)
     {
@@ -401,7 +392,7 @@ class ModelService : IModelService, IDisposable
         // Read before any model-lock block is opened; the model lock is thread-affine and must
         // never be held across the parse await.
         var isWorkspace = ModelPaths.IsWorkspace(path);
-        if (isWorkspace && !IsSamePath(path, modelListService.WorkspaceModelPath))
+        if (isWorkspace && !ModelListService.IsSamePath(path, modelListService.WorkspaceModelPath))
         {
             // Its sources are another folder's: the ones found here would make another model.
             var error = new Error("This workspace model is of another folder than the one that is open.");
@@ -411,10 +402,22 @@ class ModelService : IModelService, IDisposable
             return error;
         }
 
-        var parseOptions = modelMgr.WithModel(m => new Parsing.SolutionParseOptions
+        var parseOptions = modelMgr.WithModel(m =>
         {
-            IncludeTestProjects = m.IncludeTestProjects,
-            Sources = isWorkspace ? [.. SourceChoicesOf(m).Where(c => c.IsIncluded).Select(c => c.Path)] : [],
+            var sources = isWorkspace ? SourceChoicesOf(m).Where(c => c.IsIncluded).ToList() : [];
+            return new Parsing.SolutionParseOptions
+            {
+                IncludeTestProjects = m.IncludeTestProjects,
+                Sources = [.. sources.Select(c => c.Path)],
+                // The root names of the last parse, which the sources keep (WorkspaceItems)
+                KnownSources =
+                [
+                    .. sources
+                        .Select(c => (c.Path, SourceChoices.Saved(m.WorkspaceSources, c.Key)?.RootName))
+                        .Where(source => source.RootName is not null)
+                        .Select(source => new Parsing.ParsedSource(source.Path, source.RootName!)),
+                ],
+            };
         });
         using (
             var progress = isRefresh
@@ -504,10 +507,9 @@ class ModelService : IModelService, IDisposable
         var saved = model.WorkspaceSources;
         model.WorkspaceSources = SourceChoices.ToSaved(choices, saved, rootNames);
 
-        foreach (var source in model.WorkspaceSources)
+        foreach (var choice in choices.Where(c => parsedPaths.Contains(c.Path) && !rootNames.ContainsKey(c.Path)))
         {
-            var path = choices.First(choice => choice.Key == source.Path).Path;
-            if (source.RootName is { } rootName && parsedPaths.Contains(path) && !rootNames.ContainsKey(path))
+            if (SourceChoices.Saved(model.WorkspaceSources, choice.Key)?.RootName is { } rootName)
                 modelStructureService.KeepNodeTree(model, rootName);
         }
     }

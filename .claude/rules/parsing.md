@@ -55,6 +55,10 @@ paths:
     makes top-level nodes beside its root breaks both.
   - The sources of one parser are parsed one by one (MSBuild allows one build in a process);
     only different parsers run at the same time.
+  - A name the combining step gives must not depend on which other sources parsed this time
+    or on their order: a root keeps its name of the last parse (`KnownSources`). The first
+    version renamed by what came before in the list, so a failed first source left the second
+    with the first's name and merged it into the nodes kept for the first (found in review).
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
     with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):

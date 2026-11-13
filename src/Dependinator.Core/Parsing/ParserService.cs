@@ -43,22 +43,28 @@ class ParserService(IEnumerable<ISourceParser> parsers) : IParserService
     async Task<Result<IReadOnlyList<Parsing.Item>>> ParseWorkspaceAsync(string path, SolutionParseOptions options)
     {
         var sourcePaths = (options.Sources ?? []).Distinct().ToList();
-        var sourceOptions = options with { Sources = [] };
+        var sourceOptions = options with { Sources = [], KnownSources = [] };
 
-        var results = new Result<IReadOnlyList<Parsing.Item>>[sourcePaths.Count];
-        var parserTasks = sourcePaths
-            .Select((sourcePath, index) => (Index: index, Path: sourcePath, Parser: ParserOf(sourcePath)))
-            .GroupBy(source => source.Parser)
-            .Select(async group =>
-            {
-                foreach (var source in group)
-                    results[source.Index] = await ParseSourceAsync(source.Parser, source.Path, sourceOptions);
-            });
-        await Task.WhenAll(parserTasks);
+        var parsed = await Task.WhenAll(
+            sourcePaths
+                .Select((sourcePath, index) => (Index: index, Path: sourcePath, Parser: ParserOf(sourcePath)))
+                .GroupBy(source => source.Parser)
+                .Select(async group =>
+                {
+                    List<(int Index, string Path, Result<IReadOnlyList<Parsing.Item>> Result)> results = [];
+                    foreach (var source in group)
+                    {
+                        var result = await ParseSourceAsync(source.Parser, source.Path, sourceOptions);
+                        results.Add((source.Index, source.Path, result));
+                    }
+                    return results;
+                })
+        );
 
         return WorkspaceItems.Combine(
             path,
-            [.. sourcePaths.Select((sourcePath, index) => (sourcePath, results[index]))]
+            [.. parsed.SelectMany(results => results).OrderBy(r => r.Index).Select(r => (r.Path, r.Result))],
+            options.KnownSources ?? []
         );
     }
 

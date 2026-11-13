@@ -40,7 +40,8 @@ interface IModelListService
 
     // The model of the whole workspace: the sources found in the workspace folder that the user
     // chose, in one diagram. Null without a workspace, and with fewer than two sources, where it
-    // would be the same as the one source's own model.
+    // would be the same as the one source's own model; a model that has been used here stays
+    // when the workspace is down to one source.
     string? WorkspaceModelPath { get; }
 
     // The sources found in the workspace (solutions, Bicep deployments, script projects), which
@@ -112,10 +113,20 @@ class ModelListService(
     public bool IsWorkspacePath(string path) =>
         !string.IsNullOrWhiteSpace(path) && workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path));
 
-    public string? WorkspaceModelPath =>
-        HasWorkspace && workspaceFolder != "" && workspaceSourcePaths.Count >= 2
-            ? ModelPaths.WorkspacePath(workspaceFolder)
-            : null;
+    public string? WorkspaceModelPath
+    {
+        get
+        {
+            if (!HasWorkspace || workspaceFolder == "")
+                return null;
+
+            // A workspace model in use is not taken away when a source is removed: it would no
+            // longer refresh, and its sources could not be chosen.
+            var path = ModelPaths.WorkspacePath(workspaceFolder);
+            var isInUse = IsSamePath(lastWorkspacePath, path) || recentPaths.Any(recent => IsSamePath(recent, path));
+            return workspaceSourcePaths.Count >= 2 || isInUse ? path : null;
+        }
+    }
 
     public IReadOnlyList<string> WorkspaceSourcePaths => workspaceSourcePaths;
     public string WorkspaceFolder => workspaceFolder;
@@ -160,8 +171,12 @@ class ModelListService(
     public string? HomePath =>
         lastWorkspacePath ?? recentPaths.FirstOrDefault(IsWorkspacePath) ?? workspacePaths.FirstOrDefault();
 
-    static bool IsSamePath(string path1, string path2) =>
-        string.Equals(
+    // Whether two model paths are of one model: paths are compared as the cloud names them, so
+    // the case of a drive letter or the kind of slash makes no difference.
+    public static bool IsSamePath(string? path1, string? path2) =>
+        !string.IsNullOrWhiteSpace(path1)
+        && !string.IsNullOrWhiteSpace(path2)
+        && string.Equals(
             global::Shared.CloudModelPath.Normalize(path1),
             global::Shared.CloudModelPath.Normalize(path2),
             StringComparison.OrdinalIgnoreCase

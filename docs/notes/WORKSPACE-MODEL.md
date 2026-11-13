@@ -10,13 +10,16 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 
 - The Models menu and the Models dialog list the workspace model first under "This workspace",
   named after the workspace folder with "whole workspace" beside it. It is there only when the
-  workspace has at least two sources; with one it would be that source's own model.
+  workspace has at least two sources; with one it would be that source's own model. A model
+  that is in use (opened in this window, or among the recent models) stays when the workspace
+  is down to one source.
 - The first time it is opened, "What is in this model?" lists the found sources by kind with a
   checkbox each. The proposal ticks everything that is not in a folder named `test`, `tests`,
   `sample`, `samples`, `example` or `examples`. Cancel leaves the open model as it was; with no
   model open yet (the app is starting on it) the proposal is used.
 - "Choose Sources …" (Models menu and Settings) changes the choice later and parses again. A
-  source found since the choice was saved is marked "new" and follows the proposal rule.
+  source found since the choice was saved is marked "new" and follows the proposal rule. A
+  source that is not found for a while (another branch is checked out) keeps its choice.
 - The diagram has one root node per source and one Externals. A source that cannot be parsed is
   a problem in the problem indicator, and its part of the diagram stays as it was.
 - The model is beside the per-source models, not instead of them, and a host does not start on
@@ -37,7 +40,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   no format bump), one `WorkspaceSource` per source with its key (the path below the workspace
   folder with "/", so it holds wherever the folder is checked out), whether it is included, and
   the name of its root node from the last parse. `SourceChoices.Of` joins the found sources with
-  the saved ones; `WorkspaceSources` (Core) has the key and the proposal rule.
+  the saved ones; `WorkspaceSources` (Core) has the key and the proposal rule. The choice is
+  saved only once the model has been parsed: until then `WorkspaceSourcesService` holds it, so
+  Retry after a failed first parse is of the same sources.
 - **The parse.** `ModelService` sends the included sources on `SolutionParseOptions.Sources`
   (the parse runs in the LSP in VS Code). `ParserService.ParseWorkspaceAsync` gives each source
   to its own parser: different parsers run at the same time, the sources of one parser one by
@@ -46,8 +51,16 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
     hold in both;
   - a source whose root is named like an earlier node gets its folder in the root's name
     (`app (services∕app)`), and so in all its node names;
+  - a root keeps the name it had in the last parse (`SolutionParseOptions.KnownSources`, from
+    the saved root names), whichever of the other sources parse this time and in whatever
+    order, since the layout, the rules and a failed source's kept nodes all go by name. So a
+    name once given stays, also after the source it was told apart from is left out, and a
+    source added later is the one that is renamed;
   - a node an earlier source already has is left to that source (a project shared by two
-    solutions is shown once);
+    solutions is shown once). Within one source every item is kept, as in its own model;
+  - two C# projects that only share their name (two different `App.Core` in two solutions) are
+    shown as one, because a C# project's nodes are not named by its solution. That is reported
+    as a problem at the project, which says to leave one of the sources out;
   - a failed source is a `ParseProblem`; only when every source fails is the parse an error;
   - each parsed source adds a `ParsedSource` item with its root name.
 - **A failed source keeps its nodes.** `StructureService.ClearNotUpdated` removes what the
@@ -71,5 +84,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   been lived with.
 - Links between languages (the extension starting the language server) are not made: each
   parser sees only its own source.
-- A workspace with several folders uses the first as the workspace folder; sources of the others
-  keep their whole path as key.
+- A workspace with several folders uses the first as the workspace folder (the editor's order,
+  which the LSP's `WorkspaceFolderService` keeps); sources of the others keep their whole path
+  as key.
+- Keeping two same-named C# projects of different solutions apart (the folder in the project's
+  name, as for a root) needs the rename to be remembered per project, as it is per root.

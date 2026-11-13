@@ -175,6 +175,129 @@ public class WorkspaceItemsTests
         Assert.Single(items, i => i.Problem is not null);
     }
 
+    // A root keeps the name it had in the last parse, so the nodes of a source do not change
+    // names (and lose their layout) with what happens to the other sources.
+    [Fact]
+    public void Combine_ShouldKeepTheRootNamesOfTheLastParse_WhenTheSourceBeforeFails()
+    {
+        const string First = "/repo/a/app/tsconfig.json";
+        const string Second = "/repo/services/app/tsconfig.json";
+        const string SecondRoot = "app (services\u2215app)";
+        ParsedSource[] known = [new(First, "app"), new(Second, SecondRoot)];
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [(First, new Error("It failed.")), (Second, Source("app", Node("app.main*ts")))],
+                known
+            )
+        );
+
+        // "app" is still the failed source's, whose nodes the model keeps
+        Assert.Equal([SecondRoot, $"{SecondRoot}.main*ts"], NodeNames(items));
+        Assert.Equal([new ParsedSource(Second, SecondRoot)], items.Select(i => i.Source).OfType<ParsedSource>());
+    }
+
+    [Fact]
+    public void Combine_ShouldKeepARootsGivenName_WhenTheSourceItWasToldApartFromIsLeftOut()
+    {
+        const string Second = "/repo/services/app/tsconfig.json";
+        const string SecondRoot = "app (services\u2215app)";
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [(Second, Source("app", Node("app.main*ts")))],
+                [new("/repo/a/app/tsconfig.json", "app"), new(Second, SecondRoot)]
+            )
+        );
+
+        Assert.Equal([SecondRoot, $"{SecondRoot}.main*ts"], NodeNames(items));
+    }
+
+    // A source added to the model does not take the name of a root that is there already, also
+    // when it comes before it in the list.
+    [Fact]
+    public void Combine_ShouldRenameANewSource_WhenASourceAfterItHasTheRootName()
+    {
+        const string New = "/repo/app/tsconfig.json";
+        const string Old = "/repo/services/app/tsconfig.json";
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [(New, Source("app", Node("app.new*ts"))), (Old, Source("app", Node("app.old*ts")))],
+                [new(Old, "app")]
+            )
+        );
+
+        Assert.Equal(["app (app)", "app (app).new*ts", "app", "app.old*ts"], NodeNames(items));
+    }
+
+    [Fact]
+    public void Combine_ShouldNameARootAnew_WhenItsOwnNameChanged()
+    {
+        const string Path = "/repo/web/package.json";
+
+        var items = AssertOk(
+            WorkspaceItems.Combine(Workspace, [(Path, Source("shop", Node("shop.main*js")))], [new(Path, "web")])
+        );
+
+        Assert.Equal(["shop", "shop.main*js"], NodeNames(items));
+    }
+
+    // Within one source a node can be given more than once (a project built for two frameworks),
+    // each item adding to it as in the source's own model.
+    [Fact]
+    public void Combine_ShouldKeepEveryItemOfANode_WithinOneSource()
+    {
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [("/repo/App.sln", Source("App*sln", Node("Core.Type"), Node("Core.Type"), Node("Core.Other")))]
+            )
+        );
+
+        Assert.Equal(["App*sln", "Core.Type", "Core.Type", "Core.Other"], NodeNames(items));
+    }
+
+    // Two projects of one name in two solutions are not the project the solutions share: their
+    // nodes cannot be told apart by name, which the user is told.
+    [Fact]
+    public void Combine_ShouldReportAProjectNamedLikeAProjectOfAnotherSource()
+    {
+        var items = AssertOk(
+            WorkspaceItems.Combine(
+                Workspace,
+                [
+                    ("/repo/a/App.sln", Source("App*sln", Project("Core", "/repo/a/Core/Core.csproj"))),
+                    (
+                        "/repo/b/App.sln",
+                        Source(
+                            "App*sln",
+                            Project("Core", "/repo/b/Core/Core.csproj"),
+                            Project("Core", "/repo/b/Core/Core.csproj"),
+                            Project("Shared", "/repo/Shared/Shared.csproj")
+                        )
+                    ),
+                    ("/repo/c/Other.sln", Source("Other*sln", Project("Shared", "/repo/Shared/Shared.csproj"))),
+                ]
+            )
+        );
+
+        Assert.Equal(["App*sln", "Core", "App*sln (b)", "Shared", "Other*sln"], NodeNames(items));
+        var problem = Assert.Single(items.Select(i => i.Problem).OfType<ParseProblem>());
+        Assert.Equal(
+            "App.sln has a project named like a project of another source. "
+                + "The two are shown as one: leave one of the sources out of the model.",
+            problem.Message
+        );
+        Assert.Equal("Core", problem.NodeName);
+    }
+
+    static Item Project(string name, string file) =>
+        new(new Node(name, new() { Type = NodeType.Assembly, FileSpan = new FileSpan(file, 0, 0) }), null);
+
     static Result<IReadOnlyList<Item>> Source(string rootName, params Item[] items) =>
         (IReadOnlyList<Item>)[new Item(new Node(rootName, new() { Type = NodeType.Solution }), null), .. items];
 

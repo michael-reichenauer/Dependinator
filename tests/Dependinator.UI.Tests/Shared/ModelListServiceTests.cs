@@ -147,6 +147,37 @@ public class ModelListServiceTests
         Assert.Equal(4, service.GetWorkspaceModels().Count);
     }
 
+    // A workspace model that is in use stays when the workspace is down to one source: it must
+    // still refresh, and its sources must still be there to choose.
+    [Fact]
+    public async Task WorkspaceModelPath_ShouldStay_ForAModelInUse_WhenASourceIsRemoved()
+    {
+        const string workspaceModelPath = "/workspaces/Dependinator/.workspace";
+        workspaceFileService.Setup(w => w.GetWorkspaceFoldersAsync()).ReturnsAsync(["/workspaces/Dependinator"]);
+        var service = await CreateAsync();
+        await service.AddModelAsync(workspaceModelPath);
+
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath]);
+        await service.RefreshWorkspaceSourcesAsync();
+
+        Assert.Equal(workspaceModelPath, service.WorkspaceModelPath);
+        Assert.True(service.IsLocalPath(workspaceModelPath));
+        Assert.True(service.IsWorkspacePath(workspaceModelPath));
+
+        // Also after a restart, while it is among the models used recently
+        var restarted = await CreateAsync();
+        Assert.Equal(workspaceModelPath, restarted.WorkspaceModelPath);
+    }
+
+    [Theory]
+    [InlineData("c:\\repo\\.workspace", "C:/repo/.workspace", true)]
+    [InlineData("/repo/.workspace", "/repo/.workspace", true)]
+    [InlineData("/repo/.workspace", "/other/.workspace", false)]
+    [InlineData("/repo/.workspace", null, false)]
+    [InlineData("", "", false)]
+    public void IsSamePath_ShouldCompareThePathsAsOneModelsPaths(string path1, string? path2, bool expected) =>
+        Assert.Equal(expected, ModelListService.IsSamePath(path1, path2));
+
     [Fact]
     public async Task GetVisitedModel_ShouldBeNull_ForAWorkspaceModel()
     {

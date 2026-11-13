@@ -20,15 +20,16 @@ static class SourceChoices
             .. foundPaths.Select(path =>
             {
                 var key = WorkspaceSources.Key(workspaceFolder, path);
-                return Find(saved, key) is { } source
+                return Saved(saved, key) is { } source
                     ? new SourceChoice(path, key, source.IsIncluded)
                     : new SourceChoice(path, key, WorkspaceSources.IsProposed(key), IsNew: true);
             }),
         ];
 
     // The choices as saved with the model. A source keeps the root node it had (see
-    // WorkspaceSource.RootName) unless the parse gave it another; a source that is no longer
-    // found is forgotten.
+    // WorkspaceSource.RootName) unless the parse gave it another. A saved source that is not
+    // found now is kept as it is: it can be back (another branch was checked out for a while),
+    // and what the user chose about it, and the names of its nodes, should hold then.
     public static IReadOnlyList<WorkspaceSource> ToSaved(
         IReadOnlyList<SourceChoice> choices,
         IReadOnlyList<WorkspaceSource> saved,
@@ -38,10 +39,14 @@ static class SourceChoices
             .. choices.Select(choice => new WorkspaceSource(
                 choice.Key,
                 choice.IsIncluded,
-                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Find(saved, choice.Key)?.RootName
+                parsedRootNames?.GetValueOrDefault(choice.Path) ?? Saved(saved, choice.Key)?.RootName
             )),
+            .. saved.Where(source =>
+                !choices.Any(choice => string.Equals(choice.Key, source.Path, StringComparison.OrdinalIgnoreCase))
+            ),
         ];
 
-    static WorkspaceSource? Find(IReadOnlyList<WorkspaceSource> saved, string key) =>
+    // What is saved about the source with the key, if anything.
+    public static WorkspaceSource? Saved(IReadOnlyList<WorkspaceSource> saved, string key) =>
         saved.FirstOrDefault(source => string.Equals(source.Path, key, StringComparison.OrdinalIgnoreCase));
 }

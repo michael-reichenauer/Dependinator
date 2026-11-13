@@ -58,7 +58,8 @@ public class ModelServiceWorkspaceModelTests
                                         : new Error("It failed.")
                                 )
                             ),
-                        ]
+                        ],
+                        options.KnownSources
                     );
                 }
             );
@@ -161,6 +162,47 @@ public class ModelServiceWorkspaceModelTests
         Assert.Empty(modelMgr.WithModel(m => m.ParseProblems));
     }
 
+    // Two sources with a root of one name: the second got its folder in the name, and keeps it
+    // when the first fails, so its nodes are not mixed into the ones kept for the first.
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepTheRootNames_WhenASourceOfTheSameNameFails()
+    {
+        sourceItems[Sample] = [Root("web"), Node("web.index*ts")];
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(false, true, true)));
+        const string SampleRoot = "web (tests\u2215sample)";
+        Assert.Equal(["web", SampleRoot, $"{SampleRoot}.index*ts", "web.main*ts"], ParsedNodeNames());
+
+        sourceItems[Web] = null;
+        AssertOk(await modelService.RefreshAsync());
+
+        Assert.Equal(["web", SampleRoot, $"{SampleRoot}.index*ts", "web.main*ts"], ParsedNodeNames());
+        Assert.Equal(
+            [new ParsedSource(Web, "web"), new ParsedSource(Sample, SampleRoot)],
+            parsedOptions[1].KnownSources
+        );
+        Assert.Equal(["web", SampleRoot], modelMgr.WithModel(m => m.WorkspaceSources).Skip(1).Select(s => s.RootName));
+    }
+
+    // A source that is not found for a while (another branch is checked out) keeps what the user
+    // chose about it.
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepTheChoiceOfASourceThatIsNotFound()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(true, false, false)));
+
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Solution, Sample]);
+        AssertOk(await modelService.RefreshAsync());
+        Assert.Equal([Solution, Sample], modelService.GetSourceChoices(ModelPath).Select(c => c.Path));
+
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Solution, Web, Sample]);
+        var web = modelService.GetSourceChoices(ModelPath).Single(c => c.Path == Web);
+
+        Assert.False(web.IsIncluded);
+        Assert.False(web.IsNew);
+    }
+
     [Fact]
     public async Task SetSourceChoicesAsync_ShouldParseAgain_AddingAndRemovingTheNodesOfTheSources()
     {
@@ -237,6 +279,13 @@ public class ModelServiceWorkspaceModelTests
                 .Order(StringComparer.Ordinal)
                 .ToList()
         );
+
+    static IReadOnlyList<SourceChoice> Choices(bool solution, bool web, bool sample) =>
+        [
+            new(Solution, "App.sln", solution),
+            new(Web, "src/web/tsconfig.json", web),
+            new(Sample, "tests/sample/tsconfig.json", sample),
+        ];
 
     static Item Root(string name) => new(new ParsedNode(name, new() { Type = NodeType.Solution }), null);
 

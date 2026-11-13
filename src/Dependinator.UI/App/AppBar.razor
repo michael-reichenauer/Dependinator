@@ -578,7 +578,7 @@
         switch (action.Kind)
         {
             case ErrorActionKind.RetryLoad when action.Path is { } path:
-                await canvasService.LoadAsync(path);
+                await canvasService.LoadAsync(path, isRetry: true);
                 break;
             case ErrorActionKind.RetryRefresh:
                 await canvasService.RefreshAsync();
@@ -589,7 +589,7 @@
                 if (modelMgr.ModelPath == path)
                     await modelService.SetIncludeTestProjectsAsync(true);
                 else
-                    await canvasService.LoadAsync(path, includeTestProjects: true);
+                    await canvasService.LoadAsync(path, includeTestProjects: true, isRetry: true);
                 break;
         }
     }

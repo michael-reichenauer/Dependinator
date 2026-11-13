@@ -15,8 +15,8 @@ record SourcesAnswer(bool IsCancelled, IReadOnlyList<SourceChoice>? Choices = nu
 interface IWorkspaceSourcesService
 {
     // Before a model is loaded: asks for the sources when it is this workspace's model and has
-    // none saved yet.
-    Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath);
+    // none saved yet. A retry of a load that failed is of the sources chosen for it.
+    Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath, bool isRetry = false);
 
     // Whether the open model is this workspace's model, so its sources can be chosen.
     bool CanChoose { get; }
@@ -34,10 +34,21 @@ class WorkspaceSourcesService(
     IDialogService dialogService
 ) : IWorkspaceSourcesService
 {
-    public async Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath)
+    // The sources chosen for the workspace model while it is not saved yet: its first parse can
+    // fail, and the choice is saved with the model only once it has been parsed.
+    IReadOnlyList<SourceChoice>? unsavedChoices;
+
+    public async Task<SourcesAnswer> AskBeforeFirstOpenAsync(string modelPath, bool isRetry = false)
     {
-        if (!IsWorkspaceModel(modelPath) || await modelService.HasSavedModelAsync(modelPath))
+        if (!IsWorkspaceModel(modelPath))
             return new SourcesAnswer(IsCancelled: false);
+        if (await modelService.HasSavedModelAsync(modelPath))
+        {
+            unsavedChoices = null;
+            return new SourcesAnswer(IsCancelled: false);
+        }
+        if (isRetry && unsavedChoices is not null)
+            return new SourcesAnswer(IsCancelled: false, unsavedChoices);
 
         await RefreshSourcesAsync();
         var proposed = modelService.GetSourceChoices(modelPath);
@@ -51,7 +62,8 @@ class WorkspaceSourcesService(
         // With no model open (the app is starting), cancelling would leave an empty window, so
         // the proposal is opened: the sources can be changed any time.
         if (chosen is null && modelMgr.ModelPath == "")
-            return new SourcesAnswer(IsCancelled: false, proposed);
+            chosen = proposed;
+        unsavedChoices = chosen ?? unsavedChoices;
         return new SourcesAnswer(IsCancelled: chosen is null, chosen);
     }
 
@@ -84,5 +96,6 @@ class WorkspaceSourcesService(
         applicationEvents.TriggerUIStateChanged();
     }
 
-    bool IsWorkspaceModel(string path) => ModelPaths.IsWorkspace(path) && path == modelListService.WorkspaceModelPath;
+    bool IsWorkspaceModel(string path) =>
+        ModelPaths.IsWorkspace(path) && ModelListService.IsSamePath(path, modelListService.WorkspaceModelPath);
 }

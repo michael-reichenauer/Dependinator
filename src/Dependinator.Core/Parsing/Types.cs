@@ -21,6 +21,11 @@ record SolutionParseOptions
     // each a solution, a Bicep deployment or a script project. They travel with the request
     // because the choice is saved with the model, which only the UI has.
     public IReadOnlyList<string> Sources { get; init; } = [];
+
+    // The root node each of those sources had in the model's last parse, for the ones that
+    // have been parsed before: a source keeps that name, whichever of the others are parsed
+    // this time.
+    public IReadOnlyList<ParsedSource> KnownSources { get; init; } = [];
 }
 
 record Link(string Source, string Target, LinkProperties Properties);

@@ -8,13 +8,19 @@ namespace Dependinator.Core.Parsing;
 //   - A source that failed is a problem item, and the others still make the model.
 //   - A source whose root is named like a node before it (two "main.bicep", two project folders
 //     named "app") gets its folder in the name of its root, and so in the names of all its nodes.
+//     A root keeps the name it had in the last parse (knownSources), whichever of the other
+//     sources are parsed this time and in whatever order: the layout, the rules and what a
+//     failed source keeps in the model all go by node names.
 //   - A node that an earlier source already has is left to that source: a project that two
-//     solutions share is shown once, in the first.
+//     solutions share is shown once, in the first. Two projects that only share their name are
+//     shown as one as well, since a C# project's nodes are not named by its solution: that is
+//     reported as a problem.
 static class WorkspaceItems
 {
     public static Result<IReadOnlyList<Item>> Combine(
         string workspacePath,
-        IReadOnlyList<(string Path, Result<IReadOnlyList<Item>> Result)> sources
+        IReadOnlyList<(string Path, Result<IReadOnlyList<Item>> Result)> sources,
+        IReadOnlyList<ParsedSource>? knownSources = null
     )
     {
         if (sources.Count == 0)
@@ -23,8 +29,19 @@ static class WorkspaceItems
         var folder = ModelPaths.WorkspaceFolder(workspacePath);
         List<Item> combined = [];
         HashSet<string> nodeNames = new(StringComparer.Ordinal);
+        Dictionary<string, string> projectFiles = new(StringComparer.Ordinal);
         HashSet<(string Message, string? NodeName)> problems = [];
         List<Error> errors = [];
+
+        // The root names the sources had before, each held for its source: also for one that
+        // fails this time, whose nodes the model keeps.
+        Dictionary<string, string> knownRoots = [];
+        Dictionary<string, string> rootOwners = new(StringComparer.Ordinal);
+        foreach (var known in knownSources ?? [])
+        {
+            if (sources.Any(source => source.Path == known.Path) && knownRoots.TryAdd(known.Path, known.RootName))
+                rootOwners.TryAdd(known.RootName, known.Path);
+        }
 
         foreach (var (path, result) in sources)
         {
@@ -36,25 +53,56 @@ static class WorkspaceItems
                 continue;
             }
 
+            bool IsTaken(string name) =>
+                nodeNames.Contains(name) || (rootOwners.TryGetValue(name, out var owner) && owner != path);
+
             var items = parsed;
             var rootName = RootName(items);
-            if (rootName is not null && nodeNames.Contains(rootName))
+            if (rootName is not null)
             {
-                var newRootName = UniqueRootName(rootName, WorkspaceSources.Key(folder, path), nodeNames);
-                items = [.. items.Select(item => Renamed(item, rootName, newRootName))];
-                rootName = newRootName;
+                var newRootName =
+                    knownRoots.TryGetValue(path, out var knownRoot)
+                    && IsNameOf(knownRoot, rootName)
+                    && !IsTaken(knownRoot)
+                        ? knownRoot
+                    : IsTaken(rootName) ? UniqueRootName(rootName, WorkspaceSources.Key(folder, path), IsTaken)
+                    : rootName;
+                if (newRootName != rootName)
+                {
+                    items = [.. items.Select(item => Renamed(item, rootName, newRootName))];
+                    rootName = newRootName;
+                }
             }
 
+            // Only the nodes of the sources before this one are left out: a parser can give a
+            // node more than once (a project built for two frameworks), each adding to it.
+            HashSet<string> sourceNodeNames = new(StringComparer.Ordinal);
             foreach (var item in items)
             {
-                // A node the model already has stays as the earlier source made it; a link to it
-                // from this source leads to that node.
-                if (item.Node is not null && !nodeNames.Add(item.Node.Name))
+                var problem = item.Problem;
+                if (item.Node is { } node)
+                {
+                    // A node the model already has stays as the earlier source made it; a link
+                    // to it from this source leads to that node.
+                    if (nodeNames.Contains(node.Name))
+                    {
+                        if (!IsAnotherProject(node, projectFiles))
+                            continue;
+                        problem = SameNamedProjectProblem(path, node.Name);
+                    }
+                    else
+                    {
+                        sourceNodeNames.Add(node.Name);
+                        if (ProjectFile(node) is { } file)
+                            projectFiles.TryAdd(node.Name, file);
+                    }
+                }
+
+                if (problem is not null && !problems.Add((problem.Message, problem.NodeName)))
                     continue;
-                if (item.Problem is not null && !problems.Add((item.Problem.Message, item.Problem.NodeName)))
-                    continue;
-                combined.Add(item);
+                combined.Add(problem == item.Problem ? item : new Item(null, null, Problem: problem));
             }
+            nodeNames.UnionWith(sourceNodeNames);
 
             if (rootName is not null)
                 combined.Add(new Item(null, null, Source: new ParsedSource(path, rootName)));
@@ -70,6 +118,24 @@ static class WorkspaceItems
         return combined;
     }
 
+    // The file a project node is edited in (in the project's folder), which tells two projects
+    // of one name apart.
+    static string? ProjectFile(Node node) =>
+        node.Properties.Type == NodeType.Assembly ? node.Properties.FileSpan?.Path : null;
+
+    static bool IsAnotherProject(Node node, Dictionary<string, string> projectFiles) =>
+        ProjectFile(node) is { } file
+        && projectFiles.TryGetValue(node.Name, out var earlierFile)
+        && !string.Equals(file, earlierFile, StringComparison.OrdinalIgnoreCase);
+
+    static ParseProblem SameNamedProjectProblem(string path, string nodeName) =>
+        new(
+            $"{ModelPaths.DisplayName(path)} has a project named like a project of another source. "
+                + "The two are shown as one: leave one of the sources out of the model.",
+            1,
+            nodeName
+        );
+
     // The node all the nodes of a source are under: every parser makes one of the solution type.
     static string? RootName(IReadOnlyList<Item> items) =>
         items.Select(item => item.Node).FirstOrDefault(node => node?.Properties.Type == NodeType.Solution)?.Name;
@@ -77,7 +143,7 @@ static class WorkspaceItems
     // "app (services∕app)": the root's name with the source's folder below the workspace, in the
     // brackets that keep it one part of the name. The folder is written with a division slash
     // and "*" for its dots, since "/" and "." would split the name into parts.
-    static string UniqueRootName(string rootName, string sourceKey, HashSet<string> nodeNames)
+    static string UniqueRootName(string rootName, string sourceKey, Func<string, bool> isTaken)
     {
         var sourceFolder = WorkspaceSources
             .FolderOf(sourceKey)
@@ -89,10 +155,16 @@ static class WorkspaceItems
             .Replace(")", "");
 
         var name = sourceFolder == "" ? rootName : $"{rootName} ({sourceFolder})";
-        for (var number = 2; nodeNames.Contains(name); number++)
+        for (var number = 2; isTaken(name); number++)
             name = $"{rootName} ({(sourceFolder == "" ? "" : $"{sourceFolder} ")}{number})";
         return name;
     }
+
+    // Whether a root name from an earlier parse is a name of this root: the name itself, or the
+    // one it was given to tell it apart. A source whose root changed its name (a package was
+    // renamed) is named anew.
+    static bool IsNameOf(string knownRootName, string rootName) =>
+        knownRootName == rootName || knownRootName.StartsWith($"{rootName} (", StringComparison.Ordinal);
 
     static Item Renamed(Item item, string from, string to)
     {

@@ -134,6 +134,29 @@ public class ParserServiceTests
     }
 
     [Fact]
+    public async Task ParseAsync_ShouldNameTheRootsOfAWorkspaceModelAsInItsLastParse()
+    {
+        var scripts = ParserFor(path => true, path => RootItems("app"));
+        var service = new ParserService([scripts.Object]);
+        var options = new SolutionParseOptions
+        {
+            Sources = ["/repo/a/tsconfig.json", "/repo/b/tsconfig.json"],
+            KnownSources = [new("/repo/b/tsconfig.json", "app")],
+        };
+
+        var items = AssertOk(await service.ParseAsync("/repo/.workspace", options));
+
+        Assert.Equal(
+            [new ParsedSource("/repo/a/tsconfig.json", "app (a)"), new ParsedSource("/repo/b/tsconfig.json", "app")],
+            items.Select(i => i.Source).OfType<ParsedSource>()
+        );
+        scripts.Verify(
+            p => p.ParseAsync(It.IsAny<string>(), It.Is<SolutionParseOptions>(o => IsSame(o, new()))),
+            Times.Exactly(2)
+        );
+    }
+
+    [Fact]
     public async Task ParseAsync_ShouldReturnError_ForAWorkspaceModelWithoutSources()
     {
         var service = new ParserService([ParserFor(path => true).Object]);
@@ -144,7 +167,9 @@ public class ParserServiceTests
     }
 
     static bool IsSame(SolutionParseOptions options, SolutionParseOptions expected) =>
-        options.IncludeTestProjects == expected.IncludeTestProjects && options.Sources.SequenceEqual(expected.Sources);
+        options.IncludeTestProjects == expected.IncludeTestProjects
+        && options.Sources.SequenceEqual(expected.Sources)
+        && options.KnownSources.SequenceEqual(expected.KnownSources);
 
     static IReadOnlyList<Item> RootItems(string rootName) =>
         [new Item(new Node(rootName, new() { Type = NodeType.Solution }), null)];
