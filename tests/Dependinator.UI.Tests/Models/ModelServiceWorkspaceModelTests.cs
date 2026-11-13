@@ -548,6 +548,23 @@ public class ModelServiceWorkspaceModelTests
         );
     }
 
+    // The user opened another model while the refresh parsed: its items are not of that model.
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldDropTheParse_WhenAnotherModelWasOpenedMeanwhile()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        parseGate = new TaskCompletionSource();
+        var refresh = modelService.RefreshChangedAsync(["script"]);
+        await Task.Delay(200);
+        modelMgr.WithModel(m => m.Path = "/other/Other.sln");
+        parseGate.SetResult();
+
+        AssertOk(await refresh);
+        Assert.Equal("/other/Other.sln", modelMgr.ModelPath);
+    }
+
     [Fact]
     public async Task SetSourceChoicesAsync_ShouldReturnError_ForAnotherKindOfModel()
     {

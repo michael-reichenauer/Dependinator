@@ -292,9 +292,17 @@ class ModelService : IModelService, IDisposable
     // sources it has), and removes what it did not update.
     async Task<Result> RefreshAsync(IReadOnlyCollection<string>? changedKinds)
     {
+        var path = modelMgr.ModelPath;
         await refreshGate.WaitAsync();
         try
         {
+            // A refresh that waited is of the model it was asked for, not of one opened since
+            if (modelMgr.ModelPath != path)
+            {
+                Log.Info("Another model was opened, refresh skipped", path);
+                return Result.Ok;
+            }
+
             return await RefreshModelAsync(changedKinds);
         }
         finally
@@ -488,6 +496,7 @@ class ModelService : IModelService, IDisposable
         if (isNothingToDo)
             return false;
 
+        var isParsed = true;
         using (
             var progress = isRefresh
                 ? progressService.StartDiscreet()
@@ -501,7 +510,7 @@ class ModelService : IModelService, IDisposable
             await vsCodeSendService.NotifyStatusAsync("parsing");
 
             // Nothing to parse when a source was only taken out of a workspace model
-            var isParsed = !(isWorkspace && changedKinds is not null && parseOptions.Sources.Count == 0);
+            isParsed = !(isWorkspace && changedKinds is not null && parseOptions.Sources.Count == 0);
             var parseResult = isParsed ? await ParseAsync(path, parseOptions) : NoItems;
             await vsCodeSendService.NotifyStatusAsync("idle");
             if (parseResult is not IReadOnlyList<Parsing.Item> items)
@@ -525,6 +534,14 @@ class ModelService : IModelService, IDisposable
                     action
                 );
                 return e;
+            }
+
+            // A refresh whose model was closed while it parsed (another one was opened) is not
+            // of the model that is open now.
+            if (isRefresh && modelMgr.ModelPath != path)
+            {
+                Log.Info("Another model was opened while parsing, refresh dropped", path);
+                return false;
             }
 
             using (var model = modelMgr.UseModel())
@@ -555,8 +572,8 @@ class ModelService : IModelService, IDisposable
 
         // The source changes that were only marked (automatic refresh is off) are covered by a
         // parse of everything, or of the kinds VS Code says changed, not by one that only adds
-        // or removes a source.
-        if (changedKinds is null || changedKinds.Count > 0)
+        // or removes some sources.
+        if (changedKinds is null || changedKinds.Count > 0 || isParsed && keptSources.Count == 0)
             parsedSourceChanges = coveredSourceChanges;
         CheckLineVisibility();
 

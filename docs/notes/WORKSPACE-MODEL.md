@@ -93,6 +93,7 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   button, opening the model, Retry, and a model that does not say which sources it has (saved
   before phase 2, or its only parse failed). Refreshes run one at a time
   (`ModelService.refreshGate`): each plans from the sources the one before left in the model.
+  A refresh that waited or parsed while the user opened another model is dropped.
 - **A new source is noticed.** The extension adds "sources" to the kinds when a file that can
   make a source is added or removed (a solution, a Bicep file, a script project's config, a
   script file), or when a file that says which files are sources changes: a Bicep file (the
@@ -124,6 +125,13 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - A refresh that fails as a whole (the parser is not reached) leaves the model as it was and
   says so with Retry, which parses everything. The kinds it was for are not remembered: a
   later change of another kind parses only that kind.
+- Refreshes that wait for each other are not merged into one: only the file watcher's ones
+  are (`VsCodeReceiveService`). Pressing Parse three times during a long parse parses three
+  more times.
+- A model that does not say which sources it has parses everything at any change until one
+  parse of it succeeds.
+- A refresh can still meet a cloud pull of the same model (`ReplaceCurrentModelAsync`), as
+  before phase 2.
 - **Phase 3 (optional):** bring the layout along from a source's own model when it is added.
 - **Phase 4:** let VS Code start on the workspace model (a setting or a question), once it has
   been lived with.
