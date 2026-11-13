@@ -166,8 +166,11 @@ class ModelListService(
     }
 
     // The recent paths are shared by every window of the app, so what this one opened last wins.
+    // (What was opened last can have stopped being a workspace model: its last source is gone.)
     public string? HomePath =>
-        lastWorkspacePath ?? recentPaths.FirstOrDefault(IsWorkspacePath) ?? workspacePaths.FirstOrDefault();
+        (lastWorkspacePath is { } last && IsWorkspacePath(last) ? last : null)
+        ?? recentPaths.FirstOrDefault(IsWorkspacePath)
+        ?? workspacePaths.FirstOrDefault();
 
     // Whether two model paths are of one model: paths are compared as the cloud names them, so
     // the case of a drive letter or the kind of slash makes no difference.
@@ -254,7 +257,10 @@ class ModelListService(
 
     public async Task RefreshWorkspaceSourcesAsync()
     {
-        workspaceSourcePaths = HasWorkspace ? await workspaceFileService.GetModelFilePathsAsync() ?? [] : [];
+        // (No answer is not "no sources": what was found before stands.)
+        workspaceSourcePaths = HasWorkspace
+            ? await workspaceFileService.GetModelFilePathsAsync() ?? workspaceSourcePaths
+            : [];
         workspaceFolder = HasWorkspace
             ? (await workspaceFileService.GetWorkspaceFoldersAsync())?.FirstOrDefault() ?? ""
             : "";

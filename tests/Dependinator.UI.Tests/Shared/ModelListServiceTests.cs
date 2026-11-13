@@ -162,6 +162,11 @@ public class ModelListServiceTests
 
         Assert.Equal(4, service.GetWorkspaceModels().Count);
         Assert.Contains(workspaceModelPath, service.LocalPaths);
+
+        // A listing that got no answer leaves what was found
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync((IReadOnlyList<string>)null!);
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.Equal([ToolsPath, BicepPath], service.WorkspaceSourcePaths);
     }
 
     [Theory]

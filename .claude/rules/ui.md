@@ -178,9 +178,9 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   new workspace starts on, and that stays a single source (decided with Michael, Nov 13: no
   host starts on the workspace model by itself). `WorkspaceModelPath` is its identity (non-null
   with a workspace folder, compare with `ModelListService.IsSamePath`, never `==`); it is
-  listed only with two or more sources, but `IsWorkspacePath` and (while there is a source)
+  listed only with two or more sources, but while there is a source `IsWorkspacePath` and
   `IsLocalPath` hold for it either way, so a model that is open keeps refreshing when a source
-  is removed. A model path is not re-spelled on the way in: saved models and the cloud pull go
+  is removed. With no source left it is a visit. A model path is not re-spelled on the way in: saved models and the cloud pull go
   by the exact path (tried, and it made a pulled copy unreadable).
 - A menu item that opens a model must not await the load (`ModelMenuItems.OpenAsync` runs it
   in the background): MudBlazor keeps the menu open until the click handler returns, so the

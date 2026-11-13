@@ -166,7 +166,7 @@ class ModelService : IModelService, IDisposable
 
     // The sources chosen for a workspace model whose first parse has not succeeded yet. The
     // choice is saved with the model, which is there only once it is parsed: until then the
-    // next try starts from this (GetSourceChoices). Forgotten once a workspace model is open.
+    // next try starts from this (GetSourceChoices). Forgotten once that model is open.
     IReadOnlyList<WorkspaceSource> unparsedSourceChoices = [];
 
     public async Task<Result<ModelInfo>> LoadAsync(
@@ -206,7 +206,7 @@ class ModelService : IModelService, IDisposable
             }
 
             var parsedModelInfo = await ParseNewModelAsync(path);
-            if (parsedModelInfo is ModelInfo && ModelPaths.IsWorkspace(path))
+            if (parsedModelInfo is ModelInfo && IsWorkspaceModel(path))
                 unparsedSourceChoices = [];
             TriggerSave();
             applicationEvents.TriggerModelChanged();
@@ -214,7 +214,7 @@ class ModelService : IModelService, IDisposable
             return parsedModelInfo;
         }
 
-        if (ModelPaths.IsWorkspace(path))
+        if (IsWorkspaceModel(path))
             unparsedSourceChoices = [];
         RefreshAsync().RunInBackground();
         return modelInfo;
@@ -357,6 +357,9 @@ class ModelService : IModelService, IDisposable
             .Any(choice => kinds.Contains(WorkspaceSources.ChangeKind(choice.Path)));
     }
 
+    // Whether the path is the model of this workspace (not another folder's workspace model).
+    bool IsWorkspaceModel(string path) => ModelListService.IsSamePath(path, modelListService.WorkspaceModelPath);
+
     public Task<bool> HasSavedModelAsync(string path) => persistenceService.ExistsAsync(path);
 
     public IReadOnlyList<SourceChoice> GetSourceChoices(string workspaceModelPath)
@@ -405,7 +408,7 @@ class ModelService : IModelService, IDisposable
         // Read before any model-lock block is opened; the model lock is thread-affine and must
         // never be held across the parse await.
         var isWorkspace = ModelPaths.IsWorkspace(path);
-        if (isWorkspace && !ModelListService.IsSamePath(path, modelListService.WorkspaceModelPath))
+        if (isWorkspace && !IsWorkspaceModel(path))
         {
             // Its sources are another folder's: the ones found here would make another model.
             var error = new Error("This workspace model is of another folder than the one that is open.");

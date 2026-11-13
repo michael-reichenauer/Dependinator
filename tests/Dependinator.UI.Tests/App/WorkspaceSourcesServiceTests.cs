@@ -26,6 +26,7 @@ public class WorkspaceSourcesServiceTests
     public WorkspaceSourcesServiceTests()
     {
         modelListService.Setup(m => m.WorkspaceModelPath).Returns(ModelPath);
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([.. Proposed.Select(c => c.Path)]);
         modelService.Setup(m => m.GetSourceChoices(It.IsAny<string>())).Returns(Proposed);
         modelMgr.Setup(m => m.ModelPath).Returns("C:/repo/App.sln");
         service = new WorkspaceSourcesService(
@@ -168,5 +169,8 @@ public class WorkspaceSourcesServiceTests
 
         modelMgr.Setup(m => m.ModelPath).Returns("c:/repo/.workspace");
         Assert.True(service.CanChoose);
+
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([]);
+        Assert.False(service.CanChoose);
     }
 }

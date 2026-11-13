@@ -62,7 +62,8 @@ class WorkspaceSourcesService(
         return new SourcesAnswer(IsCancelled: chosen is null, chosen);
     }
 
-    public bool CanChoose => IsWorkspaceModel(modelMgr.ModelPath);
+    // (Without a source there is nothing to choose, and the model is not parsed.)
+    public bool CanChoose => IsWorkspaceModel(modelMgr.ModelPath) && modelListService.WorkspaceSourcePaths.Count > 0;
 
     public async Task ChooseAsync()
     {
