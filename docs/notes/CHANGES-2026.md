@@ -215,9 +215,18 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   file's line breaks, and an open container larger than 400 px on screen gets no card (`data-open`),
   since the user is then looking at its children; resting on its name, or on an open type card's
   header (`data-tip-label`, `data-header-height`), still shows it.
+- **Go to marks the node instead of selecting it (Nov 13).** Search, the dependency explorer,
+  the breadcrumb, Ask and rule links, the problems, hidden nodes and path lists, notes, share links,
+  the tour and VS Code following the editor used to select the node they went to, which dropped
+  the user's own selection and brought handles and a toolbar nobody asked for. They now mark it
+  with amber corner brackets that pulse twice as the view lands (Michael picked them over a halo
+  and a spotlight), light its lines like a selection and lead the breadcrumb, and leave the
+  selection alone. The mark lasts until the next click, tap, key or Back; a wheel zoom keeps it.
+  Showing several nodes at once (a cycle, a rule violation, Ask "show all") marks them all.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
+  Since Nov 13 it also shows the chain of a node a go to marked.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and

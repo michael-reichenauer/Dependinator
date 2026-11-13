@@ -17,8 +17,9 @@ interface IViewContextService
     // open container.
     IReadOnlyList<ViewContextItem> GetViewCenterChain();
 
-    // The selected node's chain from the top level down to the node itself; empty if no node
-    // is selected.
+    // The chain from the top level down to the node a go to highlighted (IHighlightService, the
+    // node the user just asked for, when it is one), else to the selected node; empty if there is
+    // neither.
     IReadOnlyList<ViewContextItem> GetSelectedChain();
 }
 
@@ -27,7 +28,8 @@ class ViewContextService(
     IModelMgr modelMgr,
     IScreenService screenService,
     IViewOptions viewOptions,
-    Interaction.ISelectionService selectionService
+    Interaction.ISelectionService selectionService,
+    Interaction.IHighlightService highlightService
 ) : IViewContextService
 {
     public IReadOnlyList<ViewContextItem> GetViewCenterChain()
@@ -83,18 +85,28 @@ class ViewContextService(
 
     public IReadOnlyList<ViewContextItem> GetSelectedChain()
     {
-        if (!selectionService.SelectedId.IsNode)
-            return [];
-
+        var highlightedId = highlightService.SingleHighlightedId;
         using var model = modelMgr.UseModel();
+        // A highlighted note or zone has no chain, and the selection's goes instead.
         if (
-            !model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node)
+            highlightedId is not null
+            && model.Nodes.TryGetValue(highlightedId, out var highlighted)
+            && !NodeViewPolicy.IsAnnotation(highlighted)
+        )
+            return Chain(highlighted);
+
+        if (
+            !selectionService.SelectedId.IsNode
+            || !model.Nodes.TryGetValue(selectionService.SelectedId.NodeId, out var node)
             || NodeViewPolicy.IsAnnotation(node)
         )
             return [];
 
-        return node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();
+        return Chain(node);
     }
+
+    static List<ViewContextItem> Chain(Node node) =>
+        node.AncestorsAndSelf().Where(IsShownInChain).Reverse().Select(ToItem).ToList();
 
     // The root is invisible, a pass-through container is drawn as its parent, and the solution
     // node repeats the model's own name (the breadcrumb starts with the model).

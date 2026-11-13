@@ -3,6 +3,7 @@
 @inject IApplicationEvents applicationEvents
 @inject IViewContextService viewContext
 @inject Dependinator.UI.Diagrams.Interaction.ISelectionService selectionService
+@inject Dependinator.UI.Diagrams.Interaction.IHighlightService highlightService
 @inject Modeling.Models.IModelMgr modelMgr
 @inject INavigationService navigationService
 @inject ICanvasService canvasService
@@ -10,8 +11,9 @@
 @inject Dependinator.UI.Shared.CloudSync.IAppCloudSyncService appCloudSyncService
 @implements IDisposable
 
-@* Wayfinding bar under the app bar, shown only while a node is selected: the open model, then
-   the chain of containers down to the selected node (just the model for a top-level node such
+@* Wayfinding bar under the app bar, shown only while a node is selected or a go to has
+   highlighted one (IHighlightService, which goes first): the open model, then
+   the chain of containers down to that node (just the model for a top-level node such
    as the solution, which the model crumb already names). Every crumb pans and zooms to that node;
    the model crumb fits the whole diagram. With nothing selected it is hidden, to keep the
    diagram clear (the "you are here" chain under the viewport center still drives Escape and
@@ -23,7 +25,10 @@
 @{
   var visited = Visited;
   var homePath = visited is null ? null : modelListService.HomePath;
-  var isNodeSelected = selectionService.SelectedId.IsNode;
+  var chain = viewContext.GetSelectedChain();
+  // A highlighted solution node has no crumb of its own, but the bar still shows its model.
+  var isNodeSelected =
+    selectionService.SelectedId.IsNode || chain.Count > 0 || highlightService.SingleHighlightedId is not null;
 }
 @if (ModelName.Length > 0 && (isNodeSelected || homePath is not null))
 {
@@ -48,7 +53,7 @@
       </button>
       @if (isNodeSelected)
       {
-        @foreach (var item in viewContext.GetSelectedChain())
+        @foreach (var item in chain)
         {
           <span class="dep-breadcrumb__sep">›</span>
           <button type="button" class="dep-breadcrumb__item" @onclick="() => ShowNodeAsync(item.Id)" title="@item.LongName"

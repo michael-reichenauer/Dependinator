@@ -50,7 +50,8 @@ public class ImproveCommentsTests(ITestOutputHelper output) : E2ETestBase(output
         var search = await App.OpenSearchViaHotkeyAsync();
         await search.FillAsync("Demo.Claude (dll)");
         await search.Result("Demo.Claude (dll)").First.ClickAsync();
-        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+        await Expect(App.NodeHighlight).ToBeVisibleAsync(); // The go to marks it, not selects it
+        await App.SelectNodeByFullNameAsync("Demo.Claude (dll)");
         await App.ClickNodeMenuItemAsync("node-menu-improve-comments");
 
         await Page.GetByTestId("improve-comments-only").ClickAsync();

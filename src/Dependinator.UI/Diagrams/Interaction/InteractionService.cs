@@ -38,6 +38,7 @@ class InteractionService(
     ILineEditService lineEditService,
     IApplicationEvents applicationEvents,
     ISelectionService selectionService,
+    IHighlightService highlightService,
     IModelMgr modelMgr,
     IDependenciesService dependenciesService,
     IManualEditService manualEditService,
@@ -222,6 +223,7 @@ class InteractionService(
     // plus/minus zoom. (Search, undo/redo and fit live in the app bar; Delete in the toolbars.)
     void OnKeyDown(KeyPress key)
     {
+        highlightService.Clear(); // A go to's highlight lasts until the user's next action
         if (key.Is("Escape") && key.IsPlain)
         {
             CancelOrDeselect();
@@ -688,6 +690,12 @@ class InteractionService(
     // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
+        // A go to's highlight lasts until the user's next action: a click, a tap, a pan (a wheel
+        // zoom keeps it, so the user can zoom out around the node). Cleared on the release, not
+        // the press: it lights its node's lines, and an inner member line can be hit only while
+        // lit, so a repaint between press and release took the click away from such a line. The
+        // click's target is already in this event, so the repaint now comes too late to matter.
+        highlightService.Clear();
         if (isAreaSelecting)
         {
             isAreaSelecting = false;

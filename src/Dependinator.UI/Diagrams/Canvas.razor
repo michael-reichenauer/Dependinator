@@ -28,7 +28,7 @@
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
 
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+    <svg id="svgcanvas" class="@SvgClass" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
          width="@Width" height="@Height" viewBox="@ViewBox" style="background-color:@DColors.CanvasBackground">
 
         <style>
@@ -69,6 +69,23 @@
 
                     g.line:hover .line-vis {
                         opacity: 1;
+                    }
+
+                    /* A go to's corner brackets (NodeSvg.HighlightSvg) pulse twice as the view
+                       lands, then stay until the user's next action (HighlightService). */
+                    .dep-highlight-pulsing .dep-highlight {
+                        animation: dep-highlight-pulse 0.75s ease-in-out 2;
+                    }
+
+                    @@media (prefers-reduced-motion: reduce) {
+                        .dep-highlight-pulsing .dep-highlight {
+                            animation: none;
+                        }
+                    }
+
+                    @@keyframes dep-highlight-pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.15; }
                     }
 
                     .selectpoint:hover *,

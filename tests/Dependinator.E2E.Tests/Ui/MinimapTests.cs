@@ -25,11 +25,11 @@ public class MinimapTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(frame).ToBeAttachedAsync();
 
         // At the initial fit view the frame spans the whole map, so zoom into Demo.UI first; the
-        // node gets selected once the navigation has settled, and the frame then sits inside the map.
+        // node gets its highlight once the navigation has settled, and the frame then sits inside the map.
         var search = await App.OpenSearchViaHotkeyAsync();
         await search.FillAsync("Demo.UI (dll)");
         await search.Result("Demo.UI (dll)").First.ClickAsync();
-        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+        await Expect(App.NodeHighlight).ToBeVisibleAsync();
         double before = await FrameXAsync(frame);
         Assert.True(before > 0, $"The frame should sit inside the map after zooming in, but x was {before}.");
 

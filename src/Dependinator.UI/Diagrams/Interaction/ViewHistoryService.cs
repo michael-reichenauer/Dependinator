@@ -25,8 +25,12 @@ interface IViewHistoryService
 readonly record struct ViewEntry(Pos Offset, double Zoom);
 
 [Scoped]
-class ViewHistoryService(IModelMgr modelMgr, IPanZoomService panZoomService, IApplicationEvents applicationEvents)
-    : IViewHistoryService
+class ViewHistoryService(
+    IModelMgr modelMgr,
+    IPanZoomService panZoomService,
+    IApplicationEvents applicationEvents,
+    IHighlightService highlightService
+) : IViewHistoryService
 {
     const int MaxEntries = 50;
 
@@ -73,6 +77,7 @@ class ViewHistoryService(IModelMgr modelMgr, IPanZoomService panZoomService, IAp
         from.RemoveAt(from.Count - 1);
         if (CurrentView() is { } current && current != target)
             to.Add(current);
+        highlightService.Clear(); // A go to's highlight belongs to the view the user leaves
         applicationEvents.TriggerUIStateChanged();
 
         await panZoomService.PanZoomToViewAsync(target.Offset, target.Zoom);

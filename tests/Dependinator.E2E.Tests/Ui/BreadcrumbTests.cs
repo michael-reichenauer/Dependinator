@@ -5,8 +5,8 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Exercises the breadcrumb (Breadcrumb.razor): shown only while a node is selected, with the
-// open model, then the chain of containers down to the selected node. Crumbs navigate; the
+// Exercises the breadcrumb (Breadcrumb.razor): shown only while a node is selected (or a go to
+// highlighted one), with the open model, then the chain of containers down to that node. Crumbs navigate; the
 // model crumb fits the diagram to the screen.
 public class BreadcrumbTests(ITestOutputHelper output) : E2ETestBase(output)
 {
@@ -33,12 +33,13 @@ public class BreadcrumbTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(breadcrumb).ToBeHiddenAsync();
 
         // Alt+Up zooms out one level: the innermost open container (Main) is framed inside its
-        // parent, where it draws as an icon, and becomes the selected (last) crumb.
+        // parent, where it draws as an icon, and is highlighted, not selected: it is the last crumb.
         await Page.Keyboard.PressAsync("Alt+ArrowUp");
         await Expect(items.Last).ToHaveTextAsync("Main");
-        await Expect(Page.GetByTestId("node-toolbar")).ToHaveAttributeAsync("data-container", "false");
+        await Expect(App.NodeHighlight).ToBeVisibleAsync();
+        await Expect(App.NodeToolbarMenu).ToBeHiddenAsync();
 
-        // The model crumb fits the whole diagram; the selected node keeps its chain.
+        // The model crumb fits the whole diagram; the highlighted node keeps its chain.
         await model.ClickAsync();
         await Expect(App.NodeLabel("Demo.sln")).ToBeVisibleAsync();
         await Expect(items.Last).ToHaveTextAsync("Main");

@@ -35,6 +35,7 @@ class ExportService(
     IScreenService screenService,
     ISvgExportService svgExportService,
     ISelectionService selectionService,
+    IHighlightService highlightService,
     IAreaSelectionService areaSelectionService,
     IDialogService dialogService,
     ISnackbar snackbar,
@@ -118,8 +119,9 @@ class ExportService(
             return;
         }
 
-        // The selection highlight would otherwise be baked into the exported image.
+        // The selection and a go to's highlight would otherwise be baked into the exported image.
         selectionService.Unselect();
+        highlightService.Clear();
         var svg = svgExportService.GetSvgDocument(canvasRect, zoom);
 
         try

@@ -50,7 +50,7 @@ page objects). Each rule below comes from a real CI or local failure.
 - Verify every gesture through the `AppPage` helpers; ask what UI change proves an action
   landed, and wait for it.
 - Never act on state you have not seen. Blazor Server applies state on the server, so an Escape or
-  drag sent right after a click races mode arming or post-navigation selection: use
+  drag sent right after a click races mode arming or a navigation's landing: use
   `App.CancelModeAsync()`, `App.DeselectAsync()`, and `Expect(App.ModeBanner).ToBeVisibleAsync()`
   before dragging an armed area.
 - The app ignores canvas shortcuts while a dialog or menu popover is open, including the fade-out
@@ -74,9 +74,12 @@ page objects). Each rule below comes from a real CI or local failure.
   Nov 2026).
 - A retry must not press Escape with no menu or dialog open: the canvas takes it and clears the
   selection, and every further attempt waits for a node toolbar that is gone
-  (`ResetPopoversAsync` checks `KeyboardOwners`). `App.NavigateToNodeAsync` returns only after
-  the navigation selected its node; before that, a test's own selection was replaced a moment
-  later. Together these were a third of the CI flakes of Oct 28-Nov 11 2026 (HiddenNodesTests).
+  (`ResetPopoversAsync` checks `KeyboardOwners`). A navigation no longer selects its node (since
+  Nov 13 it marks it with corner brackets, `App.NodeHighlight`): `App.NavigateToNodeAsync` waits
+  for the brackets and then selects the node with a click, and
+  `NavigateToNodeWithoutSelectingAsync` only waits. When a navigation still selected, a test's own
+  selection was replaced a moment later. Together these were a third of the CI flakes of Oct
+  28-Nov 11 2026 (HiddenNodesTests).
 - `App.SelectLineAsync` waits for the line toolbar, which proves nothing when a line is selected
   already: going from line to line, wait for the clicked line's selection overlay
   (`polyline[stroke-dasharray='3,50']` beside its hit target, found by the line's `data-name`;
