@@ -224,35 +224,6 @@ else if (HasSelectedLine)
           </MudMenuItem>
         }
 
-        @* Direct lines are view state, not an edit, so they are offered in both modes. They live
-           in the menu only (no toolbar buttons) while the feature settles. *@
-        @if (SelectedNodeHasChildren)
-        {
-          <MudDivider />
-          <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" data-testid="node-lines-depth">
-            @LinesCaption
-          </MudText>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldMore"
-                       OnClick="IncreaseLineDepth" title="Split this node's lines per child, one level deeper."
-                       data-testid="node-menu-lines-deeper">
-            Split Lines One Level Deeper
-          </MudMenuItem>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
-                       OnClick="DecreaseLineDepth" Disabled="@(SelectedNodeLineDepth == 0)"
-                       title="Merge the split lines back one level." data-testid="node-menu-lines-shallower">
-            Merge Lines Back One Level
-          </MudMenuItem>
-          @if (HasSelectedNodeLineSplits)
-          {
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
-                         OnClick="HideDirectLines"
-                         title="Merge every split line of this node and its descendants back into the bundle."
-                         data-testid="node-menu-hide-direct-lines">
-              Merge All Lines Back (Hide Direct Lines)
-            </MudMenuItem>
-          }
-        }
-
         @* Everything below changes the model, so it needs edit mode (like dragging does). *@
         @if (viewOptions.IsEditingEnabled)
         {
@@ -405,9 +376,6 @@ else if (HasSelectedLine)
   INodeEditService nodeEditService { get; set; } = null!;
 
   [Inject]
-  ILineSplitService lineSplitService { get; set; } = null!;
-
-  [Inject]
   IViewOptions viewOptions { get; set; } = null!;
 
   [Inject]
@@ -441,7 +409,6 @@ else if (HasSelectedLine)
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
-  bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
 
   // The selected node's id, when the selection is a node.
@@ -558,34 +525,6 @@ else if (HasSelectedLine)
     selectionService.SetSelectedNodesVisibility(visibility);
     if (visibility == NodeVisibility.Hidden && !viewOptions.RevealHiddenNodes)
       selectionService.Unselect();
-  }
-
-  int SelectedNodeLineDepth => TryGetSelectedNodeId(out var nodeId) ? lineSplitService.GetDepth(nodeId) : 0;
-  bool HasSelectedNodeLineSplits => TryGetSelectedNodeId(out var nodeId) && lineSplitService.HasSplits(nodeId);
-
-  // The menu section's caption shows how many levels the node's lines are split (the toolbar
-  // badge used to).
-  string LinesCaption =>
-      SelectedNodeLineDepth is var depth and > 0
-          ? $"Direct Lines (split {depth} {(depth == 1 ? "level" : "levels")})"
-          : "Direct Lines";
-
-  void IncreaseLineDepth()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.IncreaseDepth(nodeId);
-  }
-
-  void DecreaseLineDepth()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.DecreaseDepth(nodeId);
-  }
-
-  void HideDirectLines()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.Clear(nodeId);
   }
 
   // Deletes the selected manual node(s); with a group, every manual node in it goes as one

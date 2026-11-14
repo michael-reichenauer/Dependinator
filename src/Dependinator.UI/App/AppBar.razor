@@ -21,7 +21,7 @@
 @inject Dependinator.UI.Diagrams.Editing.IZoneService zoneService
 @inject Dependinator.UI.Diagrams.Editing.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
-@inject Dependinator.UI.Diagrams.Lines.ILineSplitService lineSplitService
+@inject Dependinator.UI.Diagrams.Dependencies.IDependenciesService dependenciesService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
 @inject Dependinator.UI.Diagrams.Navigation.IPathFinderService pathFinderService
 @inject Dependinator.UI.Diagrams.IHiddenNodeService hiddenNodeService
@@ -186,7 +186,7 @@
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
-                             OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
+                             OnClick="() => dependenciesService.SetShowLines(false)" data-testid="menu-hide-direct-lines">
                     Hide All Direct Lines
                 </MudMenuItem>
 

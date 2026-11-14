@@ -201,6 +201,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   The stub keeps the line's hover card ("outside X →
   child"), selection and rule colour; a labelled or hand-routed line and the dependency path are
   still drawn in full.
+  Since Nov 14 the node menu no longer has the Direct Lines section (Split Lines One Level
+  Deeper, Merge Lines Back One Level, Merge All Lines Back): a stub shows a child's own lines,
+  so splitting a container's lines by hand was no longer needed, and the split depth is gone.
 - **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
   styled card in the app's theme: a node's kind and container, description, how many nodes it
   uses and is used by (a member counts as its type), its members and its problems (compile errors,
@@ -230,7 +233,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
-  explorer focus as opt-ins. Direct lines are dotted.
+  explorer focus as opt-ins. Direct lines are dotted. The line-split depth went on Nov 14, after
+  the stubs.
 - **Dependencies explorer.**
   - Expand all (Feb).
   - Reworked UI with link counts (Jul 9).

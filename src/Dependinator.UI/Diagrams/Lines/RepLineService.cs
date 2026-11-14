@@ -51,14 +51,11 @@ readonly record struct LineReveal(RowFilter Rows, bool HideMemberLines)
 // Resolves which lines are rendered at a given zoom. By default every link is drawn as the
 // aggregated "funnel" built by LineService: child-to-parent segments up to the source-side top
 // sibling under the link's common ancestor, one sibling line between the two top siblings, and
-// parent-to-child segments down to the target. The user can split a container's bundles by
-// giving it a direct-line depth (Node.LineSplitDepth): the representative walk then descends
-// that many levels into the container, on the source side as well as on the target side, as
-// far as the nodes actually show their children at this zoom. The dependency explorer's
-// subject (Model.LineFocus) is drawn the same way: its links descend to the subject on the
-// near side and into the tree rows expanded in the explorer on the far side, and their lines
-// are flagged IsFocused. Links are grouped by their (source rep, target rep) pair and drawn as
-// one line per pair.
+// parent-to-child segments down to the target. The dependency explorer's subject
+// (Model.LineFocus) splits its bundles: its links descend to the subject on the near side and
+// into the tree rows expanded in the explorer on the far side, as far as the nodes actually
+// show their children at this zoom, and their lines are flagged IsFocused. Links are grouped
+// by their (source rep, target rep) pair and drawn as one line per pair.
 //
 // A selected stub's links are drawn end to end as well (LineReveal): a link of the stub is
 // pinned at the stub's child and descends as deep as the nodes are open on the other side, so
@@ -97,7 +94,7 @@ static class RepLineService
     // Last synced state per model: tiles are re-created far more often than the reps actually
     // change (panning, post-change re-renders, and especially zoom animations, where the zoom
     // differs every frame but no node crosses an expansion threshold). The reps depend on the
-    // model structure (which includes the split and focus state, see Model.BumpStructureVersion) and on
+    // model structure (which includes the focus state, see Model.BumpStructureVersion) and on
     // the expansion state of exactly the nodes the last resolution visited, so the sync can be
     // skipped when the structure version matches and every one of those nodes still has the
     // same expansion state at the new zoom. Geometry changes (a layout, a resize, a container
@@ -444,13 +441,12 @@ static class RepLineService
     }
 
     // Walks from the top sibling under the common ancestor (index count-common-1) toward the
-    // endpoint (index 0). The walk descends into a node only while it has depth budget left,
-    // or while the node lies above the focus pin or is a focus-expanded node, and the node
-    // shows its children at this zoom; with no split depth and no focus it stops at once, which
-    // is the aggregated funnel. With a reveal (the far side of a selected stub's link) it
-    // descends as far as the nodes show their children. Pass-through nodes are transparent:
-    // they have no chrome of their own, so they neither stop the walk nor consume a level. The
-    // depth and focus are checked before the expansion state so nodes that cannot affect the
+    // endpoint (index 0). The walk descends into a node only while the node lies above the
+    // focus pin or is a focus-expanded node, and the node shows its children at this zoom;
+    // with no focus it stops at once, which is the aggregated funnel. With a reveal (the far
+    // side of a selected stub's link) it descends as far as the nodes show their children.
+    // Pass-through nodes are transparent: they have no chrome of their own, so they never stop
+    // the walk. The focus is checked before the expansion state so nodes that cannot affect the
     // outcome never enter the memo's expansion cache.
     static int GetRepresentativeIndex(
         List<Node> path,
@@ -464,7 +460,6 @@ static class RepLineService
     )
     {
         int index = path.Count - commonAncestors - 1;
-        int budget = GetInheritedDepth(path, index);
         int pinIndex = pinNode is null ? int.MaxValue : IndexOf(path, pinNode); // MaxValue: no pin on this path
         while (index > 0)
         {
@@ -475,9 +470,7 @@ static class RepLineService
                 continue;
             }
 
-            budget = Math.Max(budget, node.LineSplitDepth);
-            var isFocusDescent = index > pinIndex || (expandedNodes is not null && expandedNodes.Contains(node));
-            var isAskedFor = budget > 0 || isFocusDescent;
+            var isAskedFor = index > pinIndex || (expandedNodes is not null && expandedNodes.Contains(node));
             if ((!isAskedFor && reveal is null) || !IsChildrenShown(node, zoom, cache))
                 break;
 
@@ -491,30 +484,10 @@ static class RepLineService
             if (!isAskedFor && !IsWorthOpening(node, zoom, reveal.GetValueOrDefault().Area, worthOpeningCache))
                 break;
 
-            if (budget > 0)
-                budget--;
             index--;
         }
 
         return index;
-    }
-
-    // The depth budget the ancestors above the top sibling grant it: an ancestor's split depth
-    // counts from that ancestor, so the levels already spent down to the top sibling are
-    // subtracted (pass-through nodes are not levels). This is what makes a split depth apply to
-    // the links inside the container too, whose top siblings lie below it.
-    static int GetInheritedDepth(List<Node> path, int topIndex)
-    {
-        int budget = 0;
-        int levels = 0;
-        for (int i = topIndex + 1; i < path.Count; i++)
-        {
-            if (!path[i - 1].IsPassThrough)
-                levels++;
-            budget = Math.Max(budget, path[i].LineSplitDepth - levels);
-        }
-
-        return budget;
     }
 
     // The size on screen (pixels) below which a container's children count as tiny: a child of
@@ -644,8 +617,8 @@ static class RepLineService
     }
 
     // Inactive cousin lines are deliberately NOT pruned: they are invisible (!IsActiveRep),
-    // their count is bounded by the distinct rep pairs of the zoom levels, split depths and
-    // focus states visited, and pruning caused heavy allocation churn when tiles at different zoom levels
+    // their count is bounded by the distinct rep pairs of the zoom levels and focus states
+    // visited, and pruning caused heavy allocation churn when tiles at different zoom levels
     // alternated (each flip re-created and re-destroyed every deep cousin line).
     // Model.RemoveLink removes them once their last link goes away, like any other line.
 }
