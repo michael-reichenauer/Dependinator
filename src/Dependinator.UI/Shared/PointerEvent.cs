@@ -31,6 +31,13 @@ public record PointerEvent
     public double DeltaZ { get; init; }
     public double DeltaMode { get; init; }
 
+    // A two-finger pinch (synthesized as a wheel event by PointerEventService): how much the
+    // distance between the fingers grew (> 1: spread, zoom in), and where their midpoint was
+    // before this move (OffsetX/OffsetY is where it is now). 0 for other events.
+    public double PinchScale { get; init; }
+    public double PinchFromX { get; init; }
+    public double PinchFromY { get; init; }
+
     // Signed count of wheel events the JS input batcher coalesced into this event (one per
     // animation frame); 0 for non-batched sources (e.g. pinch-synthesized wheel events).
     public int WheelTicks { get; init; }

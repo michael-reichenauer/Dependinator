@@ -55,7 +55,6 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // zoom band (moved by a transform, see GestureTransform) instead of forcing a full tile
     // re-render every tick.
     const double WheelZoomSpeed = 1.14;
-    const double PinchZoomSpeed = 1.04;
     const double FlightFocusShare = 0.6;
     const double FlightBaseSeconds = 0.56;
     const double FlightSecondsPerLength = 0.28;
@@ -68,6 +67,12 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
 
     public void Zoom(PointerEvent e)
     {
+        if (e.PinchScale > 0)
+        {
+            Pinch(e);
+            return;
+        }
+
         Interlocked.Increment(ref goToRequestId);
         Pos newOffset;
         double newZoom;
@@ -77,8 +82,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
                 return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
 
-            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            var factor = Math.Pow(speed, e.ZoomSteps);
+            var factor = Math.Pow(WheelZoomSpeed, e.ZoomSteps);
             newZoom = (e.DeltaY > 0) ? model.Zoom * factor : model.Zoom * (1 / factor);
             if (newZoom > MaxZoom)
                 newZoom = MaxZoom;
@@ -96,6 +100,30 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
             newOffset = new Pos(x, y);
         }
 
+        SetView(newOffset, newZoom);
+    }
+
+    // A two-finger pinch moves the view with the fingers: the canvas point that was under their
+    // midpoint stays under it, and the content grows as much as the distance between them did.
+    // (It used to zoom by a fixed 4% per move event, in the direction of the change, so the zoom
+    // depended on how often the browser sent moves, and a 1 px jitter back zoomed 4% back.)
+    void Pinch(PointerEvent e)
+    {
+        if (!double.IsFinite(e.PinchScale))
+            return;
+        Interlocked.Increment(ref goToRequestId);
+        Pos newOffset;
+        double newZoom;
+        using (var model = modelMgr.UseModel())
+        {
+            newZoom = Math.Min(MaxZoom, model.Zoom / e.PinchScale);
+            var canvasX = model.Offset.X + e.PinchFromX * model.Zoom;
+            var canvasY = model.Offset.Y + e.PinchFromY * model.Zoom;
+            newOffset = new Pos(canvasX - e.OffsetX * newZoom, canvasY - e.OffsetY * newZoom);
+        }
+
+        if (!double.IsFinite(newOffset.X) || !double.IsFinite(newOffset.Y) || newZoom <= 0)
+            return;
         SetView(newOffset, newZoom);
     }
 

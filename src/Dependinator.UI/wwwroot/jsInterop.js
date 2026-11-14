@@ -330,18 +330,18 @@ export function getWindowSizeDetails(parm) {
   return windowSize;
 }
 
-// Coalesces high-frequency input events (wheel and single-pointer pointermove) to at most one
+// Coalesces high-frequency input events (wheel and pointermove, per pointer) to at most one
 // .NET call per animation frame, since each call re-renders the UI (and round-trips over
 // SignalR on Blazor Server). Dropped events are not lost: their movement/scroll deltas are
-// accumulated into the queued event. Discrete events (pointerdown/up/cancel, contextmenu) and
-// two-pointer pinch moves are sent immediately, flushing pending queued events first so a
-// coalesced move can never arrive after its pointerup.
-const inputBatchers = new Map(); // elementId -> { queue, rafId, activePointers }
+// accumulated into the queued event. Discrete events (pointerdown/up/cancel, contextmenu) are
+// sent immediately, flushing pending queued events first so a coalesced move can never arrive
+// after its pointerup.
+const inputBatchers = new Map(); // elementId -> { queue, rafId }
 
 function getInputBatcher(elementId) {
   let batcher = inputBatchers.get(elementId);
   if (!batcher) {
-    batcher = { queue: new Map(), rafId: 0, activePointers: 0 };
+    batcher = { queue: new Map(), rafId: 0 };
     inputBatchers.set(elementId, batcher);
   }
   return batcher;
@@ -444,18 +444,16 @@ export function addPointerEventListener(elementId, eventName, instance, function
 
     if (eventName == "pointerdown") {
       event.target.setPointerCapture(event.pointerId);
-      batcher.activePointers++;
     }
     if (eventName == "pointerup" || eventName == "pointercancel") {
       event.target.releasePointerCapture(event.pointerId);
-      batcher.activePointers = Math.max(0, batcher.activePointers - 1);
     }
 
     const data = pointerEventData(eventName, event);
 
-    // Two active pointers = pinch zoom: the zoom step is applied per move event, so pinch
-    // moves are sent unbatched to keep the zoom speed intact.
-    if (eventName == "pointermove" && batcher.activePointers <= 1) {
+    // Moves are batched per pointer, also the two of a pinch: a pinch zooms by the fingers'
+    // positions (PointerEventService), not per move event, so the latest move of each is enough.
+    if (eventName == "pointermove") {
       const key = "move:" + event.pointerId;
       const previous = batcher.queue.get(key)?.data;
       if (previous) {
