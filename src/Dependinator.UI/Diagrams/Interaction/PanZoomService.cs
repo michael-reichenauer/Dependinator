@@ -46,6 +46,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     const double FlightSecondsPerLength = 0.2;
     const double FlightMaxSeconds = 2.4;
     const double FlightDwell = 1.5;
+    const double MinFlightLength = 0.01;
     static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(15);
     static readonly TimeSpan MinFrameWait = TimeSpan.FromMilliseconds(1);
     long goToRequestId = 0;
@@ -195,14 +196,18 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         var (startPos, startZoom) = GetPosAndZoom(animationRect);
         Log.Info($"StartPos:  {startPos},  StartZoom:  {startZoom}");
         Log.Info($"TargetPos: {targetPos}, TargetZoom: {targetZoom}");
+        // A broken start view (a zero zoom) has no path: go straight to the target.
+        var isFlight =
+            startZoom > 0 && double.IsFinite(startZoom) && double.IsFinite(startPos.X) && double.IsFinite(startPos.Y);
 
         // The path's width is the focus area's (FlightFocusShare of the screen's shorter side):
         // at the top of a long flight the start and the target lie about that far apart.
         var focus = Math.Min(animationRect.Width, animationRect.Height) * FlightFocusShare;
-        var path = new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus, FlightDwell);
-        // A broken start view (a zero zoom) has no path: go straight to the target.
-        var duration = double.IsFinite(path.Length) ? FlightDuration(path.Length) : TimeSpan.Zero;
-        Log.Info($"Flight length {path.Length:0.##}, duration {duration.TotalMilliseconds:0} ms");
+        var path = isFlight
+            ? new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus, FlightDwell)
+            : null;
+        var duration = path is not null ? FlightDuration(path.Length) : TimeSpan.Zero;
+        Log.Info($"Flight length {path?.Length:0.##}, duration {duration.TotalMilliseconds:0} ms");
 
         var clock = System.Diagnostics.Stopwatch.StartNew();
         while (clock.Elapsed < duration)
@@ -210,7 +215,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
             if (!IsCurrentGoToRequest(requestId))
                 return false;
 
-            var (center, width) = path.AtTime(clock.Elapsed / duration);
+            var (center, width) = path!.AtTime(clock.Elapsed / duration);
             await ShowFrameAsync(center, width / focus, animationRect);
         }
 
@@ -233,9 +238,12 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     }
 
     // The flight's duration grows with its length, but slowly: a short hop takes about half a
-    // second, a jump across the whole model about two.
+    // second, a jump across the whole model about two. No flight when the view is already
+    // there (or the length is broken).
     static TimeSpan FlightDuration(double length) =>
-        TimeSpan.FromSeconds(Math.Min(FlightBaseSeconds + FlightSecondsPerLength * length, FlightMaxSeconds));
+        double.IsFinite(length) && length >= MinFlightLength
+            ? TimeSpan.FromSeconds(Math.Min(FlightBaseSeconds + FlightSecondsPerLength * length, FlightMaxSeconds))
+            : TimeSpan.Zero;
 
     static bool IsValidSvgRect(Rect svgRect) => svgRect.Width > 0 && svgRect.Height > 0;
 
@@ -246,10 +254,8 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // app a flight that never waited would paint nothing and take no wheel or pan to cancel it.
     async Task ShowFrameAsync(Pos pos, double zoom, Rect svgRect)
     {
-        var frameClock = System.Diagnostics.Stopwatch.StartNew();
+        await using var _ = new MinDelay(FrameTime, MinFrameWait);
         SetView(ToOffset(pos, zoom, svgRect), zoom, isSaveNeeded: false);
-        var remaining = FrameTime - frameClock.Elapsed;
-        await Task.Delay(remaining > MinFrameWait ? remaining : MinFrameWait);
     }
 
     public void PanTo(Pos canvasCenter)

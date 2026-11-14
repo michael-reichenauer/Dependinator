@@ -18,8 +18,9 @@ sealed class ZoomPath
     const double Rho2 = Rho * Rho;
     const double Rho4 = Rho2 * Rho2;
 
-    // A pan shorter than this share of the wider end's width is no pan: only a zoom. The
-    // hyperbolic path divides by the pan's length.
+    // A pan shorter than this share of the narrower end's width is no pan: only a zoom (the
+    // hyperbolic path divides by the pan's length; it stays finite below this too, and its
+    // rounding moves the view by at most the pan).
     const double MinPanShare = 1e-6;
 
     // A top less than this (log scale) above the wider end is no top: about 1.5 times wider.
@@ -47,7 +48,7 @@ sealed class ZoomPath
         dy = toCenter.Y - fromCenter.Y;
         d1 = Math.Sqrt(dx * dx + dy * dy);
 
-        if (d1 < MinPanShare * Math.Max(w0, w1))
+        if (d1 < MinPanShare * Math.Min(w0, w1))
         {
             // Only a zoom (and the tiny pan along): an even pace in log scale.
             isZoomOnly = true;

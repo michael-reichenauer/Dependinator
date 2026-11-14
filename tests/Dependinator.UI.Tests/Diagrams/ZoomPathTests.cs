@@ -74,7 +74,8 @@ public class ZoomPathTests
     [Theory]
     [InlineData(6, 600000, 5)] // A big zoom out with a small pan (view history Back to an overview)
     [InlineData(600000, 6, 5)] // And back in
-    [InlineData(1, 1000, 1e-5)] // A pan just above the zoom-only threshold
+    [InlineData(1, 1000, 2e-6)] // A pan just above the zoom-only threshold (1e-6 of the narrower end)
+    [InlineData(1e6, 0.5, 0.9)] // A deep zoom in to a node a little off the overview's center
     public void AtTime_ShouldStayFinite_ForABigZoomWithASmallPan(double fromWidth, double toWidth, double pan)
     {
         var path = new ZoomPath(new Pos(0, 0), fromWidth, new Pos(pan, 0), toWidth, dwell: 1.5);
