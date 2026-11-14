@@ -108,6 +108,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     DateTimeOffset idleRefreshDeadlineUtc = DateTimeOffset.MinValue;
     CancellationTokenSource? idleRefreshCancellationTokenSource;
     DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
+    LocalContentHash? cachedLocalHash;
     DateTimeOffset lastAutoSyncAttemptUtc = DateTimeOffset.MinValue;
     CloudAuthState authState = unavailableAuthState;
     CloudSyncModelState? syncState;
@@ -256,6 +257,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
 
     async Task<Result<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
     {
+        ModelContentStamp contentStamp = modelServiceLazy.Value.ContentStamp;
         var modelDtoResult = modelServiceLazy.Value.GetCurrentModelDto();
         if (modelDtoResult is not ModelDto modelDto)
             return modelDtoResult.Error;
@@ -265,7 +267,9 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         if (pushResult is not CloudModelMetadata metadata)
             return pushResult.Error;
 
+        // The pushed content's hash, which the next checks compare with the baseline it becomes
         string localContentHash = CloudModelSerializer.GetContentHash(modelDto);
+        cachedLocalHash = new LocalContentHash(contentStamp, localContentHash);
         await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash);
         ApplySuccessfulSync(localContentHash, metadata.ContentHash, metadata);
 
@@ -762,13 +766,26 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         return !string.Equals(currentHash, baselineHash, StringComparison.OrdinalIgnoreCase);
     }
 
+    // The open model's hash is kept while what its content depends on is unchanged
+    // (IModelService.ContentStamp): the sync state is checked every few seconds while the user
+    // pans or zooms, and hashing the whole model froze the browser app for 550-700 ms each time
+    // (the demo, 11k nodes).
     string? GetCurrentModelContentHashOrDefault()
     {
-        if (modelServiceLazy.Value.GetCurrentModelDto() is not ModelDto currentModelDto)
+        IModelService modelService = modelServiceLazy.Value;
+        ModelContentStamp contentStamp = modelService.ContentStamp;
+        if (cachedLocalHash is { } cached && cached.Stamp == contentStamp)
+            return cached.Hash;
+
+        if (modelService.GetCurrentModelDto() is not ModelDto currentModelDto)
             return null;
 
-        return CloudModelSerializer.GetContentHash(currentModelDto);
+        string hash = CloudModelSerializer.GetContentHash(currentModelDto);
+        cachedLocalHash = new LocalContentHash(contentStamp, hash);
+        return hash;
     }
+
+    sealed record LocalContentHash(ModelContentStamp Stamp, string Hash);
 
     void ApplySuccessfulSync(string localContentHash, string remoteContentHash, CloudModelMetadata cloudModel)
     {

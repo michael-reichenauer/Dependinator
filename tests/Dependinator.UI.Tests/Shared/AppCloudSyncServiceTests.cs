@@ -82,6 +82,80 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task RefreshSyncStateAsync_ShouldNotHashTheModelAgain_WhileItsContentIsUnchanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(Stamp(modelPath, saves: 7));
+
+        // Panning and zooming refresh the sync state but leave the content version
+        await context.Sut.RefreshSyncStateAsync();
+        await context.Sut.RefreshSyncStateAsync();
+        await context.Sut.RefreshSyncStateAsync();
+
+        context.ModelService.Verify(x => x.GetCurrentModelDto(), Times.Once);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task RefreshSyncStateAsync_ShouldSeeALocalChange_WhenTheContentStampChanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        var stamp = Stamp(modelPath, saves: 1);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(() => stamp);
+        await context.Sut.RefreshSyncStateAsync();
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+
+        // An edit changes the content and requests a save
+        context.ModelService.Setup(x => x.GetCurrentModelDto()).Returns(CreateModelDto("edited"));
+        await context.Sut.RefreshSyncStateAsync();
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState()); // Same stamp
+        stamp = stamp with { Saves = stamp.Saves + 1 };
+        await context.Sut.RefreshSyncStateAsync();
+
+        Assert.Equal(CloudSyncState.HasLocalChanges, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task SyncUpAsync_ShouldLeaveTheCheckedHashOnThePushedContent()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        var stamp = Stamp(modelPath, saves: 1);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(() => stamp);
+        await context.Sut.RefreshSyncStateAsync();
+
+        // The content changed since the last check, and the push sends the changed content
+        ModelDto edited = CreateModelDto("edited");
+        context.ModelService.Setup(x => x.GetCurrentModelDto()).Returns(edited);
+        CloudModelMetadata pushed = CreateCloudModelMetadata(modelPath, edited);
+        context.CloudSyncService.Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(pushed);
+        context.CloudSyncService.Setup(x => x.ListAsync()).ReturnsAsync(new CloudModelList([pushed]));
+        context
+            .CloudSyncStateService.Setup(x => x.RecordPushAsync(modelPath, pushed, It.IsAny<string>()))
+            .Callback<string, CloudModelMetadata, string>(
+                (_, metadata, localHash) =>
+                    context
+                        .CloudSyncStateService.Setup(x => x.GetAsync(modelPath))
+                        .ReturnsAsync(new CloudSyncModelState() { Baseline = new(localHash, metadata.ContentHash) })
+            )
+            .Returns(Task.CompletedTask);
+        AssertOk(await context.Sut.SyncUpAsync());
+        await context.Sut.RefreshSyncStateAsync();
+
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    static ModelContentStamp Stamp(string modelPath, long saves) => new(modelPath, saves);
+
+    [Fact]
     public async Task AutoSync_ShouldNotPushOrPull_WhenConflictExists()
     {
         string modelPath = "/models/sample.model";
@@ -539,11 +613,18 @@ public class AppCloudSyncServiceTests
 
         modelMgr.SetupGet(x => x.ModelPath).Returns(modelPath);
         modelService.Setup(x => x.GetCurrentModelDto()).Returns(currentModelDto);
+        // As in ModelService, a load moves the stamp
+        long loads = 0;
+        modelService.SetupGet(x => x.ContentStamp).Returns(() => new ModelContentStamp(modelPath, loads));
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
+            .Callback(() => loads++)
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
-        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>())).Returns(Task.CompletedTask);
+        canvasService
+            .Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>()))
+            .Callback(() => loads++)
+            .Returns(Task.CompletedTask);
 
         return new SutContext(
             new AppCloudSyncService(

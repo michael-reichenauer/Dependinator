@@ -56,9 +56,22 @@ interface IModelService
     void ClearCache();
     void CheckLineVisibility();
     Result<ModelDto> GetCurrentModelDto();
+
+    // Changes when the open model's content changes the way saving sees it (ModelContentStamp),
+    // so the cloud sync hashes the model again only then: panning and zooming leave it.
+    ModelContentStamp ContentStamp { get; }
     Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
     Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
 }
+
+// What a change to the open model's saved content moves: a save request or a model load (Saves,
+// bumped after the change), or another model. Read before the content, so content read after
+// the stamp is at least as new as the stamp. Like the local save, it leaves out a change that
+// requests no save (a lazy layout while rendering or a go to, which a later load makes again
+// the same way): the next save shows it. The layout generation and the structure version are
+// left out on purpose: they also move for zooming into new containers and for the explorer's
+// line focus, and each move hashed the model again (600 ms).
+readonly record struct ModelContentStamp(string Path, long Saves);
 
 [Scoped]
 class ModelService : IModelService, IDisposable
@@ -88,6 +101,9 @@ class ModelService : IModelService, IDisposable
     long savedRequests;
     long viewSaveRequests;
     long savedViewRequests;
+
+    // Save requests and model loads (ModelContentStamp.Saves), bumped after the change
+    long contentVersion;
 
     // Reported source changes, and how many of them the last successful parse covered (it covers
     // those reported before it started, so a change saved during the parse keeps the dot).
@@ -139,7 +155,17 @@ class ModelService : IModelService, IDisposable
         {
             model.Clear();
         }
+        Interlocked.Increment(ref contentVersion);
         applicationEvents.TriggerModelChanged();
+    }
+
+    public ModelContentStamp ContentStamp
+    {
+        get
+        {
+            long saves = Interlocked.Read(ref contentVersion);
+            return new ModelContentStamp(modelMgr.ModelPath, saves);
+        }
     }
 
     public Result<ModelDto> GetCurrentModelDto()
@@ -247,6 +273,7 @@ class ModelService : IModelService, IDisposable
             model.UpdateStamp = DateTime.UtcNow;
             modelDto = model.SerializeToDto();
         }
+        Interlocked.Increment(ref contentVersion);
 
         if (await persistenceService.WriteAsync(path, modelDto) is Error e)
             return e;
@@ -717,6 +744,7 @@ class ModelService : IModelService, IDisposable
 
     public void TriggerSave()
     {
+        Interlocked.Increment(ref contentVersion);
         lock (saveStatusLock)
         {
             saveRequests++;
@@ -842,6 +870,7 @@ class ModelService : IModelService, IDisposable
         }
 
         await Task.Run(() => SetNodeAndLinkDtos(modelDto));
+        Interlocked.Increment(ref contentVersion);
         // Compute line visibility before triggering the render so the first cached tile
         // uses correct hidden state (lines to hidden nodes must render as hidden).
         CheckLineVisibility();

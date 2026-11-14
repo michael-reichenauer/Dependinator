@@ -232,6 +232,18 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   `TileCache.AddPrefetched` (not the last used tile) and syncs the lines back to the view's
   tile. Drawing a tile syncs the lines to its zoom and area, so `GetTile` also syncs them on a
   cache hit of another tile than the one they follow (`syncedKey`).
+- The cloud sync checks the sync state every 5 s while the UI is active (`AppCloudSyncService`,
+  `ActiveRefreshInterval`) and compares the model's content hash, signed in or not: hashing the
+  demo took 550-700 ms in the browser app, a stop every 5 s while panning (Michael, Nov 14).
+  The hash is kept while `IModelService.ContentStamp` is unchanged: save requests and model
+  loads (bumped after the change) and the path. Like the local save it leaves out a lazy layout
+  (the next save shows it). The layout generation and `StructureVersion` stay out of it: they
+  also move for zooming into new containers and for the explorer's line focus, and each move
+  hashed again (found by measuring and in review). A push caches the hash
+  of what it pushed, or the check compared an older hash with the new baseline and pushed again
+  and again (found in review).
+- Pausing every few seconds while panning is not the view save: it writes only the small view
+  record (`TriggerViewSave`, at most every 10 s).
 - `CreateModelTile` logs `Tile ((x,y,z)): N chars in Mms` to the app log (`~/Dependinator.log`):
   use it for before/after comparisons. Deferred until measured: a selection overlay layer,
   WebKit-gating `refreshSvgPaintServers`, a pan/zoom save debounce, description-wrap caching.

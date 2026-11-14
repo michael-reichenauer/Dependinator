@@ -246,7 +246,10 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   (in the browser app the worst frame after a single wheel tick went from up to 133 ms to 50 ms in
   Chromium), and a trackpad pinch (wheel events with Ctrl) zooms by its delta instead of racing
   at 14% per event (`PointerEvent.WheelZoomFactor`). Later still, a mouse wheel notch glides to
-  its zoom over about 130 ms instead of jumping 14% at once.
+  its zoom over about 130 ms instead of jumping 14% at once. And where cloud sync is available,
+  panning no longer stops for a moment every 5 s: the sync check hashed the whole model each time
+  (550-700 ms in the browser app for the demo), and now does so only after the model changed
+  (`IModelService.ContentStamp`).
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
