@@ -190,11 +190,29 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
 ## Rendering performance
 
 - Keep `WheelZoomSpeed` below `TileKey.ZoomFactor` (1.3), or every wheel tick rebuilds all tiles.
+- **The view moves by a CSS transform (Nov 14 2026).** Measured: a `viewBox` change repaints the
+  whole svg every frame (WebKit: 33-62 ms panning, 73-151 ms zooming at 700-1200 elements), a
+  transform on the `<svg>` element 16 ms; a transform on an inner `<g>` is as slow as the viewBox.
+  So while `PanZoomService.IsViewMoving` (a step until 150 ms of rest, or a flight's landing)
+  `CanvasService.GetView` keeps the drawn svg and moves it (`GestureTransform`), and draws the
+  view for real on rest, past the tile's area, past a 2x scale or after a `ModelChanged`. View
+  steps raise only `ViewChanged` (canvas, minimap); `UIStateChanged` goes out on the first step
+  and on rest: re-rendering the whole UI per step was 7 of the step's 11 ms in Wasm. Traps:
+  - A transformed element paints above `position: fixed` elements without a z-index that come
+    before it in the page: every fixed overlay needs one (`.dep-float-toolbar` 5, the app bar 1100).
+  - The moved svg's own rect and its events' `offsetX/Y` move with it: JS measures the
+    `#canvasframe` div instead (`getBoundingRectangle("svgcanvas")` and `mouseEventData`), and
+    the e2e `App.Canvas` locator is that frame.
+  - Headless Playwright WebKit sends `movementX` 0, so a mouse drag does not pan there: measure
+    WebKit panning with the arrow keys. Headless Chromium keeps 60 fps either way and hides the
+    repaint cost; compare in WebKit.
+- A pinch zooms by the fingers' distance and keeps the point between them under them
+  (`PointerEvent.PinchScale`, `PinchFromX/Y`); its moves are batched per frame like the mouse.
 - `CreateModelTile` logs `Tile ((x,y,z)): N chars in Mms` to the app log (`~/Dependinator.log`):
   use it for before/after comparisons. Deferred until measured: a selection overlay layer,
   WebKit-gating `refreshSvgPaintServers`, a pan/zoom save debounce, description-wrap caching.
 - WebKit loses `<use>` gradient fills when Blazor replaces the diagram subtree; `refreshSvgPaintServers`
-  (jsInterop.js, WebKit only) re-appends `<defs>` when `SvgContent` changed by reference. No e2e
+  (jsInterop.js, WebKit only) re-appends `<defs>` when the canvas content changed by reference. No e2e
   test can see it (only pixels differ). To reproduce, run playwright-cli with `--browser webkit`,
   double-click the canvas and pick an icon.
 

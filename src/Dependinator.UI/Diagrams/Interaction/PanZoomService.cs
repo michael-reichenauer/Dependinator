@@ -45,6 +45,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     const int ViewSettleMilliseconds = 150;
     readonly Debouncer viewSettleDebouncer = new();
     volatile bool isViewMoving;
+    volatile bool isDisposed;
 
     public bool IsViewMoving => isViewMoving;
 
@@ -159,18 +160,26 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         applicationEvents.TriggerViewChanged();
         if (isFirstStep)
             applicationEvents.TriggerUIStateChanged();
-        viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
+        if (!isDisposed) // A flight can still take a step after its scope is gone
+            viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
         if (isSaveNeeded)
             applicationEvents.TriggerViewSaveNeeded();
     }
 
+    // Once per gesture: a flight that landed has settled already when its debounce fires.
     void OnViewSettled()
     {
+        if (!isViewMoving)
+            return;
         isViewMoving = false;
         applicationEvents.TriggerUIStateChanged();
     }
 
-    public void Dispose() => viewSettleDebouncer.Dispose();
+    public void Dispose()
+    {
+        isDisposed = true;
+        viewSettleDebouncer.Dispose();
+    }
 
     public void ZoomBy(double factor)
     {

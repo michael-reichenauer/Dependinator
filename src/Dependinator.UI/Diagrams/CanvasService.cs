@@ -77,6 +77,7 @@ class CanvasService(
     double shownZoom = 0;
     Rect shownTileArea = Rect.None;
     volatile bool isShownStale = true;
+    bool isSubscribed;
 
     public string Cursor => interactionService.Cursor;
 
@@ -87,7 +88,11 @@ class CanvasService(
     {
         // A model change clears the tiles: what is shown must then be drawn again, also while
         // the view moves. The service lives as long as its scope, so it never unsubscribes.
-        applicationEvents.ModelChanged += () => isShownStale = true;
+        if (!isSubscribed)
+        {
+            isSubscribed = true;
+            applicationEvents.ModelChanged += () => isShownStale = true;
+        }
         await interactionService.InitAsync();
     }
 
@@ -243,7 +248,12 @@ class CanvasService(
             && !isShownStale
             && GestureTransform.Get(shownOffset, shownZoom, offset, zoom, svgRect, shownTileArea) is { } transform
         )
+        {
+            // GetTile records the view rect too, but is not called: the saved view and the layout
+            // refine read it.
+            modelMgr.WithModel(m => m.ViewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height));
             return new CanvasView(content, ViewBox(shownOffset, shownZoom, svgRect), GestureTransform.Css(transform));
+        }
 
         UpdateContent(offset, zoom, svgRect);
         return new CanvasView(content, ViewBox(offset, zoom, svgRect), "");
@@ -260,8 +270,8 @@ class CanvasService(
     void UpdateContent(Pos offset, double zoom, Rect svgRect)
     {
         var viewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height);
+        isShownStale = false; // Before the tile: a model change while it is drawn marks it again
         var tile = svgService.GetTile(viewRect, zoom);
-        isShownStale = false;
         shownOffset = offset;
         shownZoom = zoom;
         shownTileArea =

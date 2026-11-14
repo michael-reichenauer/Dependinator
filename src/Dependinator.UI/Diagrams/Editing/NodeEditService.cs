@@ -45,7 +45,6 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
     const double MinZoom = 1.0 / 10.0;
     const double Margin = 50;
     const double WheelZoomSpeed = 1.2;
-    const double PinchZoomSpeed = 1.04;
     const double SizeDiff = 10.0;
 
     // Pan/zoom on a node whose sole child is a pass-through container would be visually inert
@@ -505,9 +504,12 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
 
-            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            var factor = Math.Pow(speed, e.ZoomSteps);
-            newZoom = (e.DeltaY < 0) ? node.ContainerZoom * factor : node.ContainerZoom * (1 / factor);
+            // A pinch zooms by how much the fingers spread (PointerEvent.PinchScale), a wheel by steps.
+            var factor = Math.Pow(WheelZoomSpeed, e.ZoomSteps);
+            newZoom =
+                e.PinchScale > 0 ? node.ContainerZoom * e.PinchScale
+                : (e.DeltaY < 0) ? node.ContainerZoom * factor
+                : node.ContainerZoom * (1 / factor);
             if (newZoom < MinZoom)
                 newZoom = MinZoom;
             if (newZoom > MaxZoom)
