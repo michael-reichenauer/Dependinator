@@ -504,8 +504,9 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return; // No change (a pinch whose fingers kept their distance)
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
 
-            // A pinch zooms by how much the fingers spread (PointerEvent.PinchScale), a wheel by steps.
-            var factor = Math.Pow(WheelZoomSpeed, e.ZoomSteps);
+            // A pinch zooms by how much the fingers spread (PointerEvent.PinchScale), a wheel by
+            // steps, a trackpad pinch by its delta (PointerEvent.WheelZoomFactor).
+            var factor = e.WheelZoomFactor(WheelZoomSpeed);
             newZoom =
                 e.PinchScale > 0 ? node.ContainerZoom * e.PinchScale
                 : (e.DeltaY < 0) ? node.ContainerZoom * factor
