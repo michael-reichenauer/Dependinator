@@ -213,6 +213,14 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   mouse wheel is unchanged. A plain two-finger trackpad scroll still zooms a notch per event
   (left as it is: some browsers give a mouse notch a small pixel delta too, which would slow
   those wheels down).
+- **A wheel notch glides (Nov 14 2026).** `PanZoomService.Zoom` eases a mouse wheel notch to
+  its zoom over about 130 ms (`GlideAsync`: each frame covers `1 - e^(-dt/35 ms)` of the log
+  zoom left, around the pointer, landing within 0.5%); a notch during a glide adds to its
+  target, and a notch after the landing starts a new glide (the landing frame clears
+  `wheelGlideId` before its wait, or a notch in that wait was lost). It is a flight-like loop on
+  `goToRequestId`, so any other pan, zoom, go to or wheel event ends it (a sideways scroll too).
+  A trackpad pinch (ctrl) zooms at once, from the view as it is. The edit-mode zoom of a selected
+  node's content still steps. Unit tests that wheel-zoom must wait for the landing.
 - **Tiles drawn ahead (Nov 14 2026).** 300 ms after the canvas last rendered, `Canvas` asks
   `ICanvasService.PrefetchNext` (on the renderer, `InvokeAsync`: the Blazor Server host would
   otherwise sync the lines on a timer thread while components read them) for the tiles one zoom

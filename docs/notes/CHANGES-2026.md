@@ -245,7 +245,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   out are drawn ahead in idle time (`SvgService.PrefetchNext`), so the next zoom finds its tile
   (in the browser app the worst frame after a single wheel tick went from up to 133 ms to 50 ms in
   Chromium), and a trackpad pinch (wheel events with Ctrl) zooms by its delta instead of racing
-  at 14% per event (`PointerEvent.WheelZoomFactor`).
+  at 14% per event (`PointerEvent.WheelZoomFactor`). Later still, a mouse wheel notch glides to
+  its zoom over about 130 ms instead of jumping 14% at once.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.

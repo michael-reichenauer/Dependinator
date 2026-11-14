@@ -65,6 +65,21 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     static readonly TimeSpan MinFrameWait = TimeSpan.FromMilliseconds(1);
     long goToRequestId = 0;
 
+    // A mouse wheel notch glides to its zoom instead of jumping 14% at once: each frame covers
+    // the share 1 - e^(-dt / WheelGlideTimeMs) of the zoom still left (in log zoom), around the
+    // pointer, so a notch is done in about 130 ms, fast at first and easing in. A notch during a
+    // glide adds to its target, so a fast spin keeps its speed. A trackpad pinch (ctrl) follows
+    // the fingers already, and zooms at once. The glide's fields are not locked: Zoom and the
+    // glide's frames run on the same thread, the browser app's only one or, in the Blazor Server
+    // host, the circuit's (the frames' awaits resume on its context, as a flight's do).
+    const double WheelGlideTimeMs = 35;
+    const double WheelGlideDoneLog = 0.005; // The zoom left (ln, 0.5%) at which a glide lands
+    long wheelGlideId = NoGlide; // The running glide's request id
+    const long NoGlide = -1;
+    double wheelGlideTarget;
+    double wheelGlideX;
+    double wheelGlideY;
+
     public void Zoom(PointerEvent e)
     {
         if (e.PinchScale > 0)
@@ -73,34 +88,87 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
             return;
         }
 
-        Interlocked.Increment(ref goToRequestId);
-        Pos newOffset;
-        double newZoom;
-        using (var model = modelMgr.UseModel())
+        var isGliding = wheelGlideId != NoGlide && IsCurrentGoToRequest(wheelGlideId);
+        if (e.DeltaY == 0 || e.CtrlKey)
         {
-            if (e.DeltaY == 0)
-                return;
-            var (mx, my) = (e.OffsetX, e.OffsetY);
-
-            var factor = e.WheelZoomFactor(WheelZoomSpeed);
-            newZoom = (e.DeltaY > 0) ? model.Zoom * factor : model.Zoom * (1 / factor);
-            if (newZoom > MaxZoom)
-                newZoom = MaxZoom;
-
-            double svgX = mx * model.Zoom + model.Offset.X;
-            double svgY = my * model.Zoom + model.Offset.Y;
-
-            var svgRect = screenService.SvgRect;
-            var w = svgRect.Width * newZoom;
-            var h = svgRect.Height * newZoom;
-
-            var x = svgX - mx / svgRect.Width * w;
-            var y = svgY - my / svgRect.Height * h;
-
-            newOffset = new Pos(x, y);
+            // Any wheel event ends a flight or a glide, a sideways scroll too. A trackpad pinch
+            // zooms from the view as it is, not from where a glide was heading.
+            Interlocked.Increment(ref goToRequestId);
+            if (e.DeltaY != 0)
+                ZoomAt(e.OffsetX, e.OffsetY, NextWheelZoom(e, modelMgr.WithModel(m => m.Zoom)), isSaveNeeded: true);
+            return;
         }
 
-        SetView(newOffset, newZoom);
+        wheelGlideTarget = NextWheelZoom(e, isGliding ? wheelGlideTarget : modelMgr.WithModel(m => m.Zoom));
+        (wheelGlideX, wheelGlideY) = (e.OffsetX, e.OffsetY);
+        if (isGliding)
+            return; // The running glide heads for the new target
+
+        wheelGlideId = Interlocked.Increment(ref goToRequestId);
+        _ = GlideAsync(wheelGlideId);
+    }
+
+    double NextWheelZoom(PointerEvent e, double fromZoom)
+    {
+        var factor = e.WheelZoomFactor(WheelZoomSpeed);
+        return Math.Min(MaxZoom, e.DeltaY > 0 ? fromZoom * factor : fromZoom / factor);
+    }
+
+    // Any other pan or zoom (or a go to) bumps goToRequestId, which ends the glide where it is.
+    async Task GlideAsync(long glideId)
+    {
+        try
+        {
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            var last = -FrameTime; // The first frame moves a frame's share at once
+            while (IsCurrentGoToRequest(glideId))
+            {
+                await using var _ = new MinDelay(FrameTime, MinFrameWait);
+                var now = clock.Elapsed;
+                var dt = (now - last).TotalMilliseconds;
+                last = now;
+
+                var zoom = modelMgr.WithModel(m => m.Zoom);
+                var left = zoom > 0 ? Math.Log(wheelGlideTarget / zoom) : 0;
+                var isLanding = !double.IsFinite(left) || Math.Abs(left) < WheelGlideDoneLog;
+                var newZoom = isLanding
+                    ? wheelGlideTarget
+                    : zoom * Math.Exp(left * (1 - Math.Exp(-dt / WheelGlideTimeMs)));
+                // Saved on every frame (the save is debounced), so an interrupted glide keeps its view.
+                ZoomAt(wheelGlideX, wheelGlideY, newZoom, isSaveNeeded: true);
+                if (isLanding)
+                {
+                    // Ended before the frame's wait: a notch during it starts a new glide.
+                    wheelGlideId = NoGlide;
+                    break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Wheel zoom glide failed");
+        }
+        finally
+        {
+            if (wheelGlideId == glideId)
+                wheelGlideId = NoGlide;
+        }
+    }
+
+    // Zooms to newZoom keeping the canvas point under the screen point (mx, my) in place.
+    void ZoomAt(double mx, double my, double newZoom, bool isSaveNeeded)
+    {
+        if (newZoom <= 0 || !double.IsFinite(newZoom))
+            return;
+        Pos newOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            var canvasX = model.Offset.X + mx * model.Zoom;
+            var canvasY = model.Offset.Y + my * model.Zoom;
+            newOffset = new Pos(canvasX - mx * newZoom, canvasY - my * newZoom);
+        }
+
+        SetView(newOffset, newZoom, isSaveNeeded);
     }
 
     // A two-finger pinch moves the view with the fingers: the canvas point that was under their
@@ -183,20 +251,10 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         if (factor <= 0)
             return;
         Interlocked.Increment(ref goToRequestId);
-        Pos newOffset;
-        double newZoom;
-        using (var model = modelMgr.UseModel())
-        {
-            // model.Zoom is canvas units per pixel, so zooming in divides it.
-            newZoom = Math.Min(MaxZoom, model.Zoom / factor);
-            var svgRect = screenService.SvgRect;
-            var (cx, cy) = (svgRect.Width / 2, svgRect.Height / 2);
-            var centerX = cx * model.Zoom + model.Offset.X;
-            var centerY = cy * model.Zoom + model.Offset.Y;
-            newOffset = new Pos(centerX - cx * newZoom, centerY - cy * newZoom);
-        }
-
-        SetView(newOffset, newZoom);
+        var svgRect = screenService.SvgRect;
+        // model.Zoom is canvas units per pixel, so zooming in divides it.
+        var newZoom = Math.Min(MaxZoom, modelMgr.WithModel(m => m.Zoom) / factor);
+        ZoomAt(svgRect.Width / 2, svgRect.Height / 2, newZoom, isSaveNeeded: true);
     }
 
     public void FollowPoint(Pos from, Pos to, double scale)
