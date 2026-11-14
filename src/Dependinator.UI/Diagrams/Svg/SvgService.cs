@@ -187,12 +187,17 @@ class SvgService : ISvgService
         if (GetPrefetchKeys(viewKey, viewRect, zoom).FirstOrDefault(key => !tiles.Contains(key)) is not { } missing)
             return false;
 
-        var isCached = tiles.AddPrefetched(CreateModelTile(model, missing, nodeProblems, hiddenChildCounts));
-
-        // Drawing a tile syncs the lines to its zoom and area: sync them back to the view's tile,
-        // which hit testing, the hover cards and the toolbars read.
-        SyncLines(model, viewKey, LineEmphasis.FindSelection(model));
-        return isCached;
+        try
+        {
+            return tiles.AddPrefetched(CreateModelTile(model, missing, nodeProblems, hiddenChildCounts));
+        }
+        finally
+        {
+            // Drawing a tile syncs the lines to its zoom and area: sync them back to the view's
+            // tile, which hit testing, the hover cards and the toolbars read (also when the
+            // drawing failed half way).
+            SyncLines(model, viewKey, LineEmphasis.FindSelection(model));
+        }
     }
 
     // The tiles of the next zoom level in and out, around the view's center. In first: zooming in
