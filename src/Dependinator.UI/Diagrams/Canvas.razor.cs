@@ -53,13 +53,13 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     public InputFile inputFile { get; private set; } = null!;
     public ElementReference Ref { get; private set; }
 
-    string Content => srv.SvgContent;
+    // The page element the canvas is in (Canvas.razor), unmoved by a gesture's transform.
+    public const string CanvasFrameId = "canvasframe";
 
     // Formatted invariantly; a raw double attribute value would be rendered with the current
     // culture, which breaks the SVG in comma-decimal locales.
     string Width => string.Create(CultureInfo.InvariantCulture, $"{srv.SvgRect.Width:0.##}");
     string Height => string.Create(CultureInfo.InvariantCulture, $"{srv.SvgRect.Height:0.##}");
-    string ViewBox => srv.SvgViewBox;
     string IconDefs => iconDefsService.Defs;
 
     string Cursor => srv.Cursor;
@@ -126,17 +126,25 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
                 return;
 
             applicationEvents.UIStateChanged += OnUiStateChanged;
+            applicationEvents.ViewChanged += OnViewChanged;
             await InvokeAsync(srv.InitialShowAsync);
         }
 
-        if (!ReferenceEquals(renderedContent, Content))
+        if (!ReferenceEquals(renderedContent, lastView.Content))
         {
-            renderedContent = Content;
+            renderedContent = lastView.Content;
             await jSInterop.Call("refreshSvgPaintServers", "svgcanvas");
         }
     }
 
+    CanvasView lastView = new("", "0 0 0 0", "");
+
+    CanvasView TakeView() => lastView = srv.GetView();
+
     void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    // A pan or zoom step repaints the canvas alone (PanZoomService raises no UIStateChanged then).
+    void OnViewChanged() => InvokeAsync(StateHasChanged);
 
     // The hover card's content (initTooltips in jsInterop.js asks when the mouse rests on an item).
     [JSInvokable]
@@ -158,6 +166,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     {
         isDisposed = true;
         applicationEvents.UIStateChanged -= OnUiStateChanged;
+        applicationEvents.ViewChanged -= OnViewChanged;
         if (selfReference is not null)
         {
             // Drops the hover card's listeners if they are still this canvas's (a newer canvas

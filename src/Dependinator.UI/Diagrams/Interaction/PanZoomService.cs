@@ -7,6 +7,9 @@ namespace Dependinator.UI.Diagrams.Interaction;
 // jumps are instead recorded by the view history (IViewHistoryService).
 interface IPanZoomService
 {
+    // True from a pan or zoom step until the view has rested for a moment (or a flight landed).
+    bool IsViewMoving { get; }
+
     void PanZoomToFit(Rect bounds, double maxZoom = 1, bool isSilent = false);
     void PanZoom(Rect viewRect, double zoom);
     Task<bool> PanZoomToAsync(Pos pos, double zoom);
@@ -32,13 +35,25 @@ interface IPanZoomService
 
 [Scoped]
 class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicationEvents applicationEvents)
-    : IPanZoomService
+    : IPanZoomService,
+        IDisposable
 {
+    // A pan or zoom step repaints only what follows the view (the canvas and the minimap, on
+    // ViewChanged). The rest of the UI (app bar, panels, breadcrumb, toolbars) re-renders on the
+    // first step of a gesture and once the view has rested this long: re-rendering it on every
+    // step was two thirds of a step's cost in the browser app (about 7 of 11 ms).
+    const int ViewSettleMilliseconds = 150;
+    readonly Debouncer viewSettleDebouncer = new();
+    volatile bool isViewMoving;
+
+    public bool IsViewMoving => isViewMoving;
+
     const double MaxZoom = 10;
     const double Margin = 10;
 
     // Kept below TileKey.ZoomFactor so a wheel tick usually stays within the current tile's
-    // zoom band (a cheap viewBox update) instead of forcing a full tile re-render every tick.
+    // zoom band (moved by a transform, see GestureTransform) instead of forcing a full tile
+    // re-render every tick.
     const double WheelZoomSpeed = 1.14;
     const double PinchZoomSpeed = 1.04;
     const double FlightFocusShare = 0.6;
@@ -98,9 +113,9 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         SetView(newOffset, null);
     }
 
-    // Applies a new view and tells the UI: repaint, refresh toolbars (ViewChanged) and save the
-    // view record (not the model, see ModelService). Animation steps skip the save; the final
-    // step saves once.
+    // Applies a new view and tells the UI: repaint (ViewChanged), refresh the rest of the UI on
+    // the first step and once the view rests (UIStateChanged), and save the view record (not the
+    // model, see ModelService). Animation steps skip the save; the final step saves once.
     void SetView(Pos? offset, double? zoom, bool isSaveNeeded = true)
     {
         using (var model = modelMgr.UseModel())
@@ -111,11 +126,23 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
                 model.Zoom = newZoom;
         }
 
+        var isFirstStep = !isViewMoving;
+        isViewMoving = true;
         applicationEvents.TriggerViewChanged();
-        applicationEvents.TriggerUIStateChanged();
+        if (isFirstStep)
+            applicationEvents.TriggerUIStateChanged();
+        viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
         if (isSaveNeeded)
             applicationEvents.TriggerViewSaveNeeded();
     }
+
+    void OnViewSettled()
+    {
+        isViewMoving = false;
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    public void Dispose() => viewSettleDebouncer.Dispose();
 
     public void ZoomBy(double factor)
     {
@@ -230,6 +257,10 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         if (!IsValidSvgRect(finalRect))
             return false;
         SetView(ToOffset(targetPos, targetZoom, finalRect), targetZoom, isSaveNeeded: false);
+
+        // The flight has landed: everything shows the final view now, not after the settle delay
+        // (a go to measures the node's place on screen next).
+        OnViewSettled();
 
         var (endPos, endZoom) = GetPosAndZoom(finalRect);
         Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");

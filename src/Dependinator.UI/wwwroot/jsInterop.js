@@ -289,7 +289,14 @@ export function getBoundingRectangle(elementId) {
   if (element == null) {
     return null;
   }
-  return element.getBoundingClientRect();
+  return elementId === "svgcanvas" ? canvasFrameRect(element) : element.getBoundingClientRect();
+}
+
+// Where the diagram canvas is on the page: the rect of the frame around the svg (Canvas.razor).
+// While a pan or zoom moves the svg by a CSS transform (GestureTransform), the svg's own rect and
+// its events' offsetX/offsetY are those of the moved element, not of the canvas on screen.
+function canvasFrameRect(svg) {
+  return (svg.parentElement ?? svg).getBoundingClientRect();
 }
 
 // Id of the topmost id-bearing element at a viewport point. Used to find the drop target of a
@@ -361,11 +368,14 @@ function scheduleBatchedInput(batcher, key, send) {
 }
 
 function mouseEventData(eventName, event) {
+  // Offsets from the canvas frame, not event.offsetX/Y (see canvasFrameRect); the same values
+  // while the svg is not moved.
+  const frame = canvasFrameRect(event.currentTarget);
   return {
     Type: eventName,
     TargetId: event.target.id,
-    OffsetX: event.offsetX,
-    OffsetY: event.offsetY,
+    OffsetX: event.clientX - frame.left,
+    OffsetY: event.clientY - frame.top,
     ClientX: event.clientX,
     ClientY: event.clientY,
     ScreenX: event.screenX,
