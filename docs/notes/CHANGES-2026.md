@@ -226,6 +226,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and a spotlight), light its lines like a selection and lead the breadcrumb, and leave the
   selection alone. The mark lasts until the next click, tap, key or Back; a wheel zoom keeps it.
   Showing several nodes at once (a cycle, a rule violation, Ask "show all") marks them all.
+- **Go to flies in one smooth motion (Nov 14).** Going to a node zoomed out, panned and zoomed
+  back in as three separate steps in fixed increments (about 4.5 s per jump, longer when
+  rendering was slow). It now pans and zooms at once along van Wijk and Nuij's smooth zoom path
+  (`ZoomPath`, the one d3 and map apps' fly-to use): out only as far as the jump needs, so both
+  ends are in view at the top, where it slows down for a moment, then down onto the node. Timed
+  by the clock (0.4 to 2.4 s, about 1.7 s across the demo model) with a soft start and landing;
+  Back/Forward and share links fly the same way.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.

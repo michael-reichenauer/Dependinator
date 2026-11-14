@@ -11,8 +11,8 @@ public class ZoomPathTests
     {
         var path = new ZoomPath(new Pos(0, 0), 10, new Pos(1000, 500), 2);
 
-        var (start, startWidth) = path.AtTime(0, dwell: 1.5);
-        var (end, endWidth) = path.AtTime(1, dwell: 1.5);
+        var (start, startWidth) = path.AtTime(0);
+        var (end, endWidth) = path.AtTime(1);
 
         Assert.Equal(0, start.X, 6);
         Assert.Equal(0, start.Y, 6);
@@ -27,7 +27,7 @@ public class ZoomPathTests
     {
         var path = new ZoomPath(new Pos(0, 0), 10, new Pos(1000, 0), 10);
 
-        var maxWidth = Enumerable.Range(0, 101).Max(i => path.AtTime(i / 100.0, dwell: 0).Width);
+        var maxWidth = Enumerable.Range(0, 101).Max(i => path.AtTime(i / 100.0).Width);
 
         // At the top of the flight both ends are in the view's focus area.
         Assert.InRange(maxWidth, 950, 1100);
@@ -38,7 +38,7 @@ public class ZoomPathTests
     {
         var path = new ZoomPath(new Pos(0, 0), 10, new Pos(1000, 300), 1);
 
-        var xs = Enumerable.Range(0, 51).Select(i => path.AtTime(i / 50.0, dwell: 1.5).Center.X).ToList();
+        var xs = Enumerable.Range(0, 51).Select(i => path.AtTime(i / 50.0).Center.X).ToList();
 
         Assert.True(xs.Zip(xs.Skip(1)).All(p => p.Second >= p.First - 1e-9));
     }
@@ -48,7 +48,7 @@ public class ZoomPathTests
     {
         var path = new ZoomPath(new Pos(5, 5), 100, new Pos(5, 5), 1);
 
-        var (middle, middleWidth) = path.AtTime(0.5, dwell: 1.5);
+        var (middle, middleWidth) = path.AtTime(0.5);
 
         Assert.Equal(5, middle.X, 6);
         Assert.Equal(5, middle.Y, 6);
@@ -59,16 +59,33 @@ public class ZoomPathTests
     [Fact]
     public void AtTime_ShouldLingerAtTheTop_WithDwell()
     {
-        var path = new ZoomPath(new Pos(0, 0), 10, new Pos(1000, 0), 10);
-
         // The share of the time spent with the view at least half as wide as at the top.
-        double TopShare(double dwell)
+        static double TopShare(double dwell)
         {
-            var widths = Enumerable.Range(0, 201).Select(i => path.AtTime(i / 200.0, dwell).Width).ToList();
+            var path = new ZoomPath(new Pos(0, 0), 10, new Pos(1000, 0), 10, dwell);
+            var widths = Enumerable.Range(0, 201).Select(i => path.AtTime(i / 200.0).Width).ToList();
             var max = widths.Max();
             return widths.Count(w => w >= max / 2) / 201.0;
         }
 
         Assert.True(TopShare(1.5) > TopShare(0) * 1.3);
+    }
+
+    [Theory]
+    [InlineData(6, 600000, 5)] // A big zoom out with a small pan (view history Back to an overview)
+    [InlineData(600000, 6, 5)] // And back in
+    [InlineData(1, 1000, 1e-5)] // A pan just above the zoom-only threshold
+    public void AtTime_ShouldStayFinite_ForABigZoomWithASmallPan(double fromWidth, double toWidth, double pan)
+    {
+        var path = new ZoomPath(new Pos(0, 0), fromWidth, new Pos(pan, 0), toWidth, dwell: 1.5);
+
+        Assert.True(double.IsFinite(path.Length));
+        for (var i = 0; i <= 20; i++)
+        {
+            var (center, width) = path.AtTime(i / 20.0);
+            Assert.True(double.IsFinite(center.X) && double.IsFinite(center.Y) && double.IsFinite(width));
+            Assert.InRange(center.X, 0, pan);
+        }
+        Assert.Equal(toWidth, path.AtTime(1).Width, toWidth * 1e-9);
     }
 }

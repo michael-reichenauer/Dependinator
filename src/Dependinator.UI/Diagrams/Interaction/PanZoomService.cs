@@ -46,6 +46,8 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     const double FlightSecondsPerLength = 0.2;
     const double FlightMaxSeconds = 2.4;
     const double FlightDwell = 1.5;
+    static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(15);
+    static readonly TimeSpan MinFrameWait = TimeSpan.FromMilliseconds(1);
     long goToRequestId = 0;
 
     public void Zoom(PointerEvent e)
@@ -197,8 +199,9 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         // The path's width is the focus area's (FlightFocusShare of the screen's shorter side):
         // at the top of a long flight the start and the target lie about that far apart.
         var focus = Math.Min(animationRect.Width, animationRect.Height) * FlightFocusShare;
-        var path = new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus);
-        var duration = FlightDuration(path.Length);
+        var path = new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus, FlightDwell);
+        // A broken start view (a zero zoom) has no path: go straight to the target.
+        var duration = double.IsFinite(path.Length) ? FlightDuration(path.Length) : TimeSpan.Zero;
         Log.Info($"Flight length {path.Length:0.##}, duration {duration.TotalMilliseconds:0} ms");
 
         var clock = System.Diagnostics.Stopwatch.StartNew();
@@ -207,8 +210,8 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
             if (!IsCurrentGoToRequest(requestId))
                 return false;
 
-            var (center, width) = path.AtTime(clock.Elapsed / duration, FlightDwell);
-            await GoToAsync(center, width / focus, animationRect);
+            var (center, width) = path.AtTime(clock.Elapsed / duration);
+            await ShowFrameAsync(center, width / focus, animationRect);
         }
 
         if (!IsCurrentGoToRequest(requestId))
@@ -232,18 +235,21 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // The flight's duration grows with its length, but slowly: a short hop takes about half a
     // second, a jump across the whole model about two.
     static TimeSpan FlightDuration(double length) =>
-        TimeSpan.FromSeconds(Math.Clamp(FlightBaseSeconds + FlightSecondsPerLength * length, 0.4, FlightMaxSeconds));
+        TimeSpan.FromSeconds(Math.Min(FlightBaseSeconds + FlightSecondsPerLength * length, FlightMaxSeconds));
 
     static bool IsValidSvgRect(Rect svgRect) => svgRect.Width > 0 && svgRect.Height > 0;
 
     bool IsCurrentGoToRequest(long requestId) => requestId == Volatile.Read(ref goToRequestId);
 
-    async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
+    // Shows one frame of a flight and waits for the next. It always gives the browser a turn
+    // (at least 1 ms), even after a frame slower than FrameTime: in the single-threaded browser
+    // app a flight that never waited would paint nothing and take no wheel or pan to cancel it.
+    async Task ShowFrameAsync(Pos pos, double zoom, Rect svgRect)
     {
-        await using var _ = new MinDelay(TimeSpan.FromMilliseconds(15));
-
-        var offset = ToOffset(pos, zoom, svgRect);
-        SetView(offset, zoom, isSaveNeeded: false);
+        var frameClock = System.Diagnostics.Stopwatch.StartNew();
+        SetView(ToOffset(pos, zoom, svgRect), zoom, isSaveNeeded: false);
+        var remaining = FrameTime - frameClock.Elapsed;
+        await Task.Delay(remaining > MinFrameWait ? remaining : MinFrameWait);
     }
 
     public void PanTo(Pos canvasCenter)
