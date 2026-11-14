@@ -42,9 +42,9 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     const double WheelZoomSpeed = 1.14;
     const double PinchZoomSpeed = 1.04;
     const double FlightFocusShare = 0.6;
-    const double FlightBaseSeconds = 0.4;
-    const double FlightSecondsPerLength = 0.2;
-    const double FlightMaxSeconds = 2.4;
+    const double FlightBaseSeconds = 0.56;
+    const double FlightSecondsPerLength = 0.28;
+    const double FlightMaxSeconds = 3.4;
     const double FlightDwell = 1.5;
     const double MinFlightLength = 0.01;
     static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(15);
@@ -237,8 +237,8 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         return true;
     }
 
-    // The flight's duration grows with its length, but slowly: a short hop takes about half a
-    // second, a jump across the whole model about two. No flight when the view is already
+    // The flight's duration grows with its length, but slowly: a short hop takes about 0.6
+    // seconds, a jump across the whole model about 2.4. No flight when the view is already
     // there (or the length is broken).
     static TimeSpan FlightDuration(double length) =>
         double.IsFinite(length) && length >= MinFlightLength
