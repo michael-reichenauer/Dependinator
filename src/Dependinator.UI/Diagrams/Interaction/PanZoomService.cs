@@ -41,8 +41,11 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // zoom band (a cheap viewBox update) instead of forcing a full tile re-render every tick.
     const double WheelZoomSpeed = 1.14;
     const double PinchZoomSpeed = 1.04;
-    const double GoToZoomSpeed = 1.02;
-    const int GoToMoveStepCount = 50;
+    const double FlightFocusShare = 0.6;
+    const double FlightBaseSeconds = 0.4;
+    const double FlightSecondsPerLength = 0.2;
+    const double FlightMaxSeconds = 2.4;
+    const double FlightDwell = 1.5;
     long goToRequestId = 0;
 
     public void Zoom(PointerEvent e)
@@ -162,14 +165,15 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         SetView(newOffset, null);
     }
 
-    // Animates the view to center targetPos at targetZoom in three phases: zoom out until the
-    // target view fits within the current view, pan to the target in fixed steps, then zoom
-    // back in. Any newer pan/zoom action bumps goToRequestId, which cancels this animation at
-    // the next step (IsCurrentGoToRequest).
+    // Animates the view to center targetPos at targetZoom in one flight (ZoomPath): it pans
+    // and zooms at once, zooming out on the way as far as the jump needs, so the user sees
+    // where the target lies relative to where they were. The animation is timed by the clock,
+    // not by frames, so a slow render drops frames instead of slowing the flight down. Any
+    // newer pan/zoom action bumps goToRequestId, which cancels this animation at the next frame
+    // (IsCurrentGoToRequest).
     public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
         var requestId = Interlocked.Increment(ref goToRequestId);
-        // A non-finite target never "fits", so the zoom-out loop below would never end.
         if (
             targetZoom <= 0
             || !double.IsFinite(targetZoom)
@@ -190,49 +194,21 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         Log.Info($"StartPos:  {startPos},  StartZoom:  {startZoom}");
         Log.Info($"TargetPos: {targetPos}, TargetZoom: {targetZoom}");
 
-        var targetViewRect = ToViewRect(targetPos, targetZoom, animationRect);
+        // The path's width is the focus area's (FlightFocusShare of the screen's shorter side):
+        // at the top of a long flight the start and the target lie about that far apart.
+        var focus = Math.Min(animationRect.Width, animationRect.Height) * FlightFocusShare;
+        var path = new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus);
+        var duration = FlightDuration(path.Length);
+        Log.Info($"Flight length {path.Length:0.##}, duration {duration.TotalMilliseconds:0} ms");
 
-        var currentPos = startPos;
-        var currentZoom = startZoom;
-        var currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
-
-        // Zoom out until the target viewRect fits within the current viewRect
-        while (!RectWithin(targetViewRect, currentViewRect))
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (clock.Elapsed < duration)
         {
             if (!IsCurrentGoToRequest(requestId))
                 return false;
 
-            currentZoom *= GoToZoomSpeed;
-            currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
-
-            await GoToAsync(currentPos, currentZoom, animationRect);
-        }
-
-        var xd = (targetPos.X - currentPos.X) / currentZoom / GoToMoveStepCount;
-        var yd = (targetPos.Y - currentPos.Y) / currentZoom / GoToMoveStepCount;
-        for (var i = 0; i < GoToMoveStepCount; i++)
-        {
-            if (!IsCurrentGoToRequest(requestId))
-                return false;
-
-            var x = currentPos.X + xd * currentZoom;
-            var y = currentPos.Y + yd * currentZoom;
-            currentPos = new Pos(x, y);
-            await GoToAsync(currentPos, currentZoom, animationRect);
-        }
-
-        if (!IsCurrentGoToRequest(requestId))
-            return false;
-        await GoToAsync(targetPos, currentZoom, animationRect);
-
-        // Zoom until pos
-        while (currentZoom > targetZoom)
-        {
-            if (!IsCurrentGoToRequest(requestId))
-                return false;
-
-            currentZoom *= 1 / GoToZoomSpeed;
-            await GoToAsync(targetPos, currentZoom, animationRect);
+            var (center, width) = path.AtTime(clock.Elapsed / duration, FlightDwell);
+            await GoToAsync(center, width / focus, animationRect);
         }
 
         if (!IsCurrentGoToRequest(requestId))
@@ -245,29 +221,26 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         var finalRect = screenService.SvgRect;
         if (!IsValidSvgRect(finalRect))
             return false;
-        await GoToAsync(targetPos, targetZoom, finalRect);
+        SetView(ToOffset(targetPos, targetZoom, finalRect), targetZoom, isSaveNeeded: false);
 
-        var (endPos, endZoom) = GetPosAndZoom(animationRect);
+        var (endPos, endZoom) = GetPosAndZoom(finalRect);
         Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");
         applicationEvents.TriggerViewSaveNeeded();
         return true;
     }
 
+    // The flight's duration grows with its length, but slowly: a short hop takes about half a
+    // second, a jump across the whole model about two.
+    static TimeSpan FlightDuration(double length) =>
+        TimeSpan.FromSeconds(Math.Clamp(FlightBaseSeconds + FlightSecondsPerLength * length, 0.4, FlightMaxSeconds));
+
     static bool IsValidSvgRect(Rect svgRect) => svgRect.Width > 0 && svgRect.Height > 0;
 
     bool IsCurrentGoToRequest(long requestId) => requestId == Volatile.Read(ref goToRequestId);
 
-    bool RectWithin(Rect r1, Rect r2)
-    {
-        return r1.X >= r2.X
-            && r1.X + r1.Width <= r2.X + r2.Width
-            && r1.Y >= r2.Y
-            && r1.Y + r1.Height <= r2.Y + r2.Height;
-    }
-
     async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
     {
-        await using var _ = new MinDelay(TimeSpan.FromMilliseconds(8));
+        await using var _ = new MinDelay(TimeSpan.FromMilliseconds(15));
 
         var offset = ToOffset(pos, zoom, svgRect);
         SetView(offset, zoom, isSaveNeeded: false);
@@ -308,15 +281,6 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // the "offset" (the canvas point at the viewport's top-left corner), while the animation
     // targets a "pos" (the canvas point at the viewport's center). The helpers below convert
     // between them; the viewport spans svgRect.Size * zoom canvas units.
-
-    // The canvas rectangle currently visible for a center pos at the given zoom.
-    static Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
-    {
-        var offset = ToOffset(pos, zoom, svgRect);
-        var width = svgRect.Width * zoom;
-        var height = svgRect.Height * zoom;
-        return new Rect(offset.X, offset.Y, width, height);
-    }
 
     // Top-left offset → center pos.
     static Pos ToPos(Pos offset, double zoom, Rect svgRect)
