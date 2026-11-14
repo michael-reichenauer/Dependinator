@@ -32,6 +32,10 @@ interface ICanvasService
     // can (GestureTransform), else the current view is drawn.
     CanvasView GetView();
 
+    // Draws one tile the resting view is likely to need next (SvgService.PrefetchNext); false
+    // while the view moves or when nothing is left to draw ahead.
+    bool PrefetchNext();
+
     Task InitAsync();
     Task RemoveAsync();
     Task RefreshAsync();
@@ -257,6 +261,15 @@ class CanvasService(
 
         UpdateContent(viewRect, zoom);
         return new CanvasView(content, ViewBox(offset, zoom, svgRect), "");
+    }
+
+    public bool PrefetchNext()
+    {
+        if (panZoomService.IsViewMoving)
+            return false; // Its rest draws the view, and asks again after
+        var svgRect = SvgRect;
+        var (offset, zoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+        return svgService.PrefetchNext(new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height), zoom);
     }
 
     string ViewBox(Pos offset, double zoom, Rect svgRect) =>

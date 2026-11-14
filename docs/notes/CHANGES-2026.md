@@ -241,7 +241,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   (`PanZoomService.IsViewMoving`). In WebKit (the iPad) panning went from 26-62 ms frames to
   16 ms, and the .NET work per step dropped from about 11 ms to 3.5 ms. A pinch now follows
   the fingers (the point between them stays put, two fingers pan) instead of zooming 4% per
-  touch move.
+  touch move. Then, the same day: once the view rests, the tiles one zoom level in and
+  out are drawn ahead in idle time (`SvgService.PrefetchNext`), so the next zoom finds its tile
+  (in the browser app the worst frame after a single wheel tick went from up to 133 ms to 50 ms in
+  Chromium), and a trackpad pinch (wheel events with Ctrl) zooms by its delta instead of racing
+  at 14% per event (`PointerEvent.WheelZoomFactor`).
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.

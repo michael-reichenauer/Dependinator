@@ -82,7 +82,7 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
                 return;
             var (mx, my) = (e.OffsetX, e.OffsetY);
 
-            var factor = Math.Pow(WheelZoomSpeed, e.ZoomSteps);
+            var factor = e.WheelZoomFactor(WheelZoomSpeed);
             newZoom = (e.DeltaY > 0) ? model.Zoom * factor : model.Zoom * (1 / factor);
             if (newZoom > MaxZoom)
                 newZoom = MaxZoom;

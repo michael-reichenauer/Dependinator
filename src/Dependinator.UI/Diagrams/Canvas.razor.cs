@@ -130,6 +130,10 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
             await InvokeAsync(srv.InitialShowAsync);
         }
 
+        // Every render restarts the wait: the tiles are drawn ahead only once the canvas rests.
+        if (!isDisposed)
+            prefetchDebouncer.Debounce(PrefetchDelayMilliseconds, SchedulePrefetch);
+
         if (!ReferenceEquals(renderedContent, lastView.Content))
         {
             renderedContent = lastView.Content;
@@ -138,6 +142,35 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     }
 
     CanvasView lastView = new("", "0 0 0 0", "");
+
+    // Once the view has rested and been drawn, the tiles one zoom level in and out are drawn
+    // ahead (ICanvasService.PrefetchNext), one per timer slot so input can come between them: the
+    // next wheel tick or pinch then finds its tile instead of drawing it (6 to 116 ms a tile in
+    // the browser app) when the gesture ends. Long enough after the rest that a quick follow-up
+    // gesture comes first, since a tile cannot be stopped once it is being drawn. The timer
+    // hands the work to the renderer (InvokeAsync), as the Blazor Server host would otherwise
+    // change the lines on a timer thread while components read them.
+    const int PrefetchDelayMilliseconds = 300;
+    const int PrefetchNextDelayMilliseconds = 50;
+    readonly Debouncer prefetchDebouncer = new();
+
+    void SchedulePrefetch() => _ = InvokeAsync(Prefetch);
+
+    void Prefetch()
+    {
+        if (isDisposed)
+            return;
+        try
+        {
+            if (srv.PrefetchNext())
+                prefetchDebouncer.Debounce(PrefetchNextDelayMilliseconds, SchedulePrefetch);
+        }
+        catch (Exception e)
+        {
+            // Only a tile drawn ahead was lost; the view draws it when it needs it.
+            Log.Exception(e, "Failed to draw a tile ahead");
+        }
+    }
 
     CanvasView TakeView() => lastView = srv.GetView();
 
@@ -165,6 +198,7 @@ partial class Canvas : ComponentBase, IUIComponent, IDisposable
     public void Dispose()
     {
         isDisposed = true;
+        prefetchDebouncer.Dispose();
         applicationEvents.UIStateChanged -= OnUiStateChanged;
         applicationEvents.ViewChanged -= OnViewChanged;
         if (selfReference is not null)

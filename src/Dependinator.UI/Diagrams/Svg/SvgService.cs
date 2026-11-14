@@ -17,6 +17,11 @@ interface ISvgService
 {
     Tile GetTile(Rect viewRect, double zoom);
 
+    // Draws one tile the view is likely to need next and caches it, if it is not cached yet: the
+    // tile one zoom level in, then one level out, around the view's center. Returns whether it
+    // drew one, so the caller can ask again for the next. Leaves the view state as it was.
+    bool PrefetchNext(Rect viewRect, double zoom);
+
     // Renders the diagram content covering canvasRect (canvas coordinates) at zoom (canvas units
     // per output pixel), in output-pixel coordinates with origin at the rect's top-left. Returns
     // the bare content (no <svg> wrapper, no defs) for embedding in an export document. Unlike
@@ -41,6 +46,9 @@ class SvgService : ISvgService
     readonly IHiddenNodeService hiddenNodeService;
     IReadOnlyDictionary<NodeId, NodeProblems>? tilesNodeProblems;
     IReadOnlyDictionary<NodeId, int>? tilesHiddenChildCounts;
+
+    // The tile the lines were last synced to (SyncLines), Empty before any.
+    TileKey syncedKey = TileKey.Empty;
 
     public SvgService(
         IModelMgr modelMgr,
@@ -93,15 +101,8 @@ class SvgService : ISvgService
             model.Zoom = zoom;
         }
 
-        // The badges are baked into the tiles, and the problems can change without a model
-        // change: the counts of a parse are only taken once its progress ends. Read before the
-        // tiles lock, since it takes the model lock.
-        var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
-        // While hidden nodes are revealed they are drawn, so nothing needs a badge.
-        var hiddenChildCounts =
-            viewOptions.IsHiddenBadgesShown && !viewOptions.RevealHiddenNodes
-                ? hiddenNodeService.GetHiddenChildCounts()
-                : null;
+        // Read before the tiles lock, since it takes the model lock.
+        var (nodeProblems, hiddenChildCounts) = GetBadges();
 
         TileKey tileKey;
         Tile tile;
@@ -122,7 +123,16 @@ class SvgService : ISvgService
 
             tileKey = TileKey.From(viewRect, zoom);
             if (tiles.TryGetCached(tileKey, viewRect, zoom, out tile))
+            {
+                // The lines follow the tile that is shown (a tile drawn ahead, or one from an
+                // earlier visit, was drawn while they were synced to another one).
+                if (tile.Key != syncedKey)
+                {
+                    using var model = modelMgr.UseModel();
+                    SyncLines(model, tile.Key, LineEmphasis.FindSelection(model));
+                }
                 return tile;
+            }
         }
 
         // Create a new tile and cache it
@@ -136,6 +146,78 @@ class SvgService : ISvgService
         }
 
         return tile;
+    }
+
+    // The badges are baked into the tiles, and the problems can change without a model change:
+    // the counts of a parse are only taken once its progress ends.
+    (IReadOnlyDictionary<NodeId, NodeProblems>?, IReadOnlyDictionary<NodeId, int>?) GetBadges()
+    {
+        var nodeProblems = viewOptions.IsProblemBadgesShown ? problemService.GetNodeProblems() : null;
+        // While hidden nodes are revealed they are drawn, so nothing needs a badge.
+        var hiddenChildCounts =
+            viewOptions.IsHiddenBadgesShown && !viewOptions.RevealHiddenNodes
+                ? hiddenNodeService.GetHiddenChildCounts()
+                : null;
+        return (nodeProblems, hiddenChildCounts);
+    }
+
+    public bool PrefetchNext(Rect viewRect, double zoom)
+    {
+        if (viewRect.Width == 0 || viewRect.Height == 0 || zoom <= 0)
+            return false;
+
+        // The model lock is the tiles lock (one state lock), so nothing changes the model between
+        // drawing the tile and caching it.
+        using var model = modelMgr.UseModel();
+        if (model.Root.Children.Count == 0)
+            return false;
+        var (nodeProblems, hiddenChildCounts) = GetBadges();
+
+        using var tiles = tilesMgr.UseTiles();
+        // Only ahead of a view that is drawn and cached with the current badges and screen size:
+        // otherwise the next GetTile clears the cache, or the cache was cleared (a model change)
+        // and the view's own tile comes first.
+        var viewKey = TileKey.From(viewRect, zoom);
+        if (
+            !ReferenceEquals(nodeProblems, tilesNodeProblems)
+            || !ReferenceEquals(hiddenChildCounts, tilesHiddenChildCounts)
+            || !tiles.Contains(viewKey)
+        )
+            return false;
+        if (GetPrefetchKeys(viewKey, viewRect, zoom).FirstOrDefault(key => !tiles.Contains(key)) is not { } missing)
+            return false;
+
+        try
+        {
+            return tiles.AddPrefetched(CreateModelTile(model, missing, nodeProblems, hiddenChildCounts));
+        }
+        finally
+        {
+            // Drawing a tile syncs the lines to its zoom and area: sync them back to the view's
+            // tile, which hit testing, the hover cards and the toolbars read (also when the
+            // drawing failed half way).
+            SyncLines(model, viewKey, LineEmphasis.FindSelection(model));
+        }
+    }
+
+    // The tiles of the next zoom level in and out, around the view's center. In first: zooming in
+    // draws the denser tiles. The levels come from the view's key, not from its zoom times
+    // ZoomFactor: at a level's own zoom (1 after a fit) the floor of the log rounds a level off.
+    static IEnumerable<TileKey> GetPrefetchKeys(TileKey viewKey, Rect viewRect, double zoom)
+    {
+        var centerX = viewRect.X + viewRect.Width / 2 * zoom;
+        var centerY = viewRect.Y + viewRect.Height / 2 * zoom;
+        foreach (var level in new[] { viewKey.Z + 1, viewKey.Z - 1 })
+        {
+            var levelZoom = zoom * TileKey.LevelZoom(level) / viewKey.GetTileZoom();
+            var rect = new Rect(
+                centerX - viewRect.Width / 2 * levelZoom,
+                centerY - viewRect.Height / 2 * levelZoom,
+                viewRect.Width,
+                viewRect.Height
+            );
+            yield return TileKey.AtLevel(rect, level);
+        }
     }
 
     public string GetContentSvg(Rect canvasRect, double zoom)
@@ -163,24 +245,12 @@ class SvgService : ISvgService
             tileWithMargin.Height * tileZoom
         );
 
-    Tile CreateModelTile(
-        IModel model,
-        TileKey tileKey,
-        IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems,
-        IReadOnlyDictionary<NodeId, int>? hiddenChildCounts
-    )
+    // Syncs the lines to a tile's zoom and area, as the tile draws them. A selected stub's lines
+    // are drawn end to end, except while cycles are shown: the cycle lines are the lines between
+    // siblings, which must then stay as they are.
+    LineReveal SyncLines(IModel model, TileKey tileKey, RenderSelection selection)
     {
-        var timing = Timing.Start();
-        var tileRect = tileKey.GetTileRect();
-        var tileWithMargin = tileKey.GetTileRectWithMargin();
         var tileZoom = tileKey.GetTileZoom();
-        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
-
-        // A selected stub's lines are drawn end to end, except while cycles are shown: the cycle
-        // lines are the lines between siblings, which must then stay as they are. The lines are
-        // synced before the flags are read, since a selection can create lines and the rule
-        // and path line sets below must hold them.
-        var selection = LineEmphasis.FindSelection(model);
         var reveal = viewOptions.IsCyclesShown
             ? LineReveal.None
             : NodeTreeSvg.GetLineReveal(
@@ -197,8 +267,32 @@ class SvgService : ISvgService
         // A selected stub opens no far container outside the tile with its margin, the area the
         // tile draws nodes in: its lines end at that container.
         if (reveal.Stub is not null)
-            reveal = reveal with { Area = GetCanvasArea(tileRect, tileWithMargin, tileZoom) };
+            reveal = reveal with
+            {
+                Area = GetCanvasArea(tileKey.GetTileRect(), tileKey.GetTileRectWithMargin(), tileZoom),
+            };
         RepLineService.Sync(model, tileZoom, reveal);
+        syncedKey = tileKey;
+        return reveal;
+    }
+
+    Tile CreateModelTile(
+        IModel model,
+        TileKey tileKey,
+        IReadOnlyDictionary<NodeId, NodeProblems>? nodeProblems,
+        IReadOnlyDictionary<NodeId, int>? hiddenChildCounts
+    )
+    {
+        var timing = Timing.Start();
+        var tileRect = tileKey.GetTileRect();
+        var tileWithMargin = tileKey.GetTileRectWithMargin();
+        var tileZoom = tileKey.GetTileZoom();
+        var tileOffset = new Pos(-tileRect.X, -tileRect.Y);
+
+        // The lines are synced before the flags are read, since a selection can create lines and
+        // the rule and path line sets below must hold them.
+        var selection = LineEmphasis.FindSelection(model);
+        var reveal = SyncLines(model, tileKey, selection);
 
         // The problems GetTile checked the cache against, so the tile matches them.
         var viewFlags = Flags;
