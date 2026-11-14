@@ -208,6 +208,18 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
     repaint cost; compare in WebKit.
 - A pinch zooms by the fingers' distance and keeps the point between them under them
   (`PointerEvent.PinchScale`, `PinchFromX/Y`); its moves are batched per frame like the mouse.
+- A trackpad pinch is wheel events with ctrlKey, many per gesture: `PointerEvent.WheelZoomFactor`
+  zooms it by its deltaY (about 100 per e-fold in Chromium), capped at the notches so Ctrl + a
+  mouse wheel is unchanged. A plain two-finger trackpad scroll still zooms a notch per event
+  (left as it is: some browsers give a mouse notch a small pixel delta too, which would slow
+  those wheels down).
+- **Tiles drawn ahead (Nov 14 2026).** 300 ms after the view rests and is drawn,
+  `CanvasService` asks `SvgService.PrefetchNext` for the tiles one zoom level in, then out,
+  around the view's center, one per timer slot (a tile cannot be stopped once it is being drawn,
+  6 to 116 ms in the browser app). It holds the state lock across drawing and caching, never
+  touches `model.ViewRect`/`Zoom`, caches with `TileCache.AddPrefetched` (not the last used
+  tile), and syncs the lines back to the view's tile afterwards (`SvgService.SyncLines`), since
+  drawing a tile syncs them to its zoom and area.
 - `CreateModelTile` logs `Tile ((x,y,z)): N chars in Mms` to the app log (`~/Dependinator.log`):
   use it for before/after comparisons. Deferred until measured: a selection overlay layer,
   WebKit-gating `refreshSvgPaintServers`, a pan/zoom save debounce, description-wrap caching.

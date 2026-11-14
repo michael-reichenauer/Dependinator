@@ -7,6 +7,14 @@ interface ITileCache : IDisposable
     bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile);
     bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile);
     void SetCached(Tile tile, Rect viewRect, double zoom);
+
+    // Whether a tile for the key is cached (and of the current screen tile size), without
+    // marking it used.
+    bool Contains(TileKey key);
+
+    // Caches a tile drawn ahead of need (SvgService.PrefetchNext) without making it the shown
+    // one. A tile of another screen size than the cached ones is dropped: the screen was resized.
+    void AddPrefetched(Tile tile);
     void ClearCache();
 }
 
@@ -91,6 +99,23 @@ class TileCache : ITileCache
         EvictUntilWithinBudget();
         SetCurrentScreenTileSize(tile);
         SetLastUsed(viewRect, zoom, tile);
+    }
+
+    public bool Contains(TileKey key) =>
+        key.TileWidth == currentScreenTileWidth && key.TileHeight == currentScreenTileHeight && tiles.ContainsKey(key);
+
+    public void AddPrefetched(Tile tile)
+    {
+        if (tile.Key.TileWidth != currentScreenTileWidth || tile.Key.TileHeight != currentScreenTileHeight)
+            return;
+        if (tiles.TryGetValue(tile.Key, out var replaced))
+        {
+            cachedBytes -= replaced.Tile.ByteSize;
+        }
+
+        tiles[tile.Key] = (tile, ++accessCounter);
+        cachedBytes += tile.ByteSize;
+        EvictUntilWithinBudget();
     }
 
     // Evicts the least recently used tiles down to the low water marks, so a long session keeps
