@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
-using Dependinator.TypeScript.Tests.Parsing.Utils;
+using Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
-namespace Dependinator.TypeScript.Tests.Parsing;
+namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
 // Parses Samples/tool, a plain JavaScript project (a package.json, no config file) of CommonJS
 // and ES module files, where an assignment to exports is a declaration and little has a type.

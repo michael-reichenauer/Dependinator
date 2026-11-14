@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Dependinator.TypeScript.Tests;
+namespace Dependinator.TypeScriptParser.Tests;
 
 // Paths of the sample projects under Samples/, resolved from this file's location so the tests
 // work from any checkout (never hardcode workspace paths).

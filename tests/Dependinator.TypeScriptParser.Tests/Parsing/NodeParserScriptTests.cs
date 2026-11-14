@@ -1,17 +1,17 @@
-using Dependinator.TypeScript.Parsing;
+using Dependinator.TypeScriptParser.Parsing;
 
-namespace Dependinator.TypeScript.Tests.Parsing;
+namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
-public class HelperScriptTests
+public class NodeParserScriptTests
 {
     [Fact]
     public void GetPath_ShouldGiveTheSameExistingScript_EachTime()
     {
-        var path = AssertOk(HelperScript.GetPath());
+        var path = AssertOk(NodeParserScript.GetPath());
 
         Assert.True(File.Exists(path));
         Assert.Matches(@"ts-parser-[0-9a-f]{16}\.js$", path);
-        Assert.Equal(path, AssertOk(HelperScript.GetPath()));
+        Assert.Equal(path, AssertOk(NodeParserScript.GetPath()));
     }
 
     [Fact]
@@ -29,7 +29,7 @@ public class HelperScriptTests
             var leftover = Script("ts-parser-4444.js.123.tmp", now.AddDays(-40));
             var unrelated = Script("notes.txt", now.AddDays(-400));
 
-            HelperScript.DeleteUnusedVersions(folder, own, now.AddDays(-30));
+            NodeParserScript.DeleteUnusedVersions(folder, own, now.AddDays(-30));
 
             Assert.True(File.Exists(own));
             Assert.True(File.Exists(inUse));

@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
-using Dependinator.TypeScript.Tests.Parsing.Utils;
+using Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
-namespace Dependinator.TypeScript.Tests.Parsing;
+namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
 // Parses Samples/shop, a small TypeScript project (see TypeScriptFixture), and checks the model
 // built from it: node names encode the folders and files ("shop.src.cart*ts.Cart.add"), what a

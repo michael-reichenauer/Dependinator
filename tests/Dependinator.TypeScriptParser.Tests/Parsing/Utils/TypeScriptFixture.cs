@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
-using Dependinator.TypeScript.Parsing;
+using Dependinator.TypeScriptParser.Parsing;
 
-namespace Dependinator.TypeScript.Tests.Parsing.Utils;
+namespace Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
 // Parses the sample projects once per test run: each parse starts Node and the compiler.
 public class TypeScriptFixture : IAsyncLifetime
@@ -19,7 +19,7 @@ public class TypeScriptFixture : IAsyncLifetime
     internal IReadOnlyList<Item> Parts { get; private set; } = [];
     internal bool AreWorkspacePackagesLinked { get; private set; }
 
-    internal static TypeScriptParser Parser() => new(new NodeRuntime());
+    internal static TypeScriptSourceParser Parser() => new(new NodeRuntime());
 
     public async Task InitializeAsync()
     {

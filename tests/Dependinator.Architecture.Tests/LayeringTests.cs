@@ -15,7 +15,7 @@ public class LayeringTests
     static readonly Assembly RoslynAssembly = Assembly.Load("Dependinator.Roslyn");
     static readonly Assembly ReflectionAssembly = Assembly.Load("Dependinator.Reflection");
     static readonly Assembly BicepAssembly = Assembly.Load("Dependinator.Bicep");
-    static readonly Assembly TypeScriptAssembly = Assembly.Load("Dependinator.TypeScript");
+    static readonly Assembly TypeScriptAssembly = Assembly.Load("Dependinator.TypeScriptParser");
     static readonly Assembly ClaudeAssembly = Assembly.Load("Dependinator.Claude");
     static readonly Assembly McpAssembly = Assembly.Load("Dependinator.Mcp");
 
@@ -30,7 +30,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
-                "Dependinator.TypeScript",
+                "Dependinator.TypeScriptParser",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
                 "Dependinator.Mcp",
@@ -81,7 +81,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
-                "Dependinator.TypeScript",
+                "Dependinator.TypeScriptParser",
                 .. HostAssemblies,
             ]
         );
@@ -106,7 +106,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
-                "Dependinator.TypeScript",
+                "Dependinator.TypeScriptParser",
                 "Dependinator.Claude",
                 .. HostAssemblies,
             ]
@@ -137,7 +137,7 @@ public class LayeringTests
                 "Dependinator.UI",
                 "Dependinator.Roslyn",
                 "Dependinator.Bicep",
-                "Dependinator.TypeScript",
+                "Dependinator.TypeScriptParser",
                 "Dependinator.Reflection",
                 "Dependinator.Claude",
                 "Dependinator.Mcp",

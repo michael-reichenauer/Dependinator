@@ -1,15 +1,15 @@
 using System.Security.Cryptography;
 
-namespace Dependinator.TypeScript.Parsing;
+namespace Dependinator.TypeScriptParser.Parsing;
 
-// The parser helper's script (Helper/, bundled into one file and embedded in this assembly) as
+// The parser helper's script (NodeParser/, bundled into one file and embedded in this assembly) as
 // a file Node can run: written once per version to the user's local application data, under a
 // name of its content's hash, so a file of that name that someone changed is never run.
 // Several versions of the app can run at once (VS Code's release and pre-release, the browser
 // host), each with its own script: one in use is never deleted, only what nobody used for long.
-static class HelperScript
+static class NodeParserScript
 {
-    const string ResourceName = "Dependinator.TypeScript.ts-parser.js";
+    const string ResourceName = "Dependinator.TypeScriptParser.ts-parser.js";
     static readonly TimeSpan UnusedAge = TimeSpan.FromDays(30);
     static readonly Lock syncRoot = new();
     static string? path;
@@ -33,7 +33,7 @@ static class HelperScript
 
     static string Write()
     {
-        using var resource = typeof(HelperScript).Assembly.GetManifestResourceStream(ResourceName)
+        using var resource = typeof(NodeParserScript).Assembly.GetManifestResourceStream(ResourceName)
             ?? throw new InvalidOperationException("The TypeScript parser helper is not part of this build.");
         using var memory = new MemoryStream();
         resource.CopyTo(memory);

@@ -42,10 +42,10 @@ updates:
         update-types: ["version-update:semver-major"]
 
   # The TypeScript parser's helper (the TypeScript compiler and esbuild, bundled into
-  # Dependinator.TypeScript by its build). The unit tests parse the sample projects with the
+  # Dependinator.TypeScriptParser by its build). The unit tests parse the sample projects with the
   # bumped compiler, so a green CI covers a bump.
   - package-ecosystem: "npm"
-    directory: "/src/Dependinator.TypeScript/Helper"
+    directory: "/src/Dependinator.TypeScriptParser/NodeParser"
     target-branch: "dev"
     schedule:
       interval: "weekly"

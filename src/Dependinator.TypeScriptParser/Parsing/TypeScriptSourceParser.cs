@@ -1,14 +1,14 @@
 using Dependinator.Core.Parsing.Utils;
 using Dependinator.Core.Shared;
 
-namespace Dependinator.TypeScript.Parsing;
+namespace Dependinator.TypeScriptParser.Parsing;
 
 // Parses a TypeScript or JavaScript project: the tsconfig.json, jsconfig.json or package.json
 // given as the model path, with the source files it covers, into nodes and links. The work is
-// done by the helper program (Helper/src/main.ts: the TypeScript compiler on Node), which
+// done by the helper program (NodeParser/src/main.ts: the TypeScript compiler on Node), which
 // prints the items; this class runs it and reads them.
 [Transient]
-class TypeScriptParser(INodeRuntime nodeRuntime) : ISourceParser
+class TypeScriptSourceParser(INodeRuntime nodeRuntime) : ISourceParser
 {
     // A large project type-checks in well under a minute; the limit only ends a hung helper.
     static readonly TimeSpan Timeout = TimeSpan.FromMinutes(5);
@@ -23,7 +23,7 @@ class TypeScriptParser(INodeRuntime nodeRuntime) : ISourceParser
         var node = nodeRuntime.GetPath();
         if (node is not string nodePath)
             return node.Error;
-        var script = HelperScript.GetPath();
+        var script = NodeParserScript.GetPath();
         if (script is not string scriptPath)
             return new Error("The TypeScript parser could not be prepared.", script.Error);
 
