@@ -504,7 +504,9 @@
 
     string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
     global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    string CssPosition => $"position:fixed;left:{15}px; top:{6}px;";
+    // The z-index keeps it above the canvas while a pan or zoom moves the canvas by a CSS
+    // transform (GestureTransform), which paints it above fixed elements without one.
+    string CssPosition => $"position:fixed;left:{15}px; top:{6}px; z-index:1100;";
     string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
     protected override void OnInitialized()

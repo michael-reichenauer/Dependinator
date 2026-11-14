@@ -34,6 +34,9 @@ class PointerEventService : IPointerEventService, IDisposable
     const double DblClickMaxDistance = 10;
     const double DblClickMaxTouchDistance = 25;
 
+    // Below this distance between two fingers (px) a pinch's scale is noise.
+    const double MinPinchDistance = 10;
+
     readonly Timer clickTimer;
     readonly Dictionary<int, PointerEvent> activePointers = [];
     bool timerRunning = false;
@@ -186,15 +189,18 @@ class PointerEventService : IPointerEventService, IDisposable
         }
         else if (activePointers.Count == 2)
         {
-            // Two-finger pinch: convert the change in distance between the two pointers into
-            // a synthetic wheel event (zoom) centered between them, so pinch and mouse wheel
-            // share the same zoom handling downstream.
+            // Two-finger pinch: a synthetic wheel event centered between the fingers, so pinch
+            // and mouse wheel share the same zoom handling downstream. It carries how much the
+            // fingers spread and how far their midpoint moved, so the view zooms and pans with
+            // the fingers (PanZoomService.Zoom) instead of by a fixed step per move.
             var p1 = activePointers.Values.ElementAt(0);
             var p2 = activePointers.Values.ElementAt(1);
 
             var dx = p1.OffsetX - p2.OffsetX;
             var dy = p1.OffsetY - p2.OffsetY;
             var previousDistance = Math.Sqrt(dx * dx + dy * dy);
+            var previousCenterX = (p1.OffsetX + p2.OffsetX) / 2;
+            var previousCenterY = (p1.OffsetY + p2.OffsetY) / 2;
 
             activePointers[e.PointerId] = e;
             p1 = activePointers.Values.ElementAt(0);
@@ -209,7 +215,22 @@ class PointerEventService : IPointerEventService, IDisposable
             var centerX = (p1.OffsetX + p2.OffsetX) / 2;
             var centerY = (p1.OffsetY + p2.OffsetY) / 2;
 
-            var wheelEvent = e with { Type = "wheel", DeltaY = delta, OffsetX = centerX, OffsetY = centerY };
+            // Fingers that (nearly) touch give no usable scale: keep the zoom, follow the midpoint.
+            var scale =
+                previousDistance >= MinPinchDistance && currentDistance >= MinPinchDistance
+                    ? currentDistance / previousDistance
+                    : 1;
+
+            var wheelEvent = e with
+            {
+                Type = "wheel",
+                DeltaY = delta,
+                OffsetX = centerX,
+                OffsetY = centerY,
+                PinchScale = scale,
+                PinchFromX = previousCenterX,
+                PinchFromY = previousCenterY,
+            };
 
             Wheel?.Invoke(wheelEvent);
         }

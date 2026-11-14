@@ -16,7 +16,10 @@ public sealed class AppPage
     // Toolbar / menu hooks (see AppBar.razor data-testid attributes).
     public ILocator Menu => page.GetByTestId("appbar-menu");
     public ILocator SearchButton => page.GetByTestId("toolbar-search");
-    public ILocator Canvas => page.Locator("#svgcanvas");
+
+    // The canvas's place on the page: the frame around the svg, which a pan or zoom moves by a
+    // CSS transform for a moment (GestureTransform), so the svg's own box can be off then.
+    public ILocator Canvas => page.Locator("#canvasframe");
 
     public ILocator MenuItem(string testId) => page.GetByTestId(testId);
 

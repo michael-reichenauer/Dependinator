@@ -172,6 +172,38 @@ public class PointerEventServiceTests
         Assert.True(wheel.DeltaY < 0);
     }
 
+    [Fact]
+    public async Task TouchPinch_ShouldCarryFingerScaleAndMidpoints()
+    {
+        PointerEventService service = CreateService();
+        PointerEvent? received = null;
+        service.Wheel += e => received = e;
+
+        // The fingers go from 100 px apart around (150, 100) to 150 px apart around (175, 100).
+        await service.PointerEventCallback(TouchAt("pointerdown", 1, 100, 100));
+        await service.PointerEventCallback(TouchAt("pointerdown", 2, 200, 100));
+        await service.PointerEventCallback(TouchAt("pointermove", 2, 250, 100));
+
+        PointerEvent wheel = Assert.IsType<PointerEvent>(received);
+        Assert.Equal(1.5, wheel.PinchScale, 6);
+        Assert.Equal((150.0, 100.0), (wheel.PinchFromX, wheel.PinchFromY));
+        Assert.Equal((175.0, 100.0), (wheel.OffsetX, wheel.OffsetY));
+    }
+
+    [Fact]
+    public async Task TouchPinch_ShouldKeepScale_WhenFingersNearlyTouch()
+    {
+        PointerEventService service = CreateService();
+        PointerEvent? received = null;
+        service.Wheel += e => received = e;
+
+        await service.PointerEventCallback(TouchAt("pointerdown", 1, 100, 100));
+        await service.PointerEventCallback(TouchAt("pointerdown", 2, 102, 100));
+        await service.PointerEventCallback(TouchAt("pointermove", 2, 160, 100));
+
+        Assert.Equal(1, Assert.IsType<PointerEvent>(received).PinchScale);
+    }
+
     static PointerEvent TouchAt(string type, int pointerId, double x, double y) =>
         PointerEventAt(type, x, y, "touch") with
         {

@@ -1436,6 +1436,9 @@ button.dep-rules__node:hover {
    button groups only (Michael, Nov 13 2026; the earlier MudButtonGroup put a purple divider
    between every button). Buttons are 28 px, also for touch on the iPad. */
 .dep-float-toolbar {
+    /* Above the canvas also while a pan or zoom moves it by a CSS transform, which paints the
+       canvas in the positioned layer, after the toolbars (GestureTransform). */
+    z-index: 5;
     display: flex;
     align-items: center;
     gap: 1px;

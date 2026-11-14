@@ -26,11 +26,19 @@
 <AppProgress />
 
 
+@{
+    var view = TakeView();
+}
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
 
+    @* The frame clips the svg while a gesture moves it by a transform (GestureTransform), and its
+       canvas color fills what the moved svg leaves uncovered. It is where the canvas is on the
+       page: pointer offsets and the canvas rect are measured on it, not on the moved svg. *@
+    <div id="@CanvasFrameId" class="canvas-frame"
+         style="width:@(Width)px;height:@(Height)px;background-color:@DColors.CanvasBackground">
     <svg id="svgcanvas" class="@SvgClass" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="@Width" height="@Height" viewBox="@ViewBox" style="background-color:@DColors.CanvasBackground">
+         width="@Width" height="@Height" viewBox="@view.ViewBox" style="background-color:@DColors.CanvasBackground;@view.Style">
 
         <style>
                     svg {
@@ -350,8 +358,9 @@
             </marker>
             @((MarkupString)IconDefs)
         </defs>
-        @((MarkupString)Content)
+        @((MarkupString)view.Content)
     </svg>
+    </div>
 
     @if (manualEditService.IsLinkDragActive)
     {

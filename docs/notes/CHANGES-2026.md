@@ -37,7 +37,7 @@ project works.
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
-  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits.
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram.
   Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
@@ -233,6 +233,15 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   ends are in view at the top, where it slows down for a moment, then down onto the node. Timed
   by the clock (0.6 to 3.4 s, about 2.4 s across the demo model; Michael asked for 40% slower than the first try) with a soft start and landing;
   Back/Forward and share links fly the same way.
+- **Smoother panning and zooming (Nov 14).** While the view moves (a drag, the wheel, a pinch, a
+  go to flight), the diagram is moved by a CSS transform on the `<svg>` element, which the GPU
+  does without repainting, and drawn for real once the view rests 150 ms, reaches the edge of
+  what its tile holds or passes a 2x scale (`GestureTransform`). A view step re-renders only
+  the canvas and the minimap; the rest of the UI catches up when a gesture starts and ends
+  (`PanZoomService.IsViewMoving`). In WebKit (the iPad) panning went from 26-62 ms frames to
+  16 ms, and the .NET work per step dropped from about 11 ms to 3.5 ms. A pinch now follows
+  the fingers (the point between them stays put, two fingers pan) instead of zooming 4% per
+  touch move.
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
