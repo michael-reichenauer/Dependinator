@@ -52,6 +52,16 @@ public class ModelServiceWorkspaceModelTests
             .Returns((string _, SolutionParseOptions options) => ParseAsync(options));
     }
 
+    // Waits until the parser has been asked count times: a fixed delay was too short on a busy CI runner
+    async Task WaitForParsesAsync(int count)
+    {
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(5);
+        while (parsedOptions.Count < count && DateTimeOffset.UtcNow < deadline)
+            await Task.Delay(10);
+
+        Assert.Equal(count, parsedOptions.Count);
+    }
+
     async Task<Result<IReadOnlyList<Item>>> ParseAsync(SolutionParseOptions options)
     {
         parsedOptions.Add(options);
@@ -535,7 +545,8 @@ public class ModelServiceWorkspaceModelTests
         parseGate = new TaskCompletionSource();
         var first = modelService.RefreshChangedAsync(["script"]);
         var second = modelService.SetSourceChoicesAsync(Choices(true, true, true));
-        await Task.Delay(200);
+        await WaitForParsesAsync(2);
+        await Task.Delay(200); // Time for the second to reach the parser, if it did not wait
         Assert.Equal(2, parsedOptions.Count); // Only the first refresh has got to the parser
 
         parseGate.SetResult();
@@ -559,7 +570,7 @@ public class ModelServiceWorkspaceModelTests
 
         parseGate = new TaskCompletionSource();
         var refresh = modelService.RefreshChangedAsync(["script"]);
-        await Task.Delay(200);
+        await WaitForParsesAsync(2);
         modelMgr.WithModel(m => m.Path = "/other/Other.sln");
         parseGate.SetResult();
 
