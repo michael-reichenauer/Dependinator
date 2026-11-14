@@ -26,6 +26,10 @@ with the next official release.
 - A workspace model re-parses only the kind of sources whose files changed, and a solution, Bicep file or script project that is added or deleted shows up in the Models menu and in the workspace model without a restart
 - A model picked in the Models menu loads in the background, so the menu closes at once
 - A VS Code workspace starts on the model of it used last, also when that model was opened in another window
+- Panning and zooming are smoother, most of all in Safari and on the iPad, where panning no longer repaints the whole diagram every frame
+- A pinch on a touch screen keeps the point under the fingers, zooms by their spread and pans with them
+- A mouse wheel notch glides to its zoom around the pointer instead of jumping, and a quick spin keeps its speed; a Mac trackpad pinch zooms by how far the fingers move
+- Zooming in or out one level no longer waits for the diagram to be drawn, since it is drawn ahead while the view rests
 
 ### Changed
 
