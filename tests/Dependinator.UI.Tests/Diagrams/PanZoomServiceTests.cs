@@ -136,6 +136,17 @@ public class PanZoomServiceTests
     }
 
     [Fact]
+    public async Task Zoom_ShouldGlideAgain_ForANotchJustAfterALanding()
+    {
+        service.Zoom(Wheel(-100, -1));
+        await WaitUntilAsync(() => Math.Abs(View().Zoom - 1 / 1.14) < 1e-9);
+
+        service.Zoom(Wheel(-100, -1)); // Possibly within the landing frame's wait
+
+        await WaitUntilAsync(() => Math.Abs(View().Zoom - 1 / 1.14 / 1.14) < 1e-9);
+    }
+
+    [Fact]
     public void Zoom_ShouldZoomATrackpadPinchAtOnce()
     {
         service.Zoom(Wheel(-5, -1, ctrlKey: true));
@@ -148,6 +159,7 @@ public class PanZoomServiceTests
     {
         service.Zoom(Wheel(-100, -1));
         service.Pan(Move(5));
+        await Task.Delay(50); // A frame that was under way when the pan came has landed
         var zoom = View().Zoom;
 
         await Task.Delay(200);
