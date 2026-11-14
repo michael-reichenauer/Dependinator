@@ -241,6 +241,11 @@ class CanvasService(
         if (svgRect.Width == 0 || svgRect.Height == 0 || zoom == 0)
             return new CanvasView("", "0 0 0 0", "");
 
+        // The view rect, as the saved view and the layout refine read it (SvgService.GetTile
+        // records it as well, but is not called while the svg is only moved).
+        var viewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height);
+        modelMgr.WithModel(m => m.ViewRect = viewRect);
+
         // While the view moves the shown svg is moved, not drawn again, until the view rests
         // (PanZoomService.IsViewMoving), unless the model changed since it was drawn.
         if (
@@ -248,14 +253,9 @@ class CanvasService(
             && !isShownStale
             && GestureTransform.Get(shownOffset, shownZoom, offset, zoom, svgRect, shownTileArea) is { } transform
         )
-        {
-            // GetTile records the view rect too, but is not called: the saved view and the layout
-            // refine read it.
-            modelMgr.WithModel(m => m.ViewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height));
             return new CanvasView(content, ViewBox(shownOffset, shownZoom, svgRect), GestureTransform.Css(transform));
-        }
 
-        UpdateContent(offset, zoom, svgRect);
+        UpdateContent(viewRect, zoom);
         return new CanvasView(content, ViewBox(offset, zoom, svgRect), "");
     }
 
@@ -267,12 +267,20 @@ class CanvasService(
             )
             : "0 0 0 0";
 
-    void UpdateContent(Pos offset, double zoom, Rect svgRect)
+    void UpdateContent(Rect viewRect, double zoom)
     {
-        var viewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height);
         isShownStale = false; // Before the tile: a model change while it is drawn marks it again
-        var tile = svgService.GetTile(viewRect, zoom);
-        shownOffset = offset;
+        Tile tile;
+        try
+        {
+            tile = svgService.GetTile(viewRect, zoom);
+        }
+        catch
+        {
+            isShownStale = true; // What is shown was not replaced: never move it
+            throw;
+        }
+        shownOffset = new Pos(viewRect.X, viewRect.Y);
         shownZoom = zoom;
         shownTileArea =
             tile.Key == TileKey.Empty

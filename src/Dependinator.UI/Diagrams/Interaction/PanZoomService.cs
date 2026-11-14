@@ -44,10 +44,9 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // step was two thirds of a step's cost in the browser app (about 7 of 11 ms).
     const int ViewSettleMilliseconds = 150;
     readonly Debouncer viewSettleDebouncer = new();
-    volatile bool isViewMoving;
-    volatile bool isDisposed;
+    int isViewMoving; // 1 while moving; Interlocked, since the settle runs on a timer thread
 
-    public bool IsViewMoving => isViewMoving;
+    public bool IsViewMoving => Volatile.Read(ref isViewMoving) == 1;
 
     const double MaxZoom = 10;
     const double Margin = 10;
@@ -155,13 +154,11 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
                 model.Zoom = newZoom;
         }
 
-        var isFirstStep = !isViewMoving;
-        isViewMoving = true;
+        var isFirstStep = Interlocked.Exchange(ref isViewMoving, 1) == 0;
         applicationEvents.TriggerViewChanged();
         if (isFirstStep)
             applicationEvents.TriggerUIStateChanged();
-        if (!isDisposed) // A flight can still take a step after its scope is gone
-            viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
+        viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
         if (isSaveNeeded)
             applicationEvents.TriggerViewSaveNeeded();
     }
@@ -169,15 +166,15 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // Once per gesture: a flight that landed has settled already when its debounce fires.
     void OnViewSettled()
     {
-        if (!isViewMoving)
-            return;
-        isViewMoving = false;
-        applicationEvents.TriggerUIStateChanged();
+        if (Interlocked.CompareExchange(ref isViewMoving, 0, 1) == 1)
+            applicationEvents.TriggerUIStateChanged();
     }
 
+    // Ends a running flight at its next frame (IsCurrentGoToRequest); a late step's debounce is
+    // ignored by the disposed debouncer.
     public void Dispose()
     {
-        isDisposed = true;
+        Interlocked.Increment(ref goToRequestId);
         viewSettleDebouncer.Dispose();
     }
 

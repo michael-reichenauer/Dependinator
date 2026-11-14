@@ -500,8 +500,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             nodeId = node.Id;
             if (NodeViewPolicy.IsMemberCardNode(node))
                 return; // A card's rows stay under its header, at the card's own scale
-            if (e.DeltaY == 0)
-                return;
+            if (e.DeltaY == 0 || e.PinchScale == 1)
+                return; // No change (a pinch whose fingers kept their distance)
             var (mx, my) = (node.Boundary.Width, node.Boundary.Height);
 
             // A pinch zooms by how much the fingers spread (PointerEvent.PinchScale), a wheel by steps.

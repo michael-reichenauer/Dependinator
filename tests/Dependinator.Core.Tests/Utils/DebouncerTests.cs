@@ -93,4 +93,15 @@ public class DebouncerTests
         Assert.NotNull(invokeAction);
         invokeAction.Invoke(debouncer, null);
     }
+
+    [Fact]
+    public void Debounce_ShouldDoNothing_AfterDispose()
+    {
+        Debouncer debouncer = new();
+        debouncer.Dispose();
+
+        // A late caller, such as an animation that outlives its scope, must not throw.
+        debouncer.Debounce(10, () => throw new InvalidOperationException("must not run"));
+        debouncer.Debounce(10, 20, () => throw new InvalidOperationException("must not run"));
+    }
 }
