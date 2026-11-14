@@ -46,7 +46,7 @@ class Line : IItem
     public Node? RenderAncestor { get; set; }
 
     // A cousin line crosses container boundaries between the representatives of its links'
-    // endpoints below a node with a direct-line depth (see RepLineService); like a direct line,
+    // endpoints (a selected stub's lines, the explorer's lines; see RepLineService); like a direct line,
     // it is rendered inside its RenderAncestor's coordinate space.
     public bool IsCousin => RenderAncestor is not null && !IsDirect;
 

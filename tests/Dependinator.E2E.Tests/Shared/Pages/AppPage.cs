@@ -57,15 +57,7 @@ public sealed class AppPage
     public ILocator NodeReferencesButton => page.GetByTestId("node-references");
     public ILocator NodeDependenciesButton => page.GetByTestId("node-dependencies");
 
-    // Direct-line depth items in the node menu (NodeToolbar.razor); "Merge Lines Back One Level"
-    // is disabled while the selected node has no split depth. MudMenuItem renders Disabled as a
-    // roleless <div aria-disabled> with a mud-disabled class, so match on the class.
-    public ILocator NodeLinesDeeper => MenuItem("node-menu-lines-deeper");
-    public ILocator NodeLinesShallower => MenuItem("node-menu-lines-shallower");
-    public ILocator NodeLinesShallowerDisabled =>
-        page.Locator("[data-testid='node-menu-lines-shallower'].mud-disabled");
-
-    // Crossing ("cousin") lines drawn by RepLineService for split nodes; absent in the
+    // Crossing ("cousin") lines drawn by RepLineService for a selected stub; absent in the
     // aggregated default view.
     public ILocator CousinLines => page.Locator("#svgcanvas polyline[marker-end='url(#arrow-cousin)']");
 

@@ -109,38 +109,6 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task NodeToolbar_ShouldToggleDirectLines()
-    {
-        await App.GotoMainPageAsync();
-
-        // Same navigation as the background-color test: "Main" must render as a container so
-        // its members are visible endpoints for the crossing lines.
-        await App.NavigateToNodeAsync(AppPage.InsideMain);
-        await App.WaitForContainerNodeAsync("Main");
-        await App.SelectContainerNodeAsync("Demo.UI.Main");
-
-        // Aggregated default: no crossing lines anywhere, and nothing to merge back yet (the
-        // line items live in the node menu, which stays open for the next step).
-        await Expect(App.CousinLines).ToHaveCountAsync(0);
-        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
-
-        // One level deeper: Main's members get their own lines to the sibling containers they
-        // use (e.g. BuildRenderTree -> Diagrams). A menu click can still be swallowed by the
-        // re-rendering toolbar, so repeat until a crossing line shows up.
-        await App.RepeatUntilVisibleAsync(
-            () => App.ClickNodeMenuItemAsync("node-menu-lines-deeper"),
-            App.CousinLines.First
-        );
-
-        // One level up again restores the bundle; the item disables itself at depth zero.
-        await App.ClickNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.CousinLines).ToHaveCountAsync(0);
-        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
-    }
-
-    [E2EFact]
     public async Task DependenciesPanel_ShouldDrawFocusLines_AndSplitOnExpand()
     {
         await App.GotoMainPageAsync();

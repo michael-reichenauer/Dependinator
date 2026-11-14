@@ -27,10 +27,11 @@ paths:
 
 ## Lines
 
-Lines are the aggregated funnel by default. Descent is opt-in through `Node.LineSplitDepth` (node
-toolbar +/−, both directions, pass-through nodes don't count as a level) and `Model.LineFocus`
-(the explorer splits lines into its expanded rows, `Line.IsFocused`), both read by
-`RepLineService.Sync`.
+Lines are the aggregated funnel by default. Descent is opt-in through `Model.LineFocus` (the
+explorer splits lines into its expanded rows, `Line.IsFocused`) and a selected stub
+(`LineReveal`, below), both read by `RepLineService.Sync`. A per-node split depth
+(`Node.LineSplitDepth`, the node menu's "Split Lines One Level Deeper" and "Merge Lines Back")
+was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don't bring it back.
 - **Stubs (Nov 13 2026, Michael's idea).** The lines between a container's edge and its children
   (`LineStub.IsEdgeLine`) are drawn as a short arrow with a ring at the child, not as the long
   fan to the middle of the container's edge. A stub is the same line drawn short (`LineSvg`
@@ -115,7 +116,7 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   too, depending on the tile. The lines' `IsActiveRep` hold the newest tile's state, also while an
   older cached tile is shown (as for tiles at another zoom).
   Still open: a wider touch area for a stub if it is fiddly on the iPad.
-- Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
+- Every change to the focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:
   - endpoint-visibility culling in `NodeLinesSvg` (`IsEitherEndpointRendered`);

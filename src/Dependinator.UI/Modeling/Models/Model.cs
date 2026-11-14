@@ -27,8 +27,8 @@ interface IModel : IDisposable
     // do not count: lines are derived state themselves.
     int StructureVersion { get; }
 
-    // Invalidates structure-derived state without a node/link change, e.g. after a node's
-    // direct-line depth changed (RepLineService resolves lines from it).
+    // Invalidates structure-derived state without a node/link change, e.g. after the explorer's
+    // line focus changed (RepLineService resolves lines from it).
     void BumpStructureVersion();
 
     // A counter of the user's dim, hide and show changes (SetNodeVisibilityCommand), so the
