@@ -152,6 +152,15 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   key, view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A single
   go to's node that is selected gets no brackets; a group marks every member, selected or not.
   Michael picked the brackets over a glowing halo and a spotlight.
+- The motion (Nov 14 2026, Michael): `PanZoomService.PanZoomToAsync` flies along `ZoomPath`
+  (van Wijk and Nuij, d3's interpolateZoom) instead of the old zoom out, pan, zoom in steps. The
+  path's width is the zoom times `FlightFocusShare` of the screen's shorter side, so the top of
+  a long flight shows both ends; `FlightDwell` slows the top, a sine ease softens both ends, and
+  the duration is clock-timed from the path length (`FlightBaseSeconds`, `FlightSecondsPerLength`,
+  `FlightMaxSeconds`). Michael said to keep the first values and tune them later. Each frame
+  awaits at least 1 ms (`ShowFrameAsync`): the Wasm app paints and takes the cancelling wheel
+  only then. `ZoomPath` uses `-asinh(b)` for the paper's `ln(sqrt(b²+1)-b)`, which cancels to
+  `log(0)` on a big zoom with a small pan.
 
 ## Floating toolbars (Nov 13 2026, Michael)
 
