@@ -32,6 +32,10 @@ interface ICanvasService
     // can (GestureTransform), else the current view is drawn.
     CanvasView GetView();
 
+    // Draws one tile the resting view is likely to need next (SvgService.PrefetchNext); false
+    // while the view moves or when nothing is left to draw ahead.
+    bool PrefetchNext();
+
     Task InitAsync();
     Task RemoveAsync();
     Task RefreshAsync();
@@ -66,17 +70,8 @@ class CanvasService(
     IViewHistoryService viewHistory,
     ICommandService commandService,
     App.IWorkspaceSourcesService workspaceSourcesService
-) : ICanvasService, IDisposable
+) : ICanvasService
 {
-    // Once the view has rested and been drawn, the tiles one zoom level in and out are drawn
-    // ahead (SvgService.PrefetchNext), one per timer slot so input can come between them: the
-    // next wheel tick or pinch then finds its tile instead of drawing it (6 to 116 ms a tile in
-    // the browser app) when the gesture ends. Long enough after the rest that a quick follow-up
-    // gesture comes first, since a tile cannot be stopped once it is being drawn.
-    const int PrefetchDelayMilliseconds = 300;
-    const int PrefetchNextDelayMilliseconds = 50;
-    readonly Debouncer prefetchDebouncer = new();
-
     double levelZoom = 1;
     Pos tileOffset = Pos.None;
     string content = "";
@@ -265,30 +260,16 @@ class CanvasService(
             return new CanvasView(content, ViewBox(shownOffset, shownZoom, svgRect), GestureTransform.Css(transform));
 
         UpdateContent(viewRect, zoom);
-        if (!panZoomService.IsViewMoving)
-            prefetchDebouncer.Debounce(PrefetchDelayMilliseconds, Prefetch);
         return new CanvasView(content, ViewBox(offset, zoom, svgRect), "");
     }
 
-    public void Dispose() => prefetchDebouncer.Dispose();
-
-    // Runs on a timer: draws the next tile ahead of need while the view rests.
-    void Prefetch()
+    public bool PrefetchNext()
     {
         if (panZoomService.IsViewMoving)
-            return; // Its rest draws the view and schedules this again
-        try
-        {
-            var svgRect = SvgRect;
-            var (offset, zoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
-            if (svgService.PrefetchNext(new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height), zoom))
-                prefetchDebouncer.Debounce(PrefetchNextDelayMilliseconds, Prefetch);
-        }
-        catch (Exception e)
-        {
-            // Only a tile drawn ahead was lost; the view draws it when it needs it.
-            Log.Exception(e, "Failed to draw a tile ahead");
-        }
+            return false; // Its rest draws the view, and asks again after
+        var svgRect = SvgRect;
+        var (offset, zoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+        return svgService.PrefetchNext(new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height), zoom);
     }
 
     string ViewBox(Pos offset, double zoom, Rect svgRect) =>

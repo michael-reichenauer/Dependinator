@@ -45,24 +45,30 @@ public class SvgServicePrefetchTests
         return (service, modelMgr, tilesMgr);
     }
 
-    static TileKey CenteredKey(double zoom) =>
-        TileKey.From(
+    // The tile at a level around the view's center. At Zoom 1, a level's own zoom, the levels
+    // next to it must come out as 1 and -1 (the floor of the log would round 1 / 1.3 to 2).
+    static TileKey CenteredKey(int level)
+    {
+        var zoom = TileKey.LevelZoom(level);
+        return TileKey.AtLevel(
             new Rect(
                 ViewRect.X + ViewRect.Width / 2 * (Zoom - zoom),
                 ViewRect.Y + ViewRect.Height / 2 * (Zoom - zoom),
                 ViewRect.Width,
                 ViewRect.Height
             ),
-            zoom
+            level
         );
+    }
 
     [Fact]
     public void PrefetchNext_ShouldDrawTheNextLevelInThenOut_ThenNothing()
     {
         var (service, _, tilesMgr) = Create();
         var shown = service.GetTile(ViewRect, Zoom);
-        var zoomInKey = CenteredKey(Zoom / TileKey.ZoomFactor);
-        var zoomOutKey = CenteredKey(Zoom * TileKey.ZoomFactor);
+        Assert.Equal(0, shown.Key.Z);
+        var zoomInKey = CenteredKey(1);
+        var zoomOutKey = CenteredKey(-1);
 
         Assert.True(service.PrefetchNext(ViewRect, Zoom));
         using (var tiles = tilesMgr.UseTiles())
@@ -100,11 +106,15 @@ public class SvgServicePrefetchTests
     [Fact]
     public void GetTile_ShouldUseThePrefetchedTile_WhenZoomedInAroundTheCenter()
     {
-        var (service, _, _) = Create();
+        var (service, _, tilesMgr) = Create();
         service.GetTile(ViewRect, Zoom);
         service.PrefetchNext(ViewRect, Zoom);
+        Tile prefetched;
+        using (var tiles = tilesMgr.UseTiles())
+            Assert.True(tiles.TryGetCached(CenteredKey(1), ViewRect, Zoom, out prefetched));
 
-        var zoom = Zoom / TileKey.ZoomFactor;
+        // Two wheel ticks in (1.14 each), around the center: level 1
+        var zoom = Zoom / 1.14 / 1.14;
         var zoomedIn = new Rect(
             ViewRect.Width / 2 * (Zoom - zoom),
             ViewRect.Height / 2 * (Zoom - zoom),
@@ -113,7 +123,20 @@ public class SvgServicePrefetchTests
         );
         var tile = service.GetTile(zoomedIn, zoom);
 
-        Assert.Equal(CenteredKey(zoom), tile.Key);
+        Assert.Same(prefetched, tile);
+    }
+
+    [Fact]
+    public void PrefetchNext_ShouldDoNothing_BeforeTheViewIsDrawn()
+    {
+        var (service, _, tilesMgr) = Create();
+        service.GetTile(ViewRect, Zoom);
+        using (var tiles = tilesMgr.UseTiles())
+            tiles.ClearCache(); // A model change
+
+        Assert.False(service.PrefetchNext(ViewRect, Zoom));
+        using (var tiles = tilesMgr.UseTiles())
+            Assert.False(tiles.Contains(CenteredKey(1)));
     }
 
     [Fact]
