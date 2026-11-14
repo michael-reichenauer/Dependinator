@@ -154,7 +154,7 @@ The architecture overview with diagrams is `docs/ARCHITECTURE.md` (diagrams gene
 
 **VS Code extension:** when editing functionality used by the extension, check `src/DependinatorVsCode/scripts/` for corresponding build steps.
 
-**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core`, `TypeScript → Core`, `Reflection → Core`, `Claude → Core` and `Mcp → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, TypeScript, Reflection, Claude, hosts, or UI frameworks (MudBlazor/ASP.NET Core), Core and UI must not reference the Anthropic or MCP SDKs (they ship to the browser), and Shared must not reference other Dependinator projects. Don't add references against this direction.
+**Layering:** dependency direction is `Hosts → UI → Core → Shared` (with `Roslyn → Core`, `Bicep → Core`, `TypeScriptParser → Core`, `Reflection → Core`, `Claude → Core` and `Mcp → Core`). `tests/Dependinator.Architecture.Tests/` (NetArchTest) enforces this — e.g. Core must not reference UI, Roslyn, Bicep, TypeScriptParser, Reflection, Claude, hosts, or UI frameworks (MudBlazor/ASP.NET Core), Core and UI must not reference the Anthropic or MCP SDKs (they ship to the browser), and Shared must not reference other Dependinator projects. Don't add references against this direction.
 
 ## Committing
 
