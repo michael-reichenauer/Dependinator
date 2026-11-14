@@ -134,12 +134,19 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.ExplorerExpandButtons.First.ClickAsync();
         await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(1);
 
-        // Closing the explorer keeps its lines (they are what the user opened it for); hiding
-        // the lines with the header toggle first removes them.
+        // The header toggle hides the lines and shows them again.
         await App.ExplorerShowLinesButton.ClickAsync();
         await Expect(App.FocusLines).ToHaveCountAsync(0);
+        await App.ExplorerShowLinesButton.ClickAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // Closing the explorer keeps its lines (they are what the user opened it for); View ›
+        // Hide All Direct Lines removes them.
         await App.CloseExplorerAsync();
         await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-hide-direct-lines")).ClickAsync();
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
     }
 
     [E2EFact]

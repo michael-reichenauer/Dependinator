@@ -360,6 +360,71 @@ public class RepLineServiceTests
     }
 
     [Fact]
+    public void Sync_FocusNode_ShouldNotDescend_WhenChildrenAreNotShown()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var parentB = AddNode(model, "ParentB", model.Root);
+        var source = AddNode(model, "Source", parentA);
+        var target = AddNode(model, "Target", parentB);
+        AddLink(model, source, target);
+        var focus = LineFocus.ForNode(source, isReferences: false);
+        focus.ExpandedFarNodes.Add(parentB);
+        model.LineFocus = focus;
+
+        // Both parents are icons at this zoom: the visible level caps the descent on both sides
+        RepLineService.Sync(model, IconZoom);
+
+        Assert.Equal(3, model.Lines.Count);
+        Assert.True(GetLine(model, "ParentA", "ParentB").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_FocusOnInternalLink_ShouldDrawTheCrossingLineInsideTheContainer()
+    {
+        using var model = NewModel();
+        var container = AddNode(model, "Container", model.Root);
+        // Container renders its children larger, so X and Y are expanded when Container is
+        container.ContainerZoom = 1.0 / 2;
+        var x = AddNode(model, "X", container);
+        var y = AddNode(model, "Y", container);
+        var source = AddNode(model, "Source", x);
+        var target = AddNode(model, "Target", y);
+        AddLink(model, source, target);
+        var focus = LineFocus.ForNode(source, isReferences: false);
+        focus.ExpandedFarNodes.Add(y);
+        model.LineFocus = focus;
+
+        RepLineService.Sync(model, ContainerZoom);
+
+        var cousin = GetLine(model, "Source", "Target");
+        Assert.True(cousin.IsActiveRep);
+        Assert.Equal(container, cousin.RenderAncestor);
+        Assert.False(GetLine(model, "X", "Y").IsActiveRep);
+    }
+
+    [Fact]
+    public void Sync_FocusRepsEqualToAChainSegment_ShouldReuseIt()
+    {
+        using var model = NewModel();
+        var parentA = AddNode(model, "ParentA", model.Root);
+        var childA = AddNode(model, "ChildA", parentA);
+        var source = AddNode(model, "Source", childA);
+        AddLink(model, source, parentA);
+        var lineCount = model.Lines.Count;
+
+        // Pinned at ChildA: the reps are (ChildA, ParentA), the chain segment, which is reused
+        model.LineFocus = LineFocus.ForNode(childA, isReferences: false);
+        RepLineService.Sync(model, ContainerZoom);
+
+        Assert.Equal(lineCount, model.Lines.Count);
+        var chainLine = GetLine(model, "ChildA", "ParentA");
+        Assert.False(chainLine.IsCousin);
+        Assert.True(chainLine.IsActiveRep);
+        Assert.True(GetLine(model, "Source", "ChildA").IsActiveRep);
+    }
+
+    [Fact]
     public void Sync_NodeResizedAtSameZoom_ShouldResolveRepsAgain()
     {
         // Whether a node opens can depend on its size (NodeViewPolicy: a node resized far beyond

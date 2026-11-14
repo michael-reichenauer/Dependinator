@@ -54,8 +54,8 @@ readonly record struct LineReveal(RowFilter Rows, bool HideMemberLines)
 // parent-to-child segments down to the target. The dependency explorer's subject
 // (Model.LineFocus) splits its bundles: its links descend to the subject on the near side and
 // into the tree rows expanded in the explorer on the far side, as far as the nodes actually
-// show their children at this zoom, and their lines are flagged IsFocused. Links are grouped by their (source rep, target rep) pair and drawn as
-// one line per pair.
+// show their children at this zoom, and their lines are flagged IsFocused. Links are grouped
+// by their (source rep, target rep) pair and drawn as one line per pair.
 //
 // A selected stub's links are drawn end to end as well (LineReveal): a link of the stub is
 // pinned at the stub's child and descends as deep as the nodes are open on the other side, so

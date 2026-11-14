@@ -100,7 +100,8 @@ public class SvgServiceLineVisibilityTests
     // At this zoom top-level containers are expanded and their children icons. With the
     // explorer's focus on Source, RepLineService creates a crossing line from the source child
     // to the target's top container (RenderAncestor = root); with the ParentB row expanded in
-    // the explorer as well, the line goes child to child.
+    // the explorer as well, the line goes child to child. (A selected stub's crossing lines need
+    // a tile's selection, which this export path never has; they are culled the same way.)
     const double CousinZoom = 0.1;
 
     // ParentB lies 5000 root units (25 viewports at CousinZoom) to the right of ParentA, so
@@ -173,7 +174,7 @@ public class SvgServiceLineVisibilityTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldRenderCousinLine_WhenSourceIsVisible_AndTargetFarAway()
+    public void GetContentSvg_ShouldRenderCrossingLine_WhenSourceIsVisible_AndTargetFarAway()
     {
         var modelMgr = CreateCousinModel(isSourceFocused: true);
 
@@ -184,11 +185,11 @@ public class SvgServiceLineVisibilityTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldNotRenderCousinLine_WhenNoEndpointIsVisible()
+    public void GetContentSvg_ShouldNotRenderCrossingLine_WhenNoEndpointIsVisible()
     {
         var modelMgr = CreateCousinModel(isSourceFocused: true);
 
-        // The view lies between ParentA and ParentB; the cousin line crosses it, but
+        // The view lies between ParentA and ParentB; the crossing line crosses it, but
         // neither endpoint node is visible.
         var svg = RenderView(modelMgr, 20000, 0, CousinZoom);
 
