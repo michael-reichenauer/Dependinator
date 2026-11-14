@@ -96,6 +96,65 @@ public class PanZoomServiceTests
         Assert.Equal(canvasPoint.Y, offset.Y + 130 * zoom, 9);
     }
 
+    static PointerEvent Wheel(double deltaY, int ticks, bool ctrlKey = false) =>
+        new()
+        {
+            Type = "wheel",
+            DeltaY = deltaY,
+            WheelTicks = ticks,
+            CtrlKey = ctrlKey,
+            OffsetX = 200,
+            OffsetY = 100,
+        };
+
+    (Pos Offset, double Zoom) View() => modelMgr.WithModel(m => (m.Offset, m.Zoom));
+
+    [Fact]
+    public async Task Zoom_ShouldGlideToTheNotch_KeepingThePointUnderThePointer()
+    {
+        service.Zoom(Wheel(-100, -1));
+
+        // On its way: the first frame moved part of the notch at once
+        var started = View().Zoom;
+        Assert.InRange(started, 1 / 1.14, 1 - 1e-6);
+
+        await WaitUntilAsync(() => Math.Abs(View().Zoom - 1 / 1.14) < 1e-9);
+        var (offset, zoom) = View();
+        Assert.Equal(200, offset.X + 200 * zoom, 9);
+        Assert.Equal(100, offset.Y + 100 * zoom, 9);
+    }
+
+    [Fact]
+    public async Task Zoom_ShouldAddANotchDuringAGlideToItsTarget()
+    {
+        service.Zoom(Wheel(-100, -1));
+        service.Zoom(Wheel(-100, -1));
+
+        await WaitUntilAsync(() => Math.Abs(View().Zoom - 1 / 1.14 / 1.14) < 1e-9);
+        await Task.Delay(100);
+        Assert.Equal(1 / 1.14 / 1.14, View().Zoom, 9);
+    }
+
+    [Fact]
+    public void Zoom_ShouldZoomATrackpadPinchAtOnce()
+    {
+        service.Zoom(Wheel(-5, -1, ctrlKey: true));
+
+        Assert.Equal(1 / Math.Exp(0.05), View().Zoom, 9);
+    }
+
+    [Fact]
+    public async Task Pan_ShouldEndAGlide()
+    {
+        service.Zoom(Wheel(-100, -1));
+        service.Pan(Move(5));
+        var zoom = View().Zoom;
+
+        await Task.Delay(200);
+
+        Assert.Equal(zoom, View().Zoom);
+    }
+
     static async Task WaitUntilAsync(Func<bool> condition)
     {
         var deadline = DateTime.UtcNow.AddSeconds(3);
