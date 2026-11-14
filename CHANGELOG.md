@@ -45,6 +45,7 @@ with the next official release.
 ### Fixed
 
 - The tooltips of the menu button, the node toolbar's **More** and the color menu no longer stay up after their menu, or a dialog opened from it, closes
+- Panning and zooming no longer stop for a moment every 5 seconds where cloud sync is available
 
 ## [v0.91.453241] - 2026-11-11
 
