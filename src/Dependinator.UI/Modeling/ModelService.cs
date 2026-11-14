@@ -65,13 +65,13 @@ interface IModelService
 }
 
 // What a change to the open model's saved content moves: a save request or a model load (Saves,
-// bumped after the change), a structure change (StructureVersion, within the model lock that
-// the change holds) or another model. Read before the content, so content read after the stamp
-// is at least as new as the stamp. Like the local save, it leaves out a change that requests no
-// save (a lazy layout while rendering, which a later load makes again the same way): the next
-// save shows it. Keying on the layout generation too made zooming into new containers hash the
-// model again (600 ms) at each check while they were laid out.
-readonly record struct ModelContentStamp(string Path, long Saves, int StructureVersion);
+// bumped after the change), or another model. Read before the content, so content read after
+// the stamp is at least as new as the stamp. Like the local save, it leaves out a change that
+// requests no save (a lazy layout while rendering or a go to, which a later load makes again
+// the same way): the next save shows it. The layout generation and the structure version are
+// left out on purpose: they also move for zooming into new containers and for the explorer's
+// line focus, and each move hashed the model again (600 ms).
+readonly record struct ModelContentStamp(string Path, long Saves);
 
 [Scoped]
 class ModelService : IModelService, IDisposable
@@ -164,7 +164,7 @@ class ModelService : IModelService, IDisposable
         get
         {
             long saves = Interlocked.Read(ref contentVersion);
-            return modelMgr.WithModel(m => new ModelContentStamp(m.Path, saves, m.StructureVersion));
+            return new ModelContentStamp(modelMgr.ModelPath, saves);
         }
     }
 
@@ -868,7 +868,6 @@ class ModelService : IModelService, IDisposable
             model.Clear();
             model.SetFromDto(path, modelDto);
         }
-        Interlocked.Increment(ref contentVersion);
 
         await Task.Run(() => SetNodeAndLinkDtos(modelDto));
         Interlocked.Increment(ref contentVersion);

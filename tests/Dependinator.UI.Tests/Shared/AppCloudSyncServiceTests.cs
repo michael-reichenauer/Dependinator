@@ -153,7 +153,7 @@ public class AppCloudSyncServiceTests
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
     }
 
-    static ModelContentStamp Stamp(string modelPath, long saves) => new(modelPath, saves, 0);
+    static ModelContentStamp Stamp(string modelPath, long saves) => new(modelPath, saves);
 
     [Fact]
     public async Task AutoSync_ShouldNotPushOrPull_WhenConflictExists()
@@ -613,11 +613,18 @@ public class AppCloudSyncServiceTests
 
         modelMgr.SetupGet(x => x.ModelPath).Returns(modelPath);
         modelService.Setup(x => x.GetCurrentModelDto()).Returns(currentModelDto);
+        // As in ModelService, a load moves the stamp
+        long loads = 0;
+        modelService.SetupGet(x => x.ContentStamp).Returns(() => new ModelContentStamp(modelPath, loads));
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
+            .Callback(() => loads++)
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
-        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>())).Returns(Task.CompletedTask);
+        canvasService
+            .Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>()))
+            .Callback(() => loads++)
+            .Returns(Task.CompletedTask);
 
         return new SutContext(
             new AppCloudSyncService(

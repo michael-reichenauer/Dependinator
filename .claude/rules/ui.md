@@ -236,9 +236,10 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   `ActiveRefreshInterval`) and compares the model's content hash, signed in or not: hashing the
   demo took 550-700 ms in the browser app, a stop every 5 s while panning (Michael, Nov 14).
   The hash is kept while `IModelService.ContentStamp` is unchanged: save requests and model
-  loads (bumped after the change), `StructureVersion` and the path. Like the local save it
-  leaves out a lazy layout while rendering (the next save shows it); with the layout generation
-  in the stamp, zooming into new containers hashed again at each check. A push caches the hash
+  loads (bumped after the change) and the path. Like the local save it leaves out a lazy layout
+  (the next save shows it). The layout generation and `StructureVersion` stay out of it: they
+  also move for zooming into new containers and for the explorer's line focus, and each move
+  hashed again (found by measuring and in review). A push caches the hash
   of what it pushed, or the check compared an older hash with the new baseline and pushed again
   and again (found in review).
 - Pausing every few seconds while panning is not the view save: it writes only the small view
