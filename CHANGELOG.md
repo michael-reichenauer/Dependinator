@@ -21,6 +21,7 @@ with the next official release.
 - In VS Code a workspace with several sources that was never opened in Dependinator starts on the model of the whole workspace, asking first which sources it shows
 - A selected line whose end is out of view gets a tag at the edge of the view naming the node at that end; a click goes there and keeps the line selected, so the tag of the other end leads back
 - In edit mode a selected line has a small handle on each segment that bends the line when dragged; a bend dragged back onto the straight line, or double-clicked, goes away, and **Straighten line** in the line toolbar removes them all
+- **Re-route line** in the line toolbar routes the selected line again around the nodes where they stand, and **Reset Lines** in the node menu does so for every line between the node's children; both remove the bends set by hand, as one undo step
 
 ### Improved
 
@@ -32,6 +33,7 @@ with the next official release.
 - A pinch on a touch screen keeps the point under the fingers, zooms faster than the fingers spread and pans with them
 - A mouse wheel notch glides to its zoom around the pointer instead of jumping, and a quick spin keeps its speed; a Mac trackpad pinch zooms by how far the fingers move
 - Zooming in or out one level no longer waits for the diagram to be drawn, since it is drawn ahead while the view rests
+- When moved nodes are dropped, the lines that touch them, now cross a node or no longer need a detour are routed again around the nodes where they stand, instead of keeping their old bends; bends set by hand stay, and the move with its line changes is one undo step
 
 ### Changed
 
