@@ -69,6 +69,22 @@ public class SourceNestingTests
         Assert.Equal("", parents["tools"]);
     }
 
+    // Two solutions in one folder with a project there (they can share it) stay side by side:
+    // a project holds its own folder only for a source of another kind
+    [Fact]
+    public void Parents_ShouldKeepTwoSolutionsOfOneFolder_SideBySide_WithAProjectThere()
+    {
+        AddRoot("App*sln");
+        AddProject("App", "/repo", "App*sln");
+        AddRoot("Full*sln");
+        AddProject("Full", "/repo", "Full*sln");
+
+        var parents = Parents(("App.sln", "App*sln"), ("Full.sln", "Full*sln"));
+
+        Assert.Equal("", parents["App*sln"]);
+        Assert.Equal("", parents["Full*sln"]);
+    }
+
     // A source outside the workspace folder (a second workspace folder) has its whole path as key
     [Fact]
     public void Parents_ShouldKeepASourceOutsideTheWorkspace_AtTheTop()
@@ -193,7 +209,7 @@ public class SourceNestingTests
         AddProject("Lib", "/repo/src/lib", "App*sln");
 
         using (var model = modelMgr.UseModel())
-            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/lib/x.json", "web")]);
+            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/lib/package.json", "web")]);
 
         var dto = modelMgr.WithModel(m => m.SerializeToDto());
         var names = dto.Nodes.Select(n => n.Name).ToList();
