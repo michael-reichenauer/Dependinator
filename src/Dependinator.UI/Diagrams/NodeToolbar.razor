@@ -272,6 +272,11 @@ else if (HasSelectedLine)
                          OnClick="LayoutChildren" data-testid="node-menu-reset-children">
               Reset Children Layout
             </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Route"
+                         OnClick="ResetLines" title="Routes the lines between the children again, keeping the children where they are."
+                         data-testid="node-menu-reset-lines">
+              Reset Lines
+            </MudMenuItem>
             <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
                          OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
               Reset All Descendants Layout
@@ -359,6 +364,9 @@ else if (HasSelectedLine)
 
   [Inject]
   ICommandService commandService { get; set; } = null!;
+
+  [Inject]
+  ILineEditService lineEditService { get; set; } = null!;
 
   [Inject]
   INavigationService navigationService { get; set; } = null!;
@@ -537,6 +545,12 @@ else if (HasSelectedLine)
     commandService.Do(new ResetLayoutCommand(nodeId, recursively: false));
     await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
+  }
+
+  void ResetLines()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      lineEditService.ResetLines(nodeId);
   }
 
   async Task LayoutDescendants()

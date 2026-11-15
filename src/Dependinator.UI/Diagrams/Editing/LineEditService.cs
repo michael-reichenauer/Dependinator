@@ -25,6 +25,17 @@ interface ILineEditService
     // Removes all bend points, so the line runs straight between its ends.
     void StraightenLine(LineId lineId);
 
+    // Whether the line runs between siblings whose bends can be routed again (LineRoutes).
+    bool CanRerouteLine(LineId lineId);
+
+    // Routes the line again around the nodes where they stand now, as one undo step; bends the
+    // user set go too, so the layout owns the line again.
+    void RerouteLine(LineId lineId);
+
+    // "Reset Lines": routes every line between the node's children again, keeping the children
+    // where they are, bends the user set included, as one undo step.
+    void ResetLines(NodeId nodeId);
+
     // Slides a line's label along the line under an edit-mode drag (pointerId.IsLineLabel) by the
     // pointer's movement in screen pixels, and ends the drag.
     void MoveLabel(double movementX, double movementY, double zoom, PointerId pointerId);
@@ -160,6 +171,48 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILin
         }
 
         commandService.Do(new LineEditCommand(lineId) { SegmentPoints = [], IsOwnUndoStep = true });
+    }
+
+    public bool CanRerouteLine(LineId lineId)
+    {
+        using var model = modelMgr.UseModel();
+        return model.Lines.TryGetValue(lineId, out var line) && LineRoutes.IsRoutable(line);
+    }
+
+    public void RerouteLine(LineId lineId)
+    {
+        IReadOnlyList<Pos>? points;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line) || LineRoutes.Route(line) is not { } routed)
+                return;
+            if (routed.SequenceEqual(line.SegmentPoints) && !line.IsSegmentsUserSet)
+                return;
+            points = routed;
+        }
+
+        commandService.Do(
+            new LinePointsCommand(new Dictionary<LineId, IReadOnlyList<Pos>> { [lineId] = points }, isLayoutSet: true)
+        );
+    }
+
+    public void ResetLines(NodeId nodeId)
+    {
+        Dictionary<LineId, IReadOnlyList<Pos>> points = [];
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            foreach (var (line, routed) in LineRoutes.RouteAll(node))
+                points[line.Id] = routed;
+            // A hand-set line already where the layout would put it still goes back to the layout.
+            foreach (var line in LineRoutes.SiblingLines(node).Where(line => line.IsSegmentsUserSet))
+                points.TryAdd(line.Id, [.. line.SegmentPoints]);
+        }
+        if (points.Count == 0)
+            return;
+
+        commandService.Do(new LinePointsCommand(points, isLayoutSet: true));
     }
 
     // Whether the bend point lies within StraightTolerance screen pixels of the straight line

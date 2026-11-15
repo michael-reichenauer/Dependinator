@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -23,16 +22,7 @@ static class MovedNodeLines
         var containers = moves.Keys.Where(node => !node.IsRoot).Select(node => node.Parent).Distinct();
         foreach (var container in containers)
         {
-            var obstacles = new FreeLineRouter.Obstacles([
-                .. container
-                    .Children.Where(child =>
-                        NodeLayout.IsArranged(child)
-                        && !child.IsPassThrough
-                        && child.Boundary != Rect.None
-                        && child.Visibility != NodeVisibility.Hidden
-                    )
-                    .Select(child => child.Boundary),
-            ]);
+            var obstacles = LineRoutes.ObstaclesIn(container);
             // Where the container's moved nodes were and where they are now.
             var movedAreas = container
                 .Children.Where(moves.ContainsKey)
@@ -48,7 +38,7 @@ static class MovedNodeLines
                     }
                 )
                 .ToList();
-            foreach (var line in SiblingLines(container))
+            foreach (var line in LineRoutes.SiblingLines(container))
             {
                 if (
                     NewPoints(line, moves, obstacles, movedAreas) is { } points
@@ -59,23 +49,6 @@ static class MovedNodeLines
         }
         return changes;
     }
-
-    // The lines between the container's children whose points live in its space and that the
-    // layout routes (see LayoutSnapshot.IsLayoutLine); a member card's rows keep their lines as
-    // the card lays them out (no bends).
-    static IEnumerable<Line> SiblingLines(Node container) =>
-        container
-            .Children.SelectMany(child => child.SourceLines)
-            .Where(line =>
-                line.Target.Parent == container
-                && line.Target != line.Source
-                && !line.IsDirect
-                && !line.IsCousin
-                && !line.IsEmpty
-                && !line.Source.Type.IsMember
-                && !line.Target.Type.IsMember
-                && line.Visibility != NodeVisibility.Hidden
-            );
 
     static IReadOnlyList<Pos>? NewPoints(
         Line line,
@@ -94,11 +67,8 @@ static class MovedNodeLines
         if (line.IsSegmentsUserSet)
             return isMovedTogether ? points : null;
 
-        if (!LinePathGeometry.TryGetLocalEndpoints(line, out var ends))
+        if (!LineRoutes.TryGetEnds(line, nodes, out var start, out var end, out var obstacles))
             return null;
-        var start = new Pos(ends.X1, ends.Y1);
-        var end = new Pos(ends.X2, ends.Y2);
-        var obstacles = nodes.Without(line.Source.Boundary, line.Target.Boundary);
 
         var isTouched = (isSourceMoved || isTargetMoved) && !isMovedTogether;
         // A line away from where the moved nodes were and are now is as clear as before.

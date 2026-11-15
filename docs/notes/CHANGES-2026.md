@@ -635,7 +635,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   node now stands in, and lines whose detour is no longer needed; in the move's undo step.
   Bends the user set stay, except on a line between nodes moved together, which moves along.
   A backward line's layout bends are now computed from where it is drawn (its source's right
-  edge), not its left edge.
+  edge), not its left edge. "Re-route line" on the line toolbar and "Reset Lines" in the node
+  menu (beside Reset Children Layout) route one line or all lines between a node's children
+  again around the nodes where they stand, hand-set bends included, keeping the nodes in place.
 - **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
   the edge of the view where the line leaves names the node at that end; a click goes there
   (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.
