@@ -58,6 +58,10 @@ class Node : IItem
     public FileSpan? FileSpanOrParentSpan => // Allow using a few levels up
         fileSpan ?? Parent?.fileSpan ?? Parent?.Parent?.fileSpan ?? Parent?.Parent?.Parent?.fileSpan;
 
+    // For a project node: the folder the project is in (Parsing.NodeProperties.ProjectFolder).
+    // Not saved: every model that is opened is parsed again, and a path is the machine's own.
+    public string? ProjectFolder { get; private set; }
+
     public NodeType Type
     {
         get => type;
@@ -277,6 +281,7 @@ class Node : IItem
         );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
         IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
+        ProjectFolder = node.Properties.ProjectFolder ?? ProjectFolder;
     }
 
     // Sets the user's own state and passes the resulting state down to the descendants.

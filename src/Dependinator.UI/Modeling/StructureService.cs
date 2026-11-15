@@ -15,7 +15,13 @@ interface IStructureService
 
     // Keeps a node, all nodes in it and their links through the next ClearNotUpdated, as if
     // the parse had just produced them: a source of a workspace model that was not parsed anew.
-    void KeepNodeTree(IModel model, string nodeName);
+    // The nodes named in otherRoots are left out with all in them: the roots of other sources,
+    // which a workspace model can show inside this one (SourceNesting).
+    void KeepNodeTree(IModel model, string nodeName, IReadOnlySet<string>? otherRoots = null);
+
+    // Moves a node with everything in it into another parent ("" for the top), keeping its name
+    // and links. False when either is missing, or the parent is the node or inside it.
+    bool MoveNode(IModel model, string nodeName, string parentName);
     void SetNodeDto(IModel model, NodeDto nodeDto);
     void SetLinkDto(IModel model, LinkDto linkDto);
     void SetLineLayoutDto(IModel model, LineDto lineLayoutDto);
@@ -367,12 +373,12 @@ class StructureService(ILineService linesService) : IStructureService
             line.ClearDescription();
     }
 
-    public void KeepNodeTree(IModel model, string nodeName)
+    public void KeepNodeTree(IModel model, string nodeName, IReadOnlySet<string>? otherRoots = null)
     {
         if (!model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var root))
             return;
 
-        foreach (var node in root.DescendantsAndSelfPreOrder())
+        foreach (var node in root.DescendantsAndSelfPreOrder(n => otherRoots?.Contains(n.Name) == true))
         {
             node.UpdateStamp = model.UpdateStamp;
             foreach (var link in node.SourceLinks)
@@ -384,6 +390,22 @@ class StructureService(ILineService linesService) : IStructureService
                     line.SetDescription(line.Description, model.UpdateStamp);
             }
         }
+    }
+
+    public bool MoveNode(IModel model, string nodeName, string parentName)
+    {
+        if (
+            !model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var node)
+            || !model.Nodes.TryGetValue(NodeId.FromName(parentName), out var parent)
+            || node.IsRoot
+            || parent.IsAtOrInside(node)
+        )
+            return false;
+        if (node.Parent == parent)
+            return true;
+
+        MoveNodeToParent(model, node, parent);
+        return true;
     }
 
     void MoveNodeToParent(IModel model, Models.Node node, Models.Node parent)

@@ -53,6 +53,18 @@ static class NodeExtensions
         }
     }
 
+    // The node and its descendants in pre-order, without the subtrees of the nodes that
+    // isSkipped picks (the node itself is never skipped).
+    public static IEnumerable<Node> DescendantsAndSelfPreOrder(this Node node, Func<Node, bool> isSkipped)
+    {
+        yield return node;
+        foreach (var child in node.Children.Where(child => !isSkipped(child)))
+        {
+            foreach (var descendant in child.DescendantsAndSelfPreOrder(isSkipped))
+                yield return descendant;
+        }
+    }
+
     public static Node LowestCommonAncestor(this Node first, Node second)
     {
         if (first == second)
