@@ -54,3 +54,33 @@ export enum Priority {
 /** @deprecated */
 // Kept for old callers.
 export function old(): void {}
+
+// Kept for older callers too.
+/** @deprecated */
+export function older(): void {}
+
+// Region codes the shop ships to.
+export const regions = ["eu", "us"];
+
+/* eslint-disable
+   no-console */
+// Logs the notes.
+export function log(): void {}
+
+// The notes' first two, taken apart.
+export const [first, second] = notes;
+
+// Checks the user's license key.
+export function checkLicense(): boolean {
+    return true;
+}
+
+// Shows the notes.
+// -> Formatter: formats them
+//    one by one
+export function show(): string[] {
+    return new Formatter("- ").format();
+}
+
+// -> store.ts.Store: only the line is described
+export function load(): void {}

@@ -115,9 +115,13 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
 - **Descriptions:** a declaration's (also a member's, an enum member's, a constructor's) is its
   JSDoc text without the tags, or else the plain `//` lines or `/* */` block directly above it, up
   to an empty line, as the C# parser reads comments; tool directives (`eslint-disable`,
-  `@ts-ignore`, `#region`) are left out, and a comment at the end of a line describes nothing.
-  A variable's statement comment is its first variable's, a CommonJS `exports.x = …` takes the
-  comment above the assignment. A file's is its top comment when an empty line or the imports
+  `@ts-ignore`, `#region`, `/* global … */`), whole, and license headers are left out (also
+  from a file's top comment), and a comment at the end of a line describes nothing. A
+  variable's statement comment is its first variable's (also the first name of a `const { a, b
+  }`), a CommonJS `exports.x = …` takes the comment above the assignment. `-> Target: text`
+  lines describe the diagram line to Target, as in C# (`CommentDescriptions`); a file in the
+  target is written as shown (`store.ts.Store`). Not read: a comment between a decorator and
+  its class. A file's is its top comment when an empty line or the imports
   follow it and it is not a license; a comment directly above the first declaration belongs to
   that declaration (Improve Comments tells the AI this). A file or declaration without a comment
   gets `NoValue`, so a removed comment's description is cleared on a refresh.

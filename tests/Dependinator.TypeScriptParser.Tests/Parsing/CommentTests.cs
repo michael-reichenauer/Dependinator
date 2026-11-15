@@ -85,4 +85,54 @@ public class CommentTests(TypeScriptFixture fixture)
     {
         Assert.Equal(NoValue.String, fixture.Tool.Node("tool.lib.notes*js.list").Properties.Description);
     }
+
+    [Fact]
+    public void CommentLines_ShouldDescribeADeclaration_AboveATagOnlyJSDoc()
+    {
+        Assert.Equal("Kept for older callers too.", Description($"{Notes}.older"));
+    }
+
+    [Fact]
+    public void ProseLines_ShouldNotBeTakenForToolDirectives()
+    {
+        Assert.Equal("Region codes the shop ships to.", Description($"{Notes}.regions"));
+        Assert.Equal("Checks the user's license key.", Description($"{Notes}.checkLicense"));
+    }
+
+    [Fact]
+    public void MultiLineToolDirective_ShouldBeLeftOutWhole()
+    {
+        Assert.Equal("Logs the notes.", Description($"{Notes}.log"));
+    }
+
+    [Fact]
+    public void DestructuredVariables_ShouldTakeTheStatementsComment_ForTheFirstName()
+    {
+        Assert.Equal("The notes' first two, taken apart.", Description($"{Notes}.first"));
+        Assert.Equal(NoValue.String, Description($"{Notes}.second"));
+    }
+
+    [Fact]
+    public void ArrowLines_ShouldDescribeLines_NotTheNode()
+    {
+        Assert.Equal("Shows the notes.", Description($"{Notes}.show"));
+        var line = fixture.Shop.Single(i => i.LineDescription?.Source == $"{Notes}.show").LineDescription!;
+        Assert.Equal("Formatter", line.Target);
+        Assert.Equal("formats them one by one", line.Text);
+    }
+
+    [Fact]
+    public void ArrowLines_ShouldNameAFileAsItsNode()
+    {
+        // Only arrow lines: no description of the node
+        Assert.Equal(NoValue.String, Description($"{Notes}.load"));
+        var line = fixture.Shop.Single(i => i.LineDescription?.Source == $"{Notes}.load").LineDescription!;
+        Assert.Equal("store*ts.Store", line.Target);
+    }
+
+    [Fact]
+    public void FilesTopComment_ShouldLeaveOutToolDirectives()
+    {
+        Assert.Equal("Checks what the tool is given.", fixture.Tool.Node("tool.lib.check*js").Properties.Description);
+    }
 }
