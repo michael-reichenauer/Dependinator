@@ -16,6 +16,10 @@ static class SlnxMigration
     // The .sln an .slnx model can take its layout from, or null for any other model.
     public static string? SlnPath(string path) => ModelPaths.IsSlnx(path) ? path[..^1] : null;
 
+    // The file name of a path with either kind of separator: the UI runs in the browser too,
+    // where Path.GetFileName does not split a Windows path.
+    public static string FileName(string path) => path[(path.LastIndexOfAny(['/', '\\']) + 1)..];
+
     // The .sln's saved model as the model of the .slnx at slnxPath, or null when the .sln's model
     // does not have exactly one solution root.
     public static ModelDto? FromSlnModel(ModelDto slnModel, string slnxPath)
@@ -31,7 +35,7 @@ static class SlnxMigration
             return null;
 
         // Named as the Roslyn parser names a solution's root: its file name, "." written "*"
-        var names = new RootRename(roots[0].Name, ModelPaths.DisplayName(slnxPath).Replace('.', '*'));
+        var names = new RootRename(roots[0].Name, FileName(slnxPath).Replace('.', '*'));
         var lineIds = names.LineIds(slnModel);
 
         return slnModel with
@@ -110,36 +114,37 @@ static class SlnxMigration
             };
 
         // Line ids are hashes of their ends' names: the new id of each saved line that ends at a
-        // renamed node, by its old id. A line runs between siblings, from a container's edge to
-        // its child, or straight between two nodes a link joins (a direct line), so only those
-        // pairs are hashed: hashing a renamed node with every node took seconds in the browser.
+        // renamed node, by its old id. Every pair of a renamed node and any node is tried, but only
+        // a pair that names a saved line is hashed again under the new names.
         public IReadOnlyDictionary<string, string> LineIds(ModelDto model)
         {
             Dictionary<string, string> ids = [];
-            if (model.Lines.Count == 0)
+            var saved = model.Lines.Select(l => l.LineId).ToHashSet(StringComparer.Ordinal);
+            if (saved.Count == 0)
                 return ids;
 
-            var children = model.Nodes.ToLookup(n => n.ParentName, n => n.Name, StringComparer.Ordinal);
-            foreach (var node in model.Nodes.Where(n => Of(n.Name) != n.Name))
+            var names = model.Nodes.Select(n => n.Name).Distinct().ToList();
+            foreach (var end in names.Where(name => Of(name) != name))
             {
-                var linked = model
-                    .Links.Where(l => l.SourceName == node.Name || l.TargetName == node.Name)
-                    .SelectMany(l => new[] { l.SourceName, l.TargetName });
-                var ends = children[node.ParentName].Concat(children[node.Name]).Concat(linked).Distinct();
-                foreach (var other in ends)
+                foreach (var other in names)
                 {
-                    Add(ids, node.Name, other);
-                    Add(ids, other, node.Name);
+                    Add(ids, saved, end, other);
+                    Add(ids, saved, other, end);
                 }
             }
             return ids;
         }
 
-        void Add(Dictionary<string, string> ids, string source, string target)
+        void Add(Dictionary<string, string> ids, HashSet<string> saved, string source, string target)
         {
-            ids[LineId.From(source, target).Value] = LineId.From(Of(source), Of(target)).Value;
-            ids[LineId.FromDirect(source, target).Value] = LineId.FromDirect(Of(source), Of(target)).Value;
-            ids[LineId.FromInheritance(source, target).Value] = LineId.FromInheritance(Of(source), Of(target)).Value;
+            if (saved.Contains(LineId.From(source, target).Value))
+                ids[LineId.From(source, target).Value] = LineId.From(Of(source), Of(target)).Value;
+            if (saved.Contains(LineId.FromDirect(source, target).Value))
+                ids[LineId.FromDirect(source, target).Value] = LineId.FromDirect(Of(source), Of(target)).Value;
+            if (saved.Contains(LineId.FromInheritance(source, target).Value))
+                ids[LineId.FromInheritance(source, target).Value] = LineId
+                    .FromInheritance(Of(source), Of(target))
+                    .Value;
         }
     }
 }

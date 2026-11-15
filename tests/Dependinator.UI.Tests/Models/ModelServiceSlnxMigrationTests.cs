@@ -88,6 +88,20 @@ public class ModelServiceSlnxMigrationTests
         Assert.Null(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("Core")].Alias));
     }
 
+    // A saved .slnx model that cannot be read is the user's own: it is not replaced by the .sln's
+    [Fact]
+    public async Task LoadAsync_ShouldNotTakeOverTheSlnModel_WhenTheSlnxHasASavedModel()
+    {
+        persistenceService.Setup(p => p.ReadAsync(Sln)).ReturnsAsync(SlnModel());
+        persistenceService.Setup(p => p.ExistsAsync(Slnx)).ReturnsAsync(true);
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(Slnx));
+
+        Assert.True(parsed.Task.IsCompleted);
+        Assert.Null(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("Core")].Alias));
+    }
+
     static ModelDto SlnModel() =>
         new()
         {

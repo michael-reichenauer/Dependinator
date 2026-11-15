@@ -43,6 +43,15 @@ public class SlnxMigrationTests
         Assert.Equal(1.5, model.Zoom);
     }
 
+    // The UI runs in the browser too, where a Windows path is only text
+    [Fact]
+    public void FromSlnModel_ShouldNameTheRootAfterTheFile_OfAWindowsPath()
+    {
+        var model = AssertModel(SlnxMigration.FromSlnModel(SlnModel(), "C:\\repo\\App.slnx"));
+
+        Assert.Equal("App*slnx", model.Nodes[0].Name);
+    }
+
     // Line ids are hashes of the names of their ends
     [Fact]
     public void FromSlnModel_ShouldGiveTheLinesOfTheRootTheirNewIds()

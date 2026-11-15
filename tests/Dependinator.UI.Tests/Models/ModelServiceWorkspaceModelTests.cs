@@ -611,6 +611,30 @@ public class ModelServiceWorkspaceModelTests
         AssertSolutionLayout("App*slnx");
     }
 
+    // The workspace model had the .sln: its projects keep their names and the places this model
+    // gave them, so the .sln's own model is not brought in over them
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepTheWorkspaceLayout_WhenAnSlnxReplacesTheSlnInIt()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        modelMgr.WithModel(m => m.Nodes[NodeId.FromName("Core")].Boundary = new Rect(300, 300, 100, 100));
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        sourceItems[Slnx] = [Root("App*slnx"), Node("Core", parent: "App*slnx"), Node("Core.Type")];
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Slnx, Web]);
+
+        AssertOk(await modelService.RefreshAsync());
+
+        modelMgr.WithModel(m =>
+        {
+            var core = m.Nodes[NodeId.FromName("Core")];
+            Assert.Equal("App*slnx", core.Parent.Name);
+            Assert.Equal(new Rect(300, 300, 100, 100), core.Boundary);
+            Assert.Null(core.Alias);
+            Assert.False(m.Nodes.ContainsKey(NodeId.FromName("App*sln")));
+        });
+    }
+
     [Fact]
     public async Task GetSourceChoices_ShouldBeTheChoiceOfTheSln_ForAnSlnxThatReplacedIt()
     {
