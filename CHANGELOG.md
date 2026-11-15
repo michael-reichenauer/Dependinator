@@ -16,6 +16,8 @@ with the next official release.
 - In VS Code a TypeScript or JavaScript project needs nothing installed, and its diagram refreshes when a script file is saved; test files are left out unless **Settings › Include test files** is on
 - One model for the whole workspace: with two or more solutions, Bicep deployments or script projects in the workspace, the Models menu offers a model of them all, side by side with one Externals. The first time it opens, "What is in this model?" picks the sources (all but those in test, sample and example folders), and **Choose Sources …** in the menu and in Settings changes them later; a source that cannot be parsed is a problem in the problem indicator
 - A source that comes into the workspace model brings what was done in its own model: node places, display names, colors, icons, hidden nodes, notes, zones, and routed and labelled lines
+- The workspace model shows a source inside the project or source whose folder holds it, such as a script project inside the solution beside it; **Shown in** in **Choose Sources …**, or **Show Inside** in a source's node menu, puts it elsewhere or at the top level
+- .NET solutions in the `.slnx` format open as models like `.sln` ones. A solution moved to `.slnx` keeps the layout, notes, rules, accepted cycles and view of its `.sln` model, and while the old `.sln` is still beside it, only the `.sln` is listed
 - In VS Code a workspace with several sources that was never opened in Dependinator starts on the model of the whole workspace, asking first which sources it shows
 - A selected line whose end is out of view gets a tag at the edge of the view naming the node at that end; a click goes there and keeps the line selected, so the tag of the other end leads back
 - In edit mode a selected line has a small handle on each segment that bends the line when dragged; a bend dragged back onto the straight line, or double-clicked, goes away, and **Straighten line** in the line toolbar removes them all
@@ -27,7 +29,7 @@ with the next official release.
 - A model picked in the Models menu loads in the background, so the menu closes at once
 - A VS Code workspace starts on the model of it used last, also when that model was opened in another window
 - Panning and zooming are smoother, most of all in Safari and on the iPad, where panning no longer repaints the whole diagram every frame
-- A pinch on a touch screen keeps the point under the fingers, zooms by their spread and pans with them
+- A pinch on a touch screen keeps the point under the fingers, zooms faster than the fingers spread and pans with them
 - A mouse wheel notch glides to its zoom around the pointer instead of jumping, and a quick spin keeps its speed; a Mac trackpad pinch zooms by how far the fingers move
 - Zooming in or out one level no longer waits for the diagram to be drawn, since it is drawn ahead while the view rests
 
