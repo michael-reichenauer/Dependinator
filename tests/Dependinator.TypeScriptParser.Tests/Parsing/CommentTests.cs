@@ -117,7 +117,7 @@ public class CommentTests(TypeScriptFixture fixture)
     {
         Assert.Equal("Shows the notes.", Description($"{Notes}.show"));
         var line = fixture.Shop.Single(i => i.LineDescription?.Source == $"{Notes}.show").LineDescription!;
-        Assert.Equal("Formatter", line.Target);
+        Assert.Equal($"{Notes}.Formatter", line.Target);
         Assert.Equal("formats them one by one", line.Text);
     }
 
@@ -127,12 +127,46 @@ public class CommentTests(TypeScriptFixture fixture)
         // Only arrow lines: no description of the node
         Assert.Equal(NoValue.String, Description($"{Notes}.load"));
         var line = fixture.Shop.Single(i => i.LineDescription?.Source == $"{Notes}.load").LineDescription!;
-        Assert.Equal("store*ts.Store", line.Target);
+        Assert.Equal("shop.src.store*ts.Store", line.Target);
     }
 
     [Fact]
     public void FilesTopComment_ShouldLeaveOutToolDirectives()
     {
         Assert.Equal("Checks what the tool is given.", fixture.Tool.Node("tool.lib.check*js").Properties.Description);
+    }
+
+    [Fact]
+    public void DestructuredVariables_ShouldTakeTheStatementsComment_ForTheFirstNameAfterAHole()
+    {
+        Assert.Equal("The two after the first.", Description($"{Notes}.secondNote"));
+        Assert.Equal(NoValue.String, Description($"{Notes}.thirdNote"));
+    }
+
+    [Fact]
+    public void DestructuredVariable_ShouldTakeItsOwnComment_BeforeTheStatements()
+    {
+        Assert.Equal("The fewest notes shown.", Description($"{Notes}.fewest"));
+        Assert.Equal(NoValue.String, Description($"{Notes}.most"));
+    }
+
+    [Fact]
+    public void LineComments_ShouldNotBeTakenForBlockOnlyDirectives_NorLicenseWordsForALicense()
+    {
+        Assert.Equal("global counter", Description($"{Notes}.counter"));
+        Assert.Equal("Builds the copyright footer.", Description($"{Notes}.footer"));
+    }
+
+    [Fact]
+    public void ArrowLines_ShouldFindAFileWithDotsInItsName()
+    {
+        var line = fixture.Shop.Single(i => i.LineDescription?.Source == $"{Notes}.authors").LineDescription!;
+        Assert.Equal("shop.src.lib.user*service*ts.UserService", line.Target);
+    }
+
+    [Fact]
+    public void FilesTopComment_ShouldBeTheFirstBlockThatIsNoDirectiveOrLicense()
+    {
+        Assert.Equal("The shop's users.", Description("shop.src.lib.user*service*ts"));
     }
 }

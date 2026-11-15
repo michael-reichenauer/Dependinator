@@ -119,9 +119,10 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   from a file's top comment), and a comment at the end of a line describes nothing. A
   variable's statement comment is its first variable's (also the first name of a `const { a, b
   }`), a CommonJS `exports.x = …` takes the comment above the assignment. `-> Target: text`
-  lines describe the diagram line to Target, as in C# (`CommentDescriptions`); a file in the
-  target is written as shown (`store.ts.Store`). Not read: a comment between a decorator and
-  its class. A file's is its top comment when an empty line or the imports
+  lines describe the diagram line to Target, as in C# (`CommentDescriptions`); the helper
+  finds Target written as shown (`lib.user.service.ts.UserService`), in full or below one of
+  the source's ancestors. A file's top comment is its first block of comments that is no
+  license and not only directives. Not read: a comment between a decorator and its class. A file's is its top comment when an empty line or the imports
   follow it and it is not a license; a comment directly above the first declaration belongs to
   that declaration (Improve Comments tells the AI this). A file or declaration without a comment
   gets `NoValue`, so a removed comment's description is cleared on a refresh.

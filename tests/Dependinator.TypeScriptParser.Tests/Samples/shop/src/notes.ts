@@ -1,5 +1,7 @@
 // The shop's notes: the comment forms that describe a declaration (see CommentTests).
 
+import { UserService } from "./lib/user.service";
+
 // The longest note that is kept
 // (longer ones are cut).
 export const maxLength = 200,
@@ -70,6 +72,24 @@ export function log(): void {}
 // The notes' first two, taken apart.
 export const [first, second] = notes;
 
+// The two after the first.
+export const [, secondNote, thirdNote] = notes;
+
+// The limits.
+export const {
+    // The fewest notes shown.
+    fewest,
+    most,
+} = { fewest: 1, most: 9 };
+
+// global counter
+let counter = 0;
+
+// Builds the copyright footer.
+export function footer(): string {
+    return `${counter}`;
+}
+
 // Checks the user's license key.
 export function checkLicense(): boolean {
     return true;
@@ -84,3 +104,9 @@ export function show(): string[] {
 
 // -> store.ts.Store: only the line is described
 export function load(): void {}
+
+// Who wrote the notes.
+// -> lib.user.service.ts.UserService: the users who wrote them
+export function authors(): string[] {
+    return new UserService().names();
+}
