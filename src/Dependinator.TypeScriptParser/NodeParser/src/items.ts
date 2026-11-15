@@ -29,6 +29,7 @@ export interface NodeProperties {
     IsPrivate?: boolean;
     Signature?: string;
     FileSpan?: FileSpan;
+    IconName?: string; // an icon id of the UI's icon library
 }
 
 export interface LinkProperties {

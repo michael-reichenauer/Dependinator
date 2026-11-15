@@ -101,6 +101,8 @@ export class ModelBuilder {
         this.addNode(this.root, {
             Type: "Solution",
             Description: this.project.packageDescription ?? `${this.languageName()} project`,
+            // The language's tile, as every parser gives its root (Core's LanguageIcons)
+            IconName: this.languageName(),
             // The file that defines the project, to open from the node
             FileSpan: { Path: path.normalize(this.project.entryPath), StartLine: 0, EndLine: 0 },
         });

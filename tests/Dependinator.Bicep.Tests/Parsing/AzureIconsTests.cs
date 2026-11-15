@@ -1,4 +1,3 @@
-using Bicep.Core.TypeSystem;
 using Dependinator.Bicep.Parsing;
 using Dependinator.UI.Diagrams.Icons;
 
@@ -48,15 +47,6 @@ public class AzureIconsTests
     public void ForResourceType_ShouldIgnoreCase()
     {
         Assert.Equal("App-Service", AzureIcons.ForResourceType("microsoft.web/SITES"));
-    }
-
-    [Fact]
-    public void ForScope_ShouldMapDeploymentScopes()
-    {
-        Assert.Equal("Resource-Group", AzureIcons.ForScope(ResourceScope.ResourceGroup));
-        Assert.Equal("Subscription", AzureIcons.ForScope(ResourceScope.Subscription));
-        Assert.Equal("Management-Group", AzureIcons.ForScope(ResourceScope.ManagementGroup));
-        Assert.Null(AzureIcons.ForScope(ResourceScope.Tenant));
     }
 
     [Fact]

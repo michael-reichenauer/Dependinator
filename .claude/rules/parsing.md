@@ -29,6 +29,9 @@ paths:
   - `AddDependinatorXServices()`, registered in the Lsp and Web `Program.cs`;
   - an architecture-test rule;
   - `ModelPaths` / `WorkspaceFileService` discovery for its file kind;
+  - its language's icon on the root node (`NodeProperties.IconName`, Core's `LanguageIcons`): a
+    tile in the language's color with its letters, generated into the UI's `Library/Languages/`
+    by `scripts/language-icons/generate.py` (add a row there; Go's is already in);
   - for a language with its own toolchain, a helper program run with `HelperProcess` (see
     TypeScript below) rather than a port of its compiler.
 - **Source generators:** `MSBuildWorkspace` runs the generators Roslyn's loader can load (the

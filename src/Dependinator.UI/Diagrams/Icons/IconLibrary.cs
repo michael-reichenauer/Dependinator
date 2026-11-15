@@ -39,6 +39,7 @@ static class IconLibrary
     [
         ("Default", "Default", true),
         ("General", "General", true),
+        ("Languages", "Languages", false),
         ("Azure", "Azure", false),
         ("Aws", "AWS", false),
         ("Google", "Google", false),

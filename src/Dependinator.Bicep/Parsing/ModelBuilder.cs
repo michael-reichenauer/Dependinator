@@ -11,7 +11,7 @@ namespace Dependinator.Bicep.Parsing;
 // Walks a compiled Bicep deployment into model items.
 //
 // Hierarchy (dotted node names, see Names):
-//   main*bicep                      the entry file (NodeType.Solution, icon of the target scope)
+//   main*bicep                      the entry file (NodeType.Solution, the Bicep language icon)
 //   main*bicep.location             a parameter / variable / output (member rows)
 //   main*bicep.web                  a resource (NodeType.Resource, Azure icon of its type)
 //   main*bicep.web.config           a child resource (nested syntax or "parent:" property)
@@ -49,7 +49,7 @@ class ModelBuilder(string entryPath)
             NodeType.Solution,
             description,
             Locations.ToFileSpan(model, model.SourceFile.ProgramSyntax),
-            iconName: MetadataIcon(model) ?? AzureIcons.ForScope(model.TargetScope)
+            iconName: MetadataIcon(model) ?? LanguageIcons.Bicep
         );
 
         AddFile(model, rootName, modulePath: "", visited: [model.SourceFile.FileHandle.Uri]);

@@ -20,6 +20,7 @@ public class JavaScriptParserTests(TypeScriptFixture fixture)
 
         Assert.Equal(NodeType.Solution, root.Properties.Type);
         Assert.Equal("JavaScript project", root.Properties.Description);
+        Assert.Equal(LanguageIcons.JavaScript, root.Properties.IconName);
     }
 
     [Fact]

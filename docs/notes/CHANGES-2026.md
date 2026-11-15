@@ -37,7 +37,7 @@ project works.
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
-  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers.
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers, and a language tile (C#, TS, JS, Bicep) on each source's icon.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
   each inside the source whose folder holds it, or where the user puts it.
@@ -171,6 +171,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   solution file). The user can show a source elsewhere: "Shown in" in the sources dialog, or
   "Show Inside" in a source's node menu (top level, or any other source or one of its
   projects; Nov 15). Design and what is left in `WORKSPACE-MODEL.md`.
+- **The language on a source's icon (Nov 15).** Every source's root had the same four-square
+  solution icon, so a TypeScript project in the workspace model looked like another solution.
+  Each parser now gives its root a tile in the language's color with its letters: C# (violet,
+  as before), TS, JS and Bicep, with Go ready for its parser (Michael's pick of four looks). A
+  Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon; a
+  `metadata icon` in the file still wins, as does an icon the user picks. The tiles are a new
+  Languages group in the icon picker, made by `scripts/language-icons/generate.py`.
 
 ## Viewing, navigation and analysis
 

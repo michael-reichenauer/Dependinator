@@ -98,6 +98,7 @@ gh workflow run release.yml --ref dev -f kind=preview  # preview (or kind=releas
 
 # Icons
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
+python3 scripts/language-icons/generate.py             # regenerate the language tiles of source roots (Library/Languages/; needs fonttools and Inter Bold)
 
 # Demo models (pre-parsed, gzipped item lists in src/Dependinator.Wasm/wwwroot, also embedded in the parser libraries)
 ./scripts/gen-demo csharp                              # regenerate demo.model by parsing Dependinator.slnx (e2e tests encode its facts: run the full e2e suite after)
