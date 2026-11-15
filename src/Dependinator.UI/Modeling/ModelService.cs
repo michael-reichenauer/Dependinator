@@ -239,6 +239,14 @@ class ModelService : IModelService, IDisposable
                 return await CreateEmptyModelAsync(path);
             }
 
+            // An .slnx opened for the first time takes over the model of its .sln (a migration)
+            if (await ReadMigratedSlnModelAsync(path) is ModelInfo migratedInfo)
+            {
+                TriggerSave();
+                RefreshAsync().RunInBackground();
+                return migratedInfo;
+            }
+
             var parsedModelInfo = await ParseNewModelAsync(path);
             if (parsedModelInfo is ModelInfo && IsWorkspaceModel(path))
                 unparsedSourceChoices = [];
@@ -298,6 +306,32 @@ class ModelService : IModelService, IDisposable
         var modelInfo = await LoadCachedModelDataAsync(path, model);
 
         return modelInfo;
+    }
+
+    // The saved model of the .sln beside an .slnx, renamed to be the .slnx's (SlnxMigration),
+    // or null when the path is no .slnx or the .sln has no saved model.
+    async Task<ModelInfo?> ReadMigratedSlnModelAsync(string path)
+    {
+        if (await ReadSlnModelAsync(path) is not { } model)
+            return null;
+        if (await persistenceService.ReadViewAsync(SlnxMigration.SlnPath(path)!) is ViewDto view)
+            model = view.ApplyTo(model);
+
+        Log.Info("Taking over the model of the .sln for", path);
+        var modelInfo = await LoadCachedModelDataAsync(path, model);
+        applicationEvents.TriggerInfoReported(
+            $"Kept the layout of {ModelPaths.DisplayName(SlnxMigration.SlnPath(path)!)} for {ModelPaths.DisplayName(path)}."
+        );
+        return modelInfo;
+    }
+
+    async Task<ModelDto?> ReadSlnModelAsync(string slnxPath)
+    {
+        if (SlnxMigration.SlnPath(slnxPath) is not { } slnPath)
+            return null;
+        return await persistenceService.ReadAsync(slnPath) is ModelDto slnModel
+            ? SlnxMigration.FromSlnModel(slnModel, slnxPath)
+            : null;
     }
 
     public bool HasSourceChanges => sourceChanges != parsedSourceChanges;
@@ -627,21 +661,22 @@ class ModelService : IModelService, IDisposable
         );
 
     // The saved models of the sources, by their root names in the workspace model; a source
-    // that was never opened on its own has none.
+    // that was never opened on its own has none, but an .slnx then has its .sln's, if any.
     async Task<IReadOnlyList<(string RootName, ModelDto Model)>> ReadSourceModelsAsync(
         IReadOnlyList<Parsing.ParsedSource> sources
     )
     {
         var models = await Task.WhenAll(
-            sources.Select(async source => (source.RootName, Model: await persistenceService.ReadAsync(source.Path)))
+            sources.Select(async source =>
+                (
+                    source.RootName,
+                    Model: await persistenceService.ReadAsync(source.Path) is ModelDto model
+                        ? model
+                        : await ReadSlnModelAsync(source.Path)
+                )
+            )
         );
-        List<(string, ModelDto)> found = [];
-        foreach (var (rootName, result) in models)
-        {
-            if (result is ModelDto model)
-                found.Add((rootName, model));
-        }
-        return found;
+        return [.. models.Where(m => m.Model is not null).Select(m => (m.RootName, m.Model!))];
     }
 
     static readonly Result<IReadOnlyList<Parsing.Item>> NoItems = new List<Parsing.Item>();

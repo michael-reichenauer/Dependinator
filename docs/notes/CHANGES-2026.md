@@ -144,7 +144,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Roslyn reads it; Dependinator's own solution gives the same model in both formats) and found in
   the workspace, the Models dialog and the VS Code file watcher. Of an `.sln` with an `.slnx` of
   the same name beside it, which a migration leaves, the workspace lists only the `.sln` (the
-  model with the user's work) until the `.sln` is deleted.
+  model with the user's work) until the `.sln` is deleted. An `.slnx` opened for the first time
+  takes over the saved model of its `.sln`: layout, notes, rules, accepted cycles and view, and
+  in a workspace model the `.sln`'s layout and include choice.
 - **One model for the whole workspace (Nov 13).** With two or more sources in the workspace
   (solutions, Bicep deployments, TypeScript and JavaScript projects), the Models menu lists a
   model of the whole workspace first, beside the model of each source. The first time it is

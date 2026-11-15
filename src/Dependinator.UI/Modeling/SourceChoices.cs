@@ -11,20 +11,34 @@ public record SourceChoice(string Path, string Key, bool IsIncluded, bool IsNew 
 // joined with what the model has saved.
 static class SourceChoices
 {
+    // An .slnx the model has no choice for takes the choice of its .sln when that is gone: the
+    // solution was migrated (SlnxMigration).
     public static IReadOnlyList<SourceChoice> Of(
         string workspaceFolder,
         IReadOnlyList<string> foundPaths,
         IReadOnlyList<WorkspaceSource> saved
-    ) =>
+    )
+    {
+        var keys = foundPaths.Select(path => WorkspaceSources.Key(workspaceFolder, path)).ToList();
+        return
         [
-            .. foundPaths.Select(path =>
-            {
-                var key = WorkspaceSources.Key(workspaceFolder, path);
-                return Saved(saved, key) is { } source
-                    ? new SourceChoice(path, key, source.IsIncluded)
-                    : new SourceChoice(path, key, WorkspaceSources.IsProposed(key), IsNew: true);
-            }),
+            .. foundPaths.Select(
+                (path, i) =>
+                    (Saved(saved, keys[i]) ?? MigratedFrom(saved, keys, keys[i])) is { } source
+                        ? new SourceChoice(path, keys[i], source.IsIncluded)
+                        : new SourceChoice(path, keys[i], WorkspaceSources.IsProposed(keys[i]), IsNew: true)
+            ),
         ];
+    }
+
+    static WorkspaceSource? MigratedFrom(IReadOnlyList<WorkspaceSource> saved, IReadOnlyList<string> keys, string key)
+    {
+        if (SlnxMigration.SlnPath(key) is not { } slnKey)
+            return null;
+        if (keys.Any(k => string.Equals(k, slnKey, StringComparison.OrdinalIgnoreCase)))
+            return null;
+        return Saved(saved, slnKey);
+    }
 
     // The choices as saved with the model. A source keeps the root node it had (see
     // WorkspaceSource.RootName) unless the parse gave it another. Whether it is in the model

@@ -594,6 +594,36 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(Rect.None, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web.main*ts")].Boundary));
     }
 
+    // The solution was migrated to .slnx after the user laid it out as an .sln: the .slnx has no
+    // model of its own yet, so it brings the .sln's, and the workspace model's choice for the .sln
+    const string Slnx = "/repo/App.slnx";
+
+    [Fact]
+    public async Task LoadAsync_ShouldBringTheLayoutOfTheSlnModel_ToAnSlnxSource()
+    {
+        sourceItems[Slnx] = [Root("App*slnx"), Node("Core", parent: "App*slnx"), Node("Core.Type")];
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Slnx, Web]);
+        persistenceService.Setup(p => p.ReadAsync(Solution)).ReturnsAsync(SolutionModel("App*sln"));
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        AssertSolutionLayout("App*slnx");
+    }
+
+    [Fact]
+    public async Task GetSourceChoices_ShouldBeTheChoiceOfTheSln_ForAnSlnxThatReplacedIt()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(false, true, false)));
+        sourceItems[Slnx] = [Root("App*slnx")];
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Slnx, Web]);
+
+        var choices = modelService.GetSourceChoices(ModelPath);
+
+        Assert.Equal([(Slnx, false, false), (Web, true, false)], choices.Select(c => (c.Path, c.IsIncluded, c.IsNew)));
+    }
+
     // A node that is new since the source's model was saved gets a place by the layout
     [Fact]
     public async Task LoadAsync_ShouldLayOutANodeTheSourcesOwnModelHasNot()

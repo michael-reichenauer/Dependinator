@@ -52,7 +52,11 @@ paths:
   every project twice. The `.sln` wins: its model has the user's layout and is the key among a
   workspace model's sources; hiding it instead (the first version) silently swapped a user's
   model for an empty one (found in review). The root is named after the file (`App*slnx`), so
-  deleting the `.sln` starts a new model with its own layout.
+  an `.slnx` model would start empty: the first time one is opened (no saved model),
+  `SlnxMigration` takes over the `.sln`'s saved model, renaming the root, the names it prefixes
+  and the line ids of lines that end at them (ids are hashes of the end names). In a workspace
+  model an `.slnx` source without a model of its own brings the `.sln`'s (`ReadSourceModelsAsync`),
+  and takes the `.sln`'s include choice once the `.sln` is gone (`SourceChoices.Of`).
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.
