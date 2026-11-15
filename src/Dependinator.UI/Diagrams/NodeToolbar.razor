@@ -769,7 +769,9 @@ else if (HasSelectedLine)
       if (!model.Nodes.TryGetValue(nodeId, out var node))
         return;
       currentIconName = node.CustomIconName;
-      defaultIconName = Icon.GetIconName(node.Type);
+      // The icon the node has without a pick: the parser's (a language tile, an Azure icon) or the type's
+      defaultIconName =
+          node.IconName is { } parsedIcon && IconLibrary.Contains(parsedIcon) ? parsedIcon : Icon.GetIconName(node.Type);
     }
 
     var parameters = new DialogParameters

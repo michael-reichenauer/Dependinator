@@ -43,16 +43,17 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
-        await App.SelectNodeByFullNameAsync("Demo.sln");
+        // Externals: the solution's root shows its language tile, which keeps its own color.
+        await App.SelectNodeByFullNameAsync("Externals");
 
         // Pick Blue from the color swatch dropdown (icon tint while the node shows as an
         // icon); the node's icon <use> switches to the generated "--Blue" color variant def.
         await App.PickIconColorItemAsync("Blue");
-        await Expect(App.NodeIconUse("Solution--Blue")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("Externals--Blue")).ToBeVisibleAsync();
 
-        // Picking Default restores the base violet icon.
+        // Picking Default restores the base icon.
         await App.PickIconColorItemAsync("Default");
-        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("Externals")).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -73,10 +74,10 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.IconDialogItem("Key-Vault").ClickAsync();
         await Expect(App.NodeIconUse("Key-Vault")).ToBeVisibleAsync();
 
-        // The pinned Default row restores the node-type icon.
+        // The pinned Default row restores the parser's icon, the solution's C# tile.
         await App.OpenIconSelectorAsync();
         await App.IconDialogDefault.ClickAsync();
-        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("CSharp")).ToBeVisibleAsync();
     }
 
     [E2EFact]
