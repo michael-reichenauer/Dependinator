@@ -180,6 +180,35 @@ public class SourceNestingTests
         Assert.Equal("", parents["web"]);
     }
 
+    // A project the parse no longer has (or of a source left out) is no place to be shown in
+    [Fact]
+    public void Parents_ShouldBeAutomatic_ForAChoiceOfAProjectThatIsGone()
+    {
+        AddRoot("App*sln");
+        AddProject("Old", "/repo/src/old", "App*sln");
+        AddRoot("ui");
+        modelMgr.WithModel(m => m.UpdateStamp = m.UpdateStamp.AddSeconds(1));
+        modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].UpdateStamp = m.UpdateStamp);
+
+        var parents = Parents(("App.sln", "App*sln", null), ("src/ui/package.json", "ui", "Old"));
+
+        Assert.Equal("App*sln", parents["ui"]);
+    }
+
+    // The web project's choice cannot be followed (its node is gone), so it is placed in the
+    // solution's folder; the solution's own choice of the web project still wins
+    [Fact]
+    public void Parents_ShouldKeepAChoiceThatIsFollowed_OverOneThatIsNot()
+    {
+        AddRoot("App*sln");
+        AddRoot("web");
+
+        var parents = Parents(("App.sln", "App*sln", "web"), ("src/web/package.json", "web", "Gone"));
+
+        Assert.Equal("web", parents["App*sln"]);
+        Assert.Equal("", parents["web"]);
+    }
+
     [Fact]
     public void Places_ShouldBeTheOtherSources_AndTheirProjects()
     {

@@ -17,7 +17,8 @@ namespace Dependinator.UI.Modeling;
 //
 // The user can choose another place for a source (Source.ShownIn, WorkspaceSource.ShownIn):
 // the top, or a node of another source (its root or a project, Places). A choice whose node is
-// not in the model, or is the source's own, is Automatic until the node is back.
+// not such a node now (left out of the model, or not a project any more) is Automatic until it
+// is back.
 //
 // Decided anew after each parse on the whole model, so that it holds for the sources a refresh
 // did not parse too, and a source whose holder is left out of the model goes back to the top.
@@ -43,22 +44,17 @@ static class SourceNesting
                 .Where(source => model.Nodes.ContainsKey(NodeId.FromName(source.RootName)))
                 .DistinctBy(source => source.RootName),
         ];
-        var rootNames = roots.Select(source => source.RootName).ToHashSet(StringComparer.Ordinal);
+        IReadOnlySet<string> rootNames = roots.Select(source => source.RootName).ToHashSet(StringComparer.Ordinal);
 
-        // The nodes that hold a folder, each with the index of its source. A project is one of
-        // this parse (or of a source the model keeps, which KeepNodeTree has stamped), not one
-        // that the parse no longer has, since that is removed after the parse.
+        // The nodes that hold a folder, each with the index of its source
         List<Holder> holders = [];
         for (var index = 0; index < roots.Count; index++)
         {
             var root = model.Nodes[NodeId.FromName(roots[index].RootName)];
             var kind = WorkspaceSources.ChangeKind(roots[index].Key);
             holders.Add(new(root.Name, WorkspaceSources.FolderOf(roots[index].Key), index, kind, IsProject: false));
-            foreach (var node in root.DescendantsAndSelfPreOrder(n => rootNames.Contains(n.Name)).Skip(1))
-            {
-                if (node.ProjectFolder is { } folder && node.UpdateStamp == model.UpdateStamp)
-                    holders.Add(new(node.Name, Folder(workspaceFolder, folder), index, kind, IsProject: true));
-            }
+            foreach (var node in Projects(model, root, rootNames))
+                holders.Add(new(node.Name, Folder(workspaceFolder, node.ProjectFolder!), index, kind, IsProject: true));
         }
 
         // The deepest holder of another source, a project before a root; the first of equal ones
@@ -79,31 +75,23 @@ static class SourceNesting
             }
         }
 
-        // The user's choices, and the source that holds each parent (-1 for none)
+        // The user's choices that can be followed: the top, or a holder of another source (its
+        // root or a project of it, as Places offers), and the source of each parent (-1: none)
         var parentName = new string[roots.Count];
         var parentSource = new int[roots.Count];
-        var rootIndex = roots
-            .Select((source, index) => (source.RootName, index))
-            .ToDictionary(r => r.RootName, r => r.index);
-        int OwnerOf(Node node) =>
-            node.AncestorsAndSelf()
-                .Select(n => rootIndex.GetValueOrDefault(n.Name, -1))
-                .FirstOrDefault(i => i >= 0, -1);
+        var isChosen = new bool[roots.Count];
         for (var index = 0; index < roots.Count; index++)
         {
             (parentName[index], parentSource[index]) =
                 parentOf[index] < 0 ? ("", -1) : (holders[parentOf[index]].Name, holders[parentOf[index]].Source);
-            if (roots[index].ShownIn is not { } shownIn)
-                continue;
+            var shownIn = roots[index].ShownIn;
             if (shownIn == "")
-                (parentName[index], parentSource[index]) = ("", -1);
+                (parentName[index], parentSource[index], isChosen[index]) = ("", -1, true);
             else if (
-                model.Nodes.TryGetValue(NodeId.FromName(shownIn), out var node)
-                && !node.IsRoot
-                && OwnerOf(node) is var owner
-                && owner != index
+                shownIn is not null
+                && holders.FirstOrDefault(h => h.Name == shownIn && h.Source != index) is { } chosen
             )
-                (parentName[index], parentSource[index]) = (shownIn, owner);
+                (parentName[index], parentSource[index], isChosen[index]) = (shownIn, chosen.Source, true);
         }
 
         // Sources inside each other (through a C# project outside its solution's folder, a
@@ -123,7 +111,7 @@ static class SourceNesting
                     loop.Add(source);
                     continue;
                 }
-                var top = loop.FirstOrDefault(i => roots[i].ShownIn is null, index);
+                var top = loop.FirstOrDefault(i => !isChosen[i], index);
                 (parentName[top], parentSource[top]) = ("", -1);
                 break;
             }
@@ -138,21 +126,27 @@ static class SourceNesting
     // model and their projects, in the order of the sources
     public static IReadOnlyList<SourcePlace> Places(IModel model, IReadOnlyList<Source> sources, string rootName)
     {
-        var rootNames = sources.Select(source => source.RootName).ToHashSet(StringComparer.Ordinal);
+        IReadOnlySet<string> rootNames = sources.Select(source => source.RootName).ToHashSet(StringComparer.Ordinal);
         List<SourcePlace> places = [];
         foreach (var source in sources.DistinctBy(source => source.RootName))
         {
             if (source.RootName == rootName || !model.Nodes.TryGetValue(NodeId.FromName(source.RootName), out var root))
                 continue;
             places.Add(new(root.Name, root.DisplayName));
-            foreach (var node in root.DescendantsAndSelfPreOrder(n => rootNames.Contains(n.Name)).Skip(1))
-            {
-                if (node.ProjectFolder is not null && node.UpdateStamp == model.UpdateStamp)
-                    places.Add(new(node.Name, node.DisplayName, IsProject: true));
-            }
+            places.AddRange(
+                Projects(model, root, rootNames).Select(node => new SourcePlace(node.Name, node.DisplayName, true))
+            );
         }
         return places;
     }
+
+    // The projects of a source (Node.ProjectFolder), without those of the sources shown inside
+    // it. A project is one of this parse (or of a source the model keeps, which KeepNodeTree has
+    // stamped), not one that the parse no longer has, since that is removed after the parse.
+    static IEnumerable<Node> Projects(IModel model, Node root, IReadOnlySet<string> rootNames) =>
+        root.DescendantsAndSelfPreOrder(n => rootNames.Contains(n.Name))
+            .Skip(1)
+            .Where(node => node.ProjectFolder is not null && node.UpdateStamp == model.UpdateStamp);
 
     // Moves the root of each source to its parent (Parents), where it is placed anew, and says
     // whether any moved. A move

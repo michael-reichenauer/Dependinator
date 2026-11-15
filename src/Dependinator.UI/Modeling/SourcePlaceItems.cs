@@ -41,12 +41,6 @@ static class SourcePlaceItems
     public static string AutomaticLabel(SourcePlaces places) =>
         $"Automatic: {PlaceLabel(places, places.AutomaticParent)}";
 
-    // Where the source is shown now, for a menu's subtitle
-    public static string CurrentLabel(SourcePlaces places) =>
-        places.ShownIn is null ? AutomaticLabel(places) : Capitalized(PlaceLabel(places, places.ShownIn));
-
-    static string Capitalized(string text) => text == "" ? text : char.ToUpperInvariant(text[0]) + text[1..];
-
     static string PlaceLabel(SourcePlaces places, string nodeName) =>
         nodeName == "" ? TopLabel.ToLowerInvariant()
         : places.Places.FirstOrDefault(place => place.NodeName == nodeName) is { } place ? $"in {place.Label}"

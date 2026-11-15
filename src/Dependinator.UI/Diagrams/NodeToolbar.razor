@@ -421,8 +421,9 @@ else if (HasSelectedLine)
   // The selected node when it is the root of a source in the workspace model
   string? SelectedSourceRoot =>
     !IsMultiSelected && TryGetSelectedNodeId(out var nodeId)
-    && modelMgr.WithModel(m => m.Nodes.TryGetValue(nodeId, out var node) ? node.Name : null) is { } name
-    && modelService.IsSourceRoot(name) ? name : null;
+      ? modelMgr.WithModel(m =>
+          m.Nodes.TryGetValue(nodeId, out var node) && Modeling.ModelService.IsSourceRoot(m, node.Name) ? node.Name : null)
+      : null;
 
   // The places of the source, read when the submenu opens: Automatic, the top, the other
   // sources and their projects, the current one in bold
@@ -434,7 +435,7 @@ else if (HasSelectedLine)
     foreach (var item in Modeling.SourcePlaceItems.Of(places))
     {
       var value = item.Value;
-      <MudMenuItem OnClick="() => modelService.SetSourcePlace(rootName, Modeling.SourcePlaceItems.ShownInOf(value))"
+      <MudMenuItem OnClick="() => ShowSourceInside(rootName, Modeling.SourcePlaceItems.ShownInOf(value))"
                    data-testid="show-inside-item" data-value="@value">
         <span style="@ItemStyle(value == current, item.IsIndented)">@item.Label</span>
       </MudMenuItem>
@@ -444,6 +445,14 @@ else if (HasSelectedLine)
       }
     }
   };
+
+  // The source moves and is placed anew, maybe inside a node shown as an icon now: go to it
+  void ShowSourceInside(string rootName, string? shownIn)
+  {
+    modelService.SetSourcePlace(rootName, shownIn);
+    selectionService.Unselect();
+    navigationService.ShowNodeAsync(Modeling.Models.NodeId.FromName(rootName)).RunInBackground();
+  }
 
   static string ItemStyle(bool isCurrent, bool isIndented) =>
     (isCurrent ? "font-weight:600;" : "") + (isIndented ? "padding-left:16px;" : "");

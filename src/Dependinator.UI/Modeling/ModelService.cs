@@ -109,6 +109,11 @@ class ModelService : IModelService, IDisposable
     readonly ISaveStatusService saveStatusService;
 
     readonly SemaphoreSlim refreshGate = new(1, 1);
+
+    // While a parse puts its items into the model, which is then not all of one parse (the
+    // projects of the kept sources are stamped at the end): nesting waits for the parse's end.
+    int updatingItems;
+    bool IsUpdatingItems => Volatile.Read(ref updatingItems) > 0;
     readonly Debouncer saveDebouncer = new();
     readonly Debouncer viewSaveDebouncer = new();
 
@@ -490,7 +495,7 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             model.WorkspaceSources = SourceChoices.ToSaved(choices, model.WorkspaceSources);
-            isMoved = NestSources(model); // A source's place can be all that changed
+            isMoved = !IsUpdatingItems && NestSources(model); // A source's place can be all that changed
         }
 
         // Save before refreshing, as for the test projects below: the refresh can fail.
@@ -636,39 +641,52 @@ class ModelService : IModelService, IDisposable
                 return false;
             }
 
-            using (var model = modelMgr.UseModel())
+            Interlocked.Increment(ref updatingItems);
+            try
             {
-                // A parsed source's root stays where the model shows it (SourceNesting)
-                if (isWorkspace)
-                    items = SourceNesting.KeepParents(model, items);
-                model.Path = path;
-                model.UpdateStamp = DateTime.UtcNow;
-                // Each parse reports all problems of what it parsed, so they replace the last
-                // parse's, but for the problems of the sources that were not parsed this time.
-                model.SetParseProblems([
-                    .. items.Select(i => i.Problem).OfType<Parsing.ParseProblem>(),
-                    .. model.ParseProblems.Where(p => keptSources.Any(source => IsSameKey(source.Key, p.Source))),
-                ]);
+                using (var model = modelMgr.UseModel())
+                {
+                    // A parsed source's root stays where the model shows it (SourceNesting)
+                    if (isWorkspace)
+                        items = SourceNesting.KeepParents(model, items);
+                    model.Path = path;
+                    model.UpdateStamp = DateTime.UtcNow;
+                    // Each parse reports all problems of what it parsed, so they replace the last
+                    // parse's, but for the problems of the sources that were not parsed this time.
+                    model.SetParseProblems([
+                        .. items.Select(i => i.Problem).OfType<Parsing.ParseProblem>(),
+                        .. model.ParseProblems.Where(p => keptSources.Any(source => IsSameKey(source.Key, p.Source))),
+                    ]);
+                }
+
+                applicationEvents.TriggerModelChanged();
+                await AddOrUpdateAllItems(items);
+
+                using (var model = modelMgr.UseModel())
+                {
+                    if (isWorkspace)
+                        UpdateWorkspaceSources(
+                            model,
+                            parseOptions.Sources,
+                            [.. keptSources.Select(c => c.Path)],
+                            items
+                        );
+                    // Rendering during the progressive parse of a new model may have laid out nodes
+                    // before all their children's links had arrived; re-flag them so the next render
+                    // lays out each node with the complete dependency graph (before the sources'
+                    // own layouts are brought in, which are kept).
+                    if (!isRefresh)
+                        RequireChildrenLayout(model);
+                    foreach (var (rootName, sourceModel) in sourceLayouts)
+                        SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
+                    if (isWorkspace)
+                        NestSources(model);
+                    PassThroughService.UpdatePassThroughFlags(model);
+                }
             }
-
-            applicationEvents.TriggerModelChanged();
-            await AddOrUpdateAllItems(items);
-
-            using (var model = modelMgr.UseModel())
+            finally
             {
-                if (isWorkspace)
-                    UpdateWorkspaceSources(model, parseOptions.Sources, [.. keptSources.Select(c => c.Path)], items);
-                // Rendering during the progressive parse of a new model may have laid out nodes
-                // before all their children's links had arrived; re-flag them so the next render
-                // lays out each node with the complete dependency graph (before the sources'
-                // own layouts are brought in, which are kept).
-                if (!isRefresh)
-                    RequireChildrenLayout(model);
-                foreach (var (rootName, sourceModel) in sourceLayouts)
-                    SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
-                if (isWorkspace)
-                    NestSources(model);
-                PassThroughService.UpdatePassThroughFlags(model);
+                Interlocked.Decrement(ref updatingItems);
             }
 
             // Line descriptions can only be applied once all links (and thus lines) have been added
@@ -825,8 +843,11 @@ class ModelService : IModelService, IDisposable
                 : null
         );
 
-    public bool IsSourceRoot(string nodeName) =>
-        modelMgr.WithModel(m => ModelPaths.IsWorkspace(m.Path) && NestedSources(m).Any(s => s.RootName == nodeName));
+    public bool IsSourceRoot(string nodeName) => modelMgr.WithModel(m => IsSourceRoot(m, nodeName));
+
+    internal static bool IsSourceRoot(IModel model, string nodeName) =>
+        ModelPaths.IsWorkspace(model.Path)
+        && model.WorkspaceSources.Any(s => s.RootName == nodeName && s.IsIncluded && s.IsInModel);
 
     public IReadOnlyDictionary<string, SourcePlaces> GetSourcePlacesByPath() =>
         modelMgr.WithModel(m =>
@@ -834,11 +855,13 @@ class ModelService : IModelService, IDisposable
             if (!ModelPaths.IsWorkspace(m.Path))
                 return new Dictionary<string, SourcePlaces>();
             var sources = NestedSources(m);
-            var paths = SourceChoicesOf(m).ToDictionary(c => c.Key, c => c.Path, StringComparer.OrdinalIgnoreCase);
-            return sources
-                .Where(s => paths.ContainsKey(s.Key))
-                .DistinctBy(s => paths[s.Key])
-                .ToDictionary(s => paths[s.Key], s => PlacesOf(m, sources, s.RootName));
+            Dictionary<string, string> paths = new(StringComparer.OrdinalIgnoreCase);
+            foreach (var choice in SourceChoicesOf(m))
+                paths.TryAdd(choice.Key, choice.Path);
+            Dictionary<string, SourcePlaces> places = [];
+            foreach (var source in sources.Where(s => paths.ContainsKey(s.Key)))
+                places.TryAdd(paths[source.Key], PlacesOf(m, sources, source.RootName));
+            return places;
         });
 
     SourcePlaces PlacesOf(IModel model, IReadOnlyList<SourceNesting.Source> sources, string rootName)
@@ -867,7 +890,9 @@ class ModelService : IModelService, IDisposable
                     s.RootName == rootName && s.IsIncluded && s.IsInModel ? s with { ShownIn = shownIn } : s
                 ),
             ];
-            NestSources(model);
+            // While a parse updates the model, the parse nests the sources when it is done
+            if (!IsUpdatingItems)
+                NestSources(model);
         }
 
         applicationEvents.TriggerModelChanged();

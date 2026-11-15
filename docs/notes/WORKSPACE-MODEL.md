@@ -134,10 +134,13 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   include choice once the `.sln` is gone.
 - **The user's place for a source.** `WorkspaceSource.ShownIn` (saved, null for Automatic, ""
   for the top, else a node's name; carried through `SourceChoice.ShownIn` by the dialog) goes
-  before the folders in `SourceNesting.Parents`, unless its node is missing or the source's own
-  (the nearest root above the node). Two sources inside each other through choices or folders
-  are untangled by moving one to the top: the first that is placed automatically, so a choice
-  wins. `SourceNesting.Places` lists the other roots and their projects
+  before the folders in `SourceNesting.Parents` while its node is a holder of another source
+  (its root or a current project, what `Places` offers): a project the parse no longer has, or
+  one of a source being taken out, would keep its emptied source alive as a shell. Two sources
+  inside each other through choices or folders are untangled by moving one to the top: the
+  first whose choice is not followed, so a choice wins. A change of place during a parse is only
+  saved: the model is half updated then (`ModelService.IsUpdatingItems`), and the parse nests
+  the sources at its end. `SourceNesting.Places` lists the other roots and their projects
   (`ModelService.GetSourcePlaces`, `SourcePlaceItems` makes the list items). A choice made in the
   dialog moves the source before the refresh (`SetSourceChoicesAsync`), since nothing may need
   parsing; "Show Inside" needs no edit mode, like choosing the sources.
