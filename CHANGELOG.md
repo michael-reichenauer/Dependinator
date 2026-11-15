@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.92.459054] - 2026-11-15
+
 ### New
 
 - TypeScript and JavaScript projects open as models: a project (a `tsconfig.json`, a `jsconfig.json`, or a `package.json` for plain JavaScript) is found in the workspace and listed by its folder name, like solutions and Bicep deployments. It is drawn as folders and files with their classes, interfaces, enums and types, and each file's functions and variables as rows on its card; lines follow what the TypeScript compiler resolves, through imports, path aliases and re-exports to the member that is used, and to the packages under Externals
