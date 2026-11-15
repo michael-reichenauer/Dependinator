@@ -1,6 +1,6 @@
 using Dependinator.Core.Parsing;
 
-namespace Dependinator.TypeScript.Tests.Parsing.Utils;
+namespace Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
 static class ItemsExtensions
 {

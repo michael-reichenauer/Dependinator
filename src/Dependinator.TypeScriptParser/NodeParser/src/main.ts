@@ -3,7 +3,7 @@ import { loadProject } from "./project";
 
 // The TypeScript and JavaScript parser of Dependinator: a console program that parses the
 // project of a tsconfig.json, jsconfig.json or package.json with the TypeScript compiler and
-// prints the model items (see items.ts) as one JSON array to stdout. Dependinator.TypeScript
+// prints the model items (see items.ts) as one JSON array to stdout. Dependinator.TypeScriptParser
 // runs it with Node and reads the items.
 //
 //   node ts-parser.js <path to tsconfig.json | jsconfig.json | package.json> [--include-tests]

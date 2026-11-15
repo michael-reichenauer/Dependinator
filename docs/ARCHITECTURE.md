@@ -107,7 +107,7 @@ features share (view 8); `App/` is the shell (app bar, model list, the Settings 
 holds the cross-cutting services. Adding a language means adding a library with an `ISourceParser`,
 registering it in the Lsp and Web hosts, and adding an architecture rule; little else changes (a
 node type and an icon where the language has a new kind of thing, as files and functions were for
-TypeScript). A language with its own toolchain keeps it: `Dependinator.TypeScript` is 200 lines of
+TypeScript). A language with its own toolchain keeps it: `Dependinator.TypeScriptParser` is 200 lines of
 C# that start a Node.js helper (1.3k lines of TypeScript on the TypeScript compiler API, bundled
 into one script and embedded in the dll), which prints the items.
 
@@ -325,7 +325,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | What parsers return | `src/Dependinator.Core/Parsing/Types.cs`, `ParserService.cs` |
 | C# parsing | `src/Dependinator.Roslyn/Parsing/SourceParser.cs` |
 | Bicep parsing | `src/Dependinator.Bicep/Parsing/BicepParser.cs`, `ModelBuilder.cs`, and [docs/notes/BICEP-PARSER.md](notes/BICEP-PARSER.md) |
-| TypeScript and JavaScript parsing | `src/Dependinator.TypeScript/Helper/src/model.ts` (the helper), `Parsing/TypeScriptParser.cs` (runs it), and [docs/notes/TYPESCRIPT-PARSER.md](notes/TYPESCRIPT-PARSER.md) |
+| TypeScript and JavaScript parsing | `src/Dependinator.TypeScriptParser/NodeParser/src/model.ts` (the helper), `Parsing/TypeScriptSourceParser.cs` (runs it), and [docs/notes/TYPESCRIPT-PARSER.md](notes/TYPESCRIPT-PARSER.md) |
 | The in-memory model | `src/Dependinator.UI/Modeling/Models/Model.cs`, `Node.cs` |
 | Rendering and zoom | `src/Dependinator.UI/Diagrams/`: `Svg/SvgService.cs` (tile cache), `Svg/NodeTreeSvg.cs` (drawing), `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
 | Layout | `src/Dependinator.UI/Modeling/NodeLayout.cs`, `Layout/LayeredEngine.cs` |

@@ -40,8 +40,8 @@ done
 # Directory holding the TypeScript VS Code extension
 vscode_ext_dir="$PWD/src/DependinatorVsCode"
 
-# Directory holding the TypeScript parser's Node.js helper (bundled into Dependinator.TypeScript)
-ts_helper_dir="$PWD/src/Dependinator.TypeScript/Helper"
+# Directory holding the TypeScript parser's Node.js helper (bundled into Dependinator.TypeScriptParser)
+ts_helper_dir="$PWD/src/Dependinator.TypeScriptParser/NodeParser"
 
 # Check if dotnet-outdated is installed
 check_dotnet_outdated_installed

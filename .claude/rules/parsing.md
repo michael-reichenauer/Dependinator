@@ -3,7 +3,7 @@ paths:
   - "src/Dependinator.Core/Parsing/**"
   - "src/Dependinator.Roslyn/**"
   - "src/Dependinator.Bicep/**"
-  - "src/Dependinator.TypeScript/**"
+  - "src/Dependinator.TypeScriptParser/**"
   - "src/Dependinator.Core/Shared/ScriptProjects.cs"
   - "src/Dependinator.Lsp/**"
   - "src/Dependinator.DemoGen/**"
@@ -84,13 +84,13 @@ paths:
     stay leaf nodes. There is one `BicepCompiler` per process (`BicepCompilerHost`).
 - **TypeScript and JavaScript** (beyond CLAUDE.md; design and follow-ups in
   `docs/notes/TYPESCRIPT-PARSER.md`):
-  - The parser is a Node.js program (`src/Dependinator.TypeScript/Helper/`, the TypeScript 6
+  - The parser is a Node.js program (`src/Dependinator.TypeScriptParser/NodeParser/`, the TypeScript 6
     compiler API) that prints `Parsing.Item` JSON; the C# side only runs it. Its item types
-    (`Helper/src/items.ts`) mirror `Types.cs` by name: a new `NodeType` or property goes in both.
-  - The helper is bundled into one script and embedded in the dll by the csproj's `BuildHelper`
+    (`NodeParser/src/items.ts`) mirror `Types.cs` by name: a new `NodeType` or property goes in both.
+  - The helper is bundled into one script and embedded in the dll by the csproj's `BuildNodeParser`
     target (`npm ci`, esbuild), so a solution build needs Node.js and npm. After changing
-    `Helper/src`, a normal `dotnet build` rebuilds it; `cd Helper && npm run check` type-checks.
-    To try the helper alone: `node Helper/dist/ts-parser.js <tsconfig.json>` (items on stdout).
+    `NodeParser/src`, a normal `dotnet build` rebuilds it; `cd NodeParser && npm run check` type-checks.
+    To try the helper alone: `node NodeParser/dist/ts-parser.js <tsconfig.json>` (items on stdout).
   - A bundled compiler has no `lib.*.d.ts` beside it: without them every `Promise`, array and
     DOM type is unknown and signatures come out empty, with no error. They are bundled as a
     virtual module (`build.mjs`, `libraries.ts`).

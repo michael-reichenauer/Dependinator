@@ -127,7 +127,7 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     blank line below it (a license) is none, and a removed comment clears the description;
   - a cached model's nodes move to their new parents when it is refreshed, and a stray bracket
     in a design node's name ("Latency < 50ms") no longer joins the parts after it.
-- **TypeScript and JavaScript (Nov 12).** A third parser, `Dependinator.TypeScript`, and the
+- **TypeScript and JavaScript (Nov 12).** A third parser, `Dependinator.TypeScriptParser`, and the
   first that is not written in C#: a Node.js helper built on the TypeScript compiler prints the
   model's items, and the C# side only starts it (in VS Code on the editor's own runtime, so
   nothing needs installing). A project is a `tsconfig.json`, a `jsconfig.json`, or a

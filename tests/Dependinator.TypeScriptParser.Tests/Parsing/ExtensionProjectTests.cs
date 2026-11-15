@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
-using Dependinator.TypeScript.Tests.Parsing.Utils;
+using Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
-namespace Dependinator.TypeScript.Tests.Parsing;
+namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
 // Parses this repository's VS Code extension (src/DependinatorVsCode): a real project, parsed
 // as it is checked out, with or without its packages installed.

@@ -1,5 +1,5 @@
 {
-    // The sample project of Dependinator.TypeScript.Tests
+    // The sample project of Dependinator.TypeScriptParser.Tests
     "compilerOptions": {
         "target": "ES2022",
         "module": "ESNext",

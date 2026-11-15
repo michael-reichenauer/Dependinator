@@ -279,11 +279,11 @@ FakesAssemblies/
 node_modules/
 # The made-up packages of the TypeScript parser tests' sample projects (the tests link
 # parts/libs into @acme)
-!tests/Dependinator.TypeScript.Tests/Samples/shop/node_modules/
-!tests/Dependinator.TypeScript.Tests/Samples/parts/node_modules/
-tests/Dependinator.TypeScript.Tests/Samples/parts/node_modules/@acme/
+!tests/Dependinator.TypeScriptParser.Tests/Samples/shop/node_modules/
+!tests/Dependinator.TypeScriptParser.Tests/Samples/parts/node_modules/
+tests/Dependinator.TypeScriptParser.Tests/Samples/parts/node_modules/@acme/
 # The TypeScript parser helper's bundled script, built with the solution
-src/Dependinator.TypeScript/Helper/dist/
+src/Dependinator.TypeScriptParser/NodeParser/dist/
 
 # Visual Studio 6 build log
 *.plg

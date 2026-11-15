@@ -43,13 +43,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Reflection", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Bicep", "src\Dependinator.Bicep\Dependinator.Bicep.csproj", "{A4E25DE6-CFAF-45A1-B0F6-A661C1045EEE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.TypeScript", "src\Dependinator.TypeScript\Dependinator.TypeScript.csproj", "{AAF43F32-5E70-4328-B1AC-4880E1F1FFC5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.TypeScriptParser", "src\Dependinator.TypeScriptParser\Dependinator.TypeScriptParser.csproj", "{AAF43F32-5E70-4328-B1AC-4880E1F1FFC5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Reflection.Tests", "tests\Dependinator.Reflection.Tests\Dependinator.Reflection.Tests.csproj", "{A65DEF2A-C24C-48D3-BD66-30DFC89BA2CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Bicep.Tests", "tests\Dependinator.Bicep.Tests\Dependinator.Bicep.Tests.csproj", "{2F6A295C-6401-49B9-A242-1C68DF7C1F6A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.TypeScript.Tests", "tests\Dependinator.TypeScript.Tests\Dependinator.TypeScript.Tests.csproj", "{8E780130-D8C9-4936-9F71-1481CF59FF84}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.TypeScriptParser.Tests", "tests\Dependinator.TypeScriptParser.Tests\Dependinator.TypeScriptParser.Tests.csproj", "{8E780130-D8C9-4936-9F71-1481CF59FF84}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dependinator.Claude.Tests", "tests\Dependinator.Claude.Tests\Dependinator.Claude.Tests.csproj", "{89B3C70E-473C-4939-8384-7FBDCB83E83E}"
 EndProject

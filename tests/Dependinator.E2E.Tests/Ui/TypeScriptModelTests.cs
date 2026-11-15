@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
 
-// Opens the sample TypeScript project (tests/Dependinator.TypeScript.Tests/Samples/shop, listed
+// Opens the sample TypeScript project (tests/Dependinator.TypeScriptParser.Tests/Samples/shop, listed
 // as its folder name because the Blazor Server host's workspace folder is the repo) from the
 // Models menu and checks that the parser's Node.js helper turns it into a diagram of files.
 public class TypeScriptModelTests(ITestOutputHelper output) : E2ETestBase(output)

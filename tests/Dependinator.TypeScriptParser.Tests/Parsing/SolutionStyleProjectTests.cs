@@ -1,7 +1,7 @@
 using Dependinator.Core.Parsing;
-using Dependinator.TypeScript.Tests.Parsing.Utils;
+using Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
-namespace Dependinator.TypeScript.Tests.Parsing;
+namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
 // Parses Samples/parts, a "solution style" project: its tsconfig.json names no files, only the
 // projects it references (server, web, libs/util), each with its own options. What the web part

@@ -17,7 +17,7 @@ public class WorkspaceSourcesTests
     [Theory]
     [InlineData("App.sln", true)]
     [InlineData("src/DependinatorVsCode/tsconfig.json", true)]
-    [InlineData("src/Dependinator.TypeScript/Helper/tsconfig.json", true)]
+    [InlineData("src/Dependinator.TypeScriptParser/NodeParser/tsconfig.json", true)]
     [InlineData("infra/main.bicep", true)]
     [InlineData("examples/bicep/webshop.bicep", false)]
     [InlineData("tests/Dependinator.Bicep.Tests/Samples/main.bicep", false)]

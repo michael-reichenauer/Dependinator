@@ -1,6 +1,6 @@
 # TypeScript and JavaScript parser: design and parked follow-ups
 
-Added November 2026 as the first parser that is not written in C# (`src/Dependinator.TypeScript/`).
+Added November 2026 as the first parser that is not written in C# (`src/Dependinator.TypeScriptParser/`).
 This note records the decisions behind it and what was deliberately left for later. It is also the
 template for the next language (Go): a small helper program in the language's own toolchain that
 prints the model as items.
@@ -9,7 +9,7 @@ prints the model as items.
 
 The TypeScript compiler is the only tool that resolves TypeScript and JavaScript the way the
 editor does (path aliases, `node_modules`, declaration files, CommonJS, JSDoc types), and it is a
-Node.js library. So the parser is a small Node.js program, `Helper/` (`ts-parser.js`), that the C#
+Node.js library. So the parser is a small Node.js program, `NodeParser/` (`ts-parser.js`), that the C#
 side starts once per parse:
 
 ```
@@ -17,25 +17,25 @@ node ts-parser.js <tsconfig.json | jsconfig.json | package.json> [--include-test
 ```
 
 It prints the model to stdout as the JSON of Core's `Parsing.Item` list (the property names and
-enum names of `Types.cs`, see `Helper/src/items.ts`) and progress and errors to stderr; a non-zero
-exit code is a failed parse, with the last stderr line as the error. `TypeScriptParser` (C#) only
+enum names of `Types.cs`, see `NodeParser/src/items.ts`) and progress and errors to stderr; a non-zero
+exit code is a failed parse, with the last stderr line as the error. `TypeScriptSourceParser` (C#) only
 starts it (`HelperProcess.RunAsync` in Core, a 5 minute limit) and deserializes the items.
 
 Rejected: a TypeScript parser in C# (none resolves symbols), tree-sitter (syntax only: no resolved
 imports, no types, so links would be guesses), and the native TypeScript 7 compiler (its tool API
 is not stable before 7.1). TypeScript is pinned to 6.0.3, the last JavaScript-hosted line.
 
-**The script** is one file: esbuild bundles the helper and the compiler (`Helper/build.mjs`),
+**The script** is one file: esbuild bundles the helper and the compiler (`NodeParser/build.mjs`),
 with the compiler's `lib.*.d.ts` files inside it (a virtual module served by a custom compiler
 host, `libraries.ts`), because types like `Promise` and `Array` come from them and a bundled
 compiler has no `lib` folder beside it. About 7 MB. The C# project builds it before compiling (the
-`BuildHelper` target: `npm ci` and `npm run build`, skipped while the output is newer than the
-sources and in design-time builds) and embeds it as a resource; `HelperScript` writes it to
+`BuildNodeParser` target: `npm ci` and `npm run build`, skipped while the output is newer than the
+sources and in design-time builds) and embeds it as a resource; `NodeParserScript` writes it to
 `LocalApplicationData/Dependinator/helpers/ts-parser-<hash>.js` on first use. Versions of the app
 that run side by side each have their own script there; one that no version has started with for
 30 days is deleted. So **building the
 solution needs Node.js and npm** (CI runners, the devcontainer and cloud sessions have them), and
-`Helper/package-lock.json` is committed.
+`NodeParser/package-lock.json` is committed.
 
 **Node.js at run time:** in VS Code the extension passes its own runtime
 (`initializationOptions.nodePath`, `process.execPath`), which the parser runs with
@@ -166,7 +166,7 @@ names (`bin/cli.js`) is parsed, but a change there needs a manual refresh.
   declares them, which can differ from the one imported.
 - The demo models have no TypeScript model, and the browser app cannot open one unless it was
   parsed in VS Code and synced.
-- `Helper/package.json` is covered by Dependabot (`.github/dependabot.yml`: weekly, minor and
+- `NodeParser/package.json` is covered by Dependabot (`.github/dependabot.yml`: weekly, minor and
   patch grouped, TypeScript's major version ignored until the native compiler's API is stable)
   and by the nightly package task. The unit tests parse the samples with the bumped compiler.
 - A project whose source is under `build` or `out` and that has no config file is not found (the

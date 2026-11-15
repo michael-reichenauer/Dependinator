@@ -1,4 +1,4 @@
-namespace Dependinator.TypeScript.Parsing;
+namespace Dependinator.TypeScriptParser.Parsing;
 
 // Where Node is: the runtime the TypeScript parser helper runs on.
 interface INodeRuntime
