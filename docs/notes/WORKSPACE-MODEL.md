@@ -116,7 +116,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   place among the sources, and Externals is the workspace's own. What is in the root goes by
   the tree, not by the name (a C# project's nodes are not named by their solution), and a
   project another source shows is left alone. A source model with an older layout version gets
-  its automatic layouts redone, as when it is opened.
+  its automatic layouts redone, as when it is opened. An `.slnx` with no model of its own brings
+  the model of the `.sln` it was migrated from (`SlnxMigration`), and takes over the `.sln`'s
+  include choice once the `.sln` is gone.
 - **A failed source keeps its nodes.** `StructureService.ClearNotUpdated` removes what the
   parse did not stamp, so `ModelService.UpdateWorkspaceSources` re-stamps the subtree of an
   included source that has no `ParsedSource` item (`StructureService.KeepNodeTree`, by the saved
