@@ -55,6 +55,12 @@ internal class Program
         // "/Demo.sln" (root "Demo*sln"), so saved demo layouts and share links keep working.
         var rootName = Path.GetFileName(DemoModel.WorkingSolutionPath).Replace(".", "*");
         var demoRootName = Path.GetFileName(DemoModel.DemoSolutionName).Replace(".", "*");
+        if (!items.Any(i => i.Node?.Name == rootName))
+        {
+            Console.Error.WriteLine($"The parsed solution has no root node '{rootName}' to rename to '{demoRootName}'");
+            return 1;
+        }
+
         return await WriteModelAsync(
             items,
             json => json.Replace(rootName, demoRootName).Replace("Dependinator", "Demo"),
