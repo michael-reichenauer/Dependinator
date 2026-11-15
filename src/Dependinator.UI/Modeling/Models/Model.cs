@@ -265,6 +265,7 @@ class Model : IModel
                     IsIncluded = s.IsIncluded,
                     RootName = s.RootName,
                     IsInModel = s.IsInModel,
+                    ShownIn = s.ShownIn,
                 }),
             ],
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
@@ -361,7 +362,8 @@ class Model : IModel
                 s.Path,
                 s.IsIncluded,
                 s.RootName,
-                s.IsInModel
+                s.IsInModel,
+                s.ShownIn
             )),
         ];
         rules.Clear();

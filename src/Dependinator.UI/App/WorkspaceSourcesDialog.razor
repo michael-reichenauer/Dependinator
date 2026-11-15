@@ -4,7 +4,9 @@
 @* What a workspace model is made of: the sources found in the workspace (solutions, Bicep
    deployments, TypeScript and JavaScript projects), each with a checkbox. Shown when the model
    is opened for the first time, with a proposal ticked, and later from the Models menu and the
-   Settings dialog ("Choose Sources …"). OK returns the choice; the caller parses. *@
+   Settings dialog ("Choose Sources …"). A source in the model has a "Shown in" list: Automatic
+   (inside the source whose folder holds it, SourceNesting), the top, or a node of another source.
+   OK returns the choice; the caller parses. *@
 <MudDialog>
   <TitleContent>
     <MudText Typo="Typo.h6">What is in this model?</MudText>
@@ -14,6 +16,7 @@
       <div class="dep-settings__hint">
         The model of the whole <b>@WorkspaceName</b> workspace shows the sources you tick in one diagram.
         @(IsFirstTime ? "Sources in test, sample and example folders are left out to start with." : "")
+        @(Places.Count > 0 ? "Each is shown inside the source its folder is in, unless you choose another place." : "")
       </div>
       @foreach (var group in choices.GroupBy(c => WorkspaceSources.GroupName(c.Path)))
       {
@@ -34,6 +37,23 @@
                 }
                 <span class="dep-sources__folder"><bdi>@Folder(choice)</bdi></span>
               </span>
+              @if (IsTicked(path) && Places.TryGetValue(path, out var places))
+              {
+                <div class="dep-sources__place @(shownIn[path] is null ? "" : "dep-sources__place--chosen")"
+                     data-testid="sources-place" data-value="@SourcePlaceItems.ValueOf(shownIn[path])">
+                  <MudSelect T="string" Value="@SourcePlaceItems.ValueOf(shownIn[path])"
+                             ValueChanged="@(value => shownIn[path] = SourcePlaceItems.ShownInOf(value))"
+                             Dense="true" Margin="Margin.Dense" Variant="Variant.Text" title="Where the source is shown"
+                             RelativeWidth="DropdownWidth.Adaptive" PopoverClass="dep-sources__place-list"
+                             data-testid="sources-place-select">
+                    @foreach (var item in SourcePlaceItems.Of(places with { ShownIn = shownIn[path] }))
+                    {
+                      <MudSelectItem T="string" Value="@item.Value"
+                                     Class="@(item.IsIndented ? "dep-sources__place-item--project" : "")">@item.Label</MudSelectItem>
+                    }
+                  </MudSelect>
+                </div>
+              }
             </div>
           }
         </div>
@@ -59,18 +79,24 @@
   [Parameter] public IReadOnlyList<SourceChoice> Choices { get; set; } = [];
   [Parameter] public string WorkspaceName { get; set; } = "";
 
+  // Where each source in the model can be shown, by path (none before the first parse)
+  [Parameter] public IReadOnlyDictionary<string, SourcePlaces> Places { get; set; } =
+    new Dictionary<string, SourcePlaces>();
+
   // The model has no saved choice yet: what is ticked is the proposal.
   [Parameter] public bool IsFirstTime { get; set; }
 
   IReadOnlyList<SourceChoice> choices = [];
   readonly HashSet<string> ticked = [];
+  readonly Dictionary<string, string?> shownIn = [];
 
   // The user's choice of sources, or null when the dialog was cancelled.
   public static async Task<IReadOnlyList<SourceChoice>?> ShowAsync(
     IDialogService dialogService,
     string workspaceName,
     IReadOnlyList<SourceChoice> choices,
-    bool isFirstTime
+    bool isFirstTime,
+    IReadOnlyDictionary<string, SourcePlaces>? places = null
   )
   {
     var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
@@ -79,6 +105,7 @@
       { d => d.Choices, choices },
       { d => d.WorkspaceName, workspaceName },
       { d => d.IsFirstTime, isFirstTime },
+      { d => d.Places, places ?? new Dictionary<string, SourcePlaces>() },
     };
     var dialog = await dialogService.ShowAsync<WorkspaceSourcesDialog>((string?)null, parameters, options);
     var result = await dialog.Result;
@@ -90,6 +117,8 @@
     choices = Choices;
     foreach (var choice in choices.Where(c => c.IsIncluded))
       ticked.Add(choice.Path);
+    foreach (var choice in choices)
+      shownIn[choice.Path] = choice.ShownIn;
   }
 
   bool IsTicked(string path) => ticked.Contains(path);
@@ -112,7 +141,7 @@
 
   void Ok() =>
     MudDialog.Close(DialogResult.Ok<IReadOnlyList<SourceChoice>>(
-      [.. choices.Select(c => c with { IsIncluded = IsTicked(c.Path), IsNew = false })]
+      [.. choices.Select(c => c with { IsIncluded = IsTicked(c.Path), IsNew = false, ShownIn = shownIn[c.Path] })]
     ));
 
   void Cancel() => MudDialog.Cancel();

@@ -973,6 +973,31 @@ body {
     min-width: 0;
 }
 
+/* "Shown in" of a source in the model (WorkspaceSourcesDialog): a place the user chose is amber */
+.dep-sources__place {
+    flex: 0 0 auto;
+    width: 230px;
+    max-width: 45%;
+    margin-left: 8px;
+}
+
+.dep-sources__place .mud-input {
+    font-size: 0.8rem;
+}
+
+.dep-sources__place-list {
+    max-width: min(420px, 90vw);
+}
+
+/* A project of a source, below the source in the list */
+.dep-sources__place-item--project {
+    padding-left: 32px !important;
+}
+
+.dep-sources__place--chosen .mud-input {
+    color: var(--mud-palette-warning-darken);
+}
+
 .dep-sources__count {
     padding-left: 16px;
 }

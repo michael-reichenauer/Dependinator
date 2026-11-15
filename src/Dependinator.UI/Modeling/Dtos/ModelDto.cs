@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Dependinator.UI.Shared.Types;
 
 // Serializable data-transfer objects for persisting and loading the model to and from storage,
@@ -64,6 +65,10 @@ record WorkspaceSourceDto
     public bool IsIncluded { get; init; }
     public string? RootName { get; init; }
     public bool IsInModel { get; init; }
+
+    // Where the user chose to show the source (see Models.WorkspaceSource): null is Automatic
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ShownIn { get; init; }
 }
 
 // A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).

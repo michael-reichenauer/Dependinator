@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
@@ -107,6 +108,57 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await Expect(App.NodeLabel("The shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
         await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
     }
+
+    // A source is shown where the user chooses ("Shown in" in the sources dialog, saved with the
+    // model), and its root has "Show Inside" in its node menu for the same choice. The two
+    // samples are in folders apart, so both start at the top level.
+    [E2EFact]
+    public async Task WorkspaceModel_ShouldShowASourceWhereTheUserChooses()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+
+        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
+        await App.ClickUntilVisibleAsync(App.MenuItem("menu-workspace-model"), Page.GetByTestId("sources-dialog"));
+        foreach (ILocator source in await Page.GetByTestId("sources-check").AllAsync())
+            await SetTickedAsync(source, false);
+        await SetTickedAsync(Source("main.bicep"), true);
+        await SetTickedAsync(Source("shop"), true);
+        await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
+        await Expect(App.Node("shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
+        await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
+
+        // Show Inside the deployment, from the shop's node menu: the view goes to the shop there
+        // (it stays selected, so it gets no go to brackets)
+        await App.SelectNodeByFullNameAsync("shop");
+        ILocator showInside = await App.OpenNodeMenuItemAsync("node-menu-show-inside");
+        ILocator inDeployment = Page.Locator("[data-testid=show-inside-item][data-value^='node:']");
+        await App.ClickUntilVisibleAsync(showInside, inDeployment);
+        await App.ClickUntilGoneAsync(inDeployment);
+        await Expect(App.Node("shop")).ToBeVisibleAsync();
+
+        // The choice is saved with the model, and the sources dialog shows it; there the shop is
+        // put back at the top level
+        await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
+        await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", new Regex("^node:"));
+        ILocator topLevel = Page.Locator(".mud-popover-open .mud-list-item").Filter(new() { HasTextRegex = new Regex("^Top level$") });
+        await App.ClickUntilVisibleAsync(Place("shop").Locator(".mud-select").First, topLevel);
+        await App.ClickUntilGoneAsync(topLevel);
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "top");
+        await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
+
+        await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
+        await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "top");
+        await App.ClickUntilGoneAsync(Page.GetByTestId("sources-cancel"));
+    }
+
+    // The "Shown in" list of a source in the sources dialog
+    ILocator Place(string name) =>
+        Page.GetByTestId("sources-item")
+            .Filter(new() { Has = Page.GetByText(name, new() { Exact = true }) })
+            .GetByTestId("sources-place");
 
     // The checkbox of a source in the sources dialog, by the source's whole name ("webshop.bicep"
     // has "shop" in it too).

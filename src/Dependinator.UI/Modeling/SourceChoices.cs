@@ -4,8 +4,9 @@ using Dependinator.UI.Modeling.Models;
 namespace Dependinator.UI.Modeling;
 
 // A source found in the workspace, and whether it is in the workspace model: the user's saved
-// choice, or what is proposed for a source the user has not chosen about (IsNew).
-public record SourceChoice(string Path, string Key, bool IsIncluded, bool IsNew = false);
+// choice, or what is proposed for a source the user has not chosen about (IsNew). ShownIn is
+// where the user chose to show it (see WorkspaceSource.ShownIn, null for Automatic).
+public record SourceChoice(string Path, string Key, bool IsIncluded, bool IsNew = false, string? ShownIn = null);
 
 // The sources of a workspace model as the user chooses them: what is found in the workspace now,
 // joined with what the model has saved.
@@ -25,7 +26,7 @@ static class SourceChoices
             .. foundPaths.Select(
                 (path, i) =>
                     (Saved(saved, keys[i]) ?? MigratedFrom(saved, keys, keys[i])) is { } source
-                        ? new SourceChoice(path, keys[i], source.IsIncluded)
+                        ? new SourceChoice(path, keys[i], source.IsIncluded, ShownIn: source.ShownIn)
                         : new SourceChoice(path, keys[i], WorkspaceSources.IsProposed(keys[i]), IsNew: true)
             ),
         ];
@@ -64,7 +65,8 @@ static class SourceChoices
                 choice.Key,
                 choice.IsIncluded,
                 parsedRootNames?.GetValueOrDefault(choice.Path) ?? Kept(Saved(saved, choice.Key)?.RootName),
-                inModelPaths?.Contains(choice.Path) ?? Saved(saved, choice.Key)?.IsInModel ?? false
+                inModelPaths?.Contains(choice.Path) ?? Saved(saved, choice.Key)?.IsInModel ?? false,
+                choice.ShownIn
             )),
             .. saved
                 .Where(source =>

@@ -76,7 +76,8 @@ class WorkspaceSourcesService(
             dialogService,
             ModelPaths.DisplayName(modelPath),
             modelService.GetSourceChoices(modelPath),
-            isFirstTime: false
+            isFirstTime: false,
+            modelService.GetSourcePlacesByPath()
         );
         if (chosen is null || modelMgr.ModelPath != modelPath)
             return;

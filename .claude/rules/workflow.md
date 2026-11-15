@@ -163,9 +163,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   layout of its own model (`SourceLayout`). Phase 4 (Nov 13): a workspace never opened before
   starts on it in VS Code (Michael's choice). Nesting (Nov 15, Michael picked "A now, then B"
   from https://claude.ai/artifact/TjJ7nqiLUDeiHgd7f9L4v2): a source is shown inside the source
-  whose folder holds it, in the deepest project (`SourceNesting`); next, the user's own choice
-  per source ("Shown in" in the sources dialog, "Show Inside …" on a source's root, starting on
-  Automatic). Moving nodes inside a source by hand was ruled out: the parser owns that tree.
+  whose folder holds it, in the deepest project (`SourceNesting`, PR #243), and phase 2: the
+  user's own choice per source ("Shown in" in the sources dialog, "Show Inside" on a source's
+  root, starting on Automatic). Moving nodes inside a source by hand was ruled out: the parser
+  owns that tree.
   Then the Go parser (the TypeScript helper approach, `go/packages`).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the

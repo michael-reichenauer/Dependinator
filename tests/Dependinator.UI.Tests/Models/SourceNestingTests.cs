@@ -129,6 +129,107 @@ public class SourceNestingTests
         Assert.Equal("Lib", parents["lib"]);
     }
 
+    // The user's choice goes before the folders: the top, or a node of another source
+    [Fact]
+    public void Parents_ShouldFollowTheUsersChoice()
+    {
+        AddRoot("App*sln");
+        AddProject("Lib", "/repo/src/lib", "App*sln");
+        AddProject("Web", "/repo/src/web", "App*sln");
+        AddRoot("ui");
+        AddRoot("infra");
+
+        var parents = Parents(
+            ("App.sln", "App*sln", null),
+            ("src/lib/ui/package.json", "ui", "Web"),
+            ("infra/main.bicep", "infra", "")
+        );
+
+        Assert.Equal("Web", parents["ui"]);
+        Assert.Equal("", parents["infra"]);
+    }
+
+    // A choice of a node that is not in the model, or of the source's own, is Automatic
+    [Theory]
+    [InlineData("Gone")]
+    [InlineData("ui")]
+    [InlineData("ui.main*ts")]
+    public void Parents_ShouldBeAutomatic_ForAChoiceThatCannotBe(string shownIn)
+    {
+        AddRoot("App*sln");
+        AddRoot("ui");
+        AddNode("ui.main*ts", "ui");
+
+        var parents = Parents(("App.sln", "App*sln", null), ("src/ui/package.json", "ui", shownIn));
+
+        Assert.Equal("App*sln", parents["ui"]);
+    }
+
+    // The solution is chosen to be inside the web project, which is in the solution's folder:
+    // the choice wins, and the web project goes to the top
+    [Fact]
+    public void Parents_ShouldKeepTheUsersChoice_WhenTheSourcesWouldBeInEachOther()
+    {
+        AddRoot("App*sln");
+        AddRoot("web");
+        AddNode("web.main*ts", "web");
+
+        var parents = Parents(("App.sln", "App*sln", "web"), ("src/web/package.json", "web", null));
+
+        Assert.Equal("web", parents["App*sln"]);
+        Assert.Equal("", parents["web"]);
+    }
+
+    // A project the parse no longer has (or of a source left out) is no place to be shown in
+    [Fact]
+    public void Parents_ShouldBeAutomatic_ForAChoiceOfAProjectThatIsGone()
+    {
+        AddRoot("App*sln");
+        AddProject("Old", "/repo/src/old", "App*sln");
+        AddRoot("ui");
+        modelMgr.WithModel(m => m.UpdateStamp = m.UpdateStamp.AddSeconds(1));
+        modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].UpdateStamp = m.UpdateStamp);
+
+        var parents = Parents(("App.sln", "App*sln", null), ("src/ui/package.json", "ui", "Old"));
+
+        Assert.Equal("App*sln", parents["ui"]);
+    }
+
+    // The web project's choice cannot be followed (its node is gone), so it is placed in the
+    // solution's folder; the solution's own choice of the web project still wins
+    [Fact]
+    public void Parents_ShouldKeepAChoiceThatIsFollowed_OverOneThatIsNot()
+    {
+        AddRoot("App*sln");
+        AddRoot("web");
+
+        var parents = Parents(("App.sln", "App*sln", "web"), ("src/web/package.json", "web", "Gone"));
+
+        Assert.Equal("web", parents["App*sln"]);
+        Assert.Equal("", parents["web"]);
+    }
+
+    [Fact]
+    public void Places_ShouldBeTheOtherSources_AndTheirProjects()
+    {
+        AddRoot("App*sln");
+        AddProject("Lib", "/repo/src/lib", "App*sln");
+        AddRoot("ui");
+        AddRoot("infra");
+        SourceNesting.Source[] sources =
+        [
+            new("App.sln", "App*sln"),
+            new("src/lib/ui/package.json", "ui"),
+            new("infra/main.bicep", "infra"),
+        ];
+
+        var places = modelMgr.WithModel(m => SourceNesting.Places(m, sources, "ui"));
+
+        Assert.Equal(["App*sln", "Lib", "infra"], places.Select(p => p.NodeName));
+        Assert.True(places[1].IsProject);
+        Assert.StartsWith("Lib", places[1].Label);
+    }
+
     [Fact]
     public void Apply_ShouldMoveTheRoot_AndPlaceItAnew()
     {
@@ -209,7 +310,12 @@ public class SourceNestingTests
         AddProject("Lib", "/repo/src/lib", "App*sln");
 
         using (var model = modelMgr.UseModel())
-            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/lib/package.json", "web")]);
+            SourceNesting.Apply(
+                model,
+                structure,
+                Folder,
+                [new("App.sln", "App*sln"), new("src/lib/package.json", "web")]
+            );
 
         var dto = modelMgr.WithModel(m => m.SerializeToDto());
         var names = dto.Nodes.Select(n => n.Name).ToList();
@@ -250,8 +356,15 @@ public class SourceNestingTests
     }
 
     IReadOnlyDictionary<string, string> Parents(params (string Key, string RootName)[] sources) =>
+        Parents([.. sources.Select(s => (s.Key, s.RootName, (string?)null))]);
+
+    IReadOnlyDictionary<string, string> Parents(params (string Key, string RootName, string? ShownIn)[] sources) =>
         modelMgr.WithModel(m =>
-            SourceNesting.Parents(m, Folder, [.. sources.Select(s => new SourceNesting.Source(s.Key, s.RootName))])
+            SourceNesting.Parents(
+                m,
+                Folder,
+                [.. sources.Select(s => new SourceNesting.Source(s.Key, s.RootName, s.ShownIn))]
+            )
         );
 
     void AddRoot(string name) => Add(new ParsedNode(name, new() { Type = NodeType.Solution }));
