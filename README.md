@@ -86,7 +86,7 @@ inside, and jump from any node straight to its source.
 
 1. Install [Dependinator](https://marketplace.visualstudio.com/items?itemName=michaelreichenauer.dependinator)
    from the Marketplace, or search for "Dependinator" in the Extensions view.
-2. Open a folder that contains a `.sln` file, a Bicep deployment (a `.bicep` entry file), or a
+2. Open a folder that contains a `.sln` or `.slnx` file, a Bicep deployment (a `.bicep` entry file), or a
    TypeScript or JavaScript project.
    No Bicep files at hand? [examples/bicep](examples/bicep) holds a realistic multi-file deployment to try.
 3. Run **Dependinator: Open** from the command palette, or click the
@@ -97,7 +97,7 @@ drag to pan, and press `Ctrl+F` to find a node by name. The **Help** button in
 the app bar opens the [user guide](https://dependinator.com/help) with all
 keyboard and mouse controls.
 
-**Requirements:** a .NET solution (`.sln`) with C# projects, Azure Bicep files, or a TypeScript
+**Requirements:** a .NET solution (`.sln` or `.slnx`) with C# projects, Azure Bicep files, or a TypeScript
 or JavaScript project. Parsing C# needs a [.NET SDK](https://dotnet.microsoft.com/download) that
 can build the solution, since Roslyn loads the projects with the SDK's MSBuild. Bicep needs no
 local `dotnet` or `bicep` installation; the extension bundles a self-contained language server
@@ -123,7 +123,7 @@ ones sketched by hand, but does not parse code itself.
 
 Dependinator is in **beta**. The core works end to end, but expect rough edges
 and the occasional breaking change between versions. Today it supports C#
-solutions (`.sln` files with C# projects), Azure Bicep deployments (`.bicep`
+solutions (`.sln` or `.slnx` files with C# projects), Azure Bicep deployments (`.bicep`
 files with their local modules, drawn with Azure icons) and, as a first version,
 TypeScript and JavaScript projects; other languages are not parsed yet.
 

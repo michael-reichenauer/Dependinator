@@ -5,8 +5,9 @@ namespace Dependinator.Core.Shared;
 [Rpc]
 interface IWorkspaceFileService
 {
-    // The workspace's parseable model files: every .sln, then every .bicep entry point, then
-    // every TypeScript or JavaScript project (its tsconfig.json, jsconfig.json or package.json).
+    // The workspace's parseable model files: every solution (.sln or .slnx), then every .bicep
+    // entry point, then every TypeScript or JavaScript project (its tsconfig.json, jsconfig.json
+    // or package.json).
     Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
 
@@ -42,7 +43,7 @@ class WorkspaceFileService : IWorkspaceFileService
         // level solution comes first regardless of enumeration order; callers treat the first
         // path as the workspace model (e.g. the model the VS Code extension starts on). The
         // TypeScript and JavaScript projects come last (see ScriptProjects).
-        var solutionPaths = OrderShallowestFirst(EnumerateFiles(rootPaths, "*.sln"));
+        var solutionPaths = OrderShallowestFirst(SolutionFiles(EnumerateFiles(rootPaths, "*.sln*")));
         var bicepPaths = BicepEntryPoints.Find(
             OrderShallowestFirst(EnumerateFiles(rootPaths, "*.bicep")),
             File.ReadAllText
@@ -61,6 +62,19 @@ class WorkspaceFileService : IWorkspaceFileService
         );
         Log.Info("Model file paths", solutionPaths, bicepPaths, scriptPaths);
         return [.. solutionPaths, .. bicepPaths, .. scriptPaths];
+    }
+
+    // The solutions among the paths: .sln and .slnx files, but of an .sln with an .slnx of the same
+    // name in its folder only the .slnx. Migrating a solution (dotnet sln migrate, Visual Studio's
+    // Save As .slnx) leaves the old .sln beside the new one, and both are the same projects.
+    internal static IEnumerable<string> SolutionFiles(IEnumerable<string> paths)
+    {
+        var solutions = paths.Where(ModelPaths.IsSolution).ToList();
+        var migrated = solutions
+            .Where(ModelPaths.IsSlnx)
+            .Select(path => path[..^1])
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return solutions.Where(path => !migrated.Contains(path));
     }
 
     static List<string> OrderShallowestFirst(IEnumerable<string> paths) =>

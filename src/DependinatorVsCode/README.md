@@ -74,7 +74,7 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 
 ## Requirements
 
-- A workspace containing a **.NET solution (`.sln`)** with C# projects, an
+- A workspace containing a **.NET solution (`.sln` or `.slnx`)** with C# projects, an
   **Azure Bicep deployment** (a `.bicep` entry file and its local modules), or a
   **TypeScript or JavaScript project** (a `tsconfig.json`, `jsconfig.json` or
   `package.json`). Dependinator parses it to build the dependency map.
@@ -87,7 +87,7 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 
 ## Getting started
 
-1. Install the extension and open a folder containing a `.sln` or `.bicep` file.
+1. Install the extension and open a folder containing a `.sln`, `.slnx` or `.bicep` file.
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
    **Dependinator: Open**, or click the Dependinator icon
    <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />

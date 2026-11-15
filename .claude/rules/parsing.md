@@ -44,6 +44,13 @@ paths:
   default, and every union was a false "feature is in Preview" compile error that no fix cleared
   (Nov 11, after the move to `LangVersion` 15). `Compiler.WithUsableLanguageVersion` compiles such
   projects with `LanguageVersion.Preview`; `CompilerTests` guards it on Dependinator.Mcp.
+- **Solutions are `.sln` or `.slnx`** (`ModelPaths.IsSolution`): `MSBuildWorkspace` reads an
+  `.slnx` with its own `Microsoft.VisualStudio.SolutionPersistence`, not the user's SDK, and
+  Dependinator.sln gave the same 11,067 nodes in both formats (Nov 15). Both ignore solution
+  folders and configurations. `WorkspaceFileService.SolutionFiles` hides an `.sln` that has an
+  `.slnx` of the same name beside it (a migration leaves both), or a workspace model would hold
+  every project twice. The root is named after the file (`App*slnx`), so switching formats
+  starts a new model with its own layout.
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.

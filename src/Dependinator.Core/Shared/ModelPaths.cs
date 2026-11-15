@@ -1,6 +1,6 @@
 namespace Dependinator.Core.Shared;
 
-// Classifies model paths: a C# solution (.sln), a Bicep deployment (.bicep entry file) or a
+// Classifies model paths: a C# solution (.sln or .slnx), a Bicep deployment (.bicep entry file) or a
 // TypeScript/JavaScript project (its tsconfig.json, jsconfig.json or package.json) refers to
 // sources that can be parsed, and so does a workspace model, which is made of several of them;
 // any other path is a manually designed model that must never be parsed.
@@ -25,7 +25,11 @@ static class ModelPaths
     public static string WorkspaceFolder(string workspacePath) =>
         workspacePath[..^FileName(workspacePath).Length].TrimEnd('/', '\\');
 
-    public static bool IsSolution(string path) => path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
+    // A .NET solution, in the classic .sln format or the XML .slnx format
+    public static bool IsSolution(string path) =>
+        path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) || IsSlnx(path);
+
+    public static bool IsSlnx(string path) => path.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase);
 
     public static bool IsBicep(string path) => path.EndsWith(".bicep", StringComparison.OrdinalIgnoreCase);
 

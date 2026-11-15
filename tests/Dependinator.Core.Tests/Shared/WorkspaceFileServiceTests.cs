@@ -40,6 +40,44 @@ public class WorkspaceFileServiceTests
         }
     }
 
+    // An .slnx is listed like an .sln, but an .sln with an .slnx of the same name beside it (what a
+    // migration leaves) only once, as the .slnx.
+    [Fact]
+    public async Task GetModelFilePathsAsync_ShouldListSlnxSolutions_AndHideTheSlnTheyReplace()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"dep-workspace-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "tools"));
+            Directory.CreateDirectory(Path.Combine(root, "old"));
+            await File.WriteAllTextAsync(Path.Combine(root, "App.sln"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "App.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "tools", "Tools.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "old", "Old.sln"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "old", "App.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "notes.sln.txt"), "");
+
+            var service = new WorkspaceFileService();
+            service.SetWorkspaceFolders([root]);
+
+            var paths = await service.GetModelFilePathsAsync();
+
+            Assert.Equal(
+                [
+                    Path.Combine(root, "App.slnx"),
+                    Path.Combine(root, "old", "App.slnx"),
+                    Path.Combine(root, "old", "Old.sln"),
+                    Path.Combine(root, "tools", "Tools.slnx"),
+                ],
+                paths
+            );
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task GetModelFilePathsAsync_ShouldListTypeScriptAndJavaScriptProjects_AfterTheOthers()
     {

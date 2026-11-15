@@ -18,7 +18,7 @@ own notes, icons and hand-drawn nodes on top.
 | | |
 |---|---|
 | **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for viewing synced models from anywhere and making small adjustments (with demo models to get started) |
-| **Languages it reads** | C# (`.sln` with C# projects, through Roslyn), Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler), and TypeScript and JavaScript (a `tsconfig.json`, `jsconfig.json` or `package.json` project, through the TypeScript compiler in a Node.js helper process) |
+| **Languages it reads** | C# (`.sln` or `.slnx` with C# projects, through Roslyn), Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler), and TypeScript and JavaScript (a `tsconfig.json`, `jsconfig.json` or `package.json` project, through the TypeScript compiler in a Node.js helper process) |
 | **Stack** | .NET 10 (built with the .NET 11 SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in, the Anthropic and Model Context Protocol C# SDKs for the AI features |
 | **Size** | About 58k lines of product code, three quarters of it in the shared UI library; about 34k lines of tests |
 | **Tests** | About 1,270 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
