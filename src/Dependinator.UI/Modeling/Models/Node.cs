@@ -58,6 +58,10 @@ class Node : IItem
     public FileSpan? FileSpanOrParentSpan => // Allow using a few levels up
         fileSpan ?? Parent?.fileSpan ?? Parent?.Parent?.fileSpan ?? Parent?.Parent?.Parent?.fileSpan;
 
+    // For a project node: the folder the project is in (Parsing.NodeProperties.ProjectFolder).
+    // Saved relative to the model's folder (FileSpanPaths).
+    public string? ProjectFolder { get; private set; }
+
     public NodeType Type
     {
         get => type;
@@ -216,6 +220,7 @@ class Node : IItem
                 Signature = Signature,
                 FileSpan = fileSpan,
                 IconName = IconName,
+                ProjectFolder = ProjectFolder,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -247,6 +252,7 @@ class Node : IItem
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
         IconName = dto.Properties.IconName;
+        ProjectFolder = dto.Properties.ProjectFolder;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -277,6 +283,7 @@ class Node : IItem
         );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
         IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
+        ProjectFolder = node.Properties.ProjectFolder ?? ProjectFolder;
     }
 
     // Sets the user's own state and passes the resulting state down to the descendants.

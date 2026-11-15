@@ -207,6 +207,7 @@ class SourceParser : ISourceParser
                     Parent = parentName,
                     IsExecutable = isExecutable,
                     FileSpan = fileSpan,
+                    ProjectFolder = Path.GetDirectoryName(projectPath),
                 }
             ),
             null

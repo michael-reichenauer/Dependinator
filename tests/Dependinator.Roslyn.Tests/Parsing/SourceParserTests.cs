@@ -290,6 +290,9 @@ public class SourceParserTests(RoslynFixture fixture)
             var nodes = items.Nodes().ToList();
             Assert.Contains(nodes, n => n.Name == "App*slnx" && n.Properties.Type == NodeType.Solution);
             Assert.Contains(nodes, n => n.Name.EndsWith("Lib.Greeter"));
+            // The project's folder, where a workspace model shows a source found in it
+            var project = Assert.Single(nodes, n => n.Properties.Type == NodeType.Assembly);
+            Assert.Equal(Path.Combine(dir, "src", "Lib"), project.Properties.ProjectFolder);
         }
         finally
         {

@@ -39,7 +39,8 @@ project works.
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
   VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
-  for the whole workspace: the sources the user ticks, each with its own parser, in one diagram.
+  for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
+  each inside the source whose folder holds it.
   Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
   Line labels that are quieter and limited in length, and can be dragged along their line.
 
@@ -163,7 +164,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   brings what the user did in its own model: where its nodes are, their display names, colors,
   icons and hidden nodes, its notes and zones, and its routed and labelled lines (Nov 13,
   phase 3). In VS Code a workspace with several sources that was never opened before starts
-  on the whole workspace (Nov 13, phase 4). Design and what is left in `WORKSPACE-MODEL.md`.
+  on the whole workspace (Nov 13, phase 4). A source is shown inside the source whose folder
+  holds it, in the deepest C# project or other source's root whose folder it is in, instead of
+  beside it: here the extension is in the solution, and the TypeScript helper in the
+  TypeScriptParser project (Nov 15, Michael's pick of three options, which works without any
+  solution file). Design and what is left in `WORKSPACE-MODEL.md`.
 
 ## Viewing, navigation and analysis
 

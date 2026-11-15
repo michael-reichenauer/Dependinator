@@ -612,6 +612,9 @@ class ModelService : IModelService, IDisposable
 
             using (var model = modelMgr.UseModel())
             {
+                // A parsed source's root stays where the model shows it (SourceNesting)
+                if (isWorkspace)
+                    items = SourceNesting.KeepParents(model, items);
                 model.Path = path;
                 model.UpdateStamp = DateTime.UtcNow;
                 // Each parse reports all problems of what it parsed, so they replace the last
@@ -637,6 +640,8 @@ class ModelService : IModelService, IDisposable
                     RequireChildrenLayout(model);
                 foreach (var (rootName, sourceModel) in sourceLayouts)
                     SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
+                if (isWorkspace)
+                    NestSources(model);
                 PassThroughService.UpdatePassThroughFlags(model);
             }
 
@@ -772,13 +777,31 @@ class ModelService : IModelService, IDisposable
             inModelPaths: [.. parsedPaths, .. keptPaths]
         );
 
+        // The roots of the other sources, which can be shown inside a kept one, go by their own
+        var allRoots = model
+            .WorkspaceSources.Select(s => s.RootName)
+            .OfType<string>()
+            .ToHashSet(StringComparer.Ordinal);
         bool IsFailed(SourceChoice c) => parsedPaths.Contains(c.Path) && !rootNames.ContainsKey(c.Path);
         foreach (var choice in choices.Where(c => IsFailed(c) || keptPaths.Contains(c.Path)))
         {
             if (SourceChoices.Saved(model.WorkspaceSources, choice.Key)?.RootName is { } rootName)
-                modelStructureService.KeepNodeTree(model, rootName);
+                modelStructureService.KeepNodeTree(model, rootName, allRoots);
         }
     }
+
+    // Shows each source of a workspace model inside the source whose folder holds it
+    void NestSources(IModel model) =>
+        SourceNesting.Apply(
+            model,
+            modelStructureService,
+            modelListService.WorkspaceFolder,
+            [
+                .. model
+                    .WorkspaceSources.Where(s => s.IsIncluded && s.IsInModel && s.RootName is not null)
+                    .Select(s => new SourceNesting.Source(s.Path, s.RootName!)),
+            ]
+        );
 
     async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
     {

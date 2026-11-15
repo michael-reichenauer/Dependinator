@@ -15,7 +15,13 @@ interface IStructureService
 
     // Keeps a node, all nodes in it and their links through the next ClearNotUpdated, as if
     // the parse had just produced them: a source of a workspace model that was not parsed anew.
-    void KeepNodeTree(IModel model, string nodeName);
+    // The nodes named in otherRoots are left out with all in them: the roots of other sources,
+    // which a workspace model can show inside this one (SourceNesting).
+    void KeepNodeTree(IModel model, string nodeName, IReadOnlySet<string>? otherRoots = null);
+
+    // Moves a node with everything in it into another parent ("" for the top), keeping its name
+    // and links. False when either is missing, or the parent is the node or inside it.
+    bool MoveNode(IModel model, string nodeName, string parentName);
     void SetNodeDto(IModel model, NodeDto nodeDto);
     void SetLinkDto(IModel model, LinkDto linkDto);
     void SetLineLayoutDto(IModel model, LineDto lineLayoutDto);
@@ -228,6 +234,18 @@ class StructureService(ILineService linesService) : IStructureService
 
         var parent = GetOrCreateParent(model, nodeDto);
 
+        // A node saved after one of its children is there already, as the stand-in parent that
+        // child made (a root moved into a node made after it, SourceNesting): it becomes the
+        // saved node, with the children it holds.
+        if (model.Nodes.TryGetValue(NodeId.FromName(nodeDto.Name), out var existing))
+        {
+            existing.SetFromDto(nodeDto);
+            existing.UpdateStamp = model.UpdateStamp;
+            if (existing.Parent != parent && !parent.IsAtOrInside(existing))
+                MoveNodeToParent(model, existing, parent);
+            return;
+        }
+
         var node = new Models.Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
         node.UpdateStamp = model.UpdateStamp;
@@ -367,12 +385,12 @@ class StructureService(ILineService linesService) : IStructureService
             line.ClearDescription();
     }
 
-    public void KeepNodeTree(IModel model, string nodeName)
+    public void KeepNodeTree(IModel model, string nodeName, IReadOnlySet<string>? otherRoots = null)
     {
         if (!model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var root))
             return;
 
-        foreach (var node in root.DescendantsAndSelfPreOrder())
+        foreach (var node in root.DescendantsAndSelfPreOrder(n => otherRoots?.Contains(n.Name) == true))
         {
             node.UpdateStamp = model.UpdateStamp;
             foreach (var link in node.SourceLinks)
@@ -386,6 +404,22 @@ class StructureService(ILineService linesService) : IStructureService
         }
     }
 
+    public bool MoveNode(IModel model, string nodeName, string parentName)
+    {
+        if (
+            !model.Nodes.TryGetValue(NodeId.FromName(nodeName), out var node)
+            || !model.Nodes.TryGetValue(NodeId.FromName(parentName), out var parent)
+            || node.IsRoot
+            || parent.IsAtOrInside(node)
+        )
+            return false;
+        if (node.Parent == parent)
+            return true;
+
+        MoveNodeToParent(model, node, parent);
+        return true;
+    }
+
     void MoveNodeToParent(IModel model, Models.Node node, Models.Node parent)
     {
         // Link lines need to be re-adjusted, so first remove all links and lines, also those of the
@@ -394,6 +428,25 @@ class StructureService(ILineService linesService) : IStructureService
             .SelectMany(n => n.SourceLines.Concat(n.TargetLines).Concat(n.DirectLines))
             .SelectMany(line => line.Links)
             .Distinct()
+            .ToList();
+
+        // What a line keeps when it comes back: its description, and the route of a line inside
+        // the node, whose points are in a node that moves along (a line's label waits by itself,
+        // Model.RemoveLine)
+        var kept = links
+            .SelectMany(link => link.Lines)
+            .Distinct()
+            .Select(line =>
+                (
+                    line.Id,
+                    line.Description,
+                    line.DescriptionUpdateStamp,
+                    Points: line.Source.IsAtOrInside(node) && line.Target.IsAtOrInside(node)
+                        ? line.SegmentPoints.ToList()
+                        : null,
+                    line.IsSegmentsUserSet
+                )
+            )
             .ToList();
 
         links.ForEach(model.RemoveLink);
@@ -407,6 +460,18 @@ class StructureService(ILineService linesService) : IStructureService
 
         // Re-add link and lines again
         links.ForEach(l => AddLink(model, l));
+
+        foreach (var line in kept)
+        {
+            if (!model.Lines.TryGetValue(line.Id, out var newLine))
+                continue;
+            newLine.SetDescription(line.Description, line.DescriptionUpdateStamp);
+            if (line.Points is not null)
+            {
+                newLine.SetSegmentPoints(line.Points);
+                newLine.IsSegmentsUserSet = line.IsSegmentsUserSet;
+            }
+        }
     }
 
     void AddLink(IModel model, Models.Link link)

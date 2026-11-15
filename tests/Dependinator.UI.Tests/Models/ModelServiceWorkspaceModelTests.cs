@@ -589,9 +589,17 @@ public class ModelServiceWorkspaceModelTests
 
         AssertSolutionLayout("App*sln");
         // The layout is kept, not done again on first render
-        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].IsChildrenLayoutRequired));
+        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("Core")].IsChildrenLayoutRequired));
         // The web project had no model of its own
         Assert.Equal(Rect.None, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web.main*ts")].Boundary));
+        // It is in the solution's folder, so it is shown in the solution, which places it
+        modelMgr.WithModel(m =>
+        {
+            var web = m.Nodes[NodeId.FromName("web")];
+            Assert.Equal("App*sln", web.Parent.Name);
+            Assert.Equal(Rect.None, web.Boundary);
+            Assert.True(web.Parent.IsChildrenLayoutRequired);
+        });
     }
 
     // The solution was migrated to .slnx after the user laid it out as an .sln: the .slnx has no
@@ -880,6 +888,127 @@ public class ModelServiceWorkspaceModelTests
         parserService.Verify(p => p.ParseAsync(It.IsAny<string>(), It.IsAny<SolutionParseOptions>()), Times.Never);
     }
 
+    // A source is shown inside the source whose folder holds it: in the deepest project whose
+    // folder holds it, or else in the other source's root (SourceNesting)
+    [Fact]
+    public async Task LoadAsync_ShouldShowASource_InTheProjectWhoseFolderHoldsIt()
+    {
+        sourceItems[Solution] = [Root("App*sln"), Project("Core", "/repo/src", "App*sln"), Node("Core.Type")];
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath, sourceChoices: Choices(true, true, true)));
+
+        Assert.Equal("Core", ParentOf("web"));
+        // The sample is in the solution's folder, but in no project's
+        Assert.Equal("App*sln", ParentOf("sample"));
+        Assert.Equal("", ParentOf("App*sln"));
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldShowSourcesSideBySide_WhenInTheSameFolder()
+    {
+        const string Tool = "/repo/package.json";
+        sourceItems[Tool] = [Root("tool"), Node("tool.index*js")];
+        modelListService.Setup(m => m.WorkspaceSourcePaths).Returns([Solution, Tool]);
+        using var modelService = CreateModelService();
+
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        Assert.Equal("", ParentOf("tool"));
+        Assert.Equal("", ParentOf("App*sln"));
+    }
+
+    // A refresh of the nested source leaves it where it is, with its place in the solution
+    [Fact]
+    public async Task RefreshChangedAsync_ShouldKeepANestedSourceInPlace()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        var place = new Rect(200, 100, 100, 100);
+        modelMgr.WithModel(m =>
+        {
+            m.Nodes[NodeId.FromName("web")].Boundary = place;
+            m.Nodes[NodeId.FromName("App*sln")].IsChildrenLayoutRequired = false;
+        });
+
+        sourceItems[Web] = [Root("web"), Node("web.other*ts")];
+        AssertOk(await modelService.RefreshChangedAsync(["script"]));
+
+        Assert.Equal([Web], parsedOptions[1].Sources);
+        Assert.Equal("App*sln", ParentOf("web"));
+        Assert.Equal(place, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web")].Boundary));
+        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName("App*sln")].IsChildrenLayoutRequired));
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.other*ts"], ParsedNodeNames());
+    }
+
+    // The solution that held the web project is taken out of the model: the web project is
+    // shown at the top, and nothing of the solution is left
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldShowASourceAtTheTop_WhenItsHolderIsLeftOut()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.Equal("App*sln", ParentOf("web"));
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(false, true, false)));
+
+        Assert.Equal("", ParentOf("web"));
+        Assert.Equal(Rect.None, modelMgr.WithModel(m => m.Nodes[NodeId.FromName("web")].Boundary));
+        Assert.Equal(["web", "web.main*ts"], ParsedNodeNames());
+    }
+
+    // The web project is taken out while the solution it is shown in is kept (not parsed): what
+    // the solution keeps is its own, not the web project inside it
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldRemoveASourceShownInAKeptOne()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        AssertOk(await modelService.SetSourceChoicesAsync(Choices(true, false, false)));
+
+        Assert.Single(parsedOptions); // Only taken out: the solution is kept as it is, not parsed
+        Assert.Equal(["App*sln", "Core", "Core.Type"], ParsedNodeNames());
+    }
+
+    // The solution fails: its nodes are kept, and the web project stays inside it
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepANestedSourceInside_WhenItsHolderFails()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        sourceItems[Solution] = null;
+        AssertOk(await modelService.RefreshAsync());
+
+        Assert.Equal("App*sln", ParentOf("web"));
+        Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.main*ts"], ParsedNodeNames());
+    }
+
+    // The model is opened again from its save and the solution then fails: the project's folder
+    // was saved, so the web project stays in the project
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepANestedSourceInItsProject_AfterAReopen_WhenItsHolderFails()
+    {
+        sourceItems[Solution] = [Root("App*sln"), Project("Core", "/repo/src", "App*sln"), Node("Core.Type")];
+        using (var modelService = CreateModelService())
+        {
+            AssertOk(await modelService.LoadAsync(ModelPath));
+            Assert.Equal("Core", ParentOf("web"));
+            var saved = Assert.IsType<ModelDto>(modelService.GetCurrentModelDto().Value);
+            persistenceService.Setup(p => p.ReadAsync(ModelPath)).ReturnsAsync(saved);
+        }
+
+        sourceItems[Solution] = null;
+        using var reopened = CreateModelService();
+        AssertOk(await reopened.LoadAsync(ModelPath));
+        AssertOk(await reopened.RefreshAsync());
+
+        Assert.Equal("Core", ParentOf("web"));
+    }
+
+    string ParentOf(string name) => modelMgr.WithModel(m => m.Nodes[NodeId.FromName(name)].Parent.Name);
+
     // The names of the parsed nodes (not the Externals, which the model makes up), sorted
     List<string> ParsedNodeNames() =>
         modelMgr.WithModel(m =>
@@ -900,6 +1029,20 @@ public class ModelServiceWorkspaceModelTests
 
     static Item Node(string name, string? parent = null) =>
         new(new ParsedNode(name, new() { Type = NodeType.ClassType, Parent = parent }), null);
+
+    static Item Project(string name, string folder, string parent) =>
+        new(
+            new ParsedNode(
+                name,
+                new()
+                {
+                    Type = NodeType.Assembly,
+                    Parent = parent,
+                    ProjectFolder = folder,
+                }
+            ),
+            null
+        );
 
     static Item Link(string source, string target) => new(null, new ParsedLink(source, target, new()));
 

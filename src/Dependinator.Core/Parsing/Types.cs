@@ -76,6 +76,10 @@ class NodeProperties
     // A user-selected custom icon in the UI always takes precedence over this.
     public string? IconName { get; init; }
 
+    // For a project node (a C# project): the folder the project is in, as the parser read it. A
+    // workspace model shows a source whose folder is below it inside this node (SourceNesting).
+    public string? ProjectFolder { get; init; }
+
     // A copy with another parent. Every property above is copied: add a new one here too.
     public NodeProperties WithParent(string parent) =>
         new()
@@ -88,6 +92,7 @@ class NodeProperties
             IsExecutable = IsExecutable,
             FileSpan = FileSpan,
             IconName = IconName,
+            ProjectFolder = ProjectFolder,
         };
 }
 

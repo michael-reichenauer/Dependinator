@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
 
@@ -303,7 +304,7 @@ class Model : IModel
                     Source = p.Source,
                 }),
             ],
-            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
+            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(ToSaved(n.ToDto()), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
@@ -440,6 +441,16 @@ class Model : IModel
             : $"{a.From}\n{a.To}";
         return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
     }
+
+    // A project's folder is saved only in a workspace model, the one that nests sources by it
+    // (SourceNesting): elsewhere it would be a path of this machine that nothing reads
+    NodeDto ToSaved(NodeDto dto) =>
+        dto.Properties.ProjectFolder is null || ModelPaths.IsWorkspace(Path)
+            ? dto
+            : dto with
+            {
+                Properties = dto.Properties with { ProjectFolder = null },
+            };
 
     static RuleDto ToDto(ArchitectureRule r) =>
         new()
