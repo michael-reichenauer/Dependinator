@@ -1007,6 +1007,66 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal("Core", ParentOf("web"));
     }
 
+    // "Show Inside": the web project is shown at the top, saved with the model, and stays
+    // there through a refresh; Automatic brings it back into the solution
+    [Fact]
+    public async Task SetSourcePlace_ShouldShowTheSourceWhereTheUserChose_ThroughARefresh()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.Equal("App*sln", ParentOf("web"));
+        var places = modelService.GetSourcePlaces("web");
+        Assert.NotNull(places);
+        Assert.Null(places.ShownIn);
+        Assert.Equal("App*sln", places.AutomaticParent);
+        Assert.Equal("App*sln", Assert.Single(places.Places).NodeName);
+
+        modelService.SetSourcePlace("web", "");
+        Assert.Equal("", ParentOf("web"));
+        Assert.Equal("", modelService.GetSourcePlaces("web")!.ShownIn);
+        Assert.Equal(
+            "",
+            modelMgr.WithModel(m => m.SerializeToDto()).WorkspaceSources.Single(s => s.RootName == "web").ShownIn
+        );
+
+        AssertOk(await modelService.RefreshAsync());
+        Assert.Equal("", ParentOf("web"));
+
+        modelService.SetSourcePlace("web", null);
+        Assert.Equal("App*sln", ParentOf("web"));
+    }
+
+    [Fact]
+    public async Task GetSourcePlaces_ShouldBeNull_ForANodeThatIsNoSourcesRoot()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+
+        Assert.Null(modelService.GetSourcePlaces("Core"));
+        Assert.False(modelService.IsSourceRoot("Core"));
+        Assert.True(modelService.IsSourceRoot("App*sln"));
+    }
+
+    // A place chosen in the sources dialog moves the source at once, without a parse
+    [Fact]
+    public async Task SetSourceChoicesAsync_ShouldShowASourceWhereItIsChosen_WithoutAParse()
+    {
+        using var modelService = CreateModelService();
+        AssertOk(await modelService.LoadAsync(ModelPath));
+        Assert.Equal(Web, Assert.Single(modelService.GetSourcePlacesByPath().Keys, path => path == Web));
+
+        var choices = modelService.GetSourceChoices(ModelPath);
+        AssertOk(
+            await modelService.SetSourceChoicesAsync([
+                .. choices.Select(c => c.Path == Web ? c with { ShownIn = "" } : c),
+            ])
+        );
+
+        Assert.Single(parsedOptions);
+        Assert.Equal("", ParentOf("web"));
+        Assert.Equal("", modelService.GetSourceChoices(ModelPath).Single(c => c.Path == Web).ShownIn);
+    }
+
     string ParentOf(string name) => modelMgr.WithModel(m => m.Nodes[NodeId.FromName(name)].Parent.Name);
 
     // The names of the parsed nodes (not the Externals, which the model makes up), sorted

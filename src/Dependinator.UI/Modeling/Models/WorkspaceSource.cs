@@ -7,5 +7,13 @@ namespace Dependinator.UI.Modeling.Models;
 // source's nodes as of its last parse (null before it): what the model keeps when a later parse
 // of the source fails. IsInModel says that the last refresh had the source in the model, parsed
 // then (it may have failed) or kept as it was: a refresh after a change of files parses a kind
-// of source only when files of it changed, or the model gets or loses a source of it.
-record WorkspaceSource(string Path, bool IsIncluded, string? RootName = null, bool IsInModel = false);
+// of source only when files of it changed, or the model gets or loses a source of it. ShownIn
+// is where the user chose to show the source (SourceNesting): null for Automatic, "" for the
+// top, else the name of a node of another source.
+record WorkspaceSource(
+    string Path,
+    bool IsIncluded,
+    string? RootName = null,
+    bool IsInModel = false,
+    string? ShownIn = null
+);

@@ -12,8 +12,12 @@ namespace Dependinator.UI.Modeling;
 // solution. A root holds the folders below its own, so two sources in one folder stay side by
 // side; a project holds its own folder too for a source of another kind (a package.json beside
 // a .csproj is the project's, a second solution in its folder is not), and goes before a root
-// of the same folder. A source at the workspace folder (a monorepo's
-// package.json) holds every other one below it.
+// of the same folder. A source at the workspace folder (a monorepo's package.json) holds every
+// other one below it.
+//
+// The user can choose another place for a source (Source.ShownIn, WorkspaceSource.ShownIn):
+// the top, or a node of another source (its root or a project, Places). A choice whose node is
+// not in the model, or is the source's own, is Automatic until the node is back.
 //
 // Decided anew after each parse on the whole model, so that it holds for the sources a refresh
 // did not parse too, and a source whose holder is left out of the model goes back to the top.
@@ -22,8 +26,9 @@ namespace Dependinator.UI.Modeling;
 // it: the root is placed anew in its new parent.
 static class SourceNesting
 {
-    // A source of the model: its key (WorkspaceSources.Key) and its root node
-    public record Source(string Key, string RootName);
+    // A source of the model: its key (WorkspaceSources.Key), its root node, and where the user
+    // chose to show it (null: Automatic, "": at the top, else a node's name)
+    public record Source(string Key, string RootName, string? ShownIn = null);
 
     // The parent for the root of each source that is in the model, by root name ("" for the top)
     public static IReadOnlyDictionary<string, string> Parents(
@@ -74,33 +79,86 @@ static class SourceNesting
             }
         }
 
-        // A source would end up inside itself only through a C# project outside its solution's
-        // folder (a solution in src/app holding the project src/app/../lib): it stays at the top.
+        // The user's choices, and the source that holds each parent (-1 for none)
+        var parentName = new string[roots.Count];
+        var parentSource = new int[roots.Count];
+        var rootIndex = roots
+            .Select((source, index) => (source.RootName, index))
+            .ToDictionary(r => r.RootName, r => r.index);
+        int OwnerOf(Node node) =>
+            node.AncestorsAndSelf()
+                .Select(n => rootIndex.GetValueOrDefault(n.Name, -1))
+                .FirstOrDefault(i => i >= 0, -1);
         for (var index = 0; index < roots.Count; index++)
         {
-            var source = index;
-            for (var step = 0; step < roots.Count && parentOf[source] >= 0; step++)
+            (parentName[index], parentSource[index]) =
+                parentOf[index] < 0 ? ("", -1) : (holders[parentOf[index]].Name, holders[parentOf[index]].Source);
+            if (roots[index].ShownIn is not { } shownIn)
+                continue;
+            if (shownIn == "")
+                (parentName[index], parentSource[index]) = ("", -1);
+            else if (
+                model.Nodes.TryGetValue(NodeId.FromName(shownIn), out var node)
+                && !node.IsRoot
+                && OwnerOf(node) is var owner
+                && owner != index
+            )
+                (parentName[index], parentSource[index]) = (shownIn, owner);
+        }
+
+        // Sources inside each other (through a C# project outside its solution's folder, a
+        // solution in src/app holding src/app/../lib, or through the user's choices): one of them
+        // goes to the top, the first that is placed automatically, else the first.
+        for (var index = 0; index < roots.Count; index++)
+        {
+            List<int> loop = [index];
+            for (
+                var source = parentSource[index];
+                source >= 0 && loop.Count <= roots.Count;
+                source = parentSource[source]
+            )
             {
-                source = holders[parentOf[source]].Source;
-                if (source == index)
+                if (source != index)
                 {
-                    parentOf[index] = -1;
-                    break;
+                    loop.Add(source);
+                    continue;
                 }
+                var top = loop.FirstOrDefault(i => roots[i].ShownIn is null, index);
+                (parentName[top], parentSource[top]) = ("", -1);
+                break;
             }
         }
 
         return roots
-            .Select(
-                (source, index) => (source.RootName, Parent: parentOf[index] < 0 ? "" : holders[parentOf[index]].Name)
-            )
+            .Select((source, index) => (source.RootName, Parent: parentName[index]))
             .ToDictionary(root => root.RootName, root => root.Parent, StringComparer.Ordinal);
     }
 
-    // Moves the root of each source to its parent (Parents), where it is placed anew. A move
+    // The nodes the source with the root can be shown in: the roots of the other sources in the
+    // model and their projects, in the order of the sources
+    public static IReadOnlyList<SourcePlace> Places(IModel model, IReadOnlyList<Source> sources, string rootName)
+    {
+        var rootNames = sources.Select(source => source.RootName).ToHashSet(StringComparer.Ordinal);
+        List<SourcePlace> places = [];
+        foreach (var source in sources.DistinctBy(source => source.RootName))
+        {
+            if (source.RootName == rootName || !model.Nodes.TryGetValue(NodeId.FromName(source.RootName), out var root))
+                continue;
+            places.Add(new(root.Name, root.DisplayName));
+            foreach (var node in root.DescendantsAndSelfPreOrder(n => rootNames.Contains(n.Name)).Skip(1))
+            {
+                if (node.ProjectFolder is not null && node.UpdateStamp == model.UpdateStamp)
+                    places.Add(new(node.Name, node.DisplayName, IsProject: true));
+            }
+        }
+        return places;
+    }
+
+    // Moves the root of each source to its parent (Parents), where it is placed anew, and says
+    // whether any moved. A move
     // that is not possible yet (into a node that is still inside the root, before that node's
     // own root has moved out) is tried again after the others.
-    public static void Apply(
+    public static bool Apply(
         IModel model,
         IStructureService structure,
         string workspaceFolder,
@@ -133,6 +191,7 @@ static class SourceNesting
         }
         if (isAnyMoved)
             model.BumpStructureVersion();
+        return isAnyMoved;
     }
 
     // A parsed source's root comes without a parent: it keeps the one the model gave it, so a

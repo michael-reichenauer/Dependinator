@@ -33,8 +33,12 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   Dependinator.TypeScriptParser project. Two sources in one folder stay side by side, but a
   source beside a C# project file (a package.json next to the .csproj) is inside that project,
   and a source at the workspace folder (a monorepo's package.json) holds the others. A source
-  whose holder is left out of the model is at the top again. The next phase lets the user choose
-  the place ("Shown in" in the sources dialog, "Show Inside …" on a source's root).
+  whose holder is left out of the model is at the top again. The user can choose another place
+  for a source (Nov 15, phase 2): "Shown in" in the sources dialog and "Show Inside" on a
+  source's root in the node menu offer Automatic (the place the folders give, named in the
+  item), the top level, and every other source with its projects. The choice is saved with the
+  model; a source chosen to be in a node that is not in the model is placed automatically until
+  the node is back. Only whole sources move: inside a source the parser owns the tree.
 - The model is beside the per-source models, not instead of them. VS Code starts a workspace
   on the model of it that was used last; a workspace with none (never opened in Dependinator)
   starts on the whole workspace, so the sources dialog comes first (phase 4, Michael's choice
@@ -128,6 +132,15 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   its automatic layouts redone, as when it is opened. An `.slnx` with no model of its own brings
   the model of the `.sln` it was migrated from (`SlnxMigration`), and takes over the `.sln`'s
   include choice once the `.sln` is gone.
+- **The user's place for a source.** `WorkspaceSource.ShownIn` (saved, null for Automatic, ""
+  for the top, else a node's name; carried through `SourceChoice.ShownIn` by the dialog) goes
+  before the folders in `SourceNesting.Parents`, unless its node is missing or the source's own
+  (the nearest root above the node). Two sources inside each other through choices or folders
+  are untangled by moving one to the top: the first that is placed automatically, so a choice
+  wins. `SourceNesting.Places` lists the other roots and their projects
+  (`ModelService.GetSourcePlaces`, `SourcePlaceItems` makes the list items). A choice made in the
+  dialog moves the source before the refresh (`SetSourceChoicesAsync`), since nothing may need
+  parsing; "Show Inside" needs no edit mode, like choosing the sources.
 - **A source inside another (`SourceNesting`).** After each parse (in `ModelService`, for the
   whole model, so also for the sources a refresh did not parse) every source's root is moved to
   the deepest holder of another source: that source's root (the folder of its key) or one of its

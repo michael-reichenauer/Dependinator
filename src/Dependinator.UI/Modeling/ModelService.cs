@@ -12,6 +12,15 @@ namespace Dependinator.UI.Modeling;
 
 record ModelInfo(string Path, Rect ViewRect, double Zoom);
 
+// Where a source of a workspace model is shown: the user's choice (null: Automatic, "": at the
+// top, else a node's name), where Automatic puts it ("" for the top), and the nodes it can be
+// shown in (SourceNesting.Places).
+public record SourcePlaces(string? ShownIn, string AutomaticParent, IReadOnlyList<SourcePlace> Places);
+
+// A node a source can be shown in: another source's root, or a project in it (listed below its
+// root, indented)
+public record SourcePlace(string NodeName, string Label, bool IsProject = false);
+
 interface IModelService
 {
     // Loads the model at the path (cached layout if any, else a fresh parse). includeTestProjects
@@ -41,6 +50,16 @@ interface IModelService
     // Changes which sources the open workspace model is made of, and parses the kinds of
     // sources that it then has more or fewer of.
     Task<Result> SetSourceChoicesAsync(IReadOnlyList<SourceChoice> choices);
+
+    // Where the source with the root node can be shown in the open workspace model, by source
+    // path (GetSourcePlacesByPath: each source in the model), or null for a node that is no
+    // source's root.
+    SourcePlaces? GetSourcePlaces(string rootName);
+    bool IsSourceRoot(string nodeName);
+    IReadOnlyDictionary<string, SourcePlaces> GetSourcePlacesByPath();
+
+    // Shows the source with the root node where the user chose (null: Automatic, "": at the top)
+    void SetSourcePlace(string rootName, string? shownIn);
 
     // Source files changed since the last successful parse, as reported while automatic refresh
     // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
@@ -467,9 +486,16 @@ class ModelService : IModelService, IDisposable
         if (!ModelPaths.IsWorkspace(modelMgr.ModelPath))
             return new Error("The open model is not a workspace model.");
 
-        modelMgr.WithModel(m => m.WorkspaceSources = SourceChoices.ToSaved(choices, m.WorkspaceSources));
+        var isMoved = false;
+        using (var model = modelMgr.UseModel())
+        {
+            model.WorkspaceSources = SourceChoices.ToSaved(choices, model.WorkspaceSources);
+            isMoved = NestSources(model); // A source's place can be all that changed
+        }
 
         // Save before refreshing, as for the test projects below: the refresh can fail.
+        if (isMoved)
+            applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         TriggerSave();
 
@@ -790,18 +816,77 @@ class ModelService : IModelService, IDisposable
         }
     }
 
-    // Shows each source of a workspace model inside the source whose folder holds it
-    void NestSources(IModel model) =>
-        SourceNesting.Apply(
-            model,
-            modelStructureService,
-            modelListService.WorkspaceFolder,
-            [
-                .. model
-                    .WorkspaceSources.Where(s => s.IsIncluded && s.IsInModel && s.RootName is not null)
-                    .Select(s => new SourceNesting.Source(s.Path, s.RootName!)),
-            ]
+    public SourcePlaces? GetSourcePlaces(string rootName) =>
+        modelMgr.WithModel(m =>
+            ModelPaths.IsWorkspace(m.Path)
+            && NestedSources(m) is var sources
+            && sources.Any(s => s.RootName == rootName)
+                ? PlacesOf(m, sources, rootName)
+                : null
         );
+
+    public bool IsSourceRoot(string nodeName) =>
+        modelMgr.WithModel(m => ModelPaths.IsWorkspace(m.Path) && NestedSources(m).Any(s => s.RootName == nodeName));
+
+    public IReadOnlyDictionary<string, SourcePlaces> GetSourcePlacesByPath() =>
+        modelMgr.WithModel(m =>
+        {
+            if (!ModelPaths.IsWorkspace(m.Path))
+                return new Dictionary<string, SourcePlaces>();
+            var sources = NestedSources(m);
+            var paths = SourceChoicesOf(m).ToDictionary(c => c.Key, c => c.Path, StringComparer.OrdinalIgnoreCase);
+            return sources
+                .Where(s => paths.ContainsKey(s.Key))
+                .DistinctBy(s => paths[s.Key])
+                .ToDictionary(s => paths[s.Key], s => PlacesOf(m, sources, s.RootName));
+        });
+
+    SourcePlaces PlacesOf(IModel model, IReadOnlyList<SourceNesting.Source> sources, string rootName)
+    {
+        var automatic = SourceNesting.Parents(
+            model,
+            modelListService.WorkspaceFolder,
+            [.. sources.Select(s => s.RootName == rootName ? s with { ShownIn = null } : s)]
+        );
+        return new SourcePlaces(
+            sources.First(s => s.RootName == rootName).ShownIn,
+            automatic.GetValueOrDefault(rootName, ""),
+            SourceNesting.Places(model, sources, rootName)
+        );
+    }
+
+    public void SetSourcePlace(string rootName, string? shownIn)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            if (!ModelPaths.IsWorkspace(model.Path))
+                return;
+            model.WorkspaceSources =
+            [
+                .. model.WorkspaceSources.Select(s =>
+                    s.RootName == rootName && s.IsIncluded && s.IsInModel ? s with { ShownIn = shownIn } : s
+                ),
+            ];
+            NestSources(model);
+        }
+
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+        TriggerSave();
+    }
+
+    // Shows each source of a workspace model inside the source whose folder holds it, or where
+    // the user chose, and says whether one moved
+    bool NestSources(IModel model) =>
+        SourceNesting.Apply(model, modelStructureService, modelListService.WorkspaceFolder, NestedSources(model));
+
+    // The sources in a workspace model, for SourceNesting
+    static IReadOnlyList<SourceNesting.Source> NestedSources(IModel model) =>
+        [
+            .. model
+                .WorkspaceSources.Where(s => s.IsIncluded && s.IsInModel && s.RootName is not null)
+                .Select(s => new SourceNesting.Source(s.Path, s.RootName!, s.ShownIn)),
+        ];
 
     async Task<Result<IReadOnlyList<Parsing.Item>>> ParseAsync(string path, Parsing.SolutionParseOptions options)
     {

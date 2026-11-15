@@ -224,6 +224,18 @@ else if (HasSelectedLine)
           </MudMenuItem>
         }
 
+        @* A workspace source's root can be shown elsewhere (SourceNesting): like choosing the
+           sources, this needs no edit mode, since it changes nothing inside a source. *@
+        @if (SelectedSourceRoot is { } sourceRoot)
+        {
+          <MudMenu Label="Show Inside" StartIcon="@MudBlazor.Icons.Material.Outlined.DriveFileMove"
+                   IconColor="Color.Secondary" Dense="true" PopoverClass="@MenuClass"
+                   title="Where this source is shown in the model of the whole workspace"
+                   data-testid="node-menu-show-inside">
+            @ShowInsideItems(sourceRoot)
+          </MudMenu>
+        }
+
         @* Everything below changes the model, so it needs edit mode (like dragging does). *@
         @if (viewOptions.IsEditingEnabled)
         {
@@ -406,6 +418,36 @@ else if (HasSelectedLine)
     if (TryGetSelectedNodeId(out var nodeId))
       hiddenNodeService.OpenPanel(nodeId);
   }
+  // The selected node when it is the root of a source in the workspace model
+  string? SelectedSourceRoot =>
+    !IsMultiSelected && TryGetSelectedNodeId(out var nodeId)
+    && modelMgr.WithModel(m => m.Nodes.TryGetValue(nodeId, out var node) ? node.Name : null) is { } name
+    && modelService.IsSourceRoot(name) ? name : null;
+
+  // The places of the source, read when the submenu opens: Automatic, the top, the other
+  // sources and their projects, the current one in bold
+  RenderFragment ShowInsideItems(string rootName) => __builder =>
+  {
+    if (modelService.GetSourcePlaces(rootName) is not { } places)
+      return;
+    var current = Modeling.SourcePlaceItems.ValueOf(places.ShownIn);
+    foreach (var item in Modeling.SourcePlaceItems.Of(places))
+    {
+      var value = item.Value;
+      <MudMenuItem OnClick="() => modelService.SetSourcePlace(rootName, Modeling.SourcePlaceItems.ShownInOf(value))"
+                   data-testid="show-inside-item" data-value="@value">
+        <span style="@ItemStyle(value == current, item.IsIndented)">@item.Label</span>
+      </MudMenuItem>
+      if (value == Modeling.SourcePlaceItems.Top)
+      {
+        <MudDivider />
+      }
+    }
+  };
+
+  static string ItemStyle(bool isCurrent, bool isIndented) =>
+    (isCurrent ? "font-weight:600;" : "") + (isIndented ? "padding-left:16px;" : "");
+
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
