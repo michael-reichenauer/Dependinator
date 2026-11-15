@@ -34,6 +34,14 @@
                 </MudTooltip>
                 @* Bends are added and moved on the line itself (its segment handles); a bend
                    dragged back straight or double-clicked goes away, this removes them all. *@
+                @* The line routed again around the nodes where they stand (hand-set bends go too). *@
+                @if (CanRerouteSelectedLine)
+                {
+                    <MudTooltip Text="Re-route line around the nodes">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Route" OnClick="RerouteLine"
+                                       data-testid="line-reroute" />
+                    </MudTooltip>
+                }
                 @if (HasSelectedLineBends)
                 {
                     <MudTooltip Text="Straighten line">
@@ -75,6 +83,18 @@
         if (!selectionService.SelectedId.IsLine)
             return;
         lineEditService.StraightenLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+        selectionService.UpdateSelectedPositionAsync().RunInBackground();
+    }
+
+    bool CanRerouteSelectedLine =>
+        selectionService.SelectedId.IsLine
+        && lineEditService.CanRerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+
+    void RerouteLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        lineEditService.RerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
         selectionService.UpdateSelectedPositionAsync().RunInBackground();
     }
 

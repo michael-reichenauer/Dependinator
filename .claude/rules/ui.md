@@ -280,7 +280,11 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   routed, and `FreeLineRouter` (layout columns are gone after a move) keeps its obstacles in a
   grid and caps the pieces per line: a random 150-node grid took ~50 ms per move on the dev
   host. Backward lines are drawn from the source's right edge through the source itself; the
-  router excludes a line's own ends, like the layered layout.
+  router excludes a line's own ends, like the layered layout. "Re-route line" (line toolbar)
+  and "Reset Lines" (node menu, one level: the lines between the node's children, so a line
+  between the root's children can only be re-routed one by one) share `LineRoutes` with the
+  move; they use `LinePointsCommand(..., isLayoutSet: true)`, which hands hand-set lines back
+  to the layout (`IsSegmentsUserSet` false) as one undo step.
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
   `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.
