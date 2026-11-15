@@ -72,7 +72,7 @@ and runtimes" page again before starting.
       `dotnet-install.sh` RUN block and its comment. `scripts/installdevtools`: delete the install line
       and its echo. `.config/dotnet-tools.json`: the csharpier tool has `"rollForward": false`, so its
       version must support the net11 runtime (or set `rollForward` to `true`).
-- [ ] Hardcoded `net10.0` paths: `src/DependinatorVsCode/src/languageServer.ts` (two entries, the dev
+- [ ] Hardcoded `net10.0` paths: `src/Dependinator.VsCodeExt/src/languageServer.ts` (two entries, the dev
       fallback to `bin/{Debug,Release}/net10.0/Dependinator.Lsp.dll`), `.vscode/launch.json`
       (`Dependinator.Web.dll`), `.vscode/tasks.json` (Api `cwd`), `.vscode/settings.json`
       (`azureFunctions.deploySubpath`).
@@ -88,7 +88,7 @@ and runtimes" page again before starting.
 - [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
       require, and set `apiRuntime` in `src/Dependinator.Wasm/staticwebapp.config.json` to the 11.0 value.
 - [ ] Docs: `README.md` (Solution structure and Prerequisites), `CLAUDE.md` line 11,
-      `src/DependinatorVsCode/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
+      `src/Dependinator.VsCodeExt/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
       `UnionPolyfill.cs` comments disappear with those edits.
 - [ ] `src/Dependinator.Core/Parsing/Utils/MSBuildLocatorHelper.cs`: no code change, but note that a
       net11.0 process is offered the 11.x SDK by `MSBuildLocator` (today it is offered only 10.x), so

@@ -115,7 +115,7 @@
 			"type": "shell",
 			"command": "npm install",
 			"options": {
-				"cwd": "${workspaceFolder}/src/DependinatorVsCode"
+				"cwd": "${workspaceFolder}/src/Dependinator.VsCodeExt"
 			},
 			"problemMatcher": []
 		},
@@ -124,7 +124,7 @@
 			"type": "shell",
 			"command": "npm run compile",
 			"options": {
-				"cwd": "${workspaceFolder}/src/DependinatorVsCode"
+				"cwd": "${workspaceFolder}/src/Dependinator.VsCodeExt"
 			},
 			"problemMatcher": "$tsc"
 		},
@@ -143,13 +143,13 @@
 		{
 			"label": "Dependinator: Prepare WASM",
 			"type": "shell",
-			"command": "bash src/DependinatorVsCode/scripts/prepare-wasm.sh",
+			"command": "bash src/Dependinator.VsCodeExt/scripts/prepare-wasm.sh",
 			"problemMatcher": []
 		},
 		{
 			"label": "Dependinator: Prepare LSP",
 			"type": "shell",
-			"command": "bash src/DependinatorVsCode/scripts/prepare-server.sh",
+			"command": "bash src/Dependinator.VsCodeExt/scripts/prepare-server.sh",
 			"problemMatcher": []
 		},
 		{

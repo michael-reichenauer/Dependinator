@@ -1,5 +1,5 @@
 // Records the animated demo gif used by the VS Code extension README
-// (src/DependinatorVsCode/resources/demo.gif).
+// (src/Dependinator.VsCodeExt/resources/demo.gif).
 //
 // The scripted scenario (adjust the steps in run() below to change the demo):
 //   1. Overview of the Dependinator.sln model (fit to screen).
@@ -31,7 +31,7 @@ const { chromium } = require("playwright");
 
 const appUrl = process.env.DEMO_URL ?? "http://localhost:5000";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const outGif = process.argv[2] ?? join(repoRoot, "src/DependinatorVsCode/resources/demo.gif");
+const outGif = process.argv[2] ?? join(repoRoot, "src/Dependinator.VsCodeExt/resources/demo.gif");
 
 // Recorded at 1280x720, downscaled to the published 800x450 gif.
 const viewport = { width: 1280, height: 720 };

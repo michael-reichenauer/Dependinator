@@ -5,7 +5,7 @@ namespace Dependinator.Core.VsCodeModels;
 
 // Asks a language model that VS Code offers to extensions (its Language Model API, such as GitHub
 // Copilot's models), the "Copilot" AI provider. Only the VS Code host has it: the LSP forwards the
-// requests to the extension (DependinatorVsCode/src/languageModels.ts), which makes them. The web
+// requests to the extension (Dependinator.VsCodeExt/src/languageModels.ts), which makes them. The web
 // host and the standalone browser app have no implementation, so the UI offers it only in VS Code.
 [Rpc]
 interface IVsCodeModelService

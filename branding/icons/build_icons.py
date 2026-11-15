@@ -16,7 +16,7 @@ GLYPH_README = os.path.join(HERE, "icon-glyph-readme.svg")
 
 WASM = os.path.join(REPO, "src/Dependinator.Wasm/wwwroot")
 WEB = os.path.join(REPO, "src/Dependinator.Web/wwwroot")
-VSCODE_RES = os.path.join(REPO, "src/DependinatorVsCode/resources")
+VSCODE_RES = os.path.join(REPO, "src/Dependinator.VsCodeExt/resources")
 
 
 def render(svg, size):

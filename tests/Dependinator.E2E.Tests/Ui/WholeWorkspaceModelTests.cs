@@ -27,7 +27,7 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
 
         // The proposal: the solution and the projects under src, not the test samples or examples
         await Expect(Source("Dependinator.sln")).ToHaveAttributeAsync("data-checked", "true");
-        await Expect(Source("DependinatorVsCode")).ToHaveAttributeAsync("data-checked", "true");
+        await Expect(Source("Dependinator.VsCodeExt")).ToHaveAttributeAsync("data-checked", "true");
         await Expect(Source("webshop.bicep")).ToHaveAttributeAsync("data-checked", "false");
         await Expect(Source("shop")).ToHaveAttributeAsync("data-checked", "false");
 
