@@ -628,6 +628,14 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   bends the line there. A bend dragged back onto the straight line, or double-clicked, goes
   away, and "Straighten line" in the toolbar removes them all. The odd + and − buttons, which
   acted at the spot where the line had been clicked, are gone.
+- **Line bends follow moved nodes (Nov 15).** The automatic layout's bends used to stay where
+  they were when nodes were moved, so lines went around empty spots and through moved nodes.
+  When a move ends, the automatic bends of the container's lines are routed again where the
+  nodes stand now (`FreeLineRouter`, `MovedNodeLines`): the lines of the moved nodes, lines a
+  node now stands in, and lines whose detour is no longer needed; in the move's undo step.
+  Bends the user set stay, except on a line between nodes moved together, which moves along.
+  A backward line's layout bends are now computed from where it is drawn (its source's right
+  edge), not its left edge.
 - **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
   the edge of the view where the line leaves names the node at that end; a click goes there
   (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.

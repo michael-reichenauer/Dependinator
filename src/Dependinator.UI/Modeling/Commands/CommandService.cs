@@ -9,6 +9,11 @@ interface ICommandService
     bool CanRedo { get; }
 
     void Do(Command command, bool isClearCache = true, bool isSaveModel = true);
+
+    // Does the command as part of the undo step that holds the given command, when that is still
+    // the latest step (e.g. the lines routed again after a node drag, undone with the drag);
+    // otherwise as a step of its own.
+    void DoInStepOf(Command step, Command command);
     Task Redo();
     Task Undo();
 
@@ -39,6 +44,31 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
         ExecuteAndPush(command);
         Notify(isModelChanged: isClearCache, isSaveNeeded: isSaveModel);
     }
+
+    public void DoInStepOf(Command step, Command command)
+    {
+        if (undoStack.Count == 0 || !IsInStep(undoStack.Peek(), step))
+        {
+            Do(command);
+            return;
+        }
+
+        using (var model = modelMgr.UseModel())
+        {
+            command.Execute(model);
+        }
+        var latest = undoStack.Pop();
+        if (latest is CompositeCommand composite)
+            composite.Add(command);
+        else
+            latest = new CompositeCommand(latest, command);
+        undoStack.Push(latest);
+        redoStack.Clear();
+        Notify();
+    }
+
+    static bool IsInStep(Command latest, Command command) =>
+        latest == command || latest is CompositeCommand composite && composite.Commands.Any(c => IsInStep(c, command));
 
     public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
 

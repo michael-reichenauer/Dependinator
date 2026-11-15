@@ -771,6 +771,7 @@ class InteractionService(
                 nodeEditService.SnapSelectedNodesToGrid(zoneIds);
             else
                 nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            nodeEditService.EndMove();
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }

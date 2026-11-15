@@ -15,6 +15,10 @@ interface INodeEditService
     // delta in its own container's scale. A node whose ancestor is in the group moves with it.
     void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds);
     void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds);
+
+    // Ends a move of one or more nodes (after the snap to the grid): the lines in the moved nodes'
+    // containers follow them (MovedNodeLines), in the move's undo step.
+    void EndMove();
     void SnapResizedSelectedNodeToGrid(PointerId pointerId);
     void PanSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
     void ResizeSelectedNode(PointerEvent e, double zoom, PointerId pointerId);
@@ -74,9 +78,10 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
+            moveStarts.TryAdd(node, node.Boundary);
         }
 
-        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     public void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds) =>
@@ -90,6 +95,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
+                moveStarts.TryAdd(node, node.Boundary);
                 return new NodeEditCommand(node.Id)
                 {
                     Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy },
@@ -97,6 +103,44 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             },
             isTopLevelOnly: true
         );
+
+    public void EndMove()
+    {
+        if (moveStarts.Count == 0)
+            return;
+        Command? linesCommand = null;
+        using (var model = modelMgr.UseModel())
+        {
+            var moves = moveStarts
+                .Where(pair => model.Nodes.ContainsKey(pair.Key.Id))
+                .ToDictionary(
+                    pair => pair.Key,
+                    pair => new Pos(pair.Key.Boundary.X - pair.Value.X, pair.Key.Boundary.Y - pair.Value.Y)
+                );
+            var points = MovedNodeLines.NewPoints(moves);
+            if (points.Count > 0)
+                linesCommand = new LinePointsCommand(points.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
+        }
+        moveStarts.Clear();
+
+        if (linesCommand is null)
+            return;
+        if (lastMoveCommand is { } step)
+            commandService.DoInStepOf(step, linesCommand);
+        else
+            commandService.Do(linesCommand);
+        lastMoveCommand = null;
+    }
+
+    // Where each node of the move in progress started, and the move's latest command.
+    readonly Dictionary<Node, Rect> moveStarts = [];
+    Command? lastMoveCommand;
+
+    void Do(Command command)
+    {
+        commandService.Do(command);
+        lastMoveCommand = command;
+    }
 
     // Snaps the group after a drag. Every node gets a command, also one already on the grid, so
     // the step has the drag composite's merge key and folds into that undo step; with no node
@@ -184,7 +228,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         }
         if (commands.Count == 0)
             return;
-        commandService.Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+        Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
     }
 
     static List<Node> Resolve(IModel model, IReadOnlyCollection<NodeId> nodeIds, bool isTopLevelOnly)
@@ -217,7 +261,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
-        commandService.Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
+        Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
     // A view of the card, not an edit: no undo step.
