@@ -532,6 +532,8 @@ class InteractionService(
         // A suppressed click (if any) would have fired before this next press; clear a stale flag
         // from a selection drag that was too long to produce a click event at all.
         suppressNextClick = false;
+        if (isDraggingSelectedNode)
+            nodeEditService.EndMove(); // The release was missed (outside the window): the lines still follow
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;

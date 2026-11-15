@@ -273,8 +273,9 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   `LinePointsCommand` to the move's undo step (`ICommandService.DoInStepOf`). The whole move is
   one undo step (every edit after the first joins it): quick edits merge only within 500 ms, so a
   pause used to split a drag, and the lines would have joined only its last part.
-  `InteractionService` calls `BeginMove` when a drag starts, which forgets a move whose release
-  was missed. Member card rows and their lines are left alone. Only lines near
+  A press after a drag whose release was missed (outside the window) ends that move
+  (`InteractionService.OnMouseDown`), and `BeginMove` at a drag's start forgets any leftover.
+  Lines between member rows keep the card's own drawing. Only lines near
   a moved node's old or new box are looked at, user bends (`IsSegmentsUserSet`) are never
   routed, and `FreeLineRouter` (layout columns are gone after a move) keeps its obstacles in a
   grid and caps the pieces per line: a random 150-node grid took ~50 ms per move on the dev

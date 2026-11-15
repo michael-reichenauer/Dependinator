@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Modeling.Layout;
 using Dependinator.UI.Modeling.Models;
@@ -21,12 +20,7 @@ static class MovedNodeLines
     public static IReadOnlyDictionary<Line, IReadOnlyList<Pos>> NewPoints(IReadOnlyDictionary<Node, Pos> moves)
     {
         var changes = new Dictionary<Line, IReadOnlyList<Pos>>();
-        // A member card's rows keep their lines as the card lays them out (no bends).
-        var containers = moves
-            .Keys.Where(node => !node.IsRoot)
-            .Select(node => node.Parent)
-            .Distinct()
-            .Where(container => !NodeViewPolicy.IsMemberCardNode(container));
+        var containers = moves.Keys.Where(node => !node.IsRoot).Select(node => node.Parent).Distinct();
         foreach (var container in containers)
         {
             var obstacles = new FreeLineRouter.Obstacles([
@@ -67,7 +61,8 @@ static class MovedNodeLines
     }
 
     // The lines between the container's children whose points live in its space and that the
-    // layout routes (see LayoutSnapshot.IsLayoutLine).
+    // layout routes (see LayoutSnapshot.IsLayoutLine); a member card's rows keep their lines as
+    // the card lays them out (no bends).
     static IEnumerable<Line> SiblingLines(Node container) =>
         container
             .Children.SelectMany(child => child.SourceLines)

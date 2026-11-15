@@ -64,37 +64,26 @@ static class FreeLineRouter
         readonly Grid grid;
         readonly Lazy<Grid> transposed;
         readonly int[] excluded;
-        readonly bool isTransposed;
 
         public Obstacles(IReadOnlyList<Rect> rects)
-            : this(new Grid([.. rects.Where(rect => rect.Width > 0 && rect.Height > 0)]), null, [], false) { }
+            : this(new Grid([.. rects.Where(rect => rect.Width > 0 && rect.Height > 0)]), null, []) { }
 
-        Obstacles(Grid grid, Lazy<Grid>? transposed, int[] excluded, bool isTransposed)
+        Obstacles(Grid grid, Lazy<Grid>? transposed, int[] excluded)
         {
             this.grid = grid;
             this.transposed = transposed ?? new Lazy<Grid>(() => new Grid([.. grid.Rects.Select(Transpose)]));
             this.excluded = excluded;
-            this.isTransposed = isTransposed;
             Count = grid.Rects.Count - excluded.Length;
         }
 
         public int Count { get; }
 
-        // The same nodes without the given ones (compared by reference: a line's own ends).
+        // The same nodes without the given ones (the same rect objects: a line's own ends).
         public Obstacles Without(params Rect[] rects) =>
-            new(
-                grid,
-                transposed,
-                [
-                    .. Enumerable
-                        .Range(0, grid.Rects.Count)
-                        .Where(index => rects.Any(rect => ReferenceEquals(rect, grid.Rects[index]))),
-                ],
-                isTransposed
-            );
+            new(grid, transposed, [.. rects.Select(grid.IndexOf).Where(index => index >= 0).Distinct()]);
 
         // The same nodes with x and y swapped (to route a piece that runs up or down).
-        public Obstacles Transposed() => new(transposed.Value, new Lazy<Grid>(() => grid), excluded, !isTransposed);
+        public Obstacles Transposed() => new(transposed.Value, new Lazy<Grid>(() => grid), excluded);
 
         // The nodes that may overlap the area, each once.
         public List<Rect> In(double minX, double minY, double maxX, double maxY) =>
@@ -107,6 +96,7 @@ static class FreeLineRouter
         const double CellSize = 200;
 
         readonly Dictionary<(int, int), List<int>> cells = [];
+        readonly Dictionary<Rect, int> indexes = new(ReferenceEqualityComparer.Instance);
         readonly int[] seen;
         int stamp;
 
@@ -117,6 +107,7 @@ static class FreeLineRouter
             for (var index = 0; index < rects.Count; index++)
             {
                 var rect = rects[index];
+                indexes.TryAdd(rect, index);
                 foreach (var cell in Cells(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height))
                 {
                     if (!cells.TryGetValue(cell, out var list))
@@ -127,6 +118,9 @@ static class FreeLineRouter
         }
 
         public IReadOnlyList<Rect> Rects { get; }
+
+        // The index of this very rect object, or -1.
+        public int IndexOf(Rect rect) => indexes.TryGetValue(rect, out var index) ? index : -1;
 
         public List<Rect> In(double minX, double minY, double maxX, double maxY, int[] excluded)
         {

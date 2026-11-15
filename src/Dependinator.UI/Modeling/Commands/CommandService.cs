@@ -69,9 +69,19 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
 
     // Whether the command is the step or part of it, nested composites too (a group drag merges
     // composites); the newest parts are looked at first.
-    static bool IsInStep(Command step, Command command) =>
-        step == command
-        || step is CompositeCommand composite && composite.Commands.Reverse().Any(c => IsInStep(c, command));
+    static bool IsInStep(Command step, Command command)
+    {
+        if (step == command)
+            return true;
+        if (step is not CompositeCommand composite)
+            return false;
+        for (var index = composite.Commands.Count - 1; index >= 0; index--)
+        {
+            if (IsInStep(composite.Commands[index], command))
+                return true;
+        }
+        return false;
+    }
 
     public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
 
