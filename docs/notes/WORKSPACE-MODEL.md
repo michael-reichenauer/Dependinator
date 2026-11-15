@@ -26,6 +26,13 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   out) keeps its choice.
 - The diagram has one root node per source and one Externals. A source that cannot be parsed is
   a problem in the problem indicator, and its part of the diagram stays as it was.
+- A source is shown inside the source whose folder holds it (Nov 15, Michael picked it from
+  three options, https://claude.ai/artifact/TjJ7nqiLUDeiHgd7f9L4v2): in the deepest node of
+  another source that stands for a folder above the source's folder, a C# project or another
+  source's root. In this repository the extension is in Dependinator.sln and NodeParser in the
+  Dependinator.TypeScriptParser project. Sources in one folder stay side by side, and a source
+  whose holder is left out of the model is at the top again. The next phase lets the user choose
+  the place ("Shown in" in the sources dialog, "Show Inside …" on a source's root).
 - The model is beside the per-source models, not instead of them. VS Code starts a workspace
   on the model of it that was used last; a workspace with none (never opened in Dependinator)
   starts on the whole workspace, so the sources dialog comes first (phase 4, Michael's choice
@@ -119,6 +126,19 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   its automatic layouts redone, as when it is opened. An `.slnx` with no model of its own brings
   the model of the `.sln` it was migrated from (`SlnxMigration`), and takes over the `.sln`'s
   include choice once the `.sln` is gone.
+- **A source inside another (`SourceNesting`).** After each parse (in `ModelService`, for the
+  whole model, so also for the sources a refresh did not parse) every source's root is moved to
+  the deepest holder of another source: that source's root (the folder of its key) or one of its
+  project nodes (`Node.ProjectFolder`, which the Roslyn parser sets from the project file; not
+  saved, since every opened model is parsed again). A folder holds only the folders below it, so
+  two sources cannot be inside each other through their roots; a C# project outside its
+  solution's folder could make a loop, and then the first source stays at the top. A moved root
+  is placed anew in its new parent (`Boundary` none, both parents flagged for layout); what is
+  inside it keeps its places. A parsed root comes from its parser without a parent, so
+  `SourceNesting.KeepParents` gives it the one it has in the model first, or every refresh of
+  it would move it out and back. Only roots move, so node names do not change. The walks that go
+  by a source's tree stop at the roots of other sources (`KeepNodeTree`'s `otherRoots`): a kept
+  solution would otherwise keep a script project the user took out of the model.
 - **A failed source keeps its nodes.** `StructureService.ClearNotUpdated` removes what the
   parse did not stamp, so `ModelService.UpdateWorkspaceSources` re-stamps the subtree of an
   included source that has no `ParsedSource` item (`StructureService.KeepNodeTree`, by the saved
@@ -171,5 +191,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   case can differ), the workspace model opened by the other spelling is a second saved copy,
   and asks for its sources once more. One canonical path for every model that is opened would
   settle it for all kinds.
+- A refresh that parses only some kinds of sources nests by the project folders the model has
+  from its last parse of the others. A model loaded from a save has none until its first full
+  parse (the one that starts when it is opened): should that fail, a script project in a C#
+  project's folder goes into the solution's root until a parse of the solution succeeds.
 - Keeping two same-named C# projects of different solutions apart (the folder in the project's
   name, as for a root) needs the rename to be remembered per project, as it is per root.

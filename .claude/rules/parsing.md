@@ -92,6 +92,13 @@ paths:
     prefix). A C# project's nodes are not named by their solution, so what is in a root is
     found by the tree, never by a name prefix (the first version took only prefixed names and
     missed every project).
+  - A source is shown inside the source whose folder holds it (`SourceNesting`, after each
+    parse on the whole model). A parser that has project-like containers in other folders than
+    its root (a Go module in a `go.work`, a TypeScript project reference) sets
+    `NodeProperties.ProjectFolder` on them so sources in those folders go inside; the root's
+    folder comes from the source's key. A walk over a source's tree must stop at the roots of
+    other sources (`DescendantsAndSelfPreOrder(isSkipped)`, `KeepNodeTree`'s `otherRoots`):
+    without it a kept solution kept a script project the user had taken out (found in tests).
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
     with `Path.*`: the UI runs in the browser, where a Windows path is not a path.
 - **Bicep** (beyond CLAUDE.md; design and follow-ups in `docs/notes/BICEP-PARSER.md`):
