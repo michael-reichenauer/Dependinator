@@ -30,6 +30,8 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 - **Interactive map.** Pan, zoom and double-click to drill into any node. The
   breadcrumb and search (`Ctrl+F`) take you anywhere in one step. Lines are
   drawn soft until you select or hover a node, so busy diagrams stay readable.
+  A line from inside a container ends in a short stub at the node; click the
+  stub to draw its lines all the way to the other end.
 - **C# and Bicep.** .NET solutions are parsed with Roslyn, Azure Bicep
   deployments with the Bicep compiler; resources carry their Azure icons, local
   modules expand in place, and existing resources show as externals.
@@ -99,7 +101,7 @@ The **Help** button in the Dependinator app bar opens the
 [user guide](https://dependinator.com/help) with detailed usage instructions,
 navigation tips, and keyboard/mouse controls.
 
-![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/Dependinator.VsCodeExt/resources/demo.gif)
+![Searching for a node and flying to it, exploring its dependencies in the Dependencies explorer, clicking a line stub to follow its lines, then zooming in until the type opens into its member card and hovering it for tooltips](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/Dependinator.VsCodeExt/resources/demo.gif)
 
 ## Commands
 

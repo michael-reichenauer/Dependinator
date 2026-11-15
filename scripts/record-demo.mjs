@@ -3,14 +3,16 @@
 //
 // The scripted scenario (adjust the steps in run() below to change the demo):
 //   1. Overview of the Dependinator.slnx model (fit to screen).
-//   2. Ctrl+F search for "ModelService" and select the result.
-//   3. The diagram zooms to the node; the node toolbar appears.
+//   2. Ctrl+F search for "ModelService" and pick the result: the view flies to the node and
+//      marks it with the go-to brackets.
+//   3. A click selects the node; its toolbar appears.
 //   4. "Show dependencies" opens the Dependencies explorer.
 //   5. Tree items are expanded to drill into member-level dependencies.
-//   6. The explorer is closed and the wheel zooms in until the type opens into its UML-like
-//      member card.
-//   7. Hovering the card's header shows the type's tooltip, then a member row's.
-//   8. The view zooms back out (Fit to Screen).
+//   6. The explorer is closed, the node's incoming line stub is clicked, and the wheel zooms
+//      out a little to show the stub's lines end to end.
+//   7. The wheel zooms in until the type opens into its UML-like member card.
+//   8. Hovering the card's header shows the type's tooltip, then a member row's.
+//   9. The view zooms back out (Fit to Screen).
 //
 // Run via ./scripts/record-demo (repo root), which starts the app if needed and sets
 // NODE_PATH so the globally installed playwright (bundled with @playwright/cli
@@ -42,6 +44,8 @@ const searchText = "ModelService";
 const searchResultFullName = "Dependinator.UI.Modeling.ModelService";
 // Wheel steps from the searched node's zoom until the type shows its full member card.
 const typeCardWheelSteps = 9;
+// Wheel steps out (and back in) to show a selected stub's lines.
+const stubZoomOutSteps = 3;
 // The member row hovered for a member tooltip.
 const tooltipMemberName = "LoadAsync";
 
@@ -113,6 +117,17 @@ const findNode = (fullName) => document.querySelector(`g[data-name="${fullName}"
 const findMemberRow = (name) => document.querySelector(`text[data-name="${name}"]`);
 
 const findTestId = (testId) => document.querySelector(`[data-testid=${testId}]`);
+
+// The hit polyline of the stub (short line with a ring at the child) of a line into the node:
+// selecting it draws what uses the node from outside its container.
+const findIncomingStub = (fullName) => {
+    const lines = [...document.querySelectorAll("g.line")].filter((g) => g.querySelector("circle.line-stub-ring"));
+    const line = lines.find((g) => {
+        const name = g.querySelector("g.hoverable")?.dataset.name ?? "";
+        return name.includes(`→${fullName} (`);
+    });
+    return line?.querySelector("g.hoverable polyline");
+};
 
 // Waits until the app has been idle (no progress indicators, e.g. from model
 // parsing) for a few seconds in a row. A busy server makes the Blazor Server
@@ -211,9 +226,7 @@ async function run() {
     }
     await wait(400);
     await page.keyboard.press("Enter");
-    // The node toolbar appears once the node is selected.
-    await page.waitForSelector("[data-testid=node-dependencies]", { timeout: 30000 });
-    await wait(5000); // let the zoom-in animation and rendering finish
+    await wait(6000); // let the flight to the node and rendering finish
     await fitToScreen(page, false);
     await wait(2000); // zoom-out animation
     await page.mouse.click(300, 660); // empty area: clear the node selection
@@ -250,7 +263,13 @@ async function run() {
         searchResultFullName
     );
     await clickRect(page, result, 0.3);
-    await wait(5000); // zoom animation
+    await wait(4500); // the flight to the node
+    await wait(1200); // hold: the node marked with the go-to brackets
+
+    // Click the node to select it: its toolbar appears.
+    const nodeRect = await rectOf(page, findNode, searchResultFullName);
+    if (!nodeRect) throw new Error("The searched node is not on screen");
+    await moveAndClick(page, nodeRect.x + nodeRect.w * 0.5, nodeRect.y + nodeRect.h * 0.4);
     await wait(1300); // hold: selected node with its toolbar
 
     // Open the Dependencies explorer from the node toolbar.
@@ -267,10 +286,37 @@ async function run() {
     await clickRect(page, await rectOf(page, findTestId, "explorer-close"));
     await wait(1200);
 
+    // Click the stub of the line into the type: the lines from outside its container are drawn
+    // end to end. Zoom out a little to see where they come from.
+    const stubRect = await rectOf(page, findIncomingStub, searchResultFullName);
+    if (stubRect) {
+        await clickRect(page, stubRect);
+        await wait(1200);
+        await page.mouse.move(viewport.width / 2, viewport.height / 2, { steps: 20 });
+        for (let step = 0; step < stubZoomOutSteps; step++) {
+            await page.mouse.wheel(0, 100);
+            await wait(450);
+        }
+        // Park the cursor off the type, so its hover card does not cover the lines.
+        await page.mouse.move(1000, 705, { steps: 20 });
+        await wait(2600); // hold: the stub's lines
+        await page.mouse.move(viewport.width / 2, viewport.height / 2, { steps: 20 });
+        for (let step = 0; step < stubZoomOutSteps; step++) {
+            await page.mouse.wheel(0, -100);
+            await wait(450);
+        }
+        await wait(300);
+    } else {
+        console.log("No incoming stub found; skipping the stub step");
+    }
+
     // Clear the selection on an empty spot below the type: a selected type card draws the
     // lines of all its member rows, which hides the card.
     const typeRect = await rectOf(page, findNode, searchResultFullName);
     if (!typeRect) throw new Error("The searched type is not on screen");
+    await page.keyboard.press("Escape");
+    await wait(300);
+    await page.keyboard.press("Escape");
     await moveAndClick(page, typeRect.x + typeRect.w / 2 - 70, typeRect.y + typeRect.h + 45);
     await wait(800);
 
