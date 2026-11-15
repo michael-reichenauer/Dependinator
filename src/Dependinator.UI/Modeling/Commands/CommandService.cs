@@ -67,8 +67,11 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
         Notify();
     }
 
-    static bool IsInStep(Command latest, Command command) =>
-        latest == command || latest is CompositeCommand composite && composite.Commands.Any(c => IsInStep(c, command));
+    // Whether the command is the step or part of it, nested composites too (a group drag merges
+    // composites); the newest parts are looked at first.
+    static bool IsInStep(Command step, Command command) =>
+        step == command
+        || step is CompositeCommand composite && composite.Commands.Reverse().Any(c => IsInStep(c, command));
 
     public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
 
@@ -88,8 +91,7 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
     {
         if (undoStack.Count == 0)
             return false;
-        var latest = undoStack.Peek();
-        if (latest != command && !(latest is CompositeCommand composite && composite.Commands.Contains(command)))
+        if (!IsInStep(undoStack.Peek(), command))
             return false;
         await Undo();
         return true;

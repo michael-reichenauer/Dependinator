@@ -700,7 +700,10 @@ class InteractionService(
             // A zone dragged on its own carries the nodes drawn inside it (the set is fixed when
             // the drag starts, so a node leaving the zone mid-drag still follows).
             if (!isDraggingSelectedNode)
+            {
                 zoneDragIds = ZoneDragSet(mouseDownId.NodeId);
+                nodeEditService.BeginMove();
+            }
             isDraggingSelectedNode = true;
             if (selectionService.SelectedNodeCount > 1)
                 nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);

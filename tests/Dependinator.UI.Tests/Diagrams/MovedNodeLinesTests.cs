@@ -132,6 +132,71 @@ public class MovedNodeLinesTests
         Assert.True(commandService.CanUndo);
     }
 
+    [Fact]
+    public void EndMove_ShouldRouteEveryLineAroundTheMovedNode()
+    {
+        Node d,
+            e;
+        using (var model = modelMgr.UseModel())
+        {
+            d = AddNode(model, parent, "P.D", new Rect(0, 200, 100, 100));
+            e = AddNode(model, parent, "P.E", new Rect(400, 200, 100, 100));
+            new LineService().AddLinesFromSourceToTarget(model, new Link(d, e));
+        }
+        b.Boundary = new Rect(200, 400, 100, 300);
+        var lineDE = modelMgr.WithModel(model =>
+            model.Lines.Values.Single(line => line.Source == d && line.Target == e)
+        );
+
+        Drag(b, 0, -400); // B now stands in the way of both lines
+
+        Assert.NotEmpty(LineAC.SegmentPoints);
+        Assert.NotEmpty(lineDE.SegmentPoints);
+        Assert.False(
+            FreeLineRouter.IsBlocked([new Pos(100, 50), .. LineAC.SegmentPoints, new Pos(400, 50)], [b.Boundary])
+        );
+        Assert.False(
+            FreeLineRouter.IsBlocked([new Pos(100, 250), .. lineDE.SegmentPoints, new Pos(400, 250)], [b.Boundary])
+        );
+    }
+
+    [Fact]
+    public async Task EndMove_ShouldUndoTheWholeMoveInOneStep_AlsoAfterAPause()
+    {
+        var zoom = b.GetZoom();
+        var pointerId = PointerId.FromNode(b.Id);
+        service.BeginMove();
+        service.MoveSelectedNode(new PointerEvent { MovementX = 0, MovementY = -150 / zoom }, 1, pointerId);
+        await Task.Delay(600); // Longer than the merge time of quick edits
+        service.MoveSelectedNode(new PointerEvent { MovementX = 0, MovementY = -150 / zoom }, 1, pointerId);
+        service.SnapSelectedNodeToGrid(pointerId);
+        service.EndMove();
+        Assert.NotEmpty(LineAC.SegmentPoints);
+
+        await commandService.Undo();
+
+        Assert.Equal(new Rect(200, 300, 100, 100), b.Boundary);
+        Assert.Empty(LineAC.SegmentPoints);
+        Assert.False(commandService.CanUndo);
+    }
+
+    [Fact]
+    public void BeginMove_ShouldForgetAMoveWhoseEndWasMissed()
+    {
+        var zoom = c.GetZoom();
+        service.MoveSelectedNode(
+            new PointerEvent { MovementX = 0, MovementY = 400 / zoom },
+            1,
+            PointerId.FromNode(c.Id)
+        );
+        LineAC.SetSegmentPoints([new Pos(250, 500)]); // Bends that C's missed move end would reroute
+
+        service.BeginMove();
+        service.EndMove();
+
+        Assert.Equal([new Pos(250, 500)], LineAC.SegmentPoints);
+    }
+
     static Node AddNode(IModel model, Node parent, string name, Rect boundary)
     {
         var node = new Node(name, parent) { Boundary = boundary, Type = NodeType.ClassType };

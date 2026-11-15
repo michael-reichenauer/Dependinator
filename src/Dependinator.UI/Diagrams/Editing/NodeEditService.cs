@@ -16,6 +16,10 @@ interface INodeEditService
     void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds);
     void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds);
 
+    // A move of one or more nodes starts: forgets a move whose end was missed (a release outside
+    // the window).
+    void BeginMove();
+
     // Ends a move of one or more nodes (after the snap to the grid): the lines in the moved nodes'
     // containers follow them (MovedNodeLines), in the move's undo step.
     void EndMove();
@@ -104,15 +108,20 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             isTopLevelOnly: true
         );
 
+    public void BeginMove()
+    {
+        moveStarts.Clear();
+        lastMoveCommand = null;
+    }
+
     public void EndMove()
     {
-        if (moveStarts.Count == 0)
-            return;
         Command? linesCommand = null;
-        using (var model = modelMgr.UseModel())
+        if (moveStarts.Count > 0)
         {
+            using var model = modelMgr.UseModel();
             var moves = moveStarts
-                .Where(pair => model.Nodes.ContainsKey(pair.Key.Id))
+                .Where(pair => model.Nodes.TryGetValue(pair.Key.Id, out var node) && node == pair.Key)
                 .ToDictionary(
                     pair => pair.Key,
                     pair => new Pos(pair.Key.Boundary.X - pair.Value.X, pair.Key.Boundary.Y - pair.Value.Y)
@@ -121,25 +130,30 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (points.Count > 0)
                 linesCommand = new LinePointsCommand(points.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
         }
-        moveStarts.Clear();
+        var step = lastMoveCommand;
+        BeginMove();
 
         if (linesCommand is null)
             return;
-        if (lastMoveCommand is { } step)
+        if (step is not null)
             commandService.DoInStepOf(step, linesCommand);
         else
             commandService.Do(linesCommand);
-        lastMoveCommand = null;
     }
 
-    // Where each node of the move in progress started, and the move's latest command.
+    // Where each node of the move in progress started, and the move's latest command: the whole
+    // move is one undo step (the edits of a drag merge by time only, so a pause would split it,
+    // and the lines routed at the end would join only its last part).
     readonly Dictionary<Node, Rect> moveStarts = [];
     Command? lastMoveCommand;
 
     void Do(Command command)
     {
-        commandService.Do(command);
-        lastMoveCommand = command;
+        if (moveStarts.Count > 0 && lastMoveCommand is not null)
+            commandService.DoInStepOf(lastMoveCommand, command);
+        else
+            commandService.Do(command);
+        lastMoveCommand = moveStarts.Count > 0 ? command : null;
     }
 
     // Snaps the group after a drag. Every node gets a command, also one already on the grid, so

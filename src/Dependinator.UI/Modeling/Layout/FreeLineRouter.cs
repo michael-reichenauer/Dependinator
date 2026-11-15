@@ -57,34 +57,66 @@ static class FreeLineRouter
     }
 
     // The nodes to route around, in a grid of cells, so that a piece is checked only against the
-    // nodes near it (a container can hold hundreds).
+    // nodes near it (a container can hold hundreds). A line's own ends are left out with Without,
+    // which shares the grid (and its transposed twin) instead of building another.
     public sealed class Obstacles
+    {
+        readonly Grid grid;
+        readonly Lazy<Grid> transposed;
+        readonly int[] excluded;
+        readonly bool isTransposed;
+
+        public Obstacles(IReadOnlyList<Rect> rects)
+            : this(new Grid([.. rects.Where(rect => rect.Width > 0 && rect.Height > 0)]), null, [], false) { }
+
+        Obstacles(Grid grid, Lazy<Grid>? transposed, int[] excluded, bool isTransposed)
+        {
+            this.grid = grid;
+            this.transposed = transposed ?? new Lazy<Grid>(() => new Grid([.. grid.Rects.Select(Transpose)]));
+            this.excluded = excluded;
+            this.isTransposed = isTransposed;
+            Count = grid.Rects.Count - excluded.Length;
+        }
+
+        public int Count { get; }
+
+        // The same nodes without the given ones (compared by reference: a line's own ends).
+        public Obstacles Without(params Rect[] rects) =>
+            new(
+                grid,
+                transposed,
+                [
+                    .. Enumerable
+                        .Range(0, grid.Rects.Count)
+                        .Where(index => rects.Any(rect => ReferenceEquals(rect, grid.Rects[index]))),
+                ],
+                isTransposed
+            );
+
+        // The same nodes with x and y swapped (to route a piece that runs up or down).
+        public Obstacles Transposed() => new(transposed.Value, new Lazy<Grid>(() => grid), excluded, !isTransposed);
+
+        // The nodes that may overlap the area, each once.
+        public List<Rect> In(double minX, double minY, double maxX, double maxY) =>
+            grid.In(minX, minY, maxX, maxY, excluded);
+    }
+
+    // The rects by the cells of a grid they overlap.
+    sealed class Grid
     {
         const double CellSize = 200;
 
         readonly Dictionary<(int, int), List<int>> cells = [];
         readonly int[] seen;
-        readonly Rect[] excluded = [];
         int stamp;
 
-        // The same nodes without the given ones (a line's own ends), sharing the grid.
-        Obstacles(Obstacles all, Rect[] excluded)
+        public Grid(IReadOnlyList<Rect> rects)
         {
-            Rects = all.Rects;
-            cells = all.cells;
-            seen = all.seen;
-            this.excluded = excluded;
-        }
-
-        public Obstacles Without(params Rect[] rects) => new(this, rects);
-
-        public Obstacles(IReadOnlyList<Rect> rects)
-        {
-            Rects = [.. rects.Where(rect => rect.Width > 0 && rect.Height > 0)];
-            seen = new int[Rects.Count];
-            for (var index = 0; index < Rects.Count; index++)
+            Rects = rects;
+            seen = new int[rects.Count];
+            for (var index = 0; index < rects.Count; index++)
             {
-                var rect = Rects[index];
+                var rect = rects[index];
                 foreach (var cell in Cells(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height))
                 {
                     if (!cells.TryGetValue(cell, out var list))
@@ -95,12 +127,10 @@ static class FreeLineRouter
         }
 
         public IReadOnlyList<Rect> Rects { get; }
-        public int Count => Rects.Count(rect => !excluded.Any(other => ReferenceEquals(other, rect)));
 
-        // The nodes that may overlap the area, each once.
-        public List<Rect> In(double minX, double minY, double maxX, double maxY)
+        public List<Rect> In(double minX, double minY, double maxX, double maxY, int[] excluded)
         {
-            stamp++;
+            stamp++; // One stamp per query, so a rect in several cells is listed once
             var found = new List<Rect>();
             foreach (var cell in Cells(minX, minY, maxX, maxY))
             {
@@ -111,16 +141,12 @@ static class FreeLineRouter
                     if (seen[index] == stamp)
                         continue;
                     seen[index] = stamp;
-                    var rect = Rects[index];
-                    if (!excluded.Any(other => ReferenceEquals(other, rect)))
-                        found.Add(rect);
+                    if (Array.IndexOf(excluded, index) < 0)
+                        found.Add(Rects[index]);
                 }
             }
             return found;
         }
-
-        public Obstacles Transposed() =>
-            new([.. Rects.Where(rect => !excluded.Any(other => ReferenceEquals(other, rect))).Select(Transpose)]);
 
         static IEnumerable<(int, int)> Cells(double minX, double minY, double maxX, double maxY)
         {
