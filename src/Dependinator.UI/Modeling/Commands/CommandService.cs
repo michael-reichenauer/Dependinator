@@ -9,6 +9,11 @@ interface ICommandService
     bool CanRedo { get; }
 
     void Do(Command command, bool isClearCache = true, bool isSaveModel = true);
+
+    // Does the command as part of the undo step that holds the given command, when that is still
+    // the latest step (e.g. the lines routed again after a node drag, undone with the drag);
+    // otherwise as a step of its own.
+    void DoInStepOf(Command step, Command command);
     Task Redo();
     Task Undo();
 
@@ -40,6 +45,44 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
         Notify(isModelChanged: isClearCache, isSaveNeeded: isSaveModel);
     }
 
+    public void DoInStepOf(Command step, Command command)
+    {
+        if (undoStack.Count == 0 || !IsInStep(undoStack.Peek(), step))
+        {
+            Do(command);
+            return;
+        }
+
+        using (var model = modelMgr.UseModel())
+        {
+            command.Execute(model);
+        }
+        var latest = undoStack.Pop();
+        if (latest is CompositeCommand composite)
+            composite.Add(command);
+        else
+            latest = new CompositeCommand(latest, command);
+        undoStack.Push(latest);
+        redoStack.Clear();
+        Notify();
+    }
+
+    // Whether the command is the step or part of it, nested composites too (a group drag merges
+    // composites); the newest parts are looked at first.
+    static bool IsInStep(Command step, Command command)
+    {
+        if (step == command)
+            return true;
+        if (step is not CompositeCommand composite)
+            return false;
+        for (var index = composite.Commands.Count - 1; index >= 0; index--)
+        {
+            if (IsInStep(composite.Commands[index], command))
+                return true;
+        }
+        return false;
+    }
+
     public Task Undo() => ReplayAsync(undoStack, redoStack, (command, model) => command.Revert(model));
 
     public Task Redo() => ReplayAsync(redoStack, undoStack, (command, model) => command.Execute(model));
@@ -58,8 +101,7 @@ class CommandService(IApplicationEvents applicationEvents, IModelMgr modelMgr) :
     {
         if (undoStack.Count == 0)
             return false;
-        var latest = undoStack.Peek();
-        if (latest != command && !(latest is CompositeCommand composite && composite.Commands.Contains(command)))
+        if (!IsInStep(undoStack.Peek(), command))
             return false;
         await Undo();
         return true;

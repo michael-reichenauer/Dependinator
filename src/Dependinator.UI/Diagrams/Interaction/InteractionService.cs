@@ -532,6 +532,8 @@ class InteractionService(
         // A suppressed click (if any) would have fired before this next press; clear a stale flag
         // from a selection drag that was too long to produce a click event at all.
         suppressNextClick = false;
+        if (isDraggingSelectedNode)
+            nodeEditService.EndMove(); // The release was missed (outside the window): the lines still follow
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
@@ -700,7 +702,10 @@ class InteractionService(
             // A zone dragged on its own carries the nodes drawn inside it (the set is fixed when
             // the drag starts, so a node leaving the zone mid-drag still follows).
             if (!isDraggingSelectedNode)
+            {
                 zoneDragIds = ZoneDragSet(mouseDownId.NodeId);
+                nodeEditService.BeginMove();
+            }
             isDraggingSelectedNode = true;
             if (selectionService.SelectedNodeCount > 1)
                 nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
@@ -771,6 +776,7 @@ class InteractionService(
                 nodeEditService.SnapSelectedNodesToGrid(zoneIds);
             else
                 nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            nodeEditService.EndMove();
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }

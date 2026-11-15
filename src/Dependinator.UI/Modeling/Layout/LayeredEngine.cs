@@ -562,9 +562,10 @@ static class LayeredEngine
         var sourceRect = edge.Source.Boundary;
         var targetRect = edge.Target.Boundary;
 
-        // The anchors the renderer uses: source leaves from an edge center, target enters one
-        var start = new Pos(goingRight ? sourceRect.X + sourceRect.Width : sourceRect.X, CenterY(sourceRect));
-        var end = new Pos(goingRight ? targetRect.X : targetRect.X + targetRect.Width, CenterY(targetRect));
+        // The anchors the renderer uses (NodeAnchors): a line leaves its source's right edge center
+        // and enters its target's left edge center, also when it points backward.
+        var start = new Pos(sourceRect.X + sourceRect.Width, CenterY(sourceRect));
+        var end = new Pos(targetRect.X, CenterY(targetRect));
 
         var points = new List<Pos>();
         var step = goingRight ? 1 : -1;
