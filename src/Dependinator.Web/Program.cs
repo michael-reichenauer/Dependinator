@@ -110,12 +110,12 @@ public class Program
     }
 
     // The nearest folder at or above the content root (the project folder under dotnet run) that
-    // holds Dependinator.sln; the dev container's checkout when there is none (a published host).
+    // holds Dependinator.slnx; the dev container's checkout when there is none (a published host).
     static string FindRepositoryRoot(string contentRootPath)
     {
         for (var folder = new DirectoryInfo(contentRootPath); folder is not null; folder = folder.Parent)
         {
-            if (File.Exists(Path.Combine(folder.FullName, "Dependinator.sln")))
+            if (File.Exists(Path.Combine(folder.FullName, "Dependinator.slnx")))
                 return folder.FullName;
         }
 

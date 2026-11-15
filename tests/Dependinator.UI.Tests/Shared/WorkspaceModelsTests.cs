@@ -64,7 +64,7 @@ public class WorkspaceModelsTests
         // The test host lists the built-in demo beside the workspace's files.
         var folders = WorkspaceModels.RelativeFolders([
             "/Demo.sln",
-            "/repo/Dependinator.sln",
+            "/repo/Dependinator.slnx",
             "/repo/examples/bicep/webshop.bicep",
         ]);
 

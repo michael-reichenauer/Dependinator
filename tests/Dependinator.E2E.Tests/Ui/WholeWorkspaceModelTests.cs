@@ -27,7 +27,7 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await App.ClickUntilVisibleAsync(workspaceModel, Page.GetByTestId("sources-dialog"));
 
         // The proposal: the solution and the projects under src, not the test samples or examples
-        await Expect(Source("Dependinator.sln")).ToHaveAttributeAsync("data-checked", "true");
+        await Expect(Source("Dependinator.slnx")).ToHaveAttributeAsync("data-checked", "true");
         await Expect(Source("Dependinator.VsCodeExt")).ToHaveAttributeAsync("data-checked", "true");
         await Expect(Source("webshop.bicep")).ToHaveAttributeAsync("data-checked", "false");
         await Expect(Source("shop")).ToHaveAttributeAsync("data-checked", "false");
@@ -57,7 +57,7 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         // The choice is saved with the model: one source is taken out, and the other stays
         await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
         await Expect(Source("main.bicep")).ToHaveAttributeAsync("data-checked", "true");
-        await Expect(Source("Dependinator.sln")).ToHaveAttributeAsync("data-checked", "false");
+        await Expect(Source("Dependinator.slnx")).ToHaveAttributeAsync("data-checked", "false");
         await SetTickedAsync(Source("shop"), false);
         await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
 

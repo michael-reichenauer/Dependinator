@@ -6,13 +6,13 @@ static class Root
 {
     static readonly string ProjectFolderPath = Path.GetDirectoryName(CurrentFilePath())!;
 
-    // Test projects live under <repo>/tests/, but Dependinator.sln stays at the repo root,
+    // Test projects live under <repo>/tests/, but Dependinator.slnx stays at the repo root,
     // so the solution folder is the parent of the tests folder (two levels up).
     static readonly string TestsFolderPath = Path.GetDirectoryName(ProjectFolderPath)!;
     static readonly string SolutionFolderPath = Path.GetDirectoryName(TestsFolderPath)!;
     public static readonly string ProjectFilePath = $"{ProjectFolderPath}/Dependinator.Core.Tests.csproj";
 
-    public static readonly string SolutionFilePath = $"{SolutionFolderPath}/Dependinator.sln";
+    public static readonly string SolutionFilePath = $"{SolutionFolderPath}/Dependinator.slnx";
 
     static string CurrentFilePath([CallerFilePath] string sourceFilePath = "") => sourceFilePath;
 }

@@ -165,7 +165,7 @@ playwright-cli install-browser chromium
 
 step "dotnet tools and NuGet packages"
 dotnet tool restore
-dotnet restore Dependinator.sln
+dotnet restore Dependinator.slnx
 
 echo ""
 echo "Cloud setup done."

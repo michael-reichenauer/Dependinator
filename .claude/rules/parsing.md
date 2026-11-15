@@ -173,3 +173,6 @@ paths:
 - **Demo models:** `./scripts/gen-demo csharp` changes facts that the e2e tests rely on, so run the
   full e2e suite afterwards; `./scripts/gen-demo bicep` is safe. `./scripts/record-demo` once left
   `demo.model` modified (cause unknown): check `git status` after recording.
+  Since Nov 15 the repository's own solution is `Dependinator.slnx` (the `.sln` was deleted);
+  DemoGen still names the demo's root `Demo*sln`, so the demo stays `/Demo.sln` and saved demo
+  layouts and share links keep working.

@@ -8,7 +8,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. It h
 
 ## Solution Structure
 
-The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `global.json`: the .NET 11 SDK, needed for the C# 15 union patterns of `Result`/`Result<T>`; `Directory.Build.props` sets `LangVersion` 15 and makes CS8509 an error). The solution file stays at the repo root; all project folders live under `src/`.
+The active solution is `Dependinator.slnx` targeting `net10.0` (SDK pinned in `global.json`: the .NET 11 SDK, needed for the C# 15 union patterns of `Result`/`Result<T>`; `Directory.Build.props` sets `LangVersion` 15 and makes CS8509 an error). The solution file stays at the repo root; all project folders live under `src/`.
 
 **Runtime/host projects:**
 - `src/Dependinator.Web/` — Blazor Server host for local development
@@ -31,13 +31,13 @@ The active solution is `Dependinator.sln` targeting `net10.0` (SDK pinned in `gl
 
 The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution folders.
 
-**VS Code extension (not part of `Dependinator.sln`):**
+**VS Code extension (not part of `Dependinator.slnx`):**
 - `src/Dependinator.VsCodeExt/` — TypeScript extension packaging the web UI + language server (`src/extension.ts`, `src/webview.ts`, `src/languageServer.ts`, `src/cloudSyncAuth.ts`)
 
-**Examples (not part of `Dependinator.sln`):**
+**Examples (not part of `Dependinator.slnx`):**
 - `examples/bicep/` — the "webshop" Bicep deployment (`webshop.bicep` + `modules/`), a large realistic model to try out and demo Bicep support; the Blazor Server host and VS Code list it automatically, and `tests/Dependinator.Bicep.Tests` compiles it without errors and checks its shape (keep it compiling when bumping `Azure.Bicep.Core`)
 
-**Dev tools (not part of `Dependinator.sln`):**
+**Dev tools (not part of `Dependinator.slnx`):**
 - `src/Dependinator.DemoGen/` — console tool that regenerates the embedded demo models (`demo.model` from the solution, `demo-bicep.model` from `examples/bicep`); run via `./scripts/gen-demo [csharp|bicep]` (kept out of the solution so it never appears in the parsed model)
 
 ## Build & Development Commands
@@ -45,7 +45,7 @@ The solution groups projects into `Hosts`, `Libraries`, and `Tests` solution fol
 ```bash
 # Build
 ./scripts/build                                        # builds Dependinator.Web
-dotnet build Dependinator.sln
+dotnet build Dependinator.slnx
 
 # Run
 ./scripts/watch                                        # dotnet watch for Dependinator.Web + Azurite + Functions host (live dev)
@@ -53,7 +53,7 @@ dotnet build Dependinator.sln
 
 # Test
 ./scripts/test                                         # unit tests, then e2e (args forwarded to ./scripts/e2e, e.g. ./scripts/test -s -t)
-dotnet test Dependinator.sln                   # all unit tests (e2e are skipped)
+dotnet test Dependinator.slnx                  # all unit tests (e2e are skipped)
 dotnet test tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj
 dotnet test tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj
 dotnet test tests/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj
@@ -100,7 +100,7 @@ gh workflow run release.yml --ref dev -f kind=preview  # preview (or kind=releas
 ./scripts/import-icons                                 # re-import curated Azure/AWS/Google icons into src/Dependinator.UI/Diagrams/Icons/Library/ (manifests in scripts/cloud-icons/)
 
 # Demo models (pre-parsed, gzipped item lists in src/Dependinator.Wasm/wwwroot, also embedded in the parser libraries)
-./scripts/gen-demo csharp                              # regenerate demo.model by parsing Dependinator.sln (e2e tests encode its facts: run the full e2e suite after)
+./scripts/gen-demo csharp                              # regenerate demo.model by parsing Dependinator.slnx (e2e tests encode its facts: run the full e2e suite after)
 ./scripts/gen-demo bicep                               # regenerate demo-bicep.model from examples/bicep/webshop.bicep (after changing the example)
 
 # Demo gif (VS Code extension README)
@@ -109,8 +109,8 @@ gh workflow run release.yml --ref dev -f kind=preview  # preview (or kind=releas
 # Packages
 ./scripts/updatepackages -u                            # upgrade non-major packages
 ./scripts/updatepackages -m                            # allow major upgrades
-dotnet list Dependinator.sln package --outdated
-dotnet list Dependinator.sln package --vulnerable
+dotnet list Dependinator.slnx package --outdated
+dotnet list Dependinator.slnx package --vulnerable
 ```
 
 `./scripts/run` requires `func` (Azure Functions Core Tools), `azurite`, and `swa` (SWA CLI) to be installed.
@@ -124,7 +124,7 @@ dotnet list Dependinator.sln package --vulnerable
 - **Style:** 4-space indent, PascalCase for types/methods/properties/constants, nullable-aware code, braces preferred.
 - **Results:** fallible operations return `Result` / `Result<T>` (`src/Dependinator.Core/Utils/Result.cs`), C# 15 unions matched on the case type. Propagate with `if (await X() is Error e) return e;` and `if (result is not T value) return result.Error;`; create errors with `new Error("...")`, `new Error("...", inner)` or `new Error(exception)`; wrap a throwing API with `Result.Catch(...)`; a `switch` over a result is exhaustive with its two arms (CS8509 is a build error). There is no `Try` helper, no typed value accessor and no `union` keyword (CSharpier cannot parse it yet). `NotFoundError` exists only for the cloud pull's 404. Name the exact declared type in a pattern: `Source`, `Item`, `Node` and `Link` exist in more than one namespace, and a pattern on the wrong twin compiles and never matches. Generic code matches `result.Value is T value`. Never use `default(Result)`. Tests assert with `AssertOk(result)` / `AssertError(result)` (`tests/Dependinator.Core.Tests/Utils/ResultAssert.cs`, linked into the other test projects).
 - **.NET 11 follow-up:** the build is on the GA SDK (`LangVersion` 15); the checklist for a later move of the target framework to net11.0 is `docs/notes/NET11-UPGRADE.md` (phase B, waiting for Azure Static Web Apps).
-- **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.sln` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
+- **Tests:** xUnit + Moq + Verify.Xunit. Name tests as `MethodName_ShouldDoX()`. `tests/Dependinator.Core.Tests/Parsing/Solutions/SolutionParserTests.cs` resolves `Dependinator.slnx` (at the repo root) dynamically via `tests/Dependinator.Core.Tests/Root.cs` — do not hardcode `/workspaces/...` paths in tests.
 - **UI/e2e tests:** `tests/Dependinator.E2E.Tests/` (Microsoft.Playwright + xUnit) run only via `./scripts/e2e` (or `E2E=1`); they target the running app at `http://localhost:5000`. The browser builds follow the `Microsoft.Playwright.Xunit` version in `Directory.Packages.props`: `.devcontainer/post-create.sh` and `scripts/cloud-setup` read it from there; after a bump, re-run `post-create.sh` (or rebuild the devcontainer) to fetch matching browsers.
 - **Browser checks:** after UI changes, use the `ui-check` skill (`.claude/skills/ui-check/`) to verify behavior with `playwright-cli` and run `./scripts/e2e`.
 - **Project knowledge:** the traps, decisions and parked ideas found while working live in `.claude/rules/`: `workflow.md` is always loaded, the others load with the files they concern (e2e tests, UI, parsing). Record new durable knowledge there, not in a local memory, so every session (cloud ones too) has it.

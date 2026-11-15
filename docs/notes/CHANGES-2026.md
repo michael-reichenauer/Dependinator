@@ -666,6 +666,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - `Dependinator` renamed to `Dependinator.UI` (Mar 27).
   - Sources in `src/` (Jun 22) and tests in `tests/` (Jun 27), with solution folders.
   - Scripts in `scripts/` (Jul 24).
+  - `Dependinator.sln` replaced by `Dependinator.slnx` (Nov 15), with `dotnet sln migrate`;
+    the `.sln` was deleted so the two cannot drift.
   - New parser projects: `Dependinator.Roslyn` (Feb), `Dependinator.Reflection` (Jul) and
     `Dependinator.Bicep` (Oct).
 - **Namespace refactors.** Modeling, Diagrams, Tiles and Commands namespaces (Mar). In Jul 10–12

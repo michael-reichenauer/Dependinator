@@ -280,7 +280,7 @@ jobs:
           global-json-file: global.json
 
       - name: Install WASM workload
-        run: dotnet workload restore Dependinator.sln
+        run: dotnet workload restore Dependinator.slnx
 
       - name: Publish Dependinator WASM
         run: |

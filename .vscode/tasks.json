@@ -134,7 +134,7 @@
 			"command": "dotnet",
 			"args": [
 				"build",
-				"${workspaceFolder}/Dependinator.sln",
+				"${workspaceFolder}/Dependinator.slnx",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
