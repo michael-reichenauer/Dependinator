@@ -114,8 +114,10 @@ static class SlnxMigration
             };
 
         // Line ids are hashes of their ends' names: the new id of each saved line that ends at a
-        // renamed node, by its old id. Every pair of a renamed node and any node is tried, but only
-        // a pair that names a saved line is hashed again under the new names.
+        // renamed node, by its old id. A line of a node runs to a sibling, between it and a child
+        // (the container's edge), or toward the nodes a link in it leads to and their ancestors
+        // (direct and explored lines), so only those pairs are tried; trying every node took
+        // 0.3 s for an 11,000 node model on the dev host, and the browser is about 10x slower.
         public IReadOnlyDictionary<string, string> LineIds(ModelDto model)
         {
             Dictionary<string, string> ids = [];
@@ -123,10 +125,28 @@ static class SlnxMigration
             if (saved.Count == 0)
                 return ids;
 
-            var names = model.Nodes.Select(n => n.Name).Distinct().ToList();
-            foreach (var end in names.Where(name => Of(name) != name))
+            var parents = model.Nodes.DistinctBy(n => n.Name).ToDictionary(n => n.Name, n => n.ParentName);
+            var children = model.Nodes.ToLookup(n => n.ParentName, n => n.Name, StringComparer.Ordinal);
+            var links = model
+                .Links.SelectMany(l => new[] { (l.SourceName, l.TargetName), (l.TargetName, l.SourceName) })
+                .ToLookup(l => l.Item1, l => l.Item2, StringComparer.Ordinal);
+
+            IEnumerable<string> AncestorsAndSelf(string name)
             {
-                foreach (var other in names)
+                for (var n = name; n != "" && parents.ContainsKey(n); n = parents[n])
+                    yield return n;
+            }
+
+            IEnumerable<string> DescendantsAndSelf(string name) =>
+                children[name].SelectMany(DescendantsAndSelf).Prepend(name);
+
+            foreach (var end in parents.Keys.Where(name => Of(name) != name))
+            {
+                // The root's descendants are the whole solution: its own links are none
+                var linked =
+                    end == From ? [] : DescendantsAndSelf(end).SelectMany(n => links[n]).SelectMany(AncestorsAndSelf);
+                var others = children[parents[end]].Concat(children[end]).Concat(linked).Distinct();
+                foreach (var other in others)
                 {
                     Add(ids, saved, end, other);
                     Add(ids, saved, other, end);
