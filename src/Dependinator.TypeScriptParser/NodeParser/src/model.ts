@@ -521,8 +521,14 @@ export class ModelBuilder {
         }
         // A constructor, "export default ..." or "exports.x = ..." has no name to ask the checker
         const host = commentHost(declaration);
-        const jsDocs = ts.getJSDocCommentsAndTags(host).filter(ts.isJSDoc);
-        const jsDoc = jsDocs.length > 0 ? (ts.getTextOfJSDocComment(jsDocs[jsDocs.length - 1].comment) ?? "").trim() : "";
+        // The nearest JSDoc with text (one with only tags can follow it)
+        const jsDoc =
+            ts
+                .getJSDocCommentsAndTags(host)
+                .filter(ts.isJSDoc)
+                .map(doc => (ts.getTextOfJSDocComment(doc.comment) ?? "").trim())
+                .filter(comment => comment !== "")
+                .pop() ?? "";
         // A variable's own comment ("const a = 1, // ... b = 2") before its statement's
         return jsDoc || (host !== declaration ? leadingComment(declaration) : undefined) || leadingComment(host);
     }
