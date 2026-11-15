@@ -87,7 +87,7 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
+                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
                 }
             ],
             "editor/context": [

@@ -31,6 +31,7 @@ public class NewModelNameValidatorTests
 
     [Theory]
     [InlineData("MyModel.sln")]
+    [InlineData("MyModel.slnx")]
     [InlineData("MyModel.SLN")]
     [InlineData("infra.bicep")]
     public void Validate_ShouldReject_ParseableFileSuffix(string name)

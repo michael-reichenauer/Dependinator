@@ -9,6 +9,8 @@ public class ModelPathsTests
     [InlineData("MySolution.sln")]
     [InlineData("MYSOLUTION.SLN")]
     [InlineData("/Demo.sln")]
+    [InlineData("/workspaces/App/App.slnx")]
+    [InlineData("C:\\App\\APP.SLNX")]
     public void IsParseable_ShouldBeTrue_ForSolutionPaths(string path)
     {
         Assert.True(ModelPaths.IsParseable(path));
@@ -59,6 +61,7 @@ public class ModelPathsTests
     [InlineData("C:\\App\\tool\\package.json", "tool")]
     [InlineData("tsconfig.json", "tsconfig.json")]
     [InlineData("/Demo.sln", "Demo.sln")]
+    [InlineData("/workspaces/App/App.slnx", "App.slnx")]
     public void DisplayName_ShouldBeTheFileName_OrTheFolderOfATypeScriptProject(string path, string expected)
     {
         Assert.Equal(expected, ModelPaths.DisplayName(path));
@@ -66,6 +69,7 @@ public class ModelPathsTests
 
     [Theory]
     [InlineData("/workspaces/App/App.sln", "App")]
+    [InlineData("/workspaces/App/App.slnx", "App")]
     [InlineData("C:\\App\\infra\\main.bicep", "main")]
     [InlineData("/workspaces/App/web/tsconfig.json", "web")]
     [InlineData("/workspaces/App/my.tool/package.json", "my.tool")]
@@ -78,6 +82,7 @@ public class ModelPathsTests
 
     [Theory]
     [InlineData("/workspaces/App/App.sln", "solution")]
+    [InlineData("/workspaces/App/App.slnx", "solution")]
     [InlineData("/workspaces/App/infra/main.bicep", "Bicep deployment")]
     [InlineData("/workspaces/App/web/tsconfig.json", "TypeScript project")]
     [InlineData("/workspaces/App/web/jsconfig.json", "JavaScript project")]

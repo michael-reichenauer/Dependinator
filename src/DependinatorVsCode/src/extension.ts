@@ -140,7 +140,7 @@ function canChangeSources(path: string, isAddedOrRemoved: boolean): boolean {
     const fileName = lowerPath.substring(lowerPath.lastIndexOf("/") + 1);
     if (fileName.endsWith(".bicep") || scriptFileNames.includes(fileName))
         return true;
-    return isAddedOrRemoved && (fileName.endsWith(".sln") || isScriptFile(path));
+    return isAddedOrRemoved && (/\.slnx?$/.test(fileName) || isScriptFile(path));
 }
 
 /** True for documents the model is parsed from: C# sources, Bicep files, and TypeScript and JavaScript files. */
@@ -204,7 +204,7 @@ function isAutoRefreshRelevant(uri: vscode.Uri): boolean {
  */
 function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     const watcher = vscode.workspace.createFileSystemWatcher(
-        "**/{*.cs,*.csproj,*.sln,*.bicep,*.bicepparam,*.ts,*.tsx,*.mts,*.cts,*.js,*.jsx,*.mjs,*.cjs,tsconfig.json,jsconfig.json,package.json}"
+        "**/{*.cs,*.csproj,*.sln,*.slnx,*.bicep,*.bicepparam,*.ts,*.tsx,*.mts,*.cts,*.js,*.jsx,*.mjs,*.cjs,tsconfig.json,jsconfig.json,package.json}"
     );
     let pendingTimer: ReturnType<typeof setTimeout> | undefined;
     let hasUnrefreshedChanges = false;

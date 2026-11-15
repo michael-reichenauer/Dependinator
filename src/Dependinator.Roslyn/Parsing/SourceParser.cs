@@ -11,8 +11,7 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public bool CanParse(string path) =>
-        path == DemoModel.DemoSolutionName || path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
+    public bool CanParse(string path) => path == DemoModel.DemoSolutionName || ModelPaths.IsSolution(path);
 
     public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string solutionPath, SolutionParseOptions options)
     {
