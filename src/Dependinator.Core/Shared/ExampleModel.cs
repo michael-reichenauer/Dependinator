@@ -8,7 +8,7 @@ namespace Dependinator.Core.Shared;
 static class DemoModel
 {
     public static string DemoSolutionName = "/Demo.sln";
-    public static string WorkingSolutionPath = "/workspaces/Dependinator/Dependinator.sln";
+    public static string WorkingSolutionPath = "/workspaces/Dependinator/Dependinator.slnx";
     public static string DemoModelName = "demo.model";
     public static string DemoOutputPath = $"/workspaces/Dependinator/src/Dependinator.Wasm/wwwroot/{DemoModelName}";
 
@@ -29,9 +29,4 @@ static class DemoModel
     // In test mode always use the embedded demo model (no parsing); otherwise the Web
     // host parses the working solution and other hosts use the embedded demo model.
     public static string Path => Build.IsTestMode || !Build.IsWeb ? DemoSolutionName : WorkingSolutionPath;
-
-    // The demo models offered in the Models menu: the browser app has nothing else to open
-    // locally, and the test host uses them for determinism. The Web dev host and VS Code open
-    // real files instead (the demos stay reachable through share links and the startup fallback).
-    public static IReadOnlyList<string> ListedPaths => Build.IsTestMode || Build.IsStandaloneWasm ? DemoNames : [];
 }

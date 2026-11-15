@@ -8,6 +8,7 @@
 <ModeBanner />
 <NodeToolbar />
 <LineToolbar />
+<LineEndTags />
 <ManualNodeNameEntry />
 <ContextMenu />
 <DependenciesTree />
@@ -25,11 +26,19 @@
 <AppProgress />
 
 
+@{
+    var view = TakeView();
+}
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
 
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="@Width" height="@Height" viewBox="@ViewBox" style="background-color:@DColors.CanvasBackground">
+    @* The frame clips the svg while a gesture moves it by a transform (GestureTransform), and its
+       canvas color fills what the moved svg leaves uncovered. It is where the canvas is on the
+       page: pointer offsets and the canvas rect are measured on it, not on the moved svg. *@
+    <div id="@CanvasFrameId" class="canvas-frame"
+         style="width:@(Width)px;height:@(Height)px;background-color:@DColors.CanvasBackground">
+    <svg id="svgcanvas" class="@SvgClass" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="@Width" height="@Height" viewBox="@view.ViewBox" style="background-color:@DColors.CanvasBackground;@view.Style">
 
         <style>
                     svg {
@@ -71,7 +80,25 @@
                         opacity: 1;
                     }
 
-                    .selectpoint:hover * {
+                    /* A go to's corner brackets (NodeSvg.HighlightSvg) pulse twice as the view
+                       lands, then stay until the user's next action (HighlightService). */
+                    .dep-highlight-pulsing .dep-highlight {
+                        animation: dep-highlight-pulse 0.75s ease-in-out 2;
+                    }
+
+                    @@media (prefers-reduced-motion: reduce) {
+                        .dep-highlight-pulsing .dep-highlight {
+                            animation: none;
+                        }
+                    }
+
+                    @@keyframes dep-highlight-pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.15; }
+                    }
+
+                    .selectpoint:hover *,
+                    .line-label-handle:hover {
                         fill: #51b8fc;
                         stroke-width: 1px;
                         fill-opacity: 0.3;
@@ -331,8 +358,9 @@
             </marker>
             @((MarkupString)IconDefs)
         </defs>
-        @((MarkupString)Content)
+        @((MarkupString)view.Content)
     </svg>
+    </div>
 
     @if (manualEditService.IsLinkDragActive)
     {

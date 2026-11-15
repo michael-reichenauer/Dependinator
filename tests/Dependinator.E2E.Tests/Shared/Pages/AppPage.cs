@@ -16,7 +16,10 @@ public sealed class AppPage
     // Toolbar / menu hooks (see AppBar.razor data-testid attributes).
     public ILocator Menu => page.GetByTestId("appbar-menu");
     public ILocator SearchButton => page.GetByTestId("toolbar-search");
-    public ILocator Canvas => page.Locator("#svgcanvas");
+
+    // The canvas's place on the page: the frame around the svg, which a pan or zoom moves by a
+    // CSS transform for a moment (GestureTransform), so the svg's own box can be off then.
+    public ILocator Canvas => page.Locator("#canvasframe");
 
     public ILocator MenuItem(string testId) => page.GetByTestId(testId);
 
@@ -57,17 +60,17 @@ public sealed class AppPage
     public ILocator NodeReferencesButton => page.GetByTestId("node-references");
     public ILocator NodeDependenciesButton => page.GetByTestId("node-dependencies");
 
-    // Direct-line depth items in the node menu (NodeToolbar.razor); "Merge Lines Back One Level"
-    // is disabled while the selected node has no split depth. MudMenuItem renders Disabled as a
-    // roleless <div aria-disabled> with a mud-disabled class, so match on the class.
-    public ILocator NodeLinesDeeper => MenuItem("node-menu-lines-deeper");
-    public ILocator NodeLinesShallower => MenuItem("node-menu-lines-shallower");
-    public ILocator NodeLinesShallowerDisabled =>
-        page.Locator("[data-testid='node-menu-lines-shallower'].mud-disabled");
-
-    // Crossing ("cousin") lines drawn by RepLineService for split nodes; absent in the
+    // Crossing ("cousin") lines drawn by RepLineService for a selected stub; absent in the
     // aggregated default view.
     public ILocator CousinLines => page.Locator("#svgcanvas polyline[marker-end='url(#arrow-cousin)']");
+
+    // The crossing lines whose source's long name starts with the prefix ("Demo.UI.Main." for
+    // the lines of Main's members): a line's group holds both its drawn polyline and the hover
+    // group with the "Source→Target (n)" data-name.
+    public ILocator CousinLinesFrom(string sourcePrefix) =>
+        page.Locator(
+            $"#svgcanvas g.line:has(polyline[marker-end='url(#arrow-cousin)']):has(g.hoverable[data-name^={Css(sourcePrefix)}])"
+        );
 
     // The explorer subject's lines (Line.IsFocused): accent colored like the explorer's pair
     // lines, but dotted instead of dashed. Present only while the explorer shows lines.
@@ -83,11 +86,11 @@ public sealed class AppPage
     public ILocator Line(string sourceName, string targetName) =>
         page.Locator($"#svgcanvas g.hoverable[data-name^={Css($"{sourceName}→{targetName} (")}]");
 
-    // The selected-line toolbar (LineToolbar.razor) and its jumps to the line's ends, offered on
-    // direct lines and on the lines the dependency explorer draws for its subject.
+    // The selected-line toolbar (LineToolbar.razor), and the tags at the edge of the view that go
+    // to a selected line's ends when they are out of view (LineEndTags.razor).
     public ILocator LineToolbar => page.GetByTestId("line-toolbar");
-    public ILocator LinePanSourceButton => page.GetByTestId("line-pan-source");
-    public ILocator LinePanTargetButton => page.GetByTestId("line-pan-target");
+    public ILocator LineEndSourceTag => page.GetByTestId("line-end-tag-source");
+    public ILocator LineEndTargetTag => page.GetByTestId("line-end-tag-target");
 
     // The expand arrows of the explorer tree rows (MudTreeViewItem), in document order.
     public ILocator ExplorerExpandButtons => page.Locator(".mud-treeview button.mud-treeview-item-expand-button");
@@ -442,6 +445,26 @@ public sealed class AppPage
         }
     }
 
+    // Open a model that is not one of the workspace's (a demo, design or cloud model). The test
+    // host has a workspace, like VS Code, so its Models menu lists only the workspace's models
+    // and the others are opened from the Models dialog (Models › Other Models …).
+    public async Task OpenOtherModelAsync(string name)
+    {
+        await (await OpenModelsDialogAsync())
+            .Filter(new() { HasText = name })
+            .GetByRole(AriaRole.Button)
+            .First.ClickAsync();
+        await page.GetByTestId("models-dialog").WaitForAsync(new() { State = WaitForSelectorState.Detached });
+    }
+
+    // Open the Models dialog and return its rows (one per model, in sections).
+    public async Task<ILocator> OpenModelsDialogAsync()
+    {
+        await (await OpenSubMenuItemAsync("menu-models", "menu-manage-models")).ClickAsync();
+        await page.GetByTestId("models-dialog").WaitForAsync();
+        return page.GetByTestId("models-item");
+    }
+
     // Assert on items in a submenu, reopening the submenu on each attempt. The submenu can close
     // again right after it opened (a re-render, e.g. the one a toggle's re-parse triggers when it
     // completes, or a menu click whose popover was still fading out when the menu was reopened),
@@ -477,10 +500,8 @@ public sealed class AppPage
     {
         string expected = isChecked ? "true" : "false";
         ILocator item = MenuItem(testId);
-        await ExpectSubMenuAsync(
-            parentTestIds,
-            testId,
-            timeout => Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
+        await ExpectSubMenuAsync(parentTestIds, testId, timeout =>
+            Expect(item).ToHaveAttributeAsync("data-checked", expected, new() { Timeout = timeout })
         );
 
         // Close the submenus level by level (a nested one first, then the parent's), so the
@@ -553,10 +574,10 @@ public sealed class AppPage
     }
 
     // Clear the selection with Escape and verify it took (the node toolbar goes away). Waits for
-    // the selection first: a navigation (NavigationService.ShowNodeAsync) selects its node only
-    // after the pan/zoom animation, so an Escape pressed before that cancels nothing and the
-    // toolbar shows up afterwards (a CI flake). A keystroke landing while something animates
-    // can also be swallowed, so Escape is pressed again until the toolbar is gone.
+    // the selection first: a selection lands on the server after the click, so an Escape pressed
+    // before that cancels nothing and the toolbar shows up afterwards (a CI flake). A keystroke
+    // landing while something animates can also be swallowed, so Escape is pressed again until
+    // the toolbar is gone.
     public async Task DeselectAsync()
     {
         await Expect(NodeToolbarMenu).ToBeVisibleAsync();
@@ -857,7 +878,11 @@ public sealed class AppPage
     // A screen point on the line's visible part, read until it stops moving between two reads:
     // the canvas pans/zooms with animations, and a re-render can momentarily detach the line's
     // SVG group (same approach as WaitForStableNodeBoxAsync).
-    async Task<(float X, float Y)> WaitForStableLinePointAsync(ILocator line, float fraction, float timeoutSeconds = 15)
+    public async Task<(float X, float Y)> WaitForStableLinePointAsync(
+        ILocator line,
+        float fraction,
+        float timeoutSeconds = 15
+    )
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -1157,9 +1182,10 @@ public sealed class AppPage
     // popover is open, and a just-clicked menu item's popover is still fading out for a moment
     // (a CI run lost the hotkey 260 ms after a menu click), so wait for those to be gone, then
     // verify the dialog opened and press again if the keystroke was dropped anyway.
-    public async Task<SearchDialog> OpenSearchViaHotkeyAsync()
+    public async Task<SearchDialog> OpenSearchViaHotkeyAsync(bool isFromInitialView = true)
     {
-        await WaitForModelRenderedAsync();
+        if (isFromInitialView)
+            await WaitForModelRenderedAsync();
         await Expect(KeyboardOwners).ToHaveCountAsync(0);
         SearchDialog search = new(this, page);
         for (int attempt = 1; ; attempt++)
@@ -1179,18 +1205,30 @@ public sealed class AppPage
     ILocator KeyboardOwners =>
         page.Locator(".mud-dialog-container, .mud-popover-open .mud-list, .mud-popover-open .mud-menu-list");
 
+    // A go to's highlight (NodeSvg.HighlightSvg): a navigation marks the node it showed instead of
+    // selecting it, until the user's next press or key.
+    public ILocator NodeHighlight => page.GetByTestId("node-highlight");
+
     // Navigate to a node by its exact full name through the search dialog (which closes on
-    // Enter and selects the node once the pan/zoom animation lands). Waits for that selection:
-    // a test that went on before it landed had its own selection replaced by the navigation's a
-    // moment later, so its node menu acted on the wrong node, or its menu click was swallowed
-    // by the toolbar's re-render (the most common CI flake of Oct-Nov 2026, HiddenNodesTests).
+    // Enter and highlights the node once the pan/zoom animation lands), then select it, as the
+    // callers act on it through its node toolbar. Waits for the highlight first: a click before the
+    // view landed hit whatever was under the pointer then, and a test that went on before a
+    // navigation landed had its own state changed by it a moment later (the most common CI flake
+    // of Oct-Nov 2026, HiddenNodesTests, when a navigation still selected its node).
     public async Task NavigateToNodeAsync(string fullName)
     {
-        SearchDialog search = await OpenSearchViaHotkeyAsync();
+        await NavigateToNodeWithoutSelectingAsync(fullName);
+        await SelectNodeByFullNameAsync(fullName);
+    }
+
+    // Navigate to a node by its exact full name and wait for its highlight, leaving the selection
+    // as it was. isFromInitialView: false for a second navigation, as the wait for the rendered
+    // model looks for the solution's label at the initial view.
+    public async Task NavigateToNodeWithoutSelectingAsync(string fullName, bool isFromInitialView = true)
+    {
+        SearchDialog search = await OpenSearchViaHotkeyAsync(isFromInitialView);
         await search.NavigateToAsync(fullName);
-        // Proves the selection only when nothing was selected before, as in every caller so far:
-        // the navigation clears the selection first, but a toolbar still showing passes at once.
-        await Expect(NodeToolbarMenu).ToBeVisibleAsync();
+        await Expect(NodeHighlight).ToBeVisibleAsync();
     }
 
     // Stub Clerk sign-in without the real Clerk (E2ETestBase keeps it away): stub window.Clerk

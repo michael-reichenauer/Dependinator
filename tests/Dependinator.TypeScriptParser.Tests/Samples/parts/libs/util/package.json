@@ -1,0 +1,7 @@
+{
+    "name": "@acme/util",
+    "version": "1.0.0",
+    "private": true,
+    "description": "A part of the parts sample that the server part uses as a package: by what it builds, which is not built.",
+    "types": "./dist/index.d.ts"
+}

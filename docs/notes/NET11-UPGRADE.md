@@ -34,10 +34,10 @@ Verify (all must be clean, as for every migration commit):
 
 ```bash
 dotnet --version                                   # 11.0.1xx, no "rc"
-dotnet build Dependinator.sln 2>&1 | grep -E "warning|error"      # nothing
+dotnet build Dependinator.slnx 2>&1 | grep -E "warning|error"     # nothing
 dotnet build src/Dependinator.DemoGen/Dependinator.DemoGen.csproj
 dotnet csharpier check .
-dotnet test Dependinator.sln                       # read every "Passed!" line, never only the tail
+dotnet test Dependinator.slnx                      # read every "Passed!" line, never only the tail
 ./scripts/e2e -s -a                                # needs func + azurite (npm i -g azurite)
 dotnet publish src/Dependinator.Wasm/Dependinator.Wasm.csproj -c Release -o /tmp/wasm
 dotnet publish src/Dependinator.Lsp/Dependinator.Lsp.csproj -c Release -r linux-x64 --self-contained true -o /tmp/lsp
@@ -58,7 +58,7 @@ newest `apiRuntime`, no 11.0. So the gate is not met: check the Static Web Apps 
 and runtimes" page again before starting.
 
 - [ ] Every `*.csproj` under `src/` and `tests/` (18 projects, including `src/Dependinator.DemoGen`
-      which is outside `Dependinator.sln`): `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
+      which is outside `Dependinator.slnx`): `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
 - [ ] Delete `src/Dependinator.Core/Utils/UnionPolyfill.cs`: the base class library ships
       `UnionAttribute` and `IUnion` (the file is `#if !NET11_0_OR_GREATER`, so it is already empty on
       net11.0). Keep the `[Union]`/`IUnion` uses in `Result.cs` and `SyncDownOutcome.cs` as they are.
@@ -72,7 +72,7 @@ and runtimes" page again before starting.
       `dotnet-install.sh` RUN block and its comment. `scripts/installdevtools`: delete the install line
       and its echo. `.config/dotnet-tools.json`: the csharpier tool has `"rollForward": false`, so its
       version must support the net11 runtime (or set `rollForward` to `true`).
-- [ ] Hardcoded `net10.0` paths: `src/DependinatorVsCode/src/languageServer.ts` (two entries, the dev
+- [ ] Hardcoded `net10.0` paths: `src/Dependinator.VsCodeExt/src/languageServer.ts` (two entries, the dev
       fallback to `bin/{Debug,Release}/net10.0/Dependinator.Lsp.dll`), `.vscode/launch.json`
       (`Dependinator.Web.dll`), `.vscode/tasks.json` (Api `cwd`), `.vscode/settings.json`
       (`azureFunctions.deploySubpath`).
@@ -83,12 +83,12 @@ and runtimes" page again before starting.
 - [ ] `Directory.Packages.props`: `Microsoft.Build`, `.Framework`, `Microsoft.NET.StringTools` 18.9.6 →
       the 18.10+ line that ships with the 11 SDK, and delete their `ignore` entries in
       `.github/dependabot.yml`.
-- [ ] `dotnet workload restore Dependinator.sln` on the new band (a no-op today because
+- [ ] `dotnet workload restore Dependinator.slnx` on the new band (a no-op today because
       `WasmBuildNative` is false; keep the CI step either way).
 - [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
       require, and set `apiRuntime` in `src/Dependinator.Wasm/staticwebapp.config.json` to the 11.0 value.
 - [ ] Docs: `README.md` (Solution structure and Prerequisites), `CLAUDE.md` line 11,
-      `src/DependinatorVsCode/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
+      `src/Dependinator.VsCodeExt/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
       `UnionPolyfill.cs` comments disappear with those edits.
 - [ ] `src/Dependinator.Core/Parsing/Utils/MSBuildLocatorHelper.cs`: no code change, but note that a
       net11.0 process is offered the 11.x SDK by `MSBuildLocator` (today it is offered only 10.x), so

@@ -41,6 +41,20 @@ public class MemberSummarySvgTests
     }
 
     [Fact]
+    public void GetMemberSummarySvg_SmallCard_ShouldKeepItsTextReadable()
+    {
+        // The smallest type opens to its summary card at 120 px: its text does not shrink with
+        // the card below 0.85 of the 180 px sizes (a 12 px name, 9 px rows); fewer rows fit instead.
+        var type = TypeWithRows();
+
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 120, 120), 1);
+
+        Assert.Contains("font-size=\"10.2px\"", svg); // The name
+        Assert.Contains("font-size=\"7.65px\"", svg); // A row
+        Assert.DoesNotContain("font-size=\"6px\"", svg);
+    }
+
+    [Fact]
     public void GetMemberSummarySvg_ShouldAttachTheSignatureToTheName()
     {
         var type = TypeWithRows();
@@ -57,11 +71,8 @@ public class MemberSummarySvgTests
         Add(type, "Alpha", NodeType.ClassType, isPrivate: true);
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = MemberCardSvg.GetMemberSummarySvg(
-            type,
-            new Rect(0, 0, 180, 300),
-            1,
-            isRowShown: n => n.ShortName != "Hidden"
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 300), 1, isRowShown: n =>
+            n.ShortName != "Hidden"
         );
 
         Assert.True(
@@ -76,11 +87,8 @@ public class MemberSummarySvgTests
         var type = TypeWithRows();
         Add(type, "Hidden", NodeType.ClassType);
 
-        var svg = MemberCardSvg.GetMemberSummarySvg(
-            type,
-            new Rect(0, 0, 180, 106),
-            1,
-            isRowShown: n => n.ShortName != "Hidden"
+        var svg = MemberCardSvg.GetMemberSummarySvg(type, new Rect(0, 0, 180, 106), 1, isRowShown: n =>
+            n.ShortName != "Hidden"
         );
 
         Assert.Contains("1 nested type<", svg);

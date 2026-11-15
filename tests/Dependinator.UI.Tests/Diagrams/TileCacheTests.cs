@@ -208,4 +208,32 @@ public class TileCacheTests
 
         Assert.True(isDisposed);
     }
+
+    [Fact]
+    public void AddPrefetched_ShouldCacheTheTile_WithoutMakingItTheLastUsed()
+    {
+        TileCache cache = CreateCache();
+        Tile shown = CreateTile(0, 0);
+        cache.SetCached(shown, ViewRect, Zoom);
+        Tile ahead = CreateTile(1, 0);
+
+        cache.AddPrefetched(ahead);
+
+        Assert.True(cache.Contains(ahead.Key));
+        Assert.True(cache.TryGetLastUsed(ViewRect, Zoom, out Tile lastUsed));
+        Assert.Equal(shown, lastUsed);
+    }
+
+    [Fact]
+    public void AddPrefetched_ShouldDropTheTile_WhenTheScreenTileSizeDiffers()
+    {
+        TileCache cache = CreateCache();
+        cache.SetCached(CreateTile(0, 0), ViewRect, Zoom);
+        Tile otherSize = CreateTile(1, 0, tileWidth: 800);
+
+        cache.AddPrefetched(otherSize);
+
+        Assert.False(cache.Contains(otherSize.Key));
+        Assert.True(cache.Contains(new TileKey(0, 0, 0, 1000, 500)));
+    }
 }

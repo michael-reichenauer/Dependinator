@@ -28,6 +28,22 @@ public class MemberCardTests
         Assert.Equal([publicMethod, privateMethod], sections[3].Rows);
     }
 
+    // A TypeScript or JavaScript file's card: its variables, then its functions.
+    [Fact]
+    public void Sections_ShouldListAFilesVariablesAndFunctions()
+    {
+        var file = Type();
+        var helper = Member(file, "helper", NodeType.FunctionMember, isPrivate: true);
+        var start = Member(file, "start", NodeType.FunctionMember);
+        var limit = Member(file, "limit", NodeType.VariableMember);
+
+        var sections = MemberCard.Sections(file.Children, ByName);
+
+        Assert.Equal(["Variables", "Functions"], sections.Select(s => s.Title));
+        Assert.Equal([limit], sections[0].Rows);
+        Assert.Equal([start, helper], sections[1].Rows);
+    }
+
     [Fact]
     public void Arrange_ShouldPutEachSectionsHeadingAboveItsFirstRow()
     {

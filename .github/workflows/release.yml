@@ -151,8 +151,8 @@ jobs:
           git checkout -q -B dev "$RELEASE_SHA"
           NEXT="$MAJOR.$((MINOR + 1))"
           sed -i "s|<MinorVersion>$MINOR</MinorVersion>|<MinorVersion>$((MINOR + 1))</MinorVersion>|" Directory.Build.props
-          npm version "$NEXT.0" --no-git-tag-version --allow-same-version --prefix src/DependinatorVsCode > /dev/null
-          git commit -m "Start v$NEXT" -- Directory.Build.props src/DependinatorVsCode/package.json src/DependinatorVsCode/package-lock.json
+          npm version "$NEXT.0" --no-git-tag-version --allow-same-version --prefix src/Dependinator.VsCodeExt > /dev/null
+          git commit -m "Start v$NEXT" -- Directory.Build.props src/Dependinator.VsCodeExt/package.json src/Dependinator.VsCodeExt/package-lock.json
           DEV_SHA="$(git rev-parse HEAD)"
 
           git log --graph --oneline -6 "$DEV_SHA" "$MAIN_SHA"
@@ -280,7 +280,7 @@ jobs:
           global-json-file: global.json
 
       - name: Install WASM workload
-        run: dotnet workload restore Dependinator.sln
+        run: dotnet workload restore Dependinator.slnx
 
       - name: Publish Dependinator WASM
         run: |
@@ -368,17 +368,17 @@ jobs:
 
       - name: Install npm dependencies
         run: npm ci
-        working-directory: src/DependinatorVsCode
+        working-directory: src/Dependinator.VsCodeExt
 
       # package.json on dev holds major.minor.0; the package gets the whole version. Not committed.
       - name: Set the extension's version
         run: npm version "${{ needs.prepare.outputs.version }}" --no-git-tag-version --allow-same-version
-        working-directory: src/DependinatorVsCode
+        working-directory: src/Dependinator.VsCodeExt
 
       # A preview's packages are marked pre-release, which the Marketplace's pre-release track needs
       - name: Package extension
         run: npm run package:${{ matrix.target }}${{ inputs.kind == 'preview' && ' -- --pre-release' || '' }}
-        working-directory: src/DependinatorVsCode
+        working-directory: src/Dependinator.VsCodeExt
 
       # The bundled LSP server is per-RID and is picked at runtime from server/<rid>/,
       # so a package whose server RID does not match its target has no working server
@@ -399,7 +399,7 @@ jobs:
             exit 1
           fi
           echo "rid=$rid" >> "$GITHUB_ENV"
-        working-directory: src/DependinatorVsCode
+        working-directory: src/Dependinator.VsCodeExt
 
       # The package's own version, and Core's informational version '<version>+<sha>' in its server
       - name: Check the version
@@ -426,13 +426,13 @@ jobs:
             exit 1
           fi
           echo "Built $VSIX, $EXPECTED"
-        working-directory: src/DependinatorVsCode
+        working-directory: src/Dependinator.VsCodeExt
 
       - name: Upload VSIX
         uses: actions/upload-artifact@v4
         with:
           name: dependinator-${{ matrix.target }}-vsix
-          path: src/DependinatorVsCode/*.vsix
+          path: src/Dependinator.VsCodeExt/*.vsix
           if-no-files-found: error
 
   # Only when everything above has passed, and not in a dry run. Each step can be run again (Re-run

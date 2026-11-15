@@ -7,6 +7,15 @@ interface ITileCache : IDisposable
     bool TryGetLastUsed(Rect viewRect, double zoom, out Tile tile);
     bool TryGetCached(TileKey key, Rect viewRect, double zoom, out Tile tile);
     void SetCached(Tile tile, Rect viewRect, double zoom);
+
+    // Whether a tile for the key is cached (and of the current screen tile size), without
+    // marking it used.
+    bool Contains(TileKey key);
+
+    // Caches a tile drawn ahead of need (SvgService.PrefetchNext) without making it the shown
+    // one. A tile of another screen size than the cached ones is dropped (the screen was resized,
+    // or the cache cleared): returns whether it was cached.
+    bool AddPrefetched(Tile tile);
     void ClearCache();
 }
 
@@ -78,6 +87,26 @@ class TileCache : ITileCache
     {
         InvalidateIfTileSizeChanged(tile.Key); // May clear the cache, resetting cachedBytes
 
+        Insert(tile);
+        SetCurrentScreenTileSize(tile);
+        SetLastUsed(viewRect, zoom, tile);
+    }
+
+    public bool Contains(TileKey key) => IsCurrentSize(key) && tiles.ContainsKey(key);
+
+    public bool AddPrefetched(Tile tile)
+    {
+        if (!IsCurrentSize(tile.Key))
+            return false;
+        Insert(tile);
+        return true;
+    }
+
+    bool IsCurrentSize(TileKey key) =>
+        key.TileWidth == currentScreenTileWidth && key.TileHeight == currentScreenTileHeight;
+
+    void Insert(Tile tile)
+    {
         if (tiles.TryGetValue(tile.Key, out var replaced))
         {
             cachedBytes -= replaced.Tile.ByteSize; // Replacing this key, not adding to it
@@ -89,8 +118,6 @@ class TileCache : ITileCache
         // Evicting after the insert keeps the new tile safe: it is the most recently used, so
         // it is the last one eviction would drop, even when it alone exceeds the whole budget.
         EvictUntilWithinBudget();
-        SetCurrentScreenTileSize(tile);
-        SetLastUsed(viewRect, zoom, tile);
     }
 
     // Evicts the least recently used tiles down to the low water marks, so a long session keeps

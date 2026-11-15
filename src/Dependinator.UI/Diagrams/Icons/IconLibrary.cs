@@ -166,10 +166,8 @@ static class IconLibrary
 
         // Hex colors only occur as whole attribute values (fill="#8E6BFF", stop-color="#fff");
         // requiring the surrounding quotes avoids ever touching ids or other text.
-        return Regex.Replace(
-            svg,
-            "(?<=\")#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?=\")",
-            match => ColorUtil.ShiftHue(match.Value, BaseHue, hue)
+        return Regex.Replace(svg, "(?<=\")#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?=\")", match =>
+            ColorUtil.ShiftHue(match.Value, BaseHue, hue)
         );
     }
 

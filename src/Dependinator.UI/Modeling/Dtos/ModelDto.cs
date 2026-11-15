@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Dependinator.UI.Shared.Types;
 
 // Serializable data-transfer objects for persisting and loading the model to and from storage,
@@ -50,6 +51,24 @@ record ModelDto
     // for a model opened from the cache, before (or without) a new parse. Defaulted (no
     // FormatVersion bump).
     public IReadOnlyList<ParseProblemDto> ParseProblems { get; init; } = [];
+
+    // For a workspace model: the sources the user chose it to be made of, and the ones left
+    // out (see WorkspaceSource). Defaulted (no FormatVersion bump).
+    public IReadOnlyList<WorkspaceSourceDto> WorkspaceSources { get; init; } = [];
+}
+
+// A source of a workspace model and whether it is in the model (see Models.WorkspaceSource).
+[Serializable]
+record WorkspaceSourceDto
+{
+    public required string Path { get; init; }
+    public bool IsIncluded { get; init; }
+    public string? RootName { get; init; }
+    public bool IsInModel { get; init; }
+
+    // Where the user chose to show the source (see Models.WorkspaceSource): null is Automatic
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ShownIn { get; init; }
 }
 
 // A problem the last parse found (see Dependinator.Core.Parsing.ParseProblem).
@@ -59,6 +78,9 @@ record ParseProblemDto
     public required string Message { get; init; }
     public int ErrorCount { get; init; }
     public string? NodeName { get; init; }
+
+    // In a workspace model: the key of the source the problem is of (see ParseProblem).
+    public string? Source { get; init; }
 }
 
 // An architecture rule of its kind: "From" must not depend on "To", only "From" may use "To", or

@@ -55,8 +55,8 @@ public class AboutNodeTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
-        LocatorBoundingBoxResult box =
-            await App.Node("Externals").BoundingBoxAsync() ?? throw new InvalidOperationException("Node not rendered.");
+        LocatorBoundingBoxResult box = await App.Node("Externals").BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Node not rendered.");
         await Page.Mouse.ClickAsync(
             box.X + box.Width / 2,
             box.Y + box.Height / 2,

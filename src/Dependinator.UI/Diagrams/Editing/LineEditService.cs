@@ -9,74 +9,80 @@ namespace Dependinator.UI.Diagrams.Editing;
 
 interface ILineEditService
 {
-    Task AddSegmentPoint(LineId lineId, Pos screenPos);
-    Task RemoveSegmentPoint(LineId lineId, Pos screenPos);
-    void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId);
-    void SnapSegmentPointToGrid(PointerId pointerId);
+    // Adds a bend point at a selected line's segment handle (pointerId.IsLineMidPoint), moved by
+    // the drag so far (in screen pixels), and returns the new point's pointer id for the rest of
+    // the drag; null when the line has no such segment.
+    PointerId? InsertSegmentPoint(PointerId midPointId, double screenDx, double screenDy, double zoom);
+
+    // Moves a bend point under a drag by the pointer's movement in screen pixels.
+    void MoveSegmentPoint(double movementX, double movementY, double zoom, PointerId pointerId);
+
+    // Ends a bend-point drag: a point dragged back onto the straight line between its neighbours
+    // is removed, any other is snapped to the grid.
+    void EndSegmentPointMove(PointerId pointerId, double zoom);
+    void RemoveSegmentPoint(PointerId pointerId);
+
+    // Removes all bend points, so the line runs straight between its ends.
+    void StraightenLine(LineId lineId);
+
+    // Whether the line runs between siblings whose bends can be routed again (LineRoutes).
+    bool CanRerouteLine(LineId lineId);
+
+    // Routes the line again around the nodes where they stand now, as one undo step; bends the
+    // user set go too, so the layout owns the line again.
+    void RerouteLine(LineId lineId);
+
+    // "Reset Lines": routes every line between the node's children again, keeping the children
+    // where they are, bends the user set included, as one undo step.
+    void ResetLines(NodeId nodeId);
+
+    // Slides a line's label along the line under an edit-mode drag (pointerId.IsLineLabel) by the
+    // pointer's movement in screen pixels, and ends the drag.
+    void MoveLabel(double movementX, double movementY, double zoom, PointerId pointerId);
+    void EndLabelMove();
 }
 
 [Scoped]
-class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScreenService screenService)
-    : ILineEditService
+class LineEditService(IModelMgr modelMgr, ICommandService commandService) : ILineEditService
 {
-    public async Task AddSegmentPoint(LineId lineId, Pos screenPos)
+    // A bend point released closer than this (screen pixels) to the straight line between its
+    // neighbours is removed: dragging a bend back is how it is undone without a toolbar button.
+    internal const double StraightTolerance = 6;
+
+    public PointerId? InsertSegmentPoint(PointerId midPointId, double screenDx, double screenDy, double zoom)
     {
-        if (screenPos == Pos.None)
-            return;
+        if (!midPointId.IsLineMidPoint)
+            return null;
 
+        var segmentIndex = midPointId.LineMidPointIndex;
         IReadOnlyList<Pos> updatedPoints;
-        var worldHint = await TryScreenToWorldPosAsync(screenPos);
-        if (worldHint is null)
-            return;
-
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Lines.TryGetValue(lineId, out var line))
-                return;
-            if (!LinePathGeometry.TryGetLocalEndpoints(line, out var endpoints))
-                return;
+            if (!model.Lines.TryGetValue(midPointId.LineId, out var line))
+                return null;
             if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
-                return;
+                return null;
+            var polyline = LinePathGeometry.GetLocalPolylinePoints(line);
+            if (polyline.Count != line.SegmentPoints.Count + 2 || segmentIndex >= polyline.Count - 1)
+                return null;
 
-            var localHint = ToOwnerChildrenLocal(owner, worldHint);
-
-            updatedPoints = InsertPointAtClosestSegment(line, endpoints, localHint);
+            var (a, b) = (polyline[segmentIndex], polyline[segmentIndex + 1]);
+            var fraction = midPointId.LineMidPointFraction;
+            var localZoom = GetChildrenLocalZoom(owner) * zoom;
+            var point = new Pos(
+                a.X + (b.X - a.X) * fraction + screenDx * localZoom,
+                a.Y + (b.Y - a.Y) * fraction + screenDy * localZoom
+            );
+            var points = line.SegmentPoints.ToList();
+            points.Insert(segmentIndex, point);
+            updatedPoints = points;
         }
 
-        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
+        commandService.Do(new LineEditCommand(midPointId.LineId) { SegmentPoints = updatedPoints });
+        return PointerId.FromLinePoint(midPointId.LineId, segmentIndex);
     }
 
-    public async Task RemoveSegmentPoint(LineId lineId, Pos screenPos)
-    {
-        if (screenPos == Pos.None)
-            return;
-
-        IReadOnlyList<Pos> updatedPoints;
-        var worldHint = await TryScreenToWorldPosAsync(screenPos);
-        if (worldHint is null)
-            return;
-
-        using (var model = modelMgr.UseModel())
-        {
-            if (!model.Lines.TryGetValue(lineId, out var line))
-                return;
-            if (line.SegmentPoints.Count == 0)
-                return;
-            if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
-                return;
-
-            var localHint = ToOwnerChildrenLocal(owner, worldHint);
-            var removeIndex = GetClosestControlPointIndex(line.SegmentPoints, localHint);
-            if (removeIndex < 0)
-                return;
-
-            updatedPoints = line.SegmentPoints.Where((_, index) => index != removeIndex).ToList();
-        }
-
-        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = updatedPoints });
-    }
-
-    public void MoveSegmentPoint(PointerEvent e, double zoom, PointerId pointerId)
+    public void MoveSegmentPoint(double movementX, double movementY, double zoom, PointerId pointerId)
     {
         if (!pointerId.IsLinePoint)
             return;
@@ -92,8 +98,8 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
                 return;
 
             var localZoom = GetChildrenLocalZoom(owner) * zoom;
-            var dx = e.MovementX * localZoom;
-            var dy = e.MovementY * localZoom;
+            var dx = movementX * localZoom;
+            var dy = movementY * localZoom;
             var points = line.SegmentPoints.ToList();
             var point = points[pointerId.LinePointIndex];
             points[pointerId.LinePointIndex] = point with { X = point.X + dx, Y = point.Y + dy };
@@ -103,7 +109,40 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
     }
 
-    public void SnapSegmentPointToGrid(PointerId pointerId)
+    public void EndSegmentPointMove(PointerId pointerId, double zoom)
+    {
+        if (!pointerId.IsLinePoint)
+            return;
+
+        var index = pointerId.LinePointIndex;
+        IReadOnlyList<Pos> updatedPoints;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(pointerId.LineId, out var line))
+                return;
+            if (index < 0 || index >= line.SegmentPoints.Count)
+                return;
+
+            var points = line.SegmentPoints.ToList();
+            if (IsOnStraightLine(line, index, zoom))
+            {
+                points.RemoveAt(index);
+            }
+            else
+            {
+                var point = points[index];
+                var snapped = point with { X = NodeGrid.Snap(point.X), Y = NodeGrid.Snap(point.Y) };
+                if (snapped == point)
+                    return;
+                points[index] = snapped;
+            }
+            updatedPoints = points;
+        }
+
+        commandService.Do(new LineEditCommand(pointerId.LineId) { SegmentPoints = updatedPoints });
+    }
+
+    public void RemoveSegmentPoint(PointerId pointerId)
     {
         if (!pointerId.IsLinePoint)
             return;
@@ -111,103 +150,124 @@ class LineEditService(IModelMgr modelMgr, ICommandService commandService, IScree
         IReadOnlyList<Pos> updatedPoints;
         using (var model = modelMgr.UseModel())
         {
-            if (!model.Lines.TryGetValue(LineId.FromId(pointerId.Id), out var line))
+            if (!model.Lines.TryGetValue(pointerId.LineId, out var line))
                 return;
-            if (pointerId.LinePointIndex < 0 || pointerId.LinePointIndex >= line.SegmentPoints.Count)
+            if (pointerId.LinePointIndex >= line.SegmentPoints.Count)
                 return;
-
-            var points = line.SegmentPoints.ToList();
-            var point = points[pointerId.LinePointIndex];
-            var snapped = point with { X = NodeGrid.Snap(point.X), Y = NodeGrid.Snap(point.Y) };
-            if (snapped == point)
-                return;
-
-            points[pointerId.LinePointIndex] = snapped;
-            updatedPoints = points;
+            updatedPoints = line.SegmentPoints.Where((_, i) => i != pointerId.LinePointIndex).ToList();
         }
 
-        commandService.Do(new LineEditCommand(LineId.FromId(pointerId.Id)) { SegmentPoints = updatedPoints });
+        commandService.Do(
+            new LineEditCommand(pointerId.LineId) { SegmentPoints = updatedPoints, IsOwnUndoStep = true }
+        );
     }
+
+    public void StraightenLine(LineId lineId)
+    {
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line) || line.SegmentPoints.Count == 0)
+                return;
+        }
+
+        commandService.Do(new LineEditCommand(lineId) { SegmentPoints = [], IsOwnUndoStep = true });
+    }
+
+    public bool CanRerouteLine(LineId lineId)
+    {
+        using var model = modelMgr.UseModel();
+        return model.Lines.TryGetValue(lineId, out var line) && LineRoutes.IsRoutable(line);
+    }
+
+    public void RerouteLine(LineId lineId)
+    {
+        IReadOnlyList<Pos>? points;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line) || LineRoutes.Route(line) is not { } routed)
+                return;
+            if (routed.SequenceEqual(line.SegmentPoints) && !line.IsSegmentsUserSet)
+                return;
+            points = routed;
+        }
+
+        commandService.Do(
+            new LinePointsCommand(new Dictionary<LineId, IReadOnlyList<Pos>> { [lineId] = points }, isLayoutSet: true)
+        );
+    }
+
+    public void ResetLines(NodeId nodeId)
+    {
+        Dictionary<LineId, IReadOnlyList<Pos>> points = [];
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Nodes.TryGetValue(nodeId, out var node))
+                return;
+            foreach (var (line, routed) in LineRoutes.RouteAll(node))
+                points[line.Id] = routed;
+            // A hand-set line already where the layout would put it still goes back to the layout.
+            foreach (var line in LineRoutes.SiblingLines(node).Where(line => line.IsSegmentsUserSet))
+                points.TryAdd(line.Id, [.. line.SegmentPoints]);
+        }
+        if (points.Count == 0)
+            return;
+
+        commandService.Do(new LinePointsCommand(points, isLayoutSet: true));
+    }
+
+    // Whether the bend point lies within StraightTolerance screen pixels of the straight line
+    // between its neighbours (the line's ends or the bend points beside it).
+    static bool IsOnStraightLine(Line line, int index, double zoom)
+    {
+        if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
+            return false;
+        var polyline = LinePathGeometry.GetLocalPolylinePoints(line);
+        if (polyline.Count != line.SegmentPoints.Count + 2)
+            return false;
+
+        var (before, point, after) = (polyline[index], polyline[index + 1], polyline[index + 2]);
+        var projected = LinePathGeometry.ProjectPointOnSegment(point, before, after);
+        var tolerance = StraightTolerance * GetChildrenLocalZoom(owner) * zoom;
+        return DistanceSquared(point, projected) <= tolerance * tolerance;
+    }
+
+    // Where the pointer is during a label drag, in the line owner's children-local space. It
+    // follows the pointer freely (the label is put at the closest point of the line), so the
+    // label keeps up with the pointer however far it strays from the line.
+    Pos? labelDragPos;
+
+    public void MoveLabel(double movementX, double movementY, double zoom, PointerId pointerId)
+    {
+        if (!pointerId.IsLineLabel)
+            return;
+
+        double position;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(pointerId.LineId, out var line) || !line.HasLabel)
+                return;
+            if (!LinePathGeometry.TryGetOwnerNode(line, out var owner))
+                return;
+            var points = LinePathGeometry.GetLocalPolylinePoints(line);
+            if (points.Count < 2)
+                return;
+
+            var from = labelDragPos ?? LinePathGeometry.PointAt(points, line.LabelPosition);
+            var localZoom = GetChildrenLocalZoom(owner) * zoom;
+            var to = new Pos(from.X + movementX * localZoom, from.Y + movementY * localZoom);
+            labelDragPos = to;
+            // Compared as it would be stored, so a pointer past a clamped end sends nothing.
+            position = Line.ToLabelPosition(LinePathGeometry.FractionAt(points, to));
+            if (position == line.LabelPosition)
+                return;
+        }
+
+        commandService.Do(new LineLabelPositionCommand(pointerId.LineId) { Position = position });
+    }
+
+    public void EndLabelMove() => labelDragPos = null;
 
     static double GetChildrenLocalZoom(Node owner) => owner.GetZoom() / owner.ContainerZoom;
-
-    async Task<Pos?> TryScreenToWorldPosAsync(Pos screenPos)
-    {
-        if (await screenService.GetBoundingRectangle("svgcanvas") is not ElementBoundingRectangle svgBound)
-            return null;
-
-        var localX = screenPos.X - svgBound.X;
-        var localY = screenPos.Y - svgBound.Y;
-        var (zoom, offset) = modelMgr.WithModel(m => (m.Zoom, m.Offset));
-        return new Pos(offset.X + localX * zoom, offset.Y + localY * zoom);
-    }
-
-    static Pos ToOwnerChildrenLocal(Node owner, Pos worldPos)
-    {
-        var (ownerPos, ownerZoom) = owner.GetPosAndZoom();
-        var childrenOriginWorld = new Pos(
-            ownerPos.X + owner.ContainerOffset.X * ownerZoom,
-            ownerPos.Y + owner.ContainerOffset.Y * ownerZoom
-        );
-        var childrenZoom = ownerZoom * owner.ContainerZoom;
-        if (childrenZoom == 0)
-            return Pos.None;
-
-        return new Pos(
-            (worldPos.X - childrenOriginWorld.X) / childrenZoom,
-            (worldPos.Y - childrenOriginWorld.Y) / childrenZoom
-        );
-    }
-
-    static int GetClosestControlPointIndex(IReadOnlyList<Pos> points, Pos hint)
-    {
-        if (points.Count == 0)
-            return -1;
-
-        var bestIndex = -1;
-        var bestDistance = double.MaxValue;
-        for (var i = 0; i < points.Count; i++)
-        {
-            var d = DistanceSquared(points[i], hint);
-            if (d >= bestDistance)
-                continue;
-
-            bestDistance = d;
-            bestIndex = i;
-        }
-
-        return bestIndex;
-    }
-
-    static IReadOnlyList<Pos> InsertPointAtClosestSegment(Line line, LinePathGeometry.LineEndpoints endpoints, Pos hint)
-    {
-        var polyline = new List<Pos>(line.SegmentPoints.Count + 2) { new(endpoints.X1, endpoints.Y1) };
-        polyline.AddRange(line.SegmentPoints);
-        polyline.Add(new Pos(endpoints.X2, endpoints.Y2));
-
-        var bestSegmentIndex = 0;
-        var bestDistanceSquared = double.MaxValue;
-        Pos projectedPoint = polyline[0];
-
-        for (var i = 0; i < polyline.Count - 1; i++)
-        {
-            var p1 = polyline[i];
-            var p2 = polyline[i + 1];
-            var projected = LinePathGeometry.ProjectPointOnSegment(hint, p1, p2);
-            var dist2 = DistanceSquared(hint, projected);
-            if (dist2 >= bestDistanceSquared)
-                continue;
-
-            bestDistanceSquared = dist2;
-            bestSegmentIndex = i;
-            projectedPoint = projected;
-        }
-
-        var updatedPoints = line.SegmentPoints.ToList();
-        var insertIndex = bestSegmentIndex;
-        updatedPoints.Insert(insertIndex, projectedPoint);
-        return updatedPoints;
-    }
 
     static double DistanceSquared(Pos a, Pos b)
     {

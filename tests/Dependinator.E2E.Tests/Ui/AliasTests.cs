@@ -52,8 +52,8 @@ public class AliasTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeLabel("Third parties")).ToBeVisibleAsync();
 
         // Right-click the node's icon: the node menu offers the display-name editor.
-        LocatorBoundingBoxResult box =
-            await App.Node("Externals").BoundingBoxAsync() ?? throw new InvalidOperationException("Node not rendered.");
+        LocatorBoundingBoxResult box = await App.Node("Externals").BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Node not rendered.");
         await Page.Mouse.ClickAsync(
             box.X + box.Width / 2,
             box.Y + box.Height / 2,

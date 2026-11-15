@@ -9,6 +9,50 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.92.459054] - 2026-11-15
+
+### New
+
+- TypeScript and JavaScript projects open as models: a project (a `tsconfig.json`, a `jsconfig.json`, or a `package.json` for plain JavaScript) is found in the workspace and listed by its folder name, like solutions and Bicep deployments. It is drawn as folders and files with their classes, interfaces, enums and types, and each file's functions and variables as rows on its card; lines follow what the TypeScript compiler resolves, through imports, path aliases and re-exports to the member that is used, and to the packages under Externals
+- A monorepo's solution-style `tsconfig.json` is one model of all the projects it references
+- In VS Code a TypeScript or JavaScript project needs nothing installed, and its diagram refreshes when a script file is saved; test files are left out unless **Settings › Include test files** is on
+- One model for the whole workspace: with two or more solutions, Bicep deployments or script projects in the workspace, the Models menu offers a model of them all, side by side with one Externals. The first time it opens, "What is in this model?" picks the sources (all but those in test, sample and example folders), and **Choose Sources …** in the menu and in Settings changes them later; a source that cannot be parsed is a problem in the problem indicator
+- A source that comes into the workspace model brings what was done in its own model: node places, display names, colors, icons, hidden nodes, notes, zones, and routed and labelled lines
+- The workspace model shows a source inside the project or source whose folder holds it, such as a script project inside the solution beside it; **Shown in** in **Choose Sources …**, or **Show Inside** in a source's node menu, puts it elsewhere or at the top level
+- .NET solutions in the `.slnx` format open as models like `.sln` ones. A solution moved to `.slnx` keeps the layout, notes, rules, accepted cycles and view of its `.sln` model, and while the old `.sln` is still beside it, only the `.sln` is listed
+- In VS Code a workspace with several sources that was never opened in Dependinator starts on the model of the whole workspace, asking first which sources it shows
+- A selected line whose end is out of view gets a tag at the edge of the view naming the node at that end; a click goes there and keeps the line selected, so the tag of the other end leads back
+- In edit mode a selected line has a small handle on each segment that bends the line when dragged; a bend dragged back onto the straight line, or double-clicked, goes away, and **Straighten line** in the line toolbar removes them all
+- **Re-route line** in the line toolbar routes the selected line again around the nodes where they stand, and **Reset Lines** in the node menu does so for every line between the node's children; both remove the bends set by hand, as one undo step
+
+### Improved
+
+- The Models dialog lists the built-in demo models
+- A workspace model re-parses only the kind of sources whose files changed, and a solution, Bicep file or script project that is added or deleted shows up in the Models menu and in the workspace model without a restart
+- A model picked in the Models menu loads in the background, so the menu closes at once
+- A VS Code workspace starts on the model of it used last, also when that model was opened in another window
+- Panning and zooming are smoother, most of all in Safari and on the iPad, where panning no longer repaints the whole diagram every frame
+- A pinch on a touch screen keeps the point under the fingers, zooms faster than the fingers spread and pans with them
+- A mouse wheel notch glides to its zoom around the pointer instead of jumping, and a quick spin keeps its speed; a Mac trackpad pinch zooms by how far the fingers move
+- Zooming in or out one level no longer waits for the diagram to be drawn, since it is drawn ahead while the view rests
+- When moved nodes are dropped, the lines that touch them, now cross a node or no longer need a detour are routed again around the nodes where they stand, instead of keeping their old bends; bends set by hand stay, and the move with its line changes is one undo step
+
+### Changed
+
+- In VS Code the Models menu lists only the workspace's models, each with its folder when there are several, the open one checked and synced ones marked; **Other Models …** (was **Manage Models …**) opens the Models dialog for cloud, design and demo models and models of other folders
+- A model that is not one of the workspace's is a visit in VS Code: the menu names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and a button back to the workspace model used last
+- All children of a node now open as containers at the same zoom while zooming in, instead of the bigger ones first; a bigger node is a bigger icon until then, and only a node resized by hand far beyond the layout's sizes opens by its own size on screen
+- The lines between a container's edge and its children are drawn as short stubs with a ring at the child, instead of a fan of long lines to the edge. Selecting a stub draws its lines end to end to the nodes at the other end, one line per far container that is out of view or small on screen, split into lines to its nodes when panning toward it or zooming in; clicking one of them keeps the others, and `Escape` steps back to the stub, then clears
+- A go to (search, the dependency explorer, the breadcrumb, links, lists, the tour, following the editor in VS Code, Back and Forward) flies to the node in one smooth pan and zoom, zooming out only as far as needed to show both places, and marks the node with amber corner brackets instead of selecting it, so the selection stays as it was; the mark lasts until the next click or key, and a wheel or pan stops the flight
+- Line labels are smaller and part of their line: a description keeps its line breaks and shows at most 3 rows, the line's hover card shows them in full, and a click selects the line. In edit mode a label slides along its line when dragged, and **To the middle** in the label dialog puts it back
+- The node, note and line toolbars are a calmer white bar with grey icons; the node toolbar starts with References and Dependencies and ends with **More**. The line toolbar no longer has the + and - buttons, the go to source and target buttons, or **Show source code**
+- The node menu no longer has the Direct Lines section (**Split Lines One Level Deeper**, **Merge Lines Back One Level**, **Merge All Lines Back**): selecting a child's stub shows its own lines
+
+### Fixed
+
+- The tooltips of the menu button, the node toolbar's **More** and the color menu no longer stay up after their menu, or a dialog opened from it, closes
+- Panning and zooming no longer stop for a moment every 5 seconds where cloud sync is available
+
 ## [v0.91.453241] - 2026-11-11
 
 ### New

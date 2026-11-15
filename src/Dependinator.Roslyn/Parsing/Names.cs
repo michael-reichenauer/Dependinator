@@ -140,7 +140,7 @@ static class Names
     }
 
     // "." is the hierarchy separator in model node names, so literal dots in solution/module
-    // names (e.g. "Dependinator.sln", "Dependinator.Core") are encoded as "*" to keep the
+    // names (e.g. "Dependinator.slnx", "Dependinator.Core") are encoded as "*" to keep the
     // name a single node level.
     static string EncodeName(string name)
     {

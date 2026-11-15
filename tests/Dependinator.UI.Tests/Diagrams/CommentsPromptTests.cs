@@ -122,6 +122,36 @@ public class CommentsPromptTests
         Assert.Contains("A namespace's comment goes", all);
     }
 
+    // A TypeScript or JavaScript project: its files and types are commented, with where the
+    // parser reads a file's comment from.
+    [Fact]
+    public void Build_ShouldAskForFileAndTypeComments_ForATypeScriptProject()
+    {
+        using var model = modelMgr.UseModel();
+        var project = AddNode(model, "app", model.Root, NodeType.Solution);
+        var file = AddScriptNode(model, "app.main*ts", project, NodeType.SourceFile, 0);
+        AddScriptNode(model, "app.main*ts.Server", file, NodeType.ClassType, 4);
+        AddScriptNode(model, "app.main*ts.start", file, NodeType.FunctionMember, 20);
+
+        var targets = CommentsPrompt.Targets([project], isBelow: true);
+        var prompt = CommentsPrompt.Build(model, targets).ReplaceLineEndings("\n");
+
+        Assert.Equal(["app.main*ts", "app.main*ts.Server"], targets.Select(n => n.Name));
+        Assert.StartsWith("Please add or improve the code comments of the files and types listed below.", prompt);
+        Assert.Contains("What the file or type is for", prompt);
+        Assert.Contains("file's comment goes at the very top of the file", prompt);
+        Assert.Contains("JSDoc comment", prompt);
+        Assert.DoesNotContain("`namespace` line", prompt);
+        Assert.Contains("### file main.ts\nDeclared in", prompt);
+    }
+
+    static Node AddScriptNode(IModel model, string name, Node parent, NodeType type, int line)
+    {
+        var node = AddNode(model, name, parent, type);
+        node.Update(new ParsedNode(name, new() { FileSpan = new FileSpan("/repo/app/main.ts", line, line + 10) }));
+        return node;
+    }
+
     [Fact]
     public void Build_ShouldBeEmpty_WithNothingToComment()
     {

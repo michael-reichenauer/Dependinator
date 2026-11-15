@@ -12,6 +12,7 @@ using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
 using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
+using ParsedNode = Dependinator.Core.Parsing.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
 
@@ -146,6 +147,63 @@ public class TooltipServiceTests
         Assert.Equal(expected, WebUtility.HtmlDecode(html));
     }
 
+    // TypeScript and JavaScript declare the type last, as the member's row shows it.
+    [Theory]
+    [InlineData(
+        nameof(NodeType.FunctionMember),
+        "(port?: number): Promise<void>",
+        "<b>start</b>(port?: number): Promise<void>"
+    )]
+    [InlineData(nameof(NodeType.MethodMember), "(...ids: string[])", "<b>start</b>(...ids: string[])")]
+    [InlineData(nameof(NodeType.VariableMember), ": number", "<b>start</b>: number")]
+    [InlineData(nameof(NodeType.PropertyMember), "?: string", "<b>start</b>?: string")]
+    [InlineData(nameof(NodeType.FunctionMember), "", "<b>start</b>")]
+    public void DeclarationHtml_ShouldReadLikeTypeScript_ForAMemberOfAScriptFile(
+        string type,
+        string signature,
+        string expected
+    )
+    {
+        Node member;
+        using (var model = modelMgr.UseModel())
+        {
+            var file = AddNode(model, "app.src.main*ts", model.Root, NodeType.SourceFile);
+            member = AddNode(model, "app.src.main*ts.start", file, Enum.Parse<NodeType>(type));
+            member.Update(
+                new ParsedNode(
+                    member.Name,
+                    new() { Signature = signature, FileSpan = new FileSpan("/repo/app/src/main.ts", 3, 9) }
+                )
+            );
+        }
+
+        var html = TooltipService.DeclarationHtml(member).Replace("<wbr>", "").Replace("&nbsp;", " ");
+        Assert.Equal(expected, WebUtility.HtmlDecode(html));
+    }
+
+    [Fact]
+    public void GetHtml_ShouldNameAScriptProjectItsFilesAndFunctions()
+    {
+        Node project,
+            file,
+            start;
+        using (var model = modelMgr.UseModel())
+        {
+            project = AddNode(model, "app", model.Root, NodeType.Solution);
+            project.Update(new ParsedNode("app", new() { FileSpan = new FileSpan("/repo/app/tsconfig.json", 0, 0) }));
+            var src = AddNode(model, "app.src", project, NodeType.Folder);
+            file = AddNode(model, "app.src.main*ts", src, NodeType.SourceFile);
+            start = AddNode(model, "app.src.main*ts.start", file, NodeType.FunctionMember);
+        }
+
+        var service = NewService();
+
+        Assert.Contains("TypeScript project", Html(service, NodeElement(project)));
+        Assert.Contains("Folder in app", Html(service, NodeElement(file.Parent)));
+        Assert.Contains("File in src", Html(service, NodeElement(file)));
+        Assert.Contains("Function in src.main.ts", Html(service, NodeElement(start))?.Replace("<wbr>", ""));
+    }
+
     [Fact]
     public void DeclarationHtml_ShouldWrapOnlyBetweenParameters()
     {
@@ -250,6 +308,39 @@ public class TooltipServiceTests
         Assert.DoesNotContain("A.Delta", html); // Sorted, three shown
         Assert.Contains("+ 2 more", html);
         Assert.Contains("part of a cycle", html);
+    }
+
+    [Fact]
+    public void GetHtml_ShouldCallAContainersEndOfAStub_OutsideIt()
+    {
+        Line incoming;
+        Line outgoing;
+        using (var model = modelMgr.UseModel())
+        {
+            var m = AddNode(model, "M", model.Root, NodeType.Namespace);
+            var n = AddNode(model, "N", model.Root, NodeType.Namespace);
+            var user = AddNode(model, "M.User", m);
+            var used = AddNode(model, "N.Used", n);
+            AddLink(model, user, used);
+            incoming = model.Lines.Values.Single(l => l.Source == n && l.Target == used);
+            outgoing = model.Lines.Values.Single(l => l.Source == user && l.Target == m);
+        }
+
+        var service = NewService();
+        var incomingHtml = Html(service, PointerId.FromLine(incoming.Id).ElementId);
+        var outgoingHtml = Html(service, PointerId.FromLine(outgoing.Id).ElementId);
+
+        // The line between a container's edge and its child stands for links that cross the
+        // container's border; the links below name the real ends.
+        Assert.Contains(
+            "<span class=\"dep-tt-outside\">outside</span> N<span class=\"dep-tt-arrow\">→</span><wbr>Used",
+            incomingHtml
+        );
+        Assert.Contains("<code>User</code>", incomingHtml);
+        Assert.Contains(
+            "User<span class=\"dep-tt-arrow\">→</span><wbr><span class=\"dep-tt-outside\">outside</span> M",
+            outgoingHtml
+        );
     }
 
     [Fact]

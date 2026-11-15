@@ -458,7 +458,7 @@ class NodeLayout
                 ),
                 belowCard
             );
-            var overlapping = placed.Where(c => Intersects(c.Boundary, cardBand)).ToList();
+            var overlapping = placed.Where(c => c.Boundary.Intersects(cardBand)).ToList();
             if (overlapping.Count > 0)
             {
                 var shift = SnapToGrid(belowCard - overlapping.Min(c => c.Boundary.Y) + NodeGrid.SnapSize / 2);
@@ -732,9 +732,6 @@ class NodeLayout
         return (zoom, new Pos(-left * zoom, -top * zoom));
     }
 
-    static bool Intersects(Rect a, Rect b) =>
-        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
-
     // Orders siblings so referencing children come before the children they reference: first by
     // sibling lines (c1->c2 before c2->c1), then children referenced by the parent, then children
     // referencing the parent. The relation is a partial order, so ties are left in place.
@@ -755,27 +752,24 @@ class NodeLayout
                 )
         );
 
-        Sorter.Sort(
-            children,
-            (c1, c2) =>
-            {
-                var r1 = relations[c1];
-                var r2 = relations[c2];
+        Sorter.Sort(children, (c1, c2) =>
+        {
+            var r1 = relations[c1];
+            var r2 = relations[c2];
 
-                var c1ToC2 = r1.SiblingTargets.Contains(c2);
-                var c2ToC1 = r2.SiblingTargets.Contains(c1);
-                if (c1ToC2 != c2ToC1)
-                    return c1ToC2 ? -1 : 1;
+            var c1ToC2 = r1.SiblingTargets.Contains(c2);
+            var c2ToC1 = r2.SiblingTargets.Contains(c1);
+            if (c1ToC2 != c2ToC1)
+                return c1ToC2 ? -1 : 1;
 
-                if (r1.HasLineFromParent != r2.HasLineFromParent)
-                    return r1.HasLineFromParent ? -1 : 1;
+            if (r1.HasLineFromParent != r2.HasLineFromParent)
+                return r1.HasLineFromParent ? -1 : 1;
 
-                if (r1.HasLineToParent != r2.HasLineToParent)
-                    return r1.HasLineToParent ? -1 : 1;
+            if (r1.HasLineToParent != r2.HasLineToParent)
+                return r1.HasLineToParent ? -1 : 1;
 
-                return 0;
-            }
-        );
+            return 0;
+        });
     }
 
     // Most used/using members first, then by member kind, so the most relevant members end up
@@ -800,7 +794,7 @@ class NodeLayout
         {
             NodeType.ConstructorMember => 0,
             NodeType.PropertyMember => 1,
-            NodeType.MethodMember => 2,
+            NodeType.MethodMember or NodeType.FunctionMember => 2,
             NodeType.EventMember => 3,
             NodeType.FieldMember => 4,
             NodeType.ResourceMember => 5,

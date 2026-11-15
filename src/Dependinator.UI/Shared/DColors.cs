@@ -192,6 +192,10 @@ class DColors
 
     public static string Selected => IsDark ? ItemColorDarkSelected : ItemColorLightSelected;
     public static string LineSelected => ItemLineSelected;
+
+    // The corner brackets of a node a "go to" took the view to (NodeSvg.HighlightSvg): amber, so it is never
+    // taken for the blue hover or selection; a touch lighter on the dark canvas.
+    public static string Highlight => IsDark ? "#FBBF24" : "#F59E0B";
     public static string ToolBarIcon => MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)

@@ -31,4 +31,10 @@ record NodePropertiesDto
     // is the node-type default. Distinct from NodeDto.IconName, the user's custom icon.
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? IconName { get; init; }
+
+    // A project's folder (see Parsing.NodeProperties.ProjectFolder), relative to the model's
+    // folder like FileSpan: a workspace model nests its sources by it (SourceNesting), also
+    // while the project's own source is not parsed again (a refresh of other kinds, a failure).
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string? ProjectFolder { get; init; }
 }

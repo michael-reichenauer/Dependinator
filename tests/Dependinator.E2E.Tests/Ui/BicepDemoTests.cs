@@ -7,8 +7,8 @@ using Xunit.Abstractions;
 namespace Dependinator.E2E.Tests.Ui;
 
 // The built-in Bicep demo ("/Demo.bicep", the pre-parsed webshop example) is listed next to the
-// C# demo wherever nothing else can be opened (the browser app, and this test host) and loads
-// without the compiler.
+// C# demo (in this test host, which has a workspace, in the Models dialog) and loads without the
+// compiler.
 public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
 {
     [E2EFact]
@@ -86,8 +86,7 @@ public class BicepDemoTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.WaitForModelRenderedAsync();
 
-        await App.OpenSubMenuItemAsync("menu-models", "menu-new-model");
-        await App.MenuItem("menu-model-item").Filter(new() { HasText = "Demo.bicep" }).ClickAsync();
+        await App.OpenOtherModelAsync("Demo.bicep");
 
         await Expect(App.Node("Demo.bicep")).ToBeVisibleAsync();
     }

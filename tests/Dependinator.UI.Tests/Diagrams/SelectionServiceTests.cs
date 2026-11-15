@@ -5,6 +5,7 @@ using Dependinator.UI.Modeling.Commands;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.Types;
+using Link = Dependinator.UI.Modeling.Models.Link;
 using Node = Dependinator.UI.Modeling.Models.Node;
 
 namespace Dependinator.UI.Tests.Diagrams;
@@ -165,6 +166,270 @@ public class SelectionServiceTests
         Assert.Equal([b.Id], service.SelectedNodeIds);
         Assert.False(a.IsSelected);
         Assert.True(b.IsSelected);
+    }
+
+    // A selected stub's lines are drawn end to end only while it is selected, so one of them is
+    // on screen (can be measured) until the stub is deselected and the diagram repainted.
+    [Fact]
+    public async Task Select_ShouldSelectALineOfTheSelectedStub_ThoughDeselectingTheStubTakesItOffScreen()
+    {
+        Line stub;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            stub = new Line(b, child); // From the container's edge into its child
+            line = new Line(a, child); // One of the stub's lines, from the node that uses the child
+            model.TryAddLine(stub);
+            model.TryAddLine(line);
+        }
+        var stubPointer = PointerId.FromLine(stub.Id);
+        var linePointer = PointerId.FromLine(line.Id);
+        var onScreen = new ElementBoundingRectangle
+        {
+            X = 10,
+            Y = 10,
+            Width = 100,
+            Height = 50,
+            Right = 110,
+            Bottom = 60,
+        };
+        screenService.Setup(s => s.GetBoundingRectangle(stubPointer.ElementId)).ReturnsAsync(onScreen);
+        screenService
+            .Setup(s => s.GetBoundingRectangle(linePointer.ElementId))
+            .ReturnsAsync(() =>
+                stub.IsSelected || line.IsSelected
+                    ? new ElementBoundingRectangle
+                    {
+                        X = 10,
+                        Y = 10,
+                        Width = 100,
+                        Height = 50,
+                        Right = 110,
+                        Bottom = 60,
+                    }
+                    : (Result<ElementBoundingRectangle>)new Error("Not on screen")
+            );
+        var service = CreateService();
+        await service.Select(stubPointer, new PointerEvent { ClientX = 60, ClientY = 35 });
+        Assert.True(stub.IsSelected);
+        applicationEvents.Invocations.Clear();
+
+        await service.Select(linePointer, new PointerEvent { ClientX = 60, ClientY = 35 });
+
+        Assert.Equal(linePointer, service.SelectedId);
+        Assert.True(line.IsSelected);
+        Assert.False(stub.IsSelected);
+        Assert.Empty(service.SelectedNodeIds);
+        applicationEvents.Verify(e => e.TriggerModelChanged(), Times.AtLeastOnce);
+        applicationEvents.Verify(e => e.TriggerUIStateChanged(), Times.AtLeastOnce);
+    }
+
+    // Clicking one of a selected stub's lines keeps the stub's other lines (the stub is explored),
+    // while the user goes from line to line; Escape's first step selects the stub again, and any
+    // other selection ends it.
+    [Fact]
+    public async Task Select_ShouldKeepExploringTheStub_WhileGoingFromLineToLine()
+    {
+        Node a;
+        Line stub;
+        Line first;
+        Line second;
+        Line other;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            var c = AddNode(model, "C", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            stub = new Line(b, child);
+            first = new Line(a, child) { RenderAncestor = model.Root };
+            second = new Line(c, child) { RenderAncestor = model.Root };
+            other = new Line(a, c) { RenderAncestor = model.Root }; // Not one of the stub's lines
+            var fromA = new Link(a, child);
+            var fromC = new Link(c, child);
+            stub.Add(fromA);
+            stub.Add(fromC);
+            first.Add(fromA);
+            second.Add(fromC);
+            other.Add(new Link(a, c));
+            foreach (var line in new[] { stub, first, second, other })
+                model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+
+        await service.Select(PointerId.FromLine(stub.Id), new PointerEvent { ClientX = 20, ClientY = 30 });
+        Assert.False(service.TrySelectExploredStub()); // Nothing to step back to
+
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(first.IsSelected);
+        Assert.True(stub.IsExplored);
+
+        await service.Select(PointerId.FromLine(second.Id), click);
+        Assert.True(second.IsSelected);
+        Assert.False(first.IsSelected);
+        Assert.True(stub.IsExplored);
+
+        // Escape steps back to the stub, which shows its lines as the selected stub.
+        Assert.True(service.TrySelectExploredStub());
+        Assert.Equal(PointerId.FromLine(stub.Id), service.SelectedId);
+        Assert.True(stub.IsSelected);
+        Assert.False(second.IsSelected);
+        Assert.False(stub.IsExplored);
+        Assert.False(service.TrySelectExploredStub());
+
+        // A line that was not drawn for the stub ends it, and so does a node.
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(stub.IsExplored);
+        await service.Select(PointerId.FromLine(other.Id), click);
+        Assert.False(stub.IsExplored);
+        Assert.True(other.IsSelected);
+
+        await service.Select(PointerId.FromLine(stub.Id), click);
+        await service.Select(PointerId.FromLine(first.Id), click);
+        Assert.True(stub.IsExplored);
+        await service.Select(a.Id);
+        Assert.False(stub.IsExplored);
+        Assert.False(first.IsSelected);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task TrySelectExploredStub_ShouldNotClearTheSelection_WhenTheStubIsGone(bool isReplaced)
+    {
+        Line stub;
+        Line line;
+        Node b;
+        Node child;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            b = AddNode(model, "B", model.Root);
+            child = AddNode(model, "Child", b);
+            stub = new Line(b, child);
+            line = new Line(a, child) { RenderAncestor = model.Root };
+            var link = new Link(a, child);
+            stub.Add(link);
+            line.Add(link);
+            model.TryAddLine(stub);
+            model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+        await service.Select(PointerId.FromLine(stub.Id), click);
+        await service.Select(PointerId.FromLine(line.Id), click);
+        Assert.True(stub.IsExplored);
+
+        // A refresh took the stub's line away, or replaced it with a new one that is not explored:
+        // Escape has no step back and clears as usual.
+        modelMgr.WithModel(model =>
+        {
+            model.RemoveLine(stub);
+            if (isReplaced)
+                model.TryAddLine(new Line(b, child));
+        });
+
+        Assert.False(service.TrySelectExploredStub());
+        Assert.Equal(PointerId.FromLine(line.Id), service.SelectedId);
+        Assert.True(line.IsSelected);
+        Assert.False(service.TrySelectExploredStub());
+    }
+
+    // A labelled edge line is drawn as a line, not as a stub with lines of its own, so a line that
+    // carries its links is not one of its lines.
+    [Fact]
+    public async Task Select_ShouldNotExploreALabelledEdgeLine()
+    {
+        Line edge;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            var a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            var child = AddNode(model, "Child", b);
+            edge = new Line(b, child);
+            edge.SetLabel("uses");
+            line = new Line(a, child) { RenderAncestor = model.Root };
+            var link = new Link(a, child);
+            edge.Add(link);
+            line.Add(link);
+            model.TryAddLine(edge);
+            model.TryAddLine(line);
+        }
+        screenService
+            .Setup(s => s.GetBoundingRectangle(It.IsAny<string>()))
+            .ReturnsAsync(
+                new ElementBoundingRectangle
+                {
+                    X = 10,
+                    Y = 10,
+                    Width = 100,
+                    Height = 50,
+                    Right = 110,
+                    Bottom = 60,
+                }
+            );
+        var service = CreateService();
+        var click = new PointerEvent { ClientX = 60, ClientY = 35 };
+
+        await service.Select(PointerId.FromLine(edge.Id), click);
+        await service.Select(PointerId.FromLine(line.Id), click);
+
+        Assert.True(line.IsSelected);
+        Assert.False(edge.IsExplored);
+        Assert.False(service.TrySelectExploredStub());
+    }
+
+    [Fact]
+    public async Task Select_ShouldClearTheSelection_WhenTheClickedLineIsNotOnScreen()
+    {
+        Node a;
+        Line line;
+        using (var model = modelMgr.UseModel())
+        {
+            a = AddNode(model, "A", model.Root);
+            var b = AddNode(model, "B", model.Root);
+            line = new Line(a, b);
+            model.TryAddLine(line);
+        }
+        var service = CreateService();
+        await service.Select(a.Id);
+
+        await service.Select(PointerId.FromLine(line.Id), new PointerEvent());
+
+        Assert.False(service.IsSelected);
+        Assert.False(a.IsSelected);
+        Assert.False(line.IsSelected);
     }
 
     [Fact]

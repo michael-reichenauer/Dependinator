@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <AssemblyName>Dependinator.TypeScriptParser</AssemblyName>
+        <RootNamespace>Dependinator.TypeScriptParser</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <!-- The helper is a Node project of its own (with node_modules), no C# -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);NodeParser/**</DefaultItemExcludes>
+        <NodeParserFolder>$(MSBuildProjectDirectory)/NodeParser</NodeParserFolder>
+        <NodeParserScript>$(NodeParserFolder)/dist/ts-parser.js</NodeParserScript>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Dependinator.Core/Dependinator.Core.csproj" />
+    </ItemGroup>
+
+    <!-- The parser itself is a Node program (NodeParser/, see its src/main.ts), bundled with the
+         TypeScript compiler into one script and embedded here; TypeScriptSourceParser runs it with Node.
+         Building it needs npm, and is skipped while the script is newer than its sources, and
+         in a design-time build (an IDE, or the C# parser loading this solution). -->
+    <ItemGroup>
+        <NodeParserSource Include="$(NodeParserFolder)/src/**/*.ts" />
+        <NodeParserSource Include="$(NodeParserFolder)/build.mjs;$(NodeParserFolder)/tsconfig.json" />
+        <NodeParserSource Include="$(NodeParserFolder)/package.json;$(NodeParserFolder)/package-lock.json" />
+    </ItemGroup>
+
+    <Target
+        Name="BuildNodeParser"
+        BeforeTargets="AssignTargetPaths"
+        Inputs="@(NodeParserSource)"
+        Outputs="$(NodeParserScript)"
+        Condition="'$(DesignTimeBuild)' != 'true'"
+    >
+        <Message Importance="high" Text="Building the TypeScript parser helper (npm ci, npm run build) ..." />
+        <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(NodeParserFolder)" />
+        <Exec Command="npm run build" WorkingDirectory="$(NodeParserFolder)" />
+        <Touch Files="$(NodeParserScript)" />
+    </Target>
+
+    <Target Name="EmbedNodeParser" BeforeTargets="AssignTargetPaths" DependsOnTargets="BuildNodeParser">
+        <ItemGroup Condition="Exists('$(NodeParserScript)')">
+            <EmbeddedResource Include="$(NodeParserScript)" LogicalName="Dependinator.TypeScriptParser.ts-parser.js" />
+        </ItemGroup>
+    </Target>
+</Project>

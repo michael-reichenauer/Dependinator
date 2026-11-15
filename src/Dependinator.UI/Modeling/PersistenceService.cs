@@ -7,6 +7,9 @@ interface IPersistenceService
 {
     Task<Result> WriteAsync(string modelPath, ModelDto model);
     Task<Result<ModelDto>> ReadAsync(string path);
+
+    // Whether a model is saved at the path.
+    Task<bool> ExistsAsync(string modelPath);
     Task<Result> WriteViewAsync(string modelPath, ViewDto view);
     Task<Result<ViewDto>> ReadViewAsync(string modelPath);
 }
@@ -22,6 +25,9 @@ class PersistenceService(IFileService fileService) : IPersistenceService
             return await fileService.WriteAsync(modelPath, model);
         });
     }
+
+    public async Task<bool> ExistsAsync(string modelPath) =>
+        await fileService.GetFilePathsAsync() is IReadOnlyList<string> paths && paths.Contains(modelPath);
 
     public Task<Result> WriteViewAsync(string modelPath, ViewDto view) =>
         fileService.WriteAsync(ModelPaths.ViewPath(modelPath), view);

@@ -10,6 +10,7 @@ public sealed class Debouncer : IDisposable
     private readonly object syncRoot = new();
     private DateTime? firstDebounceTimeUtc;
     private DateTime? nextInvokeTimeUtc;
+    private bool isDisposed;
 
     public Debouncer()
     {
@@ -30,6 +31,8 @@ public sealed class Debouncer : IDisposable
     {
         lock (syncRoot)
         {
+            if (isDisposed)
+                return; // A late caller (say, an animation outliving its scope) has nothing to run
             firstDebounceTimeUtc = null;
             nextInvokeTimeUtc = DateTime.UtcNow + delay;
             this.action = action;
@@ -41,6 +44,8 @@ public sealed class Debouncer : IDisposable
     {
         lock (syncRoot)
         {
+            if (isDisposed)
+                return;
             DateTime utcNow = DateTime.UtcNow;
             firstDebounceTimeUtc ??= utcNow;
             this.action = action;
@@ -58,7 +63,15 @@ public sealed class Debouncer : IDisposable
         }
     }
 
-    public void Dispose() => timer.Dispose();
+    public void Dispose()
+    {
+        lock (syncRoot)
+        {
+            isDisposed = true;
+            action = null;
+            timer.Dispose();
+        }
+    }
 
     void InvokeAction()
     {

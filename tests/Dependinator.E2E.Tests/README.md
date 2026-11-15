@@ -90,7 +90,7 @@ starting (and stopping) them itself. It requires `func` and `azurite` installed.
 Note that signed-in sync flows additionally need a Clerk test user (not yet set
 up), so `[SyncFact]` currently only covers behavior reachable without sign-in.
 
-These tests are **skipped** during plain `dotnet test Dependinator.sln` — they
+These tests are **skipped** during plain `dotnet test Dependinator.slnx` — they
 only run when the `E2E=1` environment variable is set, which `./scripts/e2e` does.
 Equivalent manual invocation:
 

@@ -13,7 +13,8 @@ internal class SolutionParserService : IParser
         this.fileService = fileService;
     }
 
-    public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
+    public bool CanSupport(string path) =>
+        Path.GetExtension(path).IsSameIc(".sln") || Path.GetExtension(path).IsSameIc(".slnx");
 
     public async Task<Result> ParseAsync(string path, IItems items)
     {

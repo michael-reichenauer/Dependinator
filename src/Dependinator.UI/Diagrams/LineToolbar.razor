@@ -4,14 +4,12 @@
 
 
 @inject IApplicationEvents applicationEvents
-@inject IInteractionService interactionService
 @inject ISelectionService selectionService
 @inject IDialogService dialogService
 @inject IDependenciesService dependenciesService
 @inject ILineEditService lineEditService
 @inject ILineLabelService lineLabelService
 @inject IManualEditService manualEditService
-@inject INavigationService navigationService
 @inject IViewOptions viewOptions
 @inject IKeyboardService keyboardService
 @implements IDisposable
@@ -19,41 +17,38 @@
 @if (HasSelectedLine)
 {
     <MudStack Style="@containerPosition" Spacing="1">
-        <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text"
-                        Class="dep-mini-toolbar dep-toolbar-card" data-testid="line-toolbar">
+        <div class="dep-float-toolbar" data-testid="line-toolbar">
             <MudTooltip Text="Show references">
                 <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
             </MudTooltip>
             <MudTooltip Text="Show dependencies">
                 <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
             </MudTooltip>
-            @* A line the dependency explorer draws for its subject can end deep inside another
-               container, so it offers a jump to either end; an aggregated line runs between
-               nodes that are both in view. *@
-            @if (IsSelectedLineFocused)
-            {
-                <MudTooltip Text="Go to source node">
-                    <MudIconButton Icon="@Icon.LineSourceIcon" OnClick="PanToSource" data-testid="line-pan-source" />
-                </MudTooltip>
-                <MudTooltip Text="Go to target node">
-                    <MudIconButton Icon="@Icon.LineTargetIcon" OnClick="PanToTarget" data-testid="line-pan-target" />
-                </MudTooltip>
-            }
-            @* Labels and line points change the (saved) line, so they are edit-mode actions like dragging them. *@
+            <span class="dep-toolbar-sep"></span>
+            @* Labels and bends change the (saved) line, so they are edit-mode actions like dragging them. *@
             @if (viewOptions.IsEditingEnabled)
             {
                 <MudTooltip Text="Edit label (or double-click the line)">
                     <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Label" OnClick="EditLabel"
                                    data-testid="line-label" />
                 </MudTooltip>
-                <MudTooltip Text="Add line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Add" OnClick="AddSegmentPoint"
-                                   data-testid="line-add-point" />
-                </MudTooltip>
-                <MudTooltip Text="Remove line point">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.Remove" OnClick="RemoveSegmentPoint"
-                                   data-testid="line-remove-point" />
-                </MudTooltip>
+                @* The line routed again around the nodes where they stand (hand-set bends go too). *@
+                @if (CanRerouteSelectedLine)
+                {
+                    <MudTooltip Text="Re-route line around the nodes">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Route" OnClick="RerouteLine"
+                                       data-testid="line-reroute" />
+                    </MudTooltip>
+                }
+                @* Bends are added and moved on the line itself (its segment handles); a bend
+                   dragged back straight or double-clicked goes away, this removes them all. *@
+                @if (HasSelectedLineBends)
+                {
+                    <MudTooltip Text="Straighten line">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.HorizontalRule" OnClick="StraightenLine"
+                                       data-testid="line-straighten" />
+                    </MudTooltip>
+                }
                 @if (IsSelectedLineManual)
                 {
                     <MudTooltip Text="Delete link (Del)">
@@ -62,14 +57,7 @@
                     </MudTooltip>
                 }
             }
-            @if (interactionService.CanShowLineSource)
-            {
-                <MudTooltip Text="Show source node source code">
-                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
-                                   data-testid="line-show-source" />
-                </MudTooltip>
-            }
-        </MudButtonGroup>
+        </div>
     </MudStack>
 }
 
@@ -78,7 +66,9 @@
     bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
 
     double left => selectionService.SelectedLinePosition.X - 10;
-    double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 22);
+    // SelectedLinePosition is already up and left of the click (SelectionService's toolbar
+    // offsets); this puts the toolbar (36 px high, from the dep-float-toolbar CSS) a little higher, clear of the line.
+    double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 38);
     string containerPosition =>
         FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");
 
@@ -88,29 +78,27 @@
         selectionService.SelectedId.IsLine
             ? lineLabelService.EditLabelAsync(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id))
             : Task.CompletedTask;
-    async Task AddSegmentPoint()
+    void StraightenLine()
     {
         if (!selectionService.SelectedId.IsLine)
             return;
-        await lineEditService.AddSegmentPoint(
-            Modeling.Models.LineId.FromId(selectionService.SelectedId.Id),
-            selectionService.SelectedLineClickPosition
-        );
+        lineEditService.StraightenLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+        selectionService.UpdateSelectedPositionAsync().RunInBackground();
     }
-    async Task RemoveSegmentPoint()
+
+    bool CanRerouteSelectedLine =>
+        selectionService.SelectedId.IsLine
+        && lineEditService.CanRerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+
+    void RerouteLine()
     {
         if (!selectionService.SelectedId.IsLine)
             return;
-        await lineEditService.RemoveSegmentPoint(
-            Modeling.Models.LineId.FromId(selectionService.SelectedId.Id),
-            selectionService.SelectedLineClickPosition
-        );
+        lineEditService.RerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+        selectionService.UpdateSelectedPositionAsync().RunInBackground();
     }
-    // The line is one the dependency explorer draws for its subject (see Model.LineFocus).
-    // IsFocused is render state that RepLineService re-resolves on every structure change
-    // (explorer opened, row expanded, lines hidden), so it is read live rather than cached
-    // at selection time.
-    bool IsSelectedLineFocused => TryGetSelectedLine(out var line) && line.IsFocused;
+
+    bool HasSelectedLineBends => TryGetSelectedLine(out var line) && line.SegmentPoints.Count > 0;
 
     // The line shows only user-drawn link(s), so it can be deleted (parsed links cannot).
     bool IsSelectedLineManual =>
@@ -125,27 +113,6 @@
         manualEditService.DeleteManualLine(lineId);
     }
 
-    void PanToSource()
-    {
-        if (!TryGetSelectedLine(out var line))
-            return;
-        SelectNode(line.Source);
-    }
-
-    async Task ShowSourceAsync()
-    {
-        if (!TryGetSelectedLine(out var line) || !interactionService.CanShowLineSource)
-            return;
-        await navigationService.ShowEditor(line.Source.Id);
-    }
-
-    void PanToTarget()
-    {
-        if (!TryGetSelectedLine(out var line))
-            return;
-        SelectNode(line.Target);
-    }
-
     bool TryGetSelectedLine(out Modeling.Models.Line line)
     {
         line = null!;
@@ -154,12 +121,6 @@
         var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
         var found = dependenciesService.TryGetLine(lineId, out line);
         return found && line is not null;
-    }
-
-    void SelectNode(Modeling.Models.Node node)
-    {
-        applicationEvents.TriggerUIStateChanged();
-        dependenciesService.ShowNodeAsync(node.Id);
     }
 
     protected override void OnInitialized()

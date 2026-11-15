@@ -140,11 +140,13 @@ public class NodeSvgTests
     [Fact]
     public void GetNodeContainerSvg_LargeNode_ShouldFadeAtLowerZoom()
     {
-        // The fade follows the node's on-screen size: twice as large fades at half the zoom.
+        // The fade follows the node's on-screen size. A node twice the default size opens at the
+        // same zoom as a default one (2), is fully tinted for a doubling (to zoom 4) and gone at
+        // half the zoom a default node is (32 instead of 64): half faded midway, at 4 x sqrt(8).
         var node = CreateIconNode();
         node.Boundary = new Rect(0, 0, 200, 200);
 
-        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 8.0, "");
+        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 4 * Math.Sqrt(8), "");
 
         Assert.Contains("fill-opacity=\"0.5\"", deep);
     }

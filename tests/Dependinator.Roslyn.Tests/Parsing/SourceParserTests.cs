@@ -144,6 +144,8 @@ public class SourceParserTests(RoslynFixture fixture)
     [InlineData("/repo/Dependinator.sln")]
     [InlineData("C:\\repo\\App.SLN")]
     [InlineData("/Demo.sln")]
+    [InlineData("/repo/Dependinator.slnx")]
+    [InlineData("C:\\repo\\App.SLNX")]
     public void CanParse_ShouldBeTrue_ForSolutionAndDemoPaths(string path)
     {
         Assert.True(new SourceParser().CanParse(path));
@@ -225,9 +227,8 @@ public class SourceParserTests(RoslynFixture fixture)
         var problem = Assert.Single(problems);
         Assert.Equal(errors, problem.ErrorCount);
         Assert.Equal($"{errors} compile errors in Sample", problem.Message);
-        Assert.Contains(
-            items,
-            i => i.Node is { } node && node.Name == problem.NodeName && node.Properties.Type == NodeType.Assembly
+        Assert.Contains(items, i =>
+            i.Node is { } node && node.Name == problem.NodeName && node.Properties.Type == NodeType.Assembly
         );
     }
 
@@ -257,6 +258,45 @@ public class SourceParserTests(RoslynFixture fixture)
         finally
         {
             File.Delete(solutionPath);
+        }
+    }
+
+    // An .slnx solution (the XML format) is opened like an .sln: its projects, including those in
+    // solution folders, are parsed and the root is named after the file.
+    [Fact]
+    public async Task ParseAsync_ShouldParseSlnxSolution()
+    {
+        var dir = Directory.CreateTempSubdirectory("Slnx-").FullName;
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(dir, "src", "Lib"));
+            await File.WriteAllTextAsync(
+                Path.Combine(dir, "src", "Lib", "Lib.csproj"),
+                "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework>"
+                    + "</PropertyGroup></Project>"
+            );
+            await File.WriteAllTextAsync(
+                Path.Combine(dir, "src", "Lib", "Greeter.cs"),
+                "namespace Lib; public class Greeter { public string Hello() => \"Hi\"; }"
+            );
+            var solutionPath = Path.Combine(dir, "App.slnx");
+            await File.WriteAllTextAsync(
+                solutionPath,
+                "<Solution>\n  <Folder Name=\"/src/\">\n    <Project Path=\"src/Lib/Lib.csproj\" />\n  </Folder>\n</Solution>\n"
+            );
+
+            var items = AssertOk(await new SourceParser().ParseAsync(solutionPath, SolutionParseOptions.Default));
+
+            var nodes = items.Nodes().ToList();
+            Assert.Contains(nodes, n => n.Name == "App*slnx" && n.Properties.Type == NodeType.Solution);
+            Assert.Contains(nodes, n => n.Name.EndsWith("Lib.Greeter"));
+            // The project's folder, where a workspace model shows a source found in it
+            var project = Assert.Single(nodes, n => n.Properties.Type == NodeType.Assembly);
+            Assert.Equal(Path.Combine(dir, "src", "Lib"), project.Properties.ProjectFolder);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
         }
     }
 }

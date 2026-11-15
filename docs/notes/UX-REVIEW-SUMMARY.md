@@ -146,7 +146,7 @@ Smaller items
 - Extension CHANGELOG regenerated from the root changelog; wording aligned across READMEs.
 - Public share links (share-token endpoint in the Functions API).
 - Multi-select for lines; icon selection for a group (the dialog is bound to one node).
-- Re-record `src/DependinatorVsCode/resources/demo.gif` (`./scripts/record-demo`): the hero flow
+- Re-record `src/Dependinator.VsCodeExt/resources/demo.gif` (`./scripts/record-demo`): the hero flow
   now has the explorer's indirect rows and the path finder.
 
 ## Test notes

@@ -142,21 +142,17 @@ class ZoneService(
             selectionService.Unselect();
             var command = new DeleteNodeCommand(nodeId);
             commandService.Do(command);
-            snackbar.Add(
-                "Zone deleted.",
-                Severity.Normal,
-                config =>
+            snackbar.Add("Zone deleted.", Severity.Normal, config =>
+            {
+                config.Action = "Undo";
+                config.ActionColor = Color.Primary;
+                // Only this deletion: an edit made since must not be reverted by the snackbar.
+                config.OnClick = async _ =>
                 {
-                    config.Action = "Undo";
-                    config.ActionColor = Color.Primary;
-                    // Only this deletion: an edit made since must not be reverted by the snackbar.
-                    config.OnClick = async _ =>
-                    {
-                        if (!await commandService.UndoIfLatest(command))
-                            snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
-                    };
-                }
-            );
+                    if (!await commandService.UndoIfLatest(command))
+                        snackbar.Add("Changes were made since; use Undo (Ctrl+Z) to step back.", Severity.Info);
+                };
+            });
             return;
         }
 

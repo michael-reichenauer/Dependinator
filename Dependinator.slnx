@@ -1,0 +1,38 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Hosts/">
+    <Project Path="src/Api/Api.csproj" />
+    <Project Path="src/Dependinator.Lsp/Dependinator.Lsp.csproj" />
+    <Project Path="src/Dependinator.Wasm/Dependinator.Wasm.csproj" />
+    <Project Path="src/Dependinator.Web/Dependinator.Web.csproj" />
+  </Folder>
+  <Folder Name="/Libraries/">
+    <Project Path="src/Dependinator.Bicep/Dependinator.Bicep.csproj" />
+    <Project Path="src/Dependinator.Claude/Dependinator.Claude.csproj" />
+    <Project Path="src/Dependinator.Core/Dependinator.Core.csproj" />
+    <Project Path="src/Dependinator.Mcp/Dependinator.Mcp.csproj" />
+    <Project Path="src/Dependinator.Reflection/Dependinator.Reflection.csproj" />
+    <Project Path="src/Dependinator.Roslyn/Dependinator.Roslyn.csproj" />
+    <Project Path="src/Dependinator.TypeScriptParser/Dependinator.TypeScriptParser.csproj" />
+    <Project Path="src/Dependinator.UI/Dependinator.UI.csproj" />
+    <Project Path="src/Shared/Shared.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Api.Tests/Api.Tests.csproj" />
+    <Project Path="tests/Dependinator.Architecture.Tests/Dependinator.Architecture.Tests.csproj" />
+    <Project Path="tests/Dependinator.Bicep.Tests/Dependinator.Bicep.Tests.csproj" />
+    <Project Path="tests/Dependinator.Claude.Tests/Dependinator.Claude.Tests.csproj" />
+    <Project Path="tests/Dependinator.Core.Tests/Dependinator.Core.Tests.csproj" />
+    <Project Path="tests/Dependinator.E2E.Tests/Dependinator.E2E.Tests.csproj" />
+    <Project Path="tests/Dependinator.Lsp.Tests/Dependinator.Lsp.Tests.csproj" />
+    <Project Path="tests/Dependinator.Mcp.Tests/Dependinator.Mcp.Tests.csproj" />
+    <Project Path="tests/Dependinator.Reflection.Tests/Dependinator.Reflection.Tests.csproj" />
+    <Project Path="tests/Dependinator.Roslyn.Tests/Dependinator.Roslyn.Tests.csproj" />
+    <Project Path="tests/Dependinator.TypeScriptParser.Tests/Dependinator.TypeScriptParser.Tests.csproj" />
+    <Project Path="tests/Dependinator.UI.Tests/Dependinator.UI.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -44,12 +44,14 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
             TileHeight + 2 * (TileHeight * Margin)
         );
 
-    public static TileKey From(Rect canvasRect, double canvasZoom)
+    public static TileKey From(Rect canvasRect, double canvasZoom) =>
+        AtLevel(canvasRect, -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(ZoomFactor)));
+
+    // The tile at level z whose index the view rect (canvas offset, screen size) rounds to.
+    public static TileKey AtLevel(Rect canvasRect, int z)
     {
         var tileWidth = (int)Math.Ceiling(canvasRect.Width);
         var tileHeight = (int)Math.Ceiling(canvasRect.Height);
-
-        int z = -(int)Math.Floor(Math.Log(canvasZoom) / Math.Log(ZoomFactor));
         double tileZoom = LevelZoom(z);
 
         long x = (long)Math.Round(canvasRect.X / tileZoom / tileWidth);
@@ -58,7 +60,7 @@ record TileKey(long X, long Y, int Z, int TileWidth, int TileHeight)
         return new TileKey(x, y, z, tileWidth, tileHeight);
     }
 
-    static double LevelZoom(int z) => Math.Pow(ZoomFactor, -z);
+    public static double LevelZoom(int z) => Math.Pow(ZoomFactor, -z);
 
     public override string ToString() => $"(({X},{Y},{Z}))";
 }

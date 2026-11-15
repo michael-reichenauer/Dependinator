@@ -132,9 +132,8 @@ public class AskModelTests
         Assert.Contains("codebase", AskExamples.For(0)[0].Top[0]);
         Assert.Equal("What is this and why is it here?", AskExamples.For(1)[0].Top[0]);
         Assert.Contains("these", AskExamples.For(3)[0].Top[0]);
-        Assert.All(
-            new[] { 0, 1, 2 }.SelectMany(AskExamples.For),
-            g => Assert.True(g.Top.Count > 0 && g.More.Count > 0)
+        Assert.All(new[] { 0, 1, 2 }.SelectMany(AskExamples.For), g =>
+            Assert.True(g.Top.Count > 0 && g.More.Count > 0)
         );
     }
 

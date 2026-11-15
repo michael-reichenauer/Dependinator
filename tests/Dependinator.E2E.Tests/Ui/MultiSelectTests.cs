@@ -21,8 +21,8 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.NavigateToNodeAsync(AppPage.InsideMain);
         await App.WaitForContainerNodeAsync("Main");
         await App.DeselectAsync();
-        LocatorBoundingBoxResult canvas =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("No canvas box");
+        LocatorBoundingBoxResult canvas = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("No canvas box");
         await Page.Mouse.MoveAsync(canvas.X + canvas.Width / 2, canvas.Y + canvas.Height / 2);
         for (int notch = 0; notch < 14 && await MembersOnScreenAsync() < 2; notch++)
         {
@@ -37,8 +37,7 @@ public class MultiSelectTests(ITestOutputHelper output) : E2ETestBase(output)
         // A band over the visible part of Main's inside (so Main itself is only partly covered
         // and is looked into) picks the members inside it. Main may fit on screen (its member
         // card is small), so the band starts inside Main's box rather than at the canvas edge.
-        LocatorBoundingBoxResult main =
-            await App.Node("Demo.UI.Main").First.BoundingBoxAsync()
+        LocatorBoundingBoxResult main = await App.Node("Demo.UI.Main").First.BoundingBoxAsync()
             ?? throw new InvalidOperationException("No Main box");
         float x1 = Math.Max(canvas.X + 20, main.X + 10);
         float y1 = Math.Max(canvas.Y + 110, main.Y + 10);

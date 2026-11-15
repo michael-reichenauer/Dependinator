@@ -61,8 +61,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
 
         try
         {
-            IEnumerable<SecurityKey> signingKeys =
-                testSigningKeys
+            IEnumerable<SecurityKey> signingKeys = testSigningKeys
                 ?? (IEnumerable<SecurityKey>)(await GetSigningKeysAsync(cancellationToken)).GetSigningKeys();
             TokenValidationParameters validationParameters = new()
             {
@@ -104,8 +103,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
                 return null;
             }
 
-            string? email =
-                FindClaimValue(principal, "email")
+            string? email = FindClaimValue(principal, "email")
                 ?? FindClaimValue(principal, "preferred_username")
                 ?? FindClaimValue(principal, ClaimTypes.Email);
 

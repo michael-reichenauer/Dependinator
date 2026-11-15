@@ -25,8 +25,7 @@ class Line : IItem
     {
         Source = source;
         Target = target;
-        Id =
-            id
+        Id = id
             ?? (
                 isDirect ? LineId.FromDirect(source.Name, target.Name)
                 : isInheritance ? LineId.FromInheritance(source.Name, target.Name)
@@ -47,7 +46,7 @@ class Line : IItem
     public Node? RenderAncestor { get; set; }
 
     // A cousin line crosses container boundaries between the representatives of its links'
-    // endpoints below a node with a direct-line depth (see RepLineService); like a direct line,
+    // endpoints (a selected stub's lines, the explorer's lines; see RepLineService); like a direct line,
     // it is rendered inside its RenderAncestor's coordinate space.
     public bool IsCousin => RenderAncestor is not null && !IsDirect;
 
@@ -60,6 +59,16 @@ class Line : IItem
     // (see Model.LineFocus, set by RepLineService.Sync); drawn in the accent color so the
     // subject's lines stand out from the aggregated ones. Not persisted.
     public bool IsFocused { get; set; }
+
+    // Transient render state: the line represents links of a selected stub, drawn end to end, or
+    // it is one of those lines, clicked and kept (see RepLineService's LineReveal). The user
+    // asked for these lines, so the link count filter does not leave them out and they are not
+    // dimmed beside the selected line. Not persisted.
+    public bool IsRevealed { get; set; }
+
+    // Transient selection state: the stub whose lines stay drawn while one of them is selected
+    // (see SelectionService), so the user can go from line to line. Not persisted.
+    public bool IsExplored { get; internal set; }
 
     // An inheritance line segment is only anchored specially (top/bottom middle) at an end that
     // is a real link endpoint; a shared segment can end at a container boundary at the other end.
@@ -99,6 +108,23 @@ class Line : IItem
     public string? LabelDescription { get; private set; }
     public string? HtmlLabelDescription { get; private set; }
     public bool HasLabel => Label is not null || LabelDescription is not null;
+
+    // Where along the line its label sits, as a fraction of the line's length: the middle unless
+    // the user dragged it. A fraction (not a point) keeps the label on its line when nodes move or
+    // the line is rerouted.
+    public const double DefaultLabelPosition = 0.5;
+    const double MinLabelPosition = 0.05;
+    const double MaxLabelPosition = 0.95;
+    public double LabelPosition { get; private set; } = DefaultLabelPosition;
+    public bool IsLabelMoved => LabelPosition != DefaultLabelPosition;
+
+    public void SetLabelPosition(double position) => LabelPosition = ToLabelPosition(position);
+
+    // A position as it is stored: off the line's ends, rounded.
+    public static double ToLabelPosition(double position) =>
+        double.IsFinite(position)
+            ? Math.Round(Math.Clamp(position, MinLabelPosition, MaxLabelPosition), 3)
+            : DefaultLabelPosition;
 
     // Follows the nodes at the ends of its links (LineVisibility): dimmed or hidden lines are
     // drawn faintly or left out like those nodes.

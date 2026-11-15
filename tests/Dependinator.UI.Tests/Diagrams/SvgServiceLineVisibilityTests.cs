@@ -97,15 +97,16 @@ public class SvgServiceLineVisibilityTests
         Assert.DoesNotContain("marker-end", svg);
     }
 
-    // At this zoom top-level containers are expanded and their children icons. With a split
-    // depth on ParentA, RepLineService creates a cousin (crossing) line from the source child
-    // to the target's top container (RenderAncestor = root); with one on ParentB as well, the
-    // line goes child to child.
+    // At this zoom top-level containers are expanded and their children icons. With the
+    // explorer's focus on Source, RepLineService creates a crossing line from the source child
+    // to the target's top container (RenderAncestor = root); with the ParentB row expanded in
+    // the explorer as well, the line goes child to child. (A selected stub's crossing lines need
+    // a tile's selection, which this export path never has; they are culled the same way.)
     const double CousinZoom = 0.1;
 
     // ParentB lies 5000 root units (25 viewports at CousinZoom) to the right of ParentA, so
     // the cousin line's far end is well outside any view showing the source.
-    static IModelMgr CreateCousinModel(bool isSourceSplit = false, bool isTargetSplit = false)
+    static IModelMgr CreateCousinModel(bool isSourceFocused = false, bool isTargetExpanded = false)
     {
         IModelMgr modelMgr = new ModelMgr(new StateMgr());
         using var model = modelMgr.UseModel();
@@ -120,8 +121,13 @@ public class SvgServiceLineVisibilityTests
         source.AddSourceLink(link);
         target.AddTargetLink(link);
         new LineService().AddLinesFromSourceToTarget(model, link);
-        parentA.LineSplitDepth = isSourceSplit ? 1 : 0;
-        parentB.LineSplitDepth = isTargetSplit ? 1 : 0;
+        if (isSourceFocused)
+        {
+            var focus = LineFocus.ForNode(source, isReferences: false);
+            if (isTargetExpanded)
+                focus.ExpandedFarNodes.Add(parentB);
+            model.LineFocus = focus;
+        }
 
         return modelMgr;
     }
@@ -130,7 +136,7 @@ public class SvgServiceLineVisibilityTests
     const double ParentBViewX = 50000;
 
     [Fact]
-    public void GetContentSvg_ShouldRenderFunnelSegments_WhenNoSplit()
+    public void GetContentSvg_ShouldRenderFunnelSegments_WhenNotFocused()
     {
         var modelMgr = CreateCousinModel();
 
@@ -143,51 +149,51 @@ public class SvgServiceLineVisibilityTests
     }
 
     [Fact]
-    public void GetContentSvg_ShouldRenderParentToChildSegment_WhenTargetNotSplit()
+    public void GetContentSvg_ShouldRenderParentToChildSegment_WhenTargetNotExpanded()
     {
-        var modelMgr = CreateCousinModel(isSourceSplit: true);
+        var modelMgr = CreateCousinModel(isSourceFocused: true);
 
         // The view covers ParentB: the crossing line ends at its border and the ParentB->Target
         // fan-out inside renders as an ordinary segment.
         var svg = RenderView(modelMgr, ParentBViewX, 0, CousinZoom);
 
-        Assert.Contains("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.Contains("marker-end=\"url(#arrow-direct)\"", svg);
         Assert.Contains("marker-end=\"url(#arrow-line)\"", svg);
     }
 
     [Fact]
-    public void GetContentSvg_ShouldNotRenderParentToChildSegment_WhenTargetSplit()
+    public void GetContentSvg_ShouldNotRenderParentToChildSegment_WhenTargetExpanded()
     {
-        var modelMgr = CreateCousinModel(isSourceSplit: true, isTargetSplit: true);
+        var modelMgr = CreateCousinModel(isSourceFocused: true, isTargetExpanded: true);
 
         // The crossing line now ends at Target itself, so the fan-out segment is inactive.
         var svg = RenderView(modelMgr, ParentBViewX, 0, CousinZoom);
 
-        Assert.Contains("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.Contains("marker-end=\"url(#arrow-direct)\"", svg);
         Assert.DoesNotContain("marker-end=\"url(#arrow-line)\"", svg);
     }
 
     [Fact]
-    public void GetContentSvg_ShouldRenderCousinLine_WhenSourceIsVisible_AndTargetFarAway()
+    public void GetContentSvg_ShouldRenderCrossingLine_WhenSourceIsVisible_AndTargetFarAway()
     {
-        var modelMgr = CreateCousinModel(isSourceSplit: true);
+        var modelMgr = CreateCousinModel(isSourceFocused: true);
 
         // The view covers ParentA/Source; ParentB is ~25 viewports away.
         var svg = RenderView(modelMgr, 0, 0, CousinZoom);
 
-        Assert.Contains("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.Contains("marker-end=\"url(#arrow-direct)\"", svg);
     }
 
     [Fact]
-    public void GetContentSvg_ShouldNotRenderCousinLine_WhenNoEndpointIsVisible()
+    public void GetContentSvg_ShouldNotRenderCrossingLine_WhenNoEndpointIsVisible()
     {
-        var modelMgr = CreateCousinModel(isSourceSplit: true);
+        var modelMgr = CreateCousinModel(isSourceFocused: true);
 
-        // The view lies between ParentA and ParentB; the cousin line crosses it, but
+        // The view lies between ParentA and ParentB; the crossing line crosses it, but
         // neither endpoint node is visible.
         var svg = RenderView(modelMgr, 20000, 0, CousinZoom);
 
-        Assert.DoesNotContain("marker-end=\"url(#arrow-cousin)\"", svg);
+        Assert.DoesNotContain("marker-end=\"url(#arrow-direct)\"", svg);
     }
 
     [Fact]

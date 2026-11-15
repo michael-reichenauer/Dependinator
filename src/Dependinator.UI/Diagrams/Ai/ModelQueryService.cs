@@ -52,18 +52,16 @@ abstract class ModelQueryAnswers
     public Task<Result<ModelSummary>> GetModelAsync() => Ask("Looked at the model", q => q.GetModel());
 
     public Task<Result<NodeChildren>> GetChildrenAsync(string nodeName) =>
-        Ask(
-            nodeName == "" ? "Listed the top level" : $"Listed what is in {Short(nodeName)}",
-            q => q.GetChildren(nodeName)
+        Ask(nodeName == "" ? "Listed the top level" : $"Listed what is in {Short(nodeName)}", q =>
+            q.GetChildren(nodeName)
         );
 
     public Task<Result<IReadOnlyList<QueryNode>>> SearchNodesAsync(string query) =>
         Ask($"Searched for \"{query}\"", q => q.SearchNodes(query));
 
     public Task<Result<NodeDependencies>> GetDependenciesAsync(string nodeName, bool isIncoming) =>
-        Ask(
-            isIncoming ? $"Looked at what uses {Short(nodeName)}" : $"Looked at what {Short(nodeName)} uses",
-            q => q.GetDependencies(nodeName, isIncoming)
+        Ask(isIncoming ? $"Looked at what uses {Short(nodeName)}" : $"Looked at what {Short(nodeName)} uses", q =>
+            q.GetDependencies(nodeName, isIncoming)
         );
 
     public Task<Result<PathsResult>> FindPathsAsync(string fromName, string toName) =>

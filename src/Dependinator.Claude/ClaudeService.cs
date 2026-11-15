@@ -51,20 +51,17 @@ class ClaudeService(IClaudeApiKeyProvider apiKeyProvider, IModelToolsServer? mod
     {
         if (await apiKeyProvider.GetApiKeyAsync() is not { Length: > 0 } key)
             return new Error($"No Claude API key. {apiKeyProvider.SetKeyHint}");
-        return await CallClaudeAsync<ClaudeModel[]>(
-            key,
-            async client =>
+        return await CallClaudeAsync<ClaudeModel[]>(key, async client =>
+        {
+            List<ClaudeModel> models = [];
+            var page = await client.Models.List(new ModelListParams { Limit = 100 });
+            await foreach (var model in page.Paginate())
             {
-                List<ClaudeModel> models = [];
-                var page = await client.Models.List(new ModelListParams { Limit = 100 });
-                await foreach (var model in page.Paginate())
-                {
-                    if (ClaudeModels.CanAnswer(model))
-                        models.Add(new ClaudeModel(model.ID, model.DisplayName));
-                }
-                return models.ToArray();
+                if (ClaudeModels.CanAnswer(model))
+                    models.Add(new ClaudeModel(model.ID, model.DisplayName));
             }
-        );
+            return models.ToArray();
+        });
     }
 
     public Task<Result<string>> AskAsync(string prompt, string jsonSchema, string? modelId) =>

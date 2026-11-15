@@ -289,7 +289,14 @@ export function getBoundingRectangle(elementId) {
   if (element == null) {
     return null;
   }
-  return element.getBoundingClientRect();
+  return elementId === "svgcanvas" ? canvasFrameRect(element) : element.getBoundingClientRect();
+}
+
+// Where the diagram canvas is on the page: the rect of the frame around the svg (Canvas.razor).
+// While a pan or zoom moves the svg by a CSS transform (GestureTransform), the svg's own rect and
+// its events' offsetX/offsetY are those of the moved element, not of the canvas on screen.
+function canvasFrameRect(svg) {
+  return (svg.parentElement ?? svg).getBoundingClientRect();
 }
 
 // Id of the topmost id-bearing element at a viewport point. Used to find the drop target of a
@@ -323,18 +330,18 @@ export function getWindowSizeDetails(parm) {
   return windowSize;
 }
 
-// Coalesces high-frequency input events (wheel and single-pointer pointermove) to at most one
+// Coalesces high-frequency input events (wheel and pointermove, per pointer) to at most one
 // .NET call per animation frame, since each call re-renders the UI (and round-trips over
 // SignalR on Blazor Server). Dropped events are not lost: their movement/scroll deltas are
-// accumulated into the queued event. Discrete events (pointerdown/up/cancel, contextmenu) and
-// two-pointer pinch moves are sent immediately, flushing pending queued events first so a
-// coalesced move can never arrive after its pointerup.
-const inputBatchers = new Map(); // elementId -> { queue, rafId, activePointers }
+// accumulated into the queued event. Discrete events (pointerdown/up/cancel, contextmenu) are
+// sent immediately, flushing pending queued events first so a coalesced move can never arrive
+// after its pointerup.
+const inputBatchers = new Map(); // elementId -> { queue, rafId }
 
 function getInputBatcher(elementId) {
   let batcher = inputBatchers.get(elementId);
   if (!batcher) {
-    batcher = { queue: new Map(), rafId: 0, activePointers: 0 };
+    batcher = { queue: new Map(), rafId: 0 };
     inputBatchers.set(elementId, batcher);
   }
   return batcher;
@@ -361,11 +368,14 @@ function scheduleBatchedInput(batcher, key, send) {
 }
 
 function mouseEventData(eventName, event) {
+  // Offsets from the canvas frame, not event.offsetX/Y (see canvasFrameRect); the same values
+  // while the svg is not moved.
+  const frame = canvasFrameRect(event.currentTarget);
   return {
     Type: eventName,
     TargetId: event.target.id,
-    OffsetX: event.offsetX,
-    OffsetY: event.offsetY,
+    OffsetX: event.clientX - frame.left,
+    OffsetY: event.clientY - frame.top,
     ClientX: event.clientX,
     ClientY: event.clientY,
     ScreenX: event.screenX,
@@ -434,18 +444,16 @@ export function addPointerEventListener(elementId, eventName, instance, function
 
     if (eventName == "pointerdown") {
       event.target.setPointerCapture(event.pointerId);
-      batcher.activePointers++;
     }
     if (eventName == "pointerup" || eventName == "pointercancel") {
       event.target.releasePointerCapture(event.pointerId);
-      batcher.activePointers = Math.max(0, batcher.activePointers - 1);
     }
 
     const data = pointerEventData(eventName, event);
 
-    // Two active pointers = pinch zoom: the zoom step is applied per move event, so pinch
-    // moves are sent unbatched to keep the zoom speed intact.
-    if (eventName == "pointermove" && batcher.activePointers <= 1) {
+    // Moves are batched per pointer, also the two of a pinch: a pinch zooms by the fingers'
+    // positions (PointerEventService), not per move event, so the latest move of each is enough.
+    if (eventName == "pointermove") {
       const key = "move:" + event.pointerId;
       const previous = batcher.queue.get(key)?.data;
       if (previous) {

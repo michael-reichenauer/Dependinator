@@ -49,10 +49,10 @@ the `npm i -g` commands above when you need `./scripts/watch` or `./scripts/run`
 
 | Task | Command |
 | --- | --- |
-| Build | `./scripts/build` (or `dotnet build Dependinator.sln`) |
+| Build | `./scripts/build` (or `dotnet build Dependinator.slnx`) |
 | Run the Blazor Server host with hot reload, plus Azurite and the Functions API | `./scripts/watch` |
 | Run the WebAssembly host + API + Azurite locally (as deployed) | `./scripts/run` |
-| Unit tests | `dotnet test Dependinator.sln` |
+| Unit tests | `dotnet test Dependinator.slnx` |
 | UI/e2e tests (Playwright, chromium) | `./scripts/e2e` (`-a` for all browsers, `-s` to include cloud-sync tests) |
 | Unit + e2e | `./scripts/test` |
 | Format check | `dotnet csharpier --check .` |
@@ -63,7 +63,7 @@ The e2e tests target the running app at `http://localhost:5000`; see
 
 ## Repository layout
 
-`Dependinator.sln` targets `net10.0`. Production projects live under `src/`,
+`Dependinator.slnx` targets `net10.0`. Production projects live under `src/`,
 tests under `tests/`. The dependency direction is `Hosts → UI → Core → Shared`
 (with `Roslyn → Core` and `Bicep → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
 
@@ -92,8 +92,8 @@ tests under `tests/`. The dependency direction is `Hosts → UI → Core → Sha
 
 **VS Code extension** (not part of the solution)
 
-- `src/DependinatorVsCode/`: TypeScript extension packaging the web UI and the
-  language server. See its [DEVELOPMENT.md](src/DependinatorVsCode/DEVELOPMENT.md).
+- `src/Dependinator.VsCodeExt/`: TypeScript extension packaging the web UI and the
+  language server. See its [DEVELOPMENT.md](src/Dependinator.VsCodeExt/DEVELOPMENT.md).
 
 ## Conventions
 

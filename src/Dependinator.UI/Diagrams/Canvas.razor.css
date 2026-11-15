@@ -20,6 +20,12 @@ svg {
     display: block;
 }
 
+/* Clips the svg while a pan or zoom moves it by a CSS transform (GestureTransform). */
+.canvas-frame {
+    display: block;
+    overflow: hidden;
+}
+
 .drop-zone {
     border: 2px solid #0088f711;
 }

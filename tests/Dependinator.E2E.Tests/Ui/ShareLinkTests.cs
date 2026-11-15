@@ -14,10 +14,10 @@ public class ShareLinkTests(ITestOutputHelper output) : E2ETestBase(output)
     {
         await App.GotoAsync("/?m=demo&n=" + Uri.EscapeDataString("Demo*UI*dll.Demo.UI.Main"));
 
-        // The link navigates to Main (not shown at the initial root view) and selects it, so its
-        // label renders and its toolbar shows.
+        // The link navigates to Main (not shown at the initial root view) and marks it, so its
+        // label renders with the go to's brackets, and the breadcrumb leads to it.
         await Expect(App.NodeLabel("Main")).ToBeVisibleAsync();
-        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+        await Expect(App.NodeHighlight).ToBeVisibleAsync();
         await Expect(Page.GetByTestId("breadcrumb-item").Filter(new() { HasTextString = "Main" })).ToBeVisibleAsync();
     }
 

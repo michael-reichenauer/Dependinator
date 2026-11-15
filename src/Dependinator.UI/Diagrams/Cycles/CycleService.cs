@@ -133,8 +133,7 @@ class CycleService(IModelMgr modelMgr, ICommandService commandService) : ICycleS
         EnsureUpToDate();
         if (!lineIdsByCycle.ContainsKey(cycleKey))
             return null;
-        var cycle =
-            cycles.FirstOrDefault(c => c.Key == cycleKey)
+        var cycle = cycles.FirstOrDefault(c => c.Key == cycleKey)
             ?? cyclesToFix.Select(r => r.Cycle).FirstOrDefault(c => c?.Key == cycleKey);
         return cycle?.Members.Select(m => m.Id).ToList();
     }

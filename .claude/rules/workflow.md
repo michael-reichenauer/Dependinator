@@ -85,6 +85,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
   to hide it again later. Since Oct 30 the switch is in Settings › AI, with the default provider. Keep it out of the README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
+- All children of a node open as containers at the same zoom (Nov 12, Michael). Opening each node
+  by its own size on screen (Oct 14 to Nov 12) left icons beside open containers over a 3x zoom
+  range, which looked odd and surprising. Not a setting: a design choice, not a preference.
 
 ## Ideas waiting for a session
 
@@ -151,6 +154,20 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   answer `{kind, nodes, why}`), dismissals cover every kind (`KindDismissedRules`), and the MCP
   `check_rule` takes a kind. Name-pattern rules ("*.Tests may use anything") were postponed by
   Michael (Nov 4). Cycles stay their own always-on detector; only the decisions are shared.
+- **Workspace model, next** (`docs/notes/WORKSPACE-MODEL.md`, design doc
+  https://claude.ai/artifact/6f9JbUbR7w2yT13DngeXdu): phase 1 (Nov 13) is the model of the whole
+  workspace beside the per-source models, the sources dialog and the combined parse. Phase 2
+  (Nov 13): a refresh parses only the sources whose kind of file changed, and VS Code notices
+  a new or removed source without a restart (cannot be tried in a cloud session: Michael
+  checks it in VS Code). Phase 3 (Nov 13): a source new in the workspace model brings the
+  layout of its own model (`SourceLayout`). Phase 4 (Nov 13): a workspace never opened before
+  starts on it in VS Code (Michael's choice). Nesting (Nov 15, Michael picked "A now, then B"
+  from https://claude.ai/artifact/TjJ7nqiLUDeiHgd7f9L4v2): a source is shown inside the source
+  whose folder holds it, in the deepest project (`SourceNesting`, PR #243), and phase 2: the
+  user's own choice per source ("Shown in" in the sources dialog, "Show Inside" on a source's
+  root, starting on Automatic). Moving nodes inside a source by hand was ruled out: the parser
+  owns that tree.
+  Then the Go parser (the TypeScript helper approach, `go/packages`).
 - **AI bulk review** of all or selected open cycles, each answer still signed off by the user.
   Settle first: a cost and time estimate (cents and up to a minute per cycle, ~2 at a time), the
   sign-off UX (verdict badges, a "Next" button), the paste route, cancellation.

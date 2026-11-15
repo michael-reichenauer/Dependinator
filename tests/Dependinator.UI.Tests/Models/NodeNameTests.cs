@@ -121,4 +121,14 @@ public class NodeNameTests
     {
         Assert.Equal((expected, expected), NodeName.GetDisplayNames(name, Enum.Parse<NodeType>(type), isExecutable));
     }
+
+    [Theory]
+    [InlineData("web.src.app*ts.Counter.\uFF03count", nameof(NodeType.PropertyMember), "#count")]
+    [InlineData("web.src.app*ts.Counter.data\uFF04", nameof(NodeType.PropertyMember), "data$")]
+    [InlineData("web.routes.posts*\uFF04slug*tsx", nameof(NodeType.SourceFile), "posts.$slug.tsx")]
+    public void GetDisplayNames_ShouldShowTheDollarAndHashOfJavaScriptNames(string name, string type, string expected)
+    {
+        // The TypeScript parser writes them full-width: "$" and "#" mean other things in a node name
+        Assert.Equal(expected, NodeName.GetDisplayNames(name, Enum.Parse<NodeType>(type), false).shortName);
+    }
 }

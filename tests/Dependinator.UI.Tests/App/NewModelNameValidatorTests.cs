@@ -31,11 +31,25 @@ public class NewModelNameValidatorTests
 
     [Theory]
     [InlineData("MyModel.sln")]
+    [InlineData("MyModel.slnx")]
     [InlineData("MyModel.SLN")]
     [InlineData("infra.bicep")]
     public void Validate_ShouldReject_ParseableFileSuffix(string name)
     {
         Assert.NotNull(NewModelNameValidator.Validate(name, ExistingPaths));
+    }
+
+    [Theory]
+    [InlineData("tsconfig.json")]
+    [InlineData("jsconfig.json")]
+    [InlineData("Package.json")]
+    public void Validate_ShouldReject_ProjectFileName_AndSayWhy(string name)
+    {
+        // Such a name would be parsed as a TypeScript or JavaScript project
+        Assert.Equal(
+            $"Name cannot be '{name}', the name of a project file",
+            NewModelNameValidator.Validate(name, ExistingPaths)
+        );
     }
 
     [Theory]

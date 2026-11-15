@@ -82,7 +82,7 @@ public class ModelTests
     public void ParseProblems_ShouldRoundTripThroughDto_AndBeClearedWithTheModel()
     {
         var modelMgr = new ModelMgr(new StateMgr());
-        var problem = new Dependinator.Core.Parsing.ParseProblem("49 compile errors in Api", 49, "Api");
+        var problem = new Dependinator.Core.Parsing.ParseProblem("49 compile errors in Api", 49, "Api", "src/My.sln");
         var dto = modelMgr.WithModel(m =>
         {
             m.SetParseProblems([problem]);
@@ -103,6 +103,39 @@ public class ModelTests
 
         restored.WithModel(m => m.Clear());
         Assert.Empty(restored.WithModel(m => m.ParseProblems));
+    }
+
+    // The choice of sources of a workspace model is saved with it; an older file has none, and
+    // Clear drops it with the model, so it cannot leak into the parse of the next one.
+    [Fact]
+    public void WorkspaceSources_ShouldRoundTripThroughDto_AndBeClearedWithTheModel()
+    {
+        var modelMgr = new ModelMgr(new StateMgr());
+        WorkspaceSource[] sources =
+        [
+            new("App.sln", true, "App*sln", IsInModel: true),
+            new("tests/sample/tsconfig.json", false),
+        ];
+        var dto = modelMgr.WithModel(m =>
+        {
+            m.WorkspaceSources = sources;
+            return m.SerializeToDto();
+        });
+
+        var json = Json.Serialize(dto);
+        var restored = new ModelMgr(new StateMgr());
+        restored.WithModel(m =>
+            m.SetFromDto("/repo/.workspace", Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(json)!)
+        );
+        Assert.Equal(sources, restored.WithModel(m => m.WorkspaceSources));
+
+        var old = Json.Deserialize<Dependinator.UI.Modeling.Dtos.ModelDto>(
+            """{ "FormatVersion": "8", "Name": "My.sln", "Nodes": [], "Links": [] }"""
+        );
+        Assert.Empty(old!.WorkspaceSources);
+
+        restored.WithModel(m => m.Clear());
+        Assert.Empty(restored.WithModel(m => m.WorkspaceSources));
     }
 
     [Fact]
@@ -217,14 +250,12 @@ public class ModelTests
 
         var lines = model.SerializeToDto().Lines;
 
-        Assert.Contains(
-            lines,
-            l =>
-                l.LineId == kept.Value
-                && l.Label == "uses"
-                && l.LabelDescription == "to the API"
-                && l.Source == "A"
-                && l.Target == "B"
+        Assert.Contains(lines, l =>
+            l.LineId == kept.Value
+            && l.Label == "uses"
+            && l.LabelDescription == "to the API"
+            && l.Source == "A"
+            && l.Target == "B"
         );
         Assert.Contains(lines, l => l.LineId == "legacy" && l.Label == "legacy");
         Assert.DoesNotContain(lines, l => l.LineId == dropped.Value);

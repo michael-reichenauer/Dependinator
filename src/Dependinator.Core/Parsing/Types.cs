@@ -1,6 +1,12 @@
 namespace Dependinator.Core.Parsing;
 
-record Item(Node? Node, Link? Link, LineDescription? LineDescription = null, ParseProblem? Problem = null);
+record Item(
+    Node? Node,
+    Link? Link,
+    LineDescription? LineDescription = null,
+    ParseProblem? Problem = null,
+    ParsedSource? Source = null
+);
 
 // Per-model options controlling what a solution parse includes. Crosses the [Rpc] boundary of
 // IParserService, so keep it JSON-round-trippable: init properties with defaults, so that future
@@ -10,6 +16,21 @@ record SolutionParseOptions
     public static readonly SolutionParseOptions Default = new();
 
     public bool IncludeTestProjects { get; init; }
+
+    // For a workspace model (ModelPaths.IsWorkspace): the paths of the sources to parse into it,
+    // each a solution, a Bicep deployment or a script project. They travel with the request
+    // because the choice is saved with the model, which only the UI has.
+    public IReadOnlyList<string> Sources { get; init; } = [];
+
+    // The root node each of the workspace's sources had in its last parse into the model, for
+    // the ones that have been parsed before (also ones not among Sources now): a source keeps
+    // that name, whichever of the others are parsed this time.
+    public IReadOnlyList<ParsedSource> KnownSources { get; init; } = [];
+
+    // The model has more sources than the ones in Sources (a refresh of only the kinds of
+    // sources whose files changed): when every source in this parse fails, that is a problem
+    // of each like any other, not a failed parse of the model.
+    public bool HasOtherSources { get; init; }
 }
 
 record Link(string Source, string Target, LinkProperties Properties);
@@ -21,7 +42,15 @@ record LineDescription(string Source, string Target, string Text);
 // and links) or in a Bicep file. One brief summary per project or file, not each error, which the
 // editor lists. NodeName is the node to show for it (a project's assembly node), if any.
 // Errors only, for now: warnings are common and many never get fixed.
-record ParseProblem(string Message, int ErrorCount, string? NodeName = null);
+// In a workspace model, Source is the key of the source the problem is of (WorkspaceSources.Key,
+// set when the sources are combined): a refresh that parses only some of the sources keeps the
+// problems of the others.
+record ParseProblem(string Message, int ErrorCount, string? NodeName = null, string? Source = null);
+
+// One source of a workspace model that was parsed, with the name of its root node, under which
+// all its nodes are. One item per parsed source, so a source without one failed (its problem
+// item says why) and the model keeps what it had from it.
+record ParsedSource(string Path, string RootName);
 
 record Node(string Name, NodeProperties Properties);
 
@@ -46,6 +75,25 @@ class NodeProperties
     // null keeps the node-type default icon, NoValue.String clears a previously parsed icon.
     // A user-selected custom icon in the UI always takes precedence over this.
     public string? IconName { get; init; }
+
+    // For a project node (a C# project): the folder the project is in, as the parser read it. A
+    // workspace model shows a source whose folder is below it inside this node (SourceNesting).
+    public string? ProjectFolder { get; init; }
+
+    // A copy with another parent. Every property above is copied: add a new one here too.
+    public NodeProperties WithParent(string parent) =>
+        new()
+        {
+            Type = Type,
+            Description = Description,
+            Parent = parent,
+            IsPrivate = IsPrivate,
+            Signature = Signature,
+            IsExecutable = IsExecutable,
+            FileSpan = FileSpan,
+            IconName = IconName,
+            ProjectFolder = ProjectFolder,
+        };
 }
 
 class LinkProperties
@@ -107,6 +155,15 @@ enum NodeType
     VariableMember,
     OutputMember,
     ResourceMember,
+
+    // Languages whose code lives in files and free functions (TypeScript, JavaScript): SourceFile
+    // is a source file, a container of its types with its functions and variables (VariableMember)
+    // as member rows, FunctionMember a function that is no method of a type, and Folder a folder
+    // of source files.
+    // Appended at the end: NodeType crosses JSON-RPC as an int.
+    SourceFile,
+    FunctionMember,
+    Folder,
 }
 
 static class NodeDescriptions

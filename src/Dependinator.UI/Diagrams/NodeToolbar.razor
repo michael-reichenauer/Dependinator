@@ -11,8 +11,7 @@
 
 @if (HasSelectedLine && IsSelectedNodeNote)
 {
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar dep-toolbar-card"
-                  Style="@CssPosition">
+  <div class="dep-float-toolbar" style="@CssPosition">
     <MudTooltip Text="Edit note">
       <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditNote" data-testid="note-edit-toolbar" />
     </MudTooltip>
@@ -20,22 +19,138 @@
       <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNoteToolbar"
                      data-testid="note-delete-toolbar" />
     </MudTooltip>
-  </MudButtonGroup>
+  </div>
 }
 else if (HasSelectedLine)
 {
   @* data-container tells tests whether the selection renders as an open container or an icon. *@
-  <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-mini-toolbar dep-toolbar-card"
-                  Style="@CssPosition" data-testid="node-toolbar" data-container="@(IsIconMode ? "false" : "true")">
+  <div class="dep-float-toolbar" style="@CssPosition" data-testid="node-toolbar" data-container="@(IsIconMode ? "false" : "true")">
     @if (selectionService.SelectedNodeCount > 1)
     {
       <MudTooltip Text="Several nodes are selected (Shift+click adds or removes one): move, hide, color, size and delete apply to all of them.">
         <span class="dep-toolbar__count" data-testid="node-selection-count">@selectionService.SelectedNodeCount selected</span>
       </MudTooltip>
     }
-    <MudTooltip Text="Menu">
-      <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Menu" Dense="true" AnchorOrigin="Origin.BottomCenter"
-               PopoverClass="@MenuClass" data-testid="node-menu">
+    @* A zone has no links of its own. *@
+    @if (!IsSelectedNodeZone)
+    {
+      <MudTooltip Text="Show references">
+        <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
+      </MudTooltip>
+      <MudTooltip Text="Show dependencies">
+        <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
+      </MudTooltip>
+    }
+
+    <span class="dep-toolbar-sep"></span>
+
+    @if (viewOptions.IsEditingEnabled)
+    {
+      <MudTooltip Text="Decrease node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
+                       data-testid="node-decrease-size" />
+      </MudTooltip>
+      <MudTooltip Text="Increase node size">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
+                       data-testid="node-increase-size" />
+      </MudTooltip>
+      <span class="dep-toolbar-sep"></span>
+      @if (IsSelectedNodeZone)
+      {
+        <MudTooltip Text="Edit zone label and subtitle">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditZone" data-testid="node-edit-zone" />
+        </MudTooltip>
+        <MudTooltip Text="Set zone color" Disabled="@isColorMenuOpen" ShowOnFocus="false">
+          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                   PopoverClass="@MenuClass" OpenChanged="open => isColorMenuOpen = open"
+                   data-testid="node-set-color">
+            @NodeColorMenuItems
+          </MudMenu>
+        </MudTooltip>
+      }
+      else
+      {
+        <MudTooltip Text="Set icon">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
+                         data-testid="node-set-icon" />
+        </MudTooltip>
+        @* Both color choices are offered whatever the current zoom: the icon tint applies when the
+           node shows as an icon, the container color (border + background) when it is open. *@
+        <MudTooltip Text="Set colors" Disabled="@isColorMenuOpen" ShowOnFocus="false">
+          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
+                   PopoverClass="@MenuClass" OpenChanged="open => isColorMenuOpen = open"
+                   data-testid="node-set-color">
+            <div class="d-flex" style="gap:4px;">
+              <div>
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
+                @IconColorMenuItems
+              </div>
+              <MudDivider Vertical="true" FlexItem="true" />
+              <div>
+                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" title="Border and background when open">
+                  Container
+                </MudText>
+                @NodeColorMenuItems
+              </div>
+            </div>
+          </MudMenu>
+        </MudTooltip>
+      }
+    }
+
+    <span class="dep-toolbar-sep"></span>
+
+    @if (CanShowSource)
+    {
+      <MudTooltip Text="Show source code">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
+                       data-testid="node-show-source" />
+      </MudTooltip>
+    }
+
+    @if (!IsIconMode)
+    {
+      @if (IsEditNodeMode)
+      {
+        <MudTooltip Text="Done arranging (Esc)">
+          <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenWith" OnClick="() => IsEditNodeMode = false"
+                         Color="@Color.Warning" data-testid="node-edit" />
+        </MudTooltip>
+        @if (!interactionService.IsCard)
+        {
+          <MudTooltip Text="Fit contents inside the node">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
+                           data-testid="node-fit-contents" />
+          </MudTooltip>
+        }
+      }
+      else
+      {
+        @if (viewOptions.IsEditingEnabled)
+        {
+          <MudTooltip Text="@(interactionService.IsCard ? "Arrange inside: move the nested types" : "Arrange inside: pan and zoom the node's contents")">
+            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.OpenWith" OnClick="() => IsEditNodeMode = true"
+                           data-testid="node-edit" />
+          </MudTooltip>
+        }
+      }
+    }
+
+    <span class="dep-toolbar-sep"></span>
+
+    @if (IsSelectedNodeManual && viewOptions.IsEditingEnabled)
+    {
+      <MudTooltip Text="Delete node (Del)">
+        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNode"
+                       data-testid="node-delete-toolbar" />
+      </MudTooltip>
+    }
+
+    @* Last, where "more" usually lives. Its tooltip is off while the menu is open, or it stays
+       over the menu's first item (the button keeps the focus). *@
+    <MudTooltip Text="More" Disabled="@isMenuOpen" ShowOnFocus="false">
+      <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.MoreVert" Dense="true" AnchorOrigin="Origin.BottomCenter"
+               PopoverClass="@MenuClass" OpenChanged="open => isMenuOpen = open" data-testid="node-menu">
         @if (!IsMultiSelected && !IsSelectedNodeZone)
         {
           <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Info"
@@ -109,33 +224,16 @@ else if (HasSelectedLine)
           </MudMenuItem>
         }
 
-        @* Direct lines are view state, not an edit, so they are offered in both modes. They live
-           in the menu only (no toolbar buttons) while the feature settles. *@
-        @if (SelectedNodeHasChildren)
+        @* A workspace source's root can be shown elsewhere (SourceNesting): like choosing the
+           sources, this needs no edit mode, since it changes nothing inside a source. *@
+        @if (SelectedSourceRoot is { } sourceRoot)
         {
-          <MudDivider />
-          <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" data-testid="node-lines-depth">
-            @LinesCaption
-          </MudText>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldMore"
-                       OnClick="IncreaseLineDepth" title="Split this node's lines per child, one level deeper."
-                       data-testid="node-menu-lines-deeper">
-            Split Lines One Level Deeper
-          </MudMenuItem>
-          <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
-                       OnClick="DecreaseLineDepth" Disabled="@(SelectedNodeLineDepth == 0)"
-                       title="Merge the split lines back one level." data-testid="node-menu-lines-shallower">
-            Merge Lines Back One Level
-          </MudMenuItem>
-          @if (HasSelectedNodeLineSplits)
-          {
-            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.UnfoldLess"
-                         OnClick="HideDirectLines"
-                         title="Merge every split line of this node and its descendants back into the bundle."
-                         data-testid="node-menu-hide-direct-lines">
-              Merge All Lines Back (Hide Direct Lines)
-            </MudMenuItem>
-          }
+          <MudMenu Label="Show Inside" StartIcon="@MudBlazor.Icons.Material.Outlined.DriveFileMove"
+                   IconColor="Color.Secondary" Dense="true" PopoverClass="@MenuClass"
+                   title="Where this source is shown in the model of the whole workspace"
+                   data-testid="node-menu-show-inside">
+            @ShowInsideItems(sourceRoot)
+          </MudMenu>
         }
 
         @* Everything below changes the model, so it needs edit mode (like dragging does). *@
@@ -174,6 +272,11 @@ else if (HasSelectedLine)
                          OnClick="LayoutChildren" data-testid="node-menu-reset-children">
               Reset Children Layout
             </MudMenuItem>
+            <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.Route"
+                         OnClick="ResetLines" title="Routes the lines between the children again, keeping the children where they are."
+                         data-testid="node-menu-reset-lines">
+              Reset Lines
+            </MudMenuItem>
             <MudMenuItem IconColor="Color.Secondary" Icon="@MudBlazor.Icons.Material.Outlined.DeveloperBoardOff"
                          OnClick="LayoutDescendants" data-testid="node-menu-reset-descendants">
               Reset All Descendants Layout
@@ -207,113 +310,7 @@ else if (HasSelectedLine)
         }
       </MudMenu>
     </MudTooltip>
-
-    @* A zone has no links of its own. *@
-    @if (!IsSelectedNodeZone)
-    {
-      <MudTooltip Text="Show references">
-        <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="node-references" />
-      </MudTooltip>
-      <MudTooltip Text="Show dependencies">
-        <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="node-dependencies" />
-      </MudTooltip>
-    }
-
-    @if (viewOptions.IsEditingEnabled)
-    {
-      <MudTooltip Text="Decrease node size">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.CloseFullscreen" OnClick="interactionService.DecreaseNodeSize"
-                       data-testid="node-decrease-size" />
-      </MudTooltip>
-      <MudTooltip Text="Increase node size">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenInFull" OnClick="interactionService.IncreaseNodeSize"
-                       data-testid="node-increase-size" />
-      </MudTooltip>
-      @if (IsSelectedNodeZone)
-      {
-        <MudTooltip Text="Edit zone label and subtitle">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Edit" OnClick="EditZone" data-testid="node-edit-zone" />
-        </MudTooltip>
-        <MudTooltip Text="Set zone color">
-          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
-                   PopoverClass="@MenuClass" data-testid="node-set-color">
-            @NodeColorMenuItems
-          </MudMenu>
-        </MudTooltip>
-      }
-      else
-      {
-        <MudTooltip Text="Set icon">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.EmojiSymbols" OnClick="SelectIconAsync"
-                         data-testid="node-set-icon" />
-        </MudTooltip>
-        @* Both color choices are offered whatever the current zoom: the icon tint applies when the
-           node shows as an icon, the container color (border + background) when it is open. *@
-        <MudTooltip Text="Set colors">
-          <MudMenu Icon="@MudBlazor.Icons.Material.Outlined.Palette" Dense="true" AnchorOrigin="Origin.BottomCenter"
-                   PopoverClass="@MenuClass" data-testid="node-set-color">
-            <div class="d-flex" style="gap:4px;">
-              <div>
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
-                @IconColorMenuItems
-              </div>
-              <MudDivider Vertical="true" FlexItem="true" />
-              <div>
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" title="Border and background when open">
-                  Container
-                </MudText>
-                @NodeColorMenuItems
-              </div>
-            </div>
-          </MudMenu>
-        </MudTooltip>
-      }
-    }
-
-    @if (CanShowSource)
-    {
-      <MudTooltip Text="Show source code">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Code" OnClick="ShowSourceAsync"
-                       data-testid="node-show-source" />
-      </MudTooltip>
-    }
-
-    @if (!IsIconMode)
-    {
-      @if (IsEditNodeMode)
-      {
-        <MudTooltip Text="Done arranging (Esc)">
-          <MudIconButton Icon="@MudBlazor.Icons.Material.Filled.OpenWith" OnClick="() => IsEditNodeMode = false"
-                         Color="@Color.Warning" data-testid="node-edit" />
-        </MudTooltip>
-        @if (!interactionService.IsCard)
-        {
-          <MudTooltip Text="Fit contents inside the node">
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.CenterFocusWeak" OnClick="interactionService.NodePanZoomToFit"
-                           data-testid="node-fit-contents" />
-          </MudTooltip>
-        }
-      }
-      else
-      {
-        @if (viewOptions.IsEditingEnabled)
-        {
-          <MudTooltip Text="@(interactionService.IsCard ? "Arrange inside: move the nested types" : "Arrange inside: pan and zoom the node's contents")">
-            <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.OpenWith" OnClick="() => IsEditNodeMode = true"
-                           data-testid="node-edit" />
-          </MudTooltip>
-        }
-      }
-    }
-
-    @if (IsSelectedNodeManual && viewOptions.IsEditingEnabled)
-    {
-      <MudTooltip Text="Delete node (Del)">
-        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error" OnClick="DeleteNode"
-                       data-testid="node-delete-toolbar" />
-      </MudTooltip>
-    }
-  </MudButtonGroup>
+  </div>
 }
 
 <MudMessageBox @ref="mbox" Title="Reset Descendants" CancelText="Cancel">
@@ -330,7 +327,11 @@ else if (HasSelectedLine)
 
 
 @code {
-  const double ToolbarOffset = 32;
+  // From the node's top to the toolbar's top: the toolbar's height (36) and a gap that clears the
+  // selection's top handle.
+  const double ToolbarOffset = 44;
+  bool isMenuOpen;
+  bool isColorMenuOpen;
   private MudMessageBox mbox { get; set; } = null!;
 
 
@@ -365,6 +366,9 @@ else if (HasSelectedLine)
   ICommandService commandService { get; set; } = null!;
 
   [Inject]
+  ILineEditService lineEditService { get; set; } = null!;
+
+  [Inject]
   INavigationService navigationService { get; set; } = null!;
 
   [Inject]
@@ -390,9 +394,6 @@ else if (HasSelectedLine)
 
   [Inject]
   INodeEditService nodeEditService { get; set; } = null!;
-
-  [Inject]
-  ILineSplitService lineSplitService { get; set; } = null!;
 
   [Inject]
   IViewOptions viewOptions { get; set; } = null!;
@@ -425,10 +426,48 @@ else if (HasSelectedLine)
     if (TryGetSelectedNodeId(out var nodeId))
       hiddenNodeService.OpenPanel(nodeId);
   }
+  // The selected node when it is the root of a source in the workspace model
+  string? SelectedSourceRoot =>
+    !IsMultiSelected && TryGetSelectedNodeId(out var nodeId)
+      ? modelMgr.WithModel(m =>
+          m.Nodes.TryGetValue(nodeId, out var node) && Modeling.ModelService.IsSourceRoot(m, node.Name) ? node.Name : null)
+      : null;
+
+  // The places of the source, read when the submenu opens: Automatic, the top, the other
+  // sources and their projects, the current one in bold
+  RenderFragment ShowInsideItems(string rootName) => __builder =>
+  {
+    if (modelService.GetSourcePlaces(rootName) is not { } places)
+      return;
+    var current = Modeling.SourcePlaceItems.ValueOf(places.ShownIn);
+    foreach (var item in Modeling.SourcePlaceItems.Of(places))
+    {
+      var value = item.Value;
+      <MudMenuItem OnClick="() => ShowSourceInside(rootName, Modeling.SourcePlaceItems.ShownInOf(value))"
+                   data-testid="show-inside-item" data-value="@value">
+        <span style="@ItemStyle(value == current, item.IsIndented)">@item.Label</span>
+      </MudMenuItem>
+      if (value == Modeling.SourcePlaceItems.Top)
+      {
+        <MudDivider />
+      }
+    }
+  };
+
+  // The source moves and is placed anew, maybe inside a node shown as an icon now: go to it
+  // (a go to marks the node and keeps the selection). During a parse it moves at the parse's end.
+  void ShowSourceInside(string rootName, string? shownIn)
+  {
+    if (modelService.SetSourcePlace(rootName, shownIn))
+      navigationService.ShowNodeAsync(Modeling.Models.NodeId.FromName(rootName)).RunInBackground();
+  }
+
+  static string ItemStyle(bool isCurrent, bool isIndented) =>
+    (isCurrent ? "font-weight:600;" : "") + (isIndented ? "padding-left:16px;" : "");
+
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
-  bool SelectedNodeHasChildren => SelectedNodeIs(node => node.Children.Count > 0);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
 
   // The selected node's id, when the selection is a node.
@@ -465,6 +504,16 @@ else if (HasSelectedLine)
 
   void OnUiStateChanged() => InvokeAsync(StateHasChanged);
 
+  // A menu that leaves the page while open (the selection went away, a drag hid the toolbar)
+  // never reports its close, so its button's tooltip would stay disabled.
+  protected override void OnAfterRender(bool firstRender)
+  {
+    if (HasSelectedLine)
+      return;
+    isMenuOpen = false;
+    isColorMenuOpen = false;
+  }
+
   public void Dispose()
   {
     applicationEvents.UIStateChanged -= OnUiStateChanged;
@@ -496,6 +545,12 @@ else if (HasSelectedLine)
     commandService.Do(new ResetLayoutCommand(nodeId, recursively: false));
     await selectionService.Select(nodeId);
     selectionService.SetEditMode(isEdit);
+  }
+
+  void ResetLines()
+  {
+    if (TryGetSelectedNodeId(out var nodeId))
+      lineEditService.ResetLines(nodeId);
   }
 
   async Task LayoutDescendants()
@@ -535,34 +590,6 @@ else if (HasSelectedLine)
     selectionService.SetSelectedNodesVisibility(visibility);
     if (visibility == NodeVisibility.Hidden && !viewOptions.RevealHiddenNodes)
       selectionService.Unselect();
-  }
-
-  int SelectedNodeLineDepth => TryGetSelectedNodeId(out var nodeId) ? lineSplitService.GetDepth(nodeId) : 0;
-  bool HasSelectedNodeLineSplits => TryGetSelectedNodeId(out var nodeId) && lineSplitService.HasSplits(nodeId);
-
-  // The menu section's caption shows how many levels the node's lines are split (the toolbar
-  // badge used to).
-  string LinesCaption =>
-      SelectedNodeLineDepth is var depth and > 0
-          ? $"Direct Lines (split {depth} {(depth == 1 ? "level" : "levels")})"
-          : "Direct Lines";
-
-  void IncreaseLineDepth()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.IncreaseDepth(nodeId);
-  }
-
-  void DecreaseLineDepth()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.DecreaseDepth(nodeId);
-  }
-
-  void HideDirectLines()
-  {
-    if (TryGetSelectedNodeId(out var nodeId))
-      lineSplitService.Clear(nodeId);
   }
 
   // Deletes the selected manual node(s); with a group, every manual node in it goes as one

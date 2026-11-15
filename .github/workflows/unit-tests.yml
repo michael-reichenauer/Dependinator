@@ -56,7 +56,7 @@ jobs:
       # The solution includes the Blazor WebAssembly host; restore any workloads it needs
       # (no-op if none) so the solution builds on a clean runner.
       - name: Restore workloads
-        run: dotnet workload restore Dependinator.sln
+        run: dotnet workload restore Dependinator.slnx
 
       # Api.Tests starts a real Azurite for the blob-store tests. Install it up front:
       # otherwise the fixture falls back to 'npx --yes azurite', which downloads and
@@ -65,7 +65,7 @@ jobs:
         run: npm install -g azurite
 
       - name: Test
-        run: dotnet test Dependinator.sln --logger trx --results-directory "$RUNNER_TEMP/test-results"
+        run: dotnet test Dependinator.slnx --logger trx --results-directory "$RUNNER_TEMP/test-results"
 
       # The failed tests and their messages on the run's summary page, so finding the cause
       # needs no log reading.

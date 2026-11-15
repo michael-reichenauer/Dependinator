@@ -58,6 +58,10 @@ class Node : IItem
     public FileSpan? FileSpanOrParentSpan => // Allow using a few levels up
         fileSpan ?? Parent?.fileSpan ?? Parent?.Parent?.fileSpan ?? Parent?.Parent?.Parent?.fileSpan;
 
+    // For a project node: the folder the project is in (Parsing.NodeProperties.ProjectFolder).
+    // Saved relative to the model's folder (FileSpanPaths).
+    public string? ProjectFolder { get; private set; }
+
     public NodeType Type
     {
         get => type;
@@ -106,6 +110,10 @@ class Node : IItem
 
     public double StrokeWidth { get; set; } = 2;
     public bool IsSelected { get; set; } = false;
+
+    // Marked by a "go to" (search, a link, a list) so the user spots the node among its
+    // neighbours without it being selected (HighlightService); runtime only, never saved.
+    public bool IsHighlighted { get; set; } = false;
     public bool IsEditMode { get; set; } = false;
     public bool IsChildrenLayoutRequired { get; set; } = false;
     public bool IsChildrenLayoutCustomized { get; set; } = false;
@@ -171,12 +179,6 @@ class Node : IItem
     public static NodeVisibility LegacyHiddenVisibility { get; set; } = NodeVisibility.Dimmed;
     public bool IsPassThrough { get; set; }
 
-    // Direct-line depth (see RepLineService): this node's aggregated line bundles are split that
-    // many levels into its subtree, for every link touching the subtree (internal links included,
-    // incoming as well as outgoing). Pass-through nodes never count as a level. Transient view
-    // state; every change must bump Model.StructureVersion so RepLineService re-syncs.
-    public int LineSplitDepth { get; set; }
-
     // A manually added node (drawn by the user to design intended structure), as opposed to a
     // node produced by parsing. Manual nodes are marked visually and are exempt from the
     // stale-node removal that runs after each re-parse (see StructureService.ClearNotUpdated).
@@ -218,6 +220,7 @@ class Node : IItem
                 Signature = Signature,
                 FileSpan = fileSpan,
                 IconName = IconName,
+                ProjectFolder = ProjectFolder,
             },
             Boundary = boundary != Rect.None ? boundary : null,
             Offset = ContainerOffset != Pos.None ? ContainerOffset : null,
@@ -249,6 +252,7 @@ class Node : IItem
         IsExecutable = dto.Properties.IsExecutable;
         fileSpan = dto.Properties.FileSpan;
         IconName = dto.Properties.IconName;
+        ProjectFolder = dto.Properties.ProjectFolder;
 
         Boundary = dto.Boundary ?? Rect.None;
         ContainerOffset = dto.Offset ?? Pos.None;
@@ -279,6 +283,7 @@ class Node : IItem
         );
         fileSpan = node.Properties.FileSpan == NoValue.FileSpan ? null : node.Properties.FileSpan ?? fileSpan;
         IconName = node.Properties.IconName == NoValue.String ? null : node.Properties.IconName ?? IconName;
+        ProjectFolder = node.Properties.ProjectFolder ?? ProjectFolder;
     }
 
     // Sets the user's own state and passes the resulting state down to the descendants.

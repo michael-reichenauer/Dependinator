@@ -30,10 +30,8 @@ public class LayeredLayoutGoldenTests
         var parent = AddNode(model, model.Root, "Parent", new Rect(0, 0, 1200, 800));
         var sides = Build(fixture, model, parent);
 
-        var arranged = LayeredLayout.TryArrange(
-            parent,
-            new LayoutMetrics(100, 100, 70, 70, 1.0),
-            node => sides.TryGetValue(node.Name, out var side) ? new Size(side, side) : NodeLayout.DefaultSize
+        var arranged = LayeredLayout.TryArrange(parent, new LayoutMetrics(100, 100, 70, 70, 1.0), node =>
+            sides.TryGetValue(node.Name, out var side) ? new Size(side, side) : NodeLayout.DefaultSize
         );
 
         Assert.True(arranged);

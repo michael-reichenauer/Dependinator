@@ -478,19 +478,24 @@ public class StructureServiceTests
 
         var (_, _, line) = AddNodesWithLine(model, "Source", "Target");
         line.SetLabel("orders", "and payments");
+        Assert.Null(Assert.Single(model.SerializeToDto().Lines).LabelPosition);
+        line.SetLabelPosition(0.3);
 
         var lineDto = Assert.Single(model.SerializeToDto().Lines);
         Assert.Equal("orders", lineDto.Label);
         Assert.Equal("and payments", lineDto.LabelDescription);
+        Assert.Equal(0.3, lineDto.LabelPosition);
         Assert.Equal("Source", lineDto.Source);
         Assert.Equal("Target", lineDto.Target);
 
         line.SetLabel(null);
+        line.SetLabelPosition(Line.DefaultLabelPosition);
         Assert.False(line.HasLabel);
         service.SetLineLayoutDto(model, lineDto);
 
         Assert.Equal("orders", line.Label);
         Assert.Equal("and payments", line.LabelDescription);
+        Assert.Equal(0.3, line.LabelPosition);
     }
 
     [Fact]
@@ -511,16 +516,19 @@ public class StructureServiceTests
                 LineId = lineId.Value,
                 SegmentPoints = [],
                 Label = "uses",
+                LabelPosition = 0.7,
                 Source = "Source",
                 Target = "Target",
             }
         );
         Assert.Equal("uses", model.PendingLineLabels[lineId].Label);
+        Assert.Equal(0.7, model.SerializeToDto().Lines.Single(l => l.LineId == lineId.Value).LabelPosition);
 
         var line = new Line(source, target);
         model.TryAddLine(line);
 
         Assert.Equal("uses", line.Label);
+        Assert.Equal(0.7, line.LabelPosition);
         Assert.Empty(model.PendingLineLabels);
     }
 

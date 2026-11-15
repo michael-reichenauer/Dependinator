@@ -40,6 +40,95 @@ public class WorkspaceFileServiceTests
         }
     }
 
+    // An .slnx is listed like an .sln, but an .sln with an .slnx of the same name beside it (what a
+    // migration leaves) only once, as the .sln whose model the user has worked in.
+    [Fact]
+    public async Task GetModelFilePathsAsync_ShouldListSlnxSolutions_ButKeepTheSlnOfAMigration()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"dep-workspace-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "tools"));
+            Directory.CreateDirectory(Path.Combine(root, "old"));
+            await File.WriteAllTextAsync(Path.Combine(root, "App.sln"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "App.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "tools", "Tools.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "old", "Old.sln"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "old", "App.slnx"), "<Solution />");
+            await File.WriteAllTextAsync(Path.Combine(root, "notes.sln.txt"), "");
+
+            var service = new WorkspaceFileService();
+            service.SetWorkspaceFolders([root]);
+
+            var paths = await service.GetModelFilePathsAsync();
+
+            Assert.Equal(
+                [
+                    Path.Combine(root, "App.sln"),
+                    Path.Combine(root, "old", "App.slnx"),
+                    Path.Combine(root, "old", "Old.sln"),
+                    Path.Combine(root, "tools", "Tools.slnx"),
+                ],
+                paths
+            );
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task GetModelFilePathsAsync_ShouldListTypeScriptAndJavaScriptProjects_AfterTheOthers()
+    {
+        var root = Path.Combine(Path.GetTempPath(), $"dep-workspace-{Guid.NewGuid():N}");
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, "web", "src"));
+            Directory.CreateDirectory(Path.Combine(root, "web", "node_modules", "lib"));
+            Directory.CreateDirectory(Path.Combine(root, "tool", "lib"));
+            Directory.CreateDirectory(Path.Combine(root, "docs"));
+            await File.WriteAllTextAsync(Path.Combine(root, "App.sln"), "");
+            // The repository's tooling: a package.json above the projects
+            await File.WriteAllTextAsync(Path.Combine(root, "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "eslint.config.js"), "");
+            // A TypeScript project
+            await File.WriteAllTextAsync(Path.Combine(root, "web", "tsconfig.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "web", "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "web", "src", "main.ts"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "web", "node_modules", "lib", "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "web", "node_modules", "lib", "tsconfig.json"), "{}");
+            // A plain JavaScript project
+            await File.WriteAllTextAsync(Path.Combine(root, "tool", "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "tool", "lib", "run.js"), "");
+            // A package.json without source
+            await File.WriteAllTextAsync(Path.Combine(root, "docs", "package.json"), "{}");
+            // A package.json with only what was built and its declarations
+            Directory.CreateDirectory(Path.Combine(root, "built", "dist"));
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "package.json"), "{}");
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "dist", "index.js"), "");
+            await File.WriteAllTextAsync(Path.Combine(root, "built", "index.d.ts"), "");
+
+            var service = new WorkspaceFileService();
+            service.SetWorkspaceFolders([root]);
+
+            var paths = await service.GetModelFilePathsAsync();
+
+            Assert.Equal(
+                [
+                    Path.Combine(root, "App.sln"),
+                    Path.Combine(root, "web", "tsconfig.json"),
+                    Path.Combine(root, "tool", "package.json"),
+                ],
+                paths
+            );
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Fact]
     public async Task GetModelFilePathsAsync_ShouldReturnEmpty_WithoutWorkspaceFolders()
     {

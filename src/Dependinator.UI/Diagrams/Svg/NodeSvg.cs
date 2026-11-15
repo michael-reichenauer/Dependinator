@@ -328,7 +328,46 @@ static class NodeSvg
         );
     }
 
-    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
+    // The amber corner brackets of a node a "go to" took the view to (HighlightService), like a
+    // viewfinder's: outside the selection's dashed frame, so the two never overlap. Drawn with
+    // the selection overlay, which every node kind (icon, container, member card, zone) already
+    // draws at its own geometry. The canvas pulses them (dep-highlight, Canvas.razor).
+    internal static string HighlightSvg(Node node, Rect geometry)
+    {
+        if (!node.IsHighlighted)
+            return "";
+
+        const double Gap = 9; // From the node edge to the brackets
+        var bounds = new Rect(geometry.X - Gap, geometry.Y - Gap, geometry.Width + 2 * Gap, geometry.Height + 2 * Gap);
+        return HighlightBracketsSvg(bounds);
+    }
+
+    // Four L-shaped corners with rounded bends around bounds (also a note's, NoteSvg).
+    internal static string HighlightBracketsSvg(Rect bounds)
+    {
+        const double StrokeWidth = 3.5;
+        const double Bend = 5; // Radius of a corner's bend
+        var (x1, y1, x2, y2) = (bounds.X, bounds.Y, bounds.X + bounds.Width, bounds.Y + bounds.Height);
+        // A quarter of the shorter side, within limits, so a bracket reads as a corner on a
+        // small member row and does not run along the whole edge of a large container.
+        var arm = Math.Clamp(Math.Min(bounds.Width, bounds.Height) * 0.25, 8, 40);
+        var path = string.Create(
+            CultureInfo.InvariantCulture,
+            $"M{x1:0.##} {y1 + arm:0.##}V{y1 + Bend:0.##}Q{x1:0.##} {y1:0.##} {x1 + Bend:0.##} {y1:0.##}H{x1 + arm:0.##}"
+                + $"M{x2 - arm:0.##} {y1:0.##}H{x2 - Bend:0.##}Q{x2:0.##} {y1:0.##} {x2:0.##} {y1 + Bend:0.##}V{y1 + arm:0.##}"
+                + $"M{x2:0.##} {y2 - arm:0.##}V{y2 - Bend:0.##}Q{x2:0.##} {y2:0.##} {x2 - Bend:0.##} {y2:0.##}H{x2 - arm:0.##}"
+                + $"M{x1 + arm:0.##} {y2:0.##}H{x1 + Bend:0.##}Q{x1:0.##} {y2:0.##} {x1:0.##} {y2 - Bend:0.##}V{y2 - arm:0.##}"
+        );
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<path class="dep-highlight" data-testid="node-highlight" d="{path}" fill="none" stroke="{DColors.Highlight}" stroke-width="{StrokeWidth}" stroke-linecap="round" pointer-events="none"/>"""
+        );
+    }
+
+    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing) =>
+        HighlightSvg(node, geometry) + SelectionSvg(node, geometry, isEditing);
+
+    static string SelectionSvg(Node node, Rect geometry, bool isEditing)
     {
         if (!node.IsSelected)
             return "";

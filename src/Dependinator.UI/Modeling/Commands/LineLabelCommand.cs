@@ -15,6 +15,7 @@ class LineLabelCommand(LineId lineId) : Command
     public string? Description { get; set; }
     public string? LabelCopy { get; private set; }
     public string? DescriptionCopy { get; private set; }
+    public double? PositionCopy { get; private set; }
 
     public override void Execute(IModel model)
     {
@@ -24,6 +25,14 @@ class LineLabelCommand(LineId lineId) : Command
         LabelCopy = line.Label ?? "";
         DescriptionCopy = line.LabelDescription ?? "";
         line.SetLabel(Label ?? LabelCopy, Description ?? DescriptionCopy);
+        // A removed label takes its place along the line with it: a new one starts at the middle.
+        // Only then is the place this command's to restore; a drag has its own command.
+        PositionCopy = null;
+        if (!line.HasLabel && line.IsLabelMoved)
+        {
+            PositionCopy = line.LabelPosition;
+            line.SetLabelPosition(Line.DefaultLabelPosition);
+        }
     }
 
     public override void Revert(IModel model)
@@ -35,7 +44,10 @@ class LineLabelCommand(LineId lineId) : Command
         Label = line.Label ?? "";
         Description = line.LabelDescription ?? "";
         line.SetLabel(LabelCopy, DescriptionCopy);
+        if (PositionCopy is double position)
+            line.SetLabelPosition(position);
         LabelCopy = null;
         DescriptionCopy = null;
+        PositionCopy = null;
     }
 }
