@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
 using Xunit.Abstractions;
@@ -127,30 +128,29 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await Expect(App.Node("shop")).ToBeVisibleAsync(new() { Timeout = 60_000 });
         await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
 
+        // Show Inside the deployment, from the shop's node menu: the view goes to the shop there
+        // (it stays selected, so it gets no go to brackets)
         await App.SelectNodeByFullNameAsync("shop");
-        await Expect(await App.OpenNodeMenuItemAsync("node-menu-show-inside")).ToBeVisibleAsync();
-        await App.CloseMenuAsync();
+        ILocator showInside = await App.OpenNodeMenuItemAsync("node-menu-show-inside");
+        ILocator inDeployment = Page.Locator("[data-testid=show-inside-item][data-value^='node:']");
+        await App.ClickUntilVisibleAsync(showInside, inDeployment);
+        await App.ClickUntilGoneAsync(inDeployment);
+        await Expect(App.Node("shop")).ToBeVisibleAsync();
 
-        // Shown in the deployment: the shop is inside it, so not drawn at this zoom
+        // The choice is saved with the model, and the sources dialog shows it; there the shop is
+        // put back at the top level
         await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
         await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
-        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "auto");
-        ILocator inDeployment = Page.Locator(".mud-popover-open .mud-list-item")
-            .Filter(new() { HasTextRegex = new System.Text.RegularExpressions.Regex("^main.bicep") });
-        await App.ClickUntilVisibleAsync(Place("shop").Locator(".mud-select").First, inDeployment);
-        await App.ClickUntilGoneAsync(inDeployment);
-        await Expect(Place("shop"))
-            .ToHaveAttributeAsync("data-value", new System.Text.RegularExpressions.Regex("^node:"));
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", new Regex("^node:"));
+        ILocator topLevel = Page.Locator(".mud-popover-open .mud-list-item").Filter(new() { HasTextRegex = new Regex("^Top level$") });
+        await App.ClickUntilVisibleAsync(Place("shop").Locator(".mud-select").First, topLevel);
+        await App.ClickUntilGoneAsync(topLevel);
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "top");
         await App.ClickUntilGoneAsync(Page.GetByTestId("sources-ok"));
 
-        await Expect(App.Node("shop")).ToHaveCountAsync(0);
-        await Expect(App.Node("main.bicep")).ToBeVisibleAsync();
-
-        // The choice is saved with the model
         await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
         await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
-        await Expect(Place("shop"))
-            .ToHaveAttributeAsync("data-value", new System.Text.RegularExpressions.Regex("^node:"));
+        await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "top");
         await App.ClickUntilGoneAsync(Page.GetByTestId("sources-cancel"));
     }
 

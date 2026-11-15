@@ -139,7 +139,7 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   one of a source being taken out, would keep its emptied source alive as a shell. Two sources
   inside each other through choices or folders are untangled by moving one to the top: the
   first whose choice is not followed, so a choice wins. A change of place during a parse is only
-  saved: the model is half updated then (`ModelService.IsUpdatingItems`), and the parse nests
+  saved: the model is half updated then (`ModelService.isUpdatingItems`), and the parse nests
   the sources at its end. `SourceNesting.Places` lists the other roots and their projects
   (`ModelService.GetSourcePlaces`, `SourcePlaceItems` makes the list items). A choice made in the
   dialog moves the source before the refresh (`SetSourceChoicesAsync`), since nothing may need

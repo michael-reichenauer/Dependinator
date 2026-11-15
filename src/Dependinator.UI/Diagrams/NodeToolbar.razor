@@ -447,11 +447,11 @@ else if (HasSelectedLine)
   };
 
   // The source moves and is placed anew, maybe inside a node shown as an icon now: go to it
+  // (a go to marks the node and keeps the selection). During a parse it moves at the parse's end.
   void ShowSourceInside(string rootName, string? shownIn)
   {
-    modelService.SetSourcePlace(rootName, shownIn);
-    selectionService.Unselect();
-    navigationService.ShowNodeAsync(Modeling.Models.NodeId.FromName(rootName)).RunInBackground();
+    if (modelService.SetSourcePlace(rootName, shownIn))
+      navigationService.ShowNodeAsync(Modeling.Models.NodeId.FromName(rootName)).RunInBackground();
   }
 
   static string ItemStyle(bool isCurrent, bool isIndented) =>

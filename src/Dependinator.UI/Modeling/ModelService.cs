@@ -59,7 +59,8 @@ interface IModelService
     IReadOnlyDictionary<string, SourcePlaces> GetSourcePlacesByPath();
 
     // Shows the source with the root node where the user chose (null: Automatic, "": at the top)
-    void SetSourcePlace(string rootName, string? shownIn);
+    // and says whether it moved now (else a parse moves it at its end)
+    bool SetSourcePlace(string rootName, string? shownIn);
 
     // Source files changed since the last successful parse, as reported while automatic refresh
     // is off (VS Code); the Re-parse button shows a dot until a parse succeeds.
@@ -111,9 +112,11 @@ class ModelService : IModelService, IDisposable
     readonly SemaphoreSlim refreshGate = new(1, 1);
 
     // While a parse puts its items into the model, which is then not all of one parse (the
-    // projects of the kept sources are stamped at the end): nesting waits for the parse's end.
-    int updatingItems;
-    bool IsUpdatingItems => Volatile.Read(ref updatingItems) > 0;
+    // projects of the kept sources are stamped at the end), a change of a source's place is only
+    // saved, and the parse nests the sources at its end. Both are read and set under the model
+    // lock, so a change cannot fall between the parse's nesting and its end.
+    bool isUpdatingItems;
+    bool isNestPending;
     readonly Debouncer saveDebouncer = new();
     readonly Debouncer viewSaveDebouncer = new();
 
@@ -495,7 +498,7 @@ class ModelService : IModelService, IDisposable
         using (var model = modelMgr.UseModel())
         {
             model.WorkspaceSources = SourceChoices.ToSaved(choices, model.WorkspaceSources);
-            isMoved = !IsUpdatingItems && NestSources(model); // A source's place can be all that changed
+            isMoved = NestSourcesNowOrAfterParse(model); // A source's place can be all that changed
         }
 
         // Save before refreshing, as for the test projects below: the refresh can fail.
@@ -641,11 +644,11 @@ class ModelService : IModelService, IDisposable
                 return false;
             }
 
-            Interlocked.Increment(ref updatingItems);
             try
             {
                 using (var model = modelMgr.UseModel())
                 {
+                    isUpdatingItems = true;
                     // A parsed source's root stays where the model shows it (SourceNesting)
                     if (isWorkspace)
                         items = SourceNesting.KeepParents(model, items);
@@ -679,6 +682,7 @@ class ModelService : IModelService, IDisposable
                         RequireChildrenLayout(model);
                     foreach (var (rootName, sourceModel) in sourceLayouts)
                         SourceLayout.Apply(model, modelStructureService, sourceModel, rootName);
+                    (isUpdatingItems, isNestPending) = (false, false);
                     if (isWorkspace)
                         NestSources(model);
                     PassThroughService.UpdatePassThroughFlags(model);
@@ -686,7 +690,12 @@ class ModelService : IModelService, IDisposable
             }
             finally
             {
-                Interlocked.Decrement(ref updatingItems);
+                // A parse that failed on the way still applies a change of place made meanwhile
+                if (EndUpdatingItems())
+                {
+                    applicationEvents.TriggerModelChanged();
+                    TriggerSave();
+                }
             }
 
             // Line descriptions can only be applied once all links (and thus lines) have been added
@@ -846,8 +855,7 @@ class ModelService : IModelService, IDisposable
     public bool IsSourceRoot(string nodeName) => modelMgr.WithModel(m => IsSourceRoot(m, nodeName));
 
     internal static bool IsSourceRoot(IModel model, string nodeName) =>
-        ModelPaths.IsWorkspace(model.Path)
-        && model.WorkspaceSources.Any(s => s.RootName == nodeName && s.IsIncluded && s.IsInModel);
+        ModelPaths.IsWorkspace(model.Path) && model.WorkspaceSources.Any(s => s.RootName == nodeName && IsNested(s));
 
     public IReadOnlyDictionary<string, SourcePlaces> GetSourcePlacesByPath() =>
         modelMgr.WithModel(m =>
@@ -878,26 +886,47 @@ class ModelService : IModelService, IDisposable
         );
     }
 
-    public void SetSourcePlace(string rootName, string? shownIn)
+    public bool SetSourcePlace(string rootName, string? shownIn)
     {
+        var isMoved = false;
         using (var model = modelMgr.UseModel())
         {
             if (!ModelPaths.IsWorkspace(model.Path))
-                return;
+                return false;
             model.WorkspaceSources =
             [
                 .. model.WorkspaceSources.Select(s =>
-                    s.RootName == rootName && s.IsIncluded && s.IsInModel ? s with { ShownIn = shownIn } : s
+                    s.RootName == rootName && IsNested(s) ? s with { ShownIn = shownIn } : s
                 ),
             ];
-            // While a parse updates the model, the parse nests the sources when it is done
-            if (!IsUpdatingItems)
-                NestSources(model);
+            isMoved = NestSourcesNowOrAfterParse(model);
         }
 
         applicationEvents.TriggerModelChanged();
         applicationEvents.TriggerUIStateChanged();
         TriggerSave();
+        return isMoved;
+    }
+
+    // Nests the sources (under the model lock), or leaves it to the parse that is putting in its
+    // items (isUpdatingItems)
+    bool NestSourcesNowOrAfterParse(IModel model)
+    {
+        if (!isUpdatingItems)
+            return NestSources(model);
+        isNestPending = true;
+        return false;
+    }
+
+    // After a parse that did not reach its own nesting: nests if a change of place came meanwhile
+    bool EndUpdatingItems()
+    {
+        using var model = modelMgr.UseModel();
+        if (!isUpdatingItems)
+            return false;
+        var isPending = isNestPending;
+        (isUpdatingItems, isNestPending) = (false, false);
+        return isPending && ModelPaths.IsWorkspace(model.Path) && NestSources(model);
     }
 
     // Shows each source of a workspace model inside the source whose folder holds it, or where
@@ -905,11 +934,14 @@ class ModelService : IModelService, IDisposable
     bool NestSources(IModel model) =>
         SourceNesting.Apply(model, modelStructureService, modelListService.WorkspaceFolder, NestedSources(model));
 
+    // A source the workspace model has (and so nests)
+    static bool IsNested(WorkspaceSource source) => source.IsIncluded && source.IsInModel;
+
     // The sources in a workspace model, for SourceNesting
     static IReadOnlyList<SourceNesting.Source> NestedSources(IModel model) =>
         [
             .. model
-                .WorkspaceSources.Where(s => s.IsIncluded && s.IsInModel && s.RootName is not null)
+                .WorkspaceSources.Where(s => IsNested(s) && s.RootName is not null)
                 .Select(s => new SourceNesting.Source(s.Path, s.RootName!, s.ShownIn)),
         ];
 
