@@ -144,6 +144,24 @@ public class LineEditServiceTests
     }
 
     [Fact]
+    public async Task StraightenLine_ShouldBeRedone_AfterAnUndo()
+    {
+        var (service, commands, line) = Create();
+        line.SetSegmentPoints([new Pos(150, 100)]);
+        line.IsSegmentsUserSet = true;
+        service.StraightenLine(line.Id);
+
+        await commands.Undo();
+        await commands.Redo();
+        Assert.Empty(line.SegmentPoints);
+        Assert.False(line.IsSegmentsUserSet);
+
+        await commands.Undo();
+        Assert.Equal([new Pos(150, 100)], line.SegmentPoints);
+        Assert.True(line.IsSegmentsUserSet);
+    }
+
+    [Fact]
     public async Task StraightenLine_ShouldBeAnUndoStepOfItsOwn_RightAfterABend()
     {
         var (service, commands, line) = Create();

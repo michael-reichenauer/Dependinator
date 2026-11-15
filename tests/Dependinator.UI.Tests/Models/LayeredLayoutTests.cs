@@ -320,8 +320,9 @@ public class LayeredLayoutTests
         Assert.False(line.IsSegmentsUserSet);
         Assert.Empty(line.SegmentPoints);
 
-        command.Revert(model); // Redo
+        command.Execute(model); // Redo (CommandService.Redo executes again)
         Assert.True(line.IsSegmentsUserSet);
+        Assert.Equal([new Pos(10, 20)], line.SegmentPoints);
 
         // User removing all points hands the line back to auto-routing
         var clearCommand = new Dependinator.UI.Modeling.Commands.LineEditCommand(line.Id) { SegmentPoints = [] };
