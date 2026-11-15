@@ -64,17 +64,24 @@ class WorkspaceFileService : IWorkspaceFileService
         return [.. solutionPaths, .. bicepPaths, .. scriptPaths];
     }
 
-    // The solutions among the paths: .sln and .slnx files, but of an .sln with an .slnx of the same
-    // name in its folder only the .slnx. Migrating a solution (dotnet sln migrate, Visual Studio's
-    // Save As .slnx) leaves the old .sln beside the new one, and both are the same projects.
+    // The solutions among the paths: .sln and .slnx files, but of an .slnx with an .sln of the same
+    // name in its folder only the .sln. Migrating a solution (dotnet sln migrate, Visual Studio's
+    // Save As .slnx) leaves the old .sln beside the new one, both with the same projects, and a
+    // workspace model with both would hold every project twice. The .sln wins since its model
+    // is the one the user has worked in (its layout, and its key among the workspace model's
+    // sources); the .slnx takes over once the .sln is deleted.
     internal static IEnumerable<string> SolutionFiles(IEnumerable<string> paths)
     {
         var solutions = paths.Where(ModelPaths.IsSolution).ToList();
-        var migrated = solutions
-            .Where(ModelPaths.IsSlnx)
-            .Select(path => path[..^1])
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        return solutions.Where(path => !migrated.Contains(path));
+        var comparer =
+            OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+        var classicNames = solutions
+            .Where(path => !ModelPaths.IsSlnx(path))
+            .Select(path => path[..^".sln".Length])
+            .ToHashSet(comparer);
+        return solutions.Where(path => !ModelPaths.IsSlnx(path) || !classicNames.Contains(path[..^".slnx".Length]));
     }
 
     static List<string> OrderShallowestFirst(IEnumerable<string> paths) =>

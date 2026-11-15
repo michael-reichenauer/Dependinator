@@ -143,7 +143,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **.slnx solutions (Nov 15).** The XML solution format is parsed like an `.sln` (the bundled
   Roslyn reads it; Dependinator's own solution gives the same model in both formats) and found in
   the workspace, the Models dialog and the VS Code file watcher. Of an `.sln` with an `.slnx` of
-  the same name beside it, which a migration leaves, the workspace lists only the `.slnx`.
+  the same name beside it, which a migration leaves, the workspace lists only the `.sln` (the
+  model with the user's work) until the `.sln` is deleted.
 - **One model for the whole workspace (Nov 13).** With two or more sources in the workspace
   (solutions, Bicep deployments, TypeScript and JavaScript projects), the Models menu lists a
   model of the whole workspace first, beside the model of each source. The first time it is

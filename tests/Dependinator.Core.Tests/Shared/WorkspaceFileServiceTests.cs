@@ -41,9 +41,9 @@ public class WorkspaceFileServiceTests
     }
 
     // An .slnx is listed like an .sln, but an .sln with an .slnx of the same name beside it (what a
-    // migration leaves) only once, as the .slnx.
+    // migration leaves) only once, as the .sln whose model the user has worked in.
     [Fact]
-    public async Task GetModelFilePathsAsync_ShouldListSlnxSolutions_AndHideTheSlnTheyReplace()
+    public async Task GetModelFilePathsAsync_ShouldListSlnxSolutions_ButKeepTheSlnOfAMigration()
     {
         var root = Path.Combine(Path.GetTempPath(), $"dep-workspace-{Guid.NewGuid():N}");
         try
@@ -64,7 +64,7 @@ public class WorkspaceFileServiceTests
 
             Assert.Equal(
                 [
-                    Path.Combine(root, "App.slnx"),
+                    Path.Combine(root, "App.sln"),
                     Path.Combine(root, "old", "App.slnx"),
                     Path.Combine(root, "old", "Old.sln"),
                     Path.Combine(root, "tools", "Tools.slnx"),

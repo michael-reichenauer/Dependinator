@@ -47,10 +47,12 @@ paths:
 - **Solutions are `.sln` or `.slnx`** (`ModelPaths.IsSolution`): `MSBuildWorkspace` reads an
   `.slnx` with its own `Microsoft.VisualStudio.SolutionPersistence`, not the user's SDK, and
   Dependinator.sln gave the same 11,067 nodes in both formats (Nov 15). Both ignore solution
-  folders and configurations. `WorkspaceFileService.SolutionFiles` hides an `.sln` that has an
-  `.slnx` of the same name beside it (a migration leaves both), or a workspace model would hold
-  every project twice. The root is named after the file (`App*slnx`), so switching formats
-  starts a new model with its own layout.
+  folders and configurations. `WorkspaceFileService.SolutionFiles` hides an `.slnx` that has an
+  `.sln` of the same name beside it (a migration leaves both), or a workspace model would hold
+  every project twice. The `.sln` wins: its model has the user's layout and is the key among a
+  workspace model's sources; hiding it instead (the first version) silently swapped a user's
+  model for an empty one (found in review). The root is named after the file (`App*slnx`), so
+  deleting the `.sln` starts a new model with its own layout.
 - **Parse problems:** a parser reports what can leave the model incomplete as a `ParseProblem`
   item (`Types.cs`), one brief summary per project or file, never per error. DemoGen leaves them
   out of the demo models.
