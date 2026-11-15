@@ -185,7 +185,9 @@ public class PointerEventServiceTests
         await service.PointerEventCallback(TouchAt("pointermove", 2, 250, 100));
 
         PointerEvent wheel = Assert.IsType<PointerEvent>(received);
-        Assert.Equal(1.5, wheel.PinchScale, 6);
+        // The zoom outpaces the fingers by PinchZoomGain: 1.5^1.5 = 1.84.
+        Assert.Equal(Math.Pow(1.5, PointerEventService.PinchZoomGain), wheel.PinchScale, 6);
+        Assert.True(wheel.PinchScale > 1.5);
         Assert.Equal((150.0, 100.0), (wheel.PinchFromX, wheel.PinchFromY));
         Assert.Equal((175.0, 100.0), (wheel.OffsetX, wheel.OffsetY));
     }

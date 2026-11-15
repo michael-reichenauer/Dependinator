@@ -37,6 +37,12 @@ class PointerEventService : IPointerEventService, IDisposable
     // Below this distance between two fingers (px) a pinch's scale is noise.
     const double MinPinchDistance = 10;
 
+    // A pinch zooms by the fingers' spread raised to this power, so the content grows faster than
+    // the fingers part (1.5: spreading them to twice the distance zooms 2.8x) while the point
+    // between them stays under them. 1 is exact finger following, which felt slow on the iPad.
+    // Only touch pinches: a trackpad pinch arrives as ctrl+wheel (PointerEvent.WheelZoomFactor).
+    internal const double PinchZoomGain = 1.5;
+
     readonly Timer clickTimer;
     readonly Dictionary<int, PointerEvent> activePointers = [];
     bool timerRunning = false;
@@ -218,7 +224,7 @@ class PointerEventService : IPointerEventService, IDisposable
             // Fingers that (nearly) touch give no usable scale: keep the zoom, follow the midpoint.
             var scale =
                 previousDistance >= MinPinchDistance && currentDistance >= MinPinchDistance
-                    ? currentDistance / previousDistance
+                    ? Math.Pow(currentDistance / previousDistance, PinchZoomGain)
                     : 1;
 
             var wheelEvent = e with
