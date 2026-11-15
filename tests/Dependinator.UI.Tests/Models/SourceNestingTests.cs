@@ -183,32 +183,54 @@ public class SourceNestingTests
         Assert.Equal(version, modelMgr.WithModel(m => m.StructureVersion));
     }
 
-    // A moved root is saved after its new parent, even one made after it, or a load would put
-    // it in a stand-in parent
+    // A moved root can be saved before its new parent (a node made after it): it loads into
+    // that parent all the same, with no second copy of the parent
     [Fact]
-    public void Apply_ShouldSaveTheMovedRoot_AfterItsNewParent()
+    public void Apply_ShouldLoadTheMovedRoot_IntoItsNewParent()
     {
         AddRoot("web");
         AddRoot("App*sln");
+        AddProject("Lib", "/repo/src/lib", "App*sln");
 
         using (var model = modelMgr.UseModel())
-            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/web/x.json", "web")]);
+            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/lib/x.json", "web")]);
 
         var dto = modelMgr.WithModel(m => m.SerializeToDto());
         var names = dto.Nodes.Select(n => n.Name).ToList();
-        Assert.True(names.IndexOf("App*sln") < names.IndexOf("web"));
+        Assert.True(names.IndexOf("web") < names.IndexOf("Lib"));
 
         var loaded = new ModelMgr(new StateMgr());
         using (var model = loaded.UseModel())
         {
+            model.Path = "/repo/.workspace";
             foreach (var node in dto.Nodes)
                 structure.SetNodeDto(model, node);
         }
         loaded.WithModel(m =>
         {
-            Assert.Equal("App*sln", m.Nodes[NodeId.FromName("web")].Parent.Name);
-            Assert.Equal(dto.Nodes.Count, m.Nodes.Count);
+            var lib = m.Nodes[NodeId.FromName("Lib")];
+            Assert.Same(lib, m.Nodes[NodeId.FromName("web")].Parent);
+            Assert.Equal("App*sln", lib.Parent.Name);
+            Assert.Same(lib, Assert.Single(m.Nodes[NodeId.FromName("App*sln")].Children));
+            Assert.Equal(NodeType.Assembly, lib.Type);
+            // Only the Externals, where the stand-in for the project was made, is added
+            Assert.Equal(names.Append("$Externals").Order(), m.Nodes.Values.Select(n => n.Name).Order());
         });
+    }
+
+    // Saved relative in a workspace model, which nests by it, and nowhere else
+    [Theory]
+    [InlineData("/repo/.workspace", "src/lib")]
+    [InlineData("/repo/App.sln", null)]
+    public void SerializeToDto_ShouldSaveAProjectsFolder_OnlyInAWorkspaceModel(string path, string? saved)
+    {
+        AddRoot("App*sln");
+        AddProject("Lib", "/repo/src/lib", "App*sln");
+        modelMgr.WithModel(m => m.Path = path);
+
+        var dto = modelMgr.WithModel(m => m.SerializeToDto());
+
+        Assert.Equal(saved, dto.Nodes.Single(n => n.Name == "Lib").Properties.ProjectFolder);
     }
 
     IReadOnlyDictionary<string, string> Parents(params (string Key, string RootName)[] sources) =>

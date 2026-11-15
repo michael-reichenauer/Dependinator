@@ -131,8 +131,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - **A source inside another (`SourceNesting`).** After each parse (in `ModelService`, for the
   whole model, so also for the sources a refresh did not parse) every source's root is moved to
   the deepest holder of another source: that source's root (the folder of its key) or one of its
-  project nodes (`Node.ProjectFolder`, which the Roslyn parser sets from the project file; saved
-  relative to the model's folder like a `FileSpan`, so a model opened again nests the same way
+  project nodes (`Node.ProjectFolder`, which the Roslyn parser sets from the project file; saved,
+  in a workspace model only, relative to the model's folder like a `FileSpan`, so a model opened again nests the same way
   while the solution's parse fails or has not run). A root holds only the folders below its
   own, so two sources cannot be inside each other through their roots; a project holds its own
   folder too and goes before a root of the same folder. A C# project outside its solution's
@@ -140,8 +140,10 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   anew in its new parent (`Boundary` none, both parents flagged for layout); what is inside it
   keeps its places, and the lines inside it their routes (`StructureService.MoveNodeToParent`
   re-creates the lines of a moved node: it keeps their descriptions, and the points of the
-  lines inside the node). A model saves each node after its parent (`Model.ParentsFirst`): a
-  root moved into a node made after it would otherwise load into a stand-in parent. A parsed root comes from its parser without a parent, so
+  lines inside the node; a line from inside to outside gets new ends, and its parsed
+  description is back with the next parse of its source). A root moved into a node made after
+  it is saved before that node: loading makes a stand-in parent for it, and the saved node then
+  takes over the stand-in (`StructureService.SetNodeDto`), or the parent was there twice. A parsed root comes from its parser without a parent, so
   `SourceNesting.KeepParents` gives it the one it has in the model first, or every refresh of
   it would move it out and back. Only roots move, so node names do not change. The walks that go
   by a source's tree stop at the roots of other sources (`KeepNodeTree`'s `otherRoots`): a kept

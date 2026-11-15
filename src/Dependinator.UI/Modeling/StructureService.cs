@@ -234,6 +234,18 @@ class StructureService(ILineService linesService) : IStructureService
 
         var parent = GetOrCreateParent(model, nodeDto);
 
+        // A node saved after one of its children is there already, as the stand-in parent that
+        // child made (a root moved into a node made after it, SourceNesting): it becomes the
+        // saved node, with the children it holds.
+        if (model.Nodes.TryGetValue(NodeId.FromName(nodeDto.Name), out var existing))
+        {
+            existing.SetFromDto(nodeDto);
+            existing.UpdateStamp = model.UpdateStamp;
+            if (existing.Parent != parent && !parent.IsAtOrInside(existing))
+                MoveNodeToParent(model, existing, parent);
+            return;
+        }
+
         var node = new Models.Node(nodeDto.Name, parent);
         node.SetFromDto(nodeDto);
         node.UpdateStamp = model.UpdateStamp;

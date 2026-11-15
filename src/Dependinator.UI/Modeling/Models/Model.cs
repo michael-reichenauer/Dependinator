@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
 
@@ -303,7 +304,7 @@ class Model : IModel
                     Source = p.Source,
                 }),
             ],
-            Nodes = [.. ParentsFirst(nodes.Values).Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
+            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(ToSaved(n.ToDto()), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
@@ -441,37 +442,15 @@ class Model : IModel
         return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
     }
 
-    // The nodes in their own order, but each after its parent: loading adds a node to its
-    // parent, and a node moved to a parent made after it (SourceNesting, a hand move) would
-    // otherwise come first and be placed in a stand-in parent.
-    static IEnumerable<Node> ParentsFirst(IEnumerable<Node> nodes)
-    {
-        HashSet<Node> done = [];
-        Dictionary<Node, List<Node>> waiting = [];
-        foreach (var node in nodes)
-        {
-            if (node.IsRoot || done.Contains(node.Parent))
+    // A project's folder is saved only in a workspace model, the one that nests sources by it
+    // (SourceNesting): elsewhere it would be a path of this machine that nothing reads
+    NodeDto ToSaved(NodeDto dto) =>
+        dto.Properties.ProjectFolder is null || ModelPaths.IsWorkspace(Path)
+            ? dto
+            : dto with
             {
-                Stack<Node> ready = new([node]);
-                while (ready.TryPop(out var next))
-                {
-                    done.Add(next);
-                    yield return next;
-                    if (waiting.Remove(next, out var children))
-                        for (var index = children.Count - 1; index >= 0; index--)
-                            ready.Push(children[index]);
-                }
-            }
-            else if (waiting.TryGetValue(node.Parent, out var children))
-                children.Add(node);
-            else
-                waiting[node.Parent] = [node];
-        }
-
-        // Never left out, even under a parent that is not in the model
-        foreach (var node in waiting.Values.SelectMany(children => children))
-            yield return node;
-    }
+                Properties = dto.Properties with { ProjectFolder = null },
+            };
 
     static RuleDto ToDto(ArchitectureRule r) =>
         new()
