@@ -29,7 +29,7 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - A source is shown inside the source whose folder holds it (Nov 15, Michael picked it from
   three options, https://claude.ai/artifact/TjJ7nqiLUDeiHgd7f9L4v2): in the deepest node of
   another source that stands for a folder above the source's folder, a C# project or another
-  source's root. In this repository the extension is in Dependinator.sln and NodeParser in the
+  source's root. In this repository the extension is in Dependinator.slnx and NodeParser in the
   Dependinator.TypeScriptParser project. Two sources in one folder stay side by side, but a
   source beside a C# project file (a package.json next to the .csproj) is inside that project,
   and a source at the workspace folder (a monorepo's package.json) holds the others. A source

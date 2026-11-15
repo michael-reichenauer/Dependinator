@@ -2,7 +2,7 @@
 // (src/Dependinator.VsCodeExt/resources/demo.gif).
 //
 // The scripted scenario (adjust the steps in run() below to change the demo):
-//   1. Overview of the Dependinator.sln model (fit to screen).
+//   1. Overview of the Dependinator.slnx model (fit to screen).
 //   2. Ctrl+F search for "ModelService" and select the result.
 //   3. The diagram zooms to the node; the node toolbar appears.
 //   4. "Show dependencies" opens the Dependencies explorer.
@@ -17,7 +17,7 @@
 // in the devcontainer) is resolvable. Requires ffmpeg.
 //
 // The app must be running at http://localhost:5000 (override with DEMO_URL)
-// and must already have the Dependinator.sln model loaded/parsed.
+// and must already have the Dependinator.slnx model loaded/parsed.
 
 import { createRequire } from "module";
 import { execFileSync } from "child_process";

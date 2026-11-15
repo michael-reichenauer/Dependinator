@@ -235,6 +235,25 @@ public class ModelListServiceTests
         Assert.Equal(BicepPath, service.HomePath);
     }
 
+    [Fact]
+    public async Task StartupPath_ShouldBeTheSlnx_WhenTheSlnUsedLastWasMigratedAndDeleted()
+    {
+        const string SlnxPath = "/workspaces/Dependinator/tools/Tools.slnx";
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([SlnxPath, BicepPath]);
+        config.RecentPaths = [ToolsPath];
+        var service = await CreateAsync();
+
+        Assert.Equal(SlnxPath, service.StartupPath);
+
+        // Not while the .sln is still there (a migration leaves both until the .sln is deleted)
+        workspaceFileService.Setup(w => w.GetModelFilePathsAsync()).ReturnsAsync([ToolsPath, BicepPath]);
+        await service.RefreshWorkspaceSourcesAsync();
+        Assert.Equal(ToolsPath, service.StartupPath);
+
+        // Nor for an .sln of another folder
+        Assert.Equal(OtherPath, service.MigratedSlnx(OtherPath));
+    }
+
     // The model VS Code starts on: the one of this workspace used last, or else the model of
     // the whole workspace (its first open asks what is in it).
     [Fact]

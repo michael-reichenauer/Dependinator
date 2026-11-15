@@ -398,7 +398,7 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
 - A menu item that opens a model must not await the load (`ModelMenuItems.OpenAsync` runs it
   in the background): MudBlazor keeps the menu open until the click handler returns, so the
   menu stayed up behind the sources dialog and through the whole parse.
-- In a cloud session the dev host lists `Dependinator.sln` twice among the workspace's sources
+- In a cloud session the dev host lists `Dependinator.slnx` twice among the workspace's sources
   (the `/workspaces/Dependinator` symlink and the real path): an artifact of the session, not
   a bug in the list.
 

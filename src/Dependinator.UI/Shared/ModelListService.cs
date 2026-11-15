@@ -91,7 +91,20 @@ class ModelListService(
 
     // The model to show when the app starts. Browser hosts resume the most recently used
     // model, but the VS Code extension is opened for a specific workspace (WorkspaceStartupPath).
-    public string? StartupPath => Build.IsVsCodeExtWasm ? WorkspaceStartupPath : LastUsedPath;
+    public string? StartupPath => Build.IsVsCodeExtWasm ? WorkspaceStartupPath : MigratedSlnx(LastUsedPath);
+
+    // An .sln of the workspace that was migrated to an .slnx of the same name and deleted (as
+    // this repository's own solution was) starts on the .slnx, which takes over the .sln's saved
+    // model on its first open (SlnxMigration), not on the gone .sln, which no longer parses.
+    // VS Code needs no such step: it starts on a model the workspace still has.
+    internal string? MigratedSlnx(string? path) =>
+        path is not null
+        && ModelPaths.IsSolution(path)
+        && !ModelPaths.IsSlnx(path)
+        && !IsWorkspacePath(path)
+        && IsWorkspacePath(path + "x")
+            ? path + "x"
+            : path;
 
     // A workspace starts on the model of it that was used last, not on one last used in some
     // other workspace (the recent paths are shared by all of them). A workspace that has none

@@ -8,7 +8,7 @@ namespace Dependinator.Core.Shared;
 static class DemoModel
 {
     public static string DemoSolutionName = "/Demo.sln";
-    public static string WorkingSolutionPath = "/workspaces/Dependinator/Dependinator.sln";
+    public static string WorkingSolutionPath = "/workspaces/Dependinator/Dependinator.slnx";
     public static string DemoModelName = "demo.model";
     public static string DemoOutputPath = $"/workspaces/Dependinator/src/Dependinator.Wasm/wwwroot/{DemoModelName}";
 

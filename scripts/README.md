@@ -16,7 +16,7 @@ from anywhere (they `cd` to the repo root themselves), e.g. `./scripts/watch`.
 
 | Script | Description |
 | --- | --- |
-| `test` | Full suite: unit tests (`dotnet test Dependinator.sln`), then the e2e tests. Arguments are forwarded to `e2e` (e.g. `./scripts/test -s -t`). |
+| `test` | Full suite: unit tests (`dotnet test Dependinator.slnx`), then the e2e tests. Arguments are forwarded to `e2e` (e.g. `./scripts/test -s -t`). |
 | `e2e` | Playwright UI tests. Starts the app itself in test mode (embedded demo model); `-b <browser>`, `-a` (all browsers), `-s` (cloud-sync stack), `-t` (traces). See `tests/Dependinator.E2E.Tests/README.md`. |
 | `ask-eval` | Ask the Ask panel's eval questions (`scripts/ask-eval.json`, about this repository's own model) in the dev host and score the answers: the nodes they name, time, lookups and cost. `-c` for the Claude Code route, case names to run only those. Answers saved in `tests/ask-eval-results/`. |
 | `trace` | Serve a Playwright trace from `./scripts/e2e -t` in the Trace Viewer on port 9322 (`./scripts/trace`, `./scripts/trace 6`, or a path). |
@@ -38,7 +38,7 @@ from anywhere (they `cd` to the repo root themselves), e.g. `./scripts/watch`.
 
 | Script | Description |
 | --- | --- |
-| `gen-demo` | Regenerate the embedded demo model (`src/Dependinator.Wasm/wwwroot/demo.model`) by parsing `Dependinator.sln`. |
+| `gen-demo` | Regenerate the embedded demo model (`src/Dependinator.Wasm/wwwroot/demo.model`) by parsing `Dependinator.slnx`. |
 | `record-demo` | Re-record the VS Code extension demo gif (`src/Dependinator.VsCodeExt/resources/demo.gif`); scenario in `record-demo.mjs`. Needs `ffmpeg` + global `@playwright/cli`. |
 | `import-icons` | Re-import curated Azure/AWS/Google icons into `src/Dependinator.UI/Diagrams/Icons/Library/`; curated lists in `cloud-icons/*.manifest`. |
 | `updatepackages` | List outdated/vulnerable NuGet + npm packages; `-u` upgrades non-major, `-m` also major. |
