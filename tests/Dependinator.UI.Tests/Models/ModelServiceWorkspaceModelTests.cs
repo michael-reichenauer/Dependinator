@@ -985,6 +985,28 @@ public class ModelServiceWorkspaceModelTests
         Assert.Equal(["App*sln", "Core", "Core.Type", "web", "web.main*ts"], ParsedNodeNames());
     }
 
+    // The model is opened again from its save and the solution then fails: the project's folder
+    // was saved, so the web project stays in the project
+    [Fact]
+    public async Task RefreshAsync_ShouldKeepANestedSourceInItsProject_AfterAReopen_WhenItsHolderFails()
+    {
+        sourceItems[Solution] = [Root("App*sln"), Project("Core", "/repo/src", "App*sln"), Node("Core.Type")];
+        using (var modelService = CreateModelService())
+        {
+            AssertOk(await modelService.LoadAsync(ModelPath));
+            Assert.Equal("Core", ParentOf("web"));
+            var saved = Assert.IsType<ModelDto>(modelService.GetCurrentModelDto().Value);
+            persistenceService.Setup(p => p.ReadAsync(ModelPath)).ReturnsAsync(saved);
+        }
+
+        sourceItems[Solution] = null;
+        using var reopened = CreateModelService();
+        AssertOk(await reopened.LoadAsync(ModelPath));
+        AssertOk(await reopened.RefreshAsync());
+
+        Assert.Equal("Core", ParentOf("web"));
+    }
+
     string ParentOf(string name) => modelMgr.WithModel(m => m.Nodes[NodeId.FromName(name)].Parent.Name);
 
     // The names of the parsed nodes (not the Externals, which the model makes up), sorted

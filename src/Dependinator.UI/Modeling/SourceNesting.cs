@@ -9,7 +9,10 @@ namespace Dependinator.UI.Modeling;
 // when it is a source's root (the folder of the source's file, WorkspaceSources.FolderOf) or a
 // project (Node.ProjectFolder, a C# project's folder). So a TypeScript project in a C# project's
 // folder is shown in that project, and a script project elsewhere in a solution's folder in the
-// solution. Only folders below a folder are held: two sources in one folder stay side by side.
+// solution. A root holds the folders below its own, so two sources in one folder stay side by
+// side; a project holds its own folder too (a package.json beside a .csproj is the project's),
+// and goes before a root of the same folder. A source at the workspace folder (a monorepo's
+// package.json) holds every other one below it.
 //
 // Decided anew after each parse on the whole model, so that it holds for the sources a refresh
 // did not parse too, and a source whose holder is left out of the model goes back to the top.
@@ -39,19 +42,19 @@ static class SourceNesting
         // The nodes that hold a folder, each with the index of its source. A project is one of
         // this parse (or of a source the model keeps, which KeepNodeTree has stamped), not one
         // that the parse no longer has, since that is removed after the parse.
-        List<(string Name, string Folder, int Source)> holders = [];
+        List<Holder> holders = [];
         for (var index = 0; index < roots.Count; index++)
         {
             var root = model.Nodes[NodeId.FromName(roots[index].RootName)];
-            holders.Add((root.Name, WorkspaceSources.FolderOf(roots[index].Key), index));
+            holders.Add(new(root.Name, WorkspaceSources.FolderOf(roots[index].Key), index, IsProject: false));
             foreach (var node in root.DescendantsAndSelfPreOrder(n => rootNames.Contains(n.Name)).Skip(1))
             {
                 if (node.ProjectFolder is { } folder && node.UpdateStamp == model.UpdateStamp)
-                    holders.Add((node.Name, Folder(workspaceFolder, folder), index));
+                    holders.Add(new(node.Name, Folder(workspaceFolder, folder), index, IsProject: true));
             }
         }
 
-        // The deepest holder of another source; the first of equally deep ones
+        // The deepest holder of another source, a project before a root; the first of equal ones
         var parentOf = new int[roots.Count];
         for (var index = 0; index < roots.Count; index++)
         {
@@ -61,8 +64,8 @@ static class SourceNesting
             {
                 if (
                     holders[holder].Source != index
-                    && IsBelow(folder, holders[holder].Folder)
-                    && (parentOf[index] < 0 || holders[holder].Folder.Length > holders[parentOf[index]].Folder.Length)
+                    && holders[holder].Holds(folder)
+                    && (parentOf[index] < 0 || holders[holder].IsDeeperThan(holders[parentOf[index]]))
                 )
                     parentOf[index] = holder;
             }
@@ -104,6 +107,7 @@ static class SourceNesting
         var moves = Parents(model, workspaceFolder, sources)
             .Where(move => model.Nodes[NodeId.FromName(move.Key)].Parent.Name != move.Value)
             .ToList();
+        var isAnyMoved = false;
         while (moves.Count > 0)
         {
             var isMoved = false;
@@ -119,11 +123,13 @@ static class SourceNesting
                 root.Parent.IsChildrenLayoutRequired = true;
                 moves.RemoveAll(move => move.Key == rootName);
                 isMoved = true;
+                isAnyMoved = true;
             }
             if (!isMoved)
                 break;
         }
-        model.BumpStructureVersion();
+        if (isAnyMoved)
+            model.BumpStructureVersion();
     }
 
     // A parsed source's root comes without a parent: it keeps the one the model gave it, so a
@@ -155,12 +161,22 @@ static class SourceNesting
     static string Folder(string workspaceFolder, string folder) =>
         WorkspaceSources.Key(workspaceFolder, folder.TrimEnd('/', '\\') + "/").TrimEnd('/');
 
+    // A node that holds a folder: a source's root, or a project in it
+    record Holder(string Name, string Folder, int Source, bool IsProject)
+    {
+        // A root holds the folders below its own, a project its own one too
+        public bool Holds(string folder) =>
+            IsBelow(folder, Folder) || IsProject && string.Equals(folder, Folder, StringComparison.OrdinalIgnoreCase);
+
+        public bool IsDeeperThan(Holder other) =>
+            Folder.Length > other.Folder.Length
+            || Folder.Length == other.Folder.Length && IsProject && !other.IsProject;
+    }
+
     // Whether a folder is below another one ("" is the workspace folder, which holds every
     // folder in it, but not a source's whole path outside it)
     static bool IsBelow(string folder, string holder) =>
         holder == ""
-            ? folder != "" && !IsWholePath(folder)
+            ? folder != "" && !FileSpanPaths.IsAbsolute(folder)
             : folder.StartsWith(holder + "/", StringComparison.OrdinalIgnoreCase);
-
-    static bool IsWholePath(string folder) => folder.StartsWith('/') || folder.Length > 1 && folder[1] == ':';
 }

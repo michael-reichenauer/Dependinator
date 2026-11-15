@@ -36,17 +36,37 @@ public class SourceNestingTests
         Assert.Equal("App*sln", parents["infra"]);
     }
 
-    // A project's folder holds only the folders below it, like a root's
+    // A project holds a source in its own folder (a package.json beside the .csproj), and goes
+    // before a root of the same folder
     [Fact]
-    public void Parents_ShouldNotNestASource_InAProjectOfTheSameFolder()
+    public void Parents_ShouldNestASource_InAProjectOfTheSameFolder()
     {
         AddRoot("App*sln");
         AddProject("Web", "/repo/src/web", "App*sln");
         AddRoot("web");
+        AddRoot("client");
 
-        var parents = Parents(("src/app/App.sln", "App*sln"), ("src/web/package.json", "web"));
+        var parents = Parents(
+            ("src/web/Web.sln", "App*sln"),
+            ("src/web/package.json", "web"),
+            ("src/web/client/package.json", "client")
+        );
 
-        Assert.Equal("", parents["web"]);
+        Assert.Equal("Web", parents["web"]);
+        Assert.Equal("Web", parents["client"]);
+    }
+
+    // A root holds only the folders below its own: two sources in one folder stay side by side
+    [Fact]
+    public void Parents_ShouldKeepTwoSourcesOfOneFolder_SideBySide()
+    {
+        AddRoot("App*sln");
+        AddRoot("tools");
+
+        var parents = Parents(("App.sln", "App*sln"), ("package.json", "tools"));
+
+        Assert.Equal("", parents["App*sln"]);
+        Assert.Equal("", parents["tools"]);
     }
 
     // A source outside the workspace folder (a second workspace folder) has its whole path as key
@@ -116,6 +136,78 @@ public class SourceNestingTests
             Assert.True(web.Parent.IsChildrenLayoutRequired);
             // What is inside keeps its place
             Assert.Equal(new Rect(10, 10, 60, 60), m.Nodes[NodeId.FromName("web.main*ts")].Boundary);
+        });
+    }
+
+    // The lines inside a moved root keep their route and description; the route's points are in
+    // a node that moves along
+    [Fact]
+    public void Apply_ShouldKeepTheLinesInsideTheRoot()
+    {
+        AddRoot("App*sln");
+        AddRoot("web");
+        AddNode("web.a*ts", "web");
+        AddNode("web.b*ts", "web");
+        Pos[] points = [new(20, 30), new(40, 30)];
+        using (var model = modelMgr.UseModel())
+        {
+            structure.AddOrUpdateLink(model, new Dependinator.Core.Parsing.Link("web.a*ts", "web.b*ts", new()));
+            var line = model.Lines[LineId.From("web.a*ts", "web.b*ts")];
+            line.SetSegmentPoints(points);
+            line.IsSegmentsUserSet = true;
+            line.SetDescription("calls", model.UpdateStamp);
+        }
+
+        using (var model = modelMgr.UseModel())
+            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/web/x.json", "web")]);
+
+        modelMgr.WithModel(m =>
+        {
+            var line = m.Lines[LineId.From("web.a*ts", "web.b*ts")];
+            Assert.Equal(points, line.SegmentPoints);
+            Assert.True(line.IsSegmentsUserSet);
+            Assert.Equal("calls", line.Description);
+        });
+    }
+
+    [Fact]
+    public void Apply_ShouldLeaveTheStructureVersion_WhenNothingMoves()
+    {
+        AddRoot("App*sln");
+        AddRoot("web");
+        var version = modelMgr.WithModel(m => m.StructureVersion);
+
+        using (var model = modelMgr.UseModel())
+            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("/other/x.json", "web")]);
+
+        Assert.Equal(version, modelMgr.WithModel(m => m.StructureVersion));
+    }
+
+    // A moved root is saved after its new parent, even one made after it, or a load would put
+    // it in a stand-in parent
+    [Fact]
+    public void Apply_ShouldSaveTheMovedRoot_AfterItsNewParent()
+    {
+        AddRoot("web");
+        AddRoot("App*sln");
+
+        using (var model = modelMgr.UseModel())
+            SourceNesting.Apply(model, structure, Folder, [new("App.sln", "App*sln"), new("src/web/x.json", "web")]);
+
+        var dto = modelMgr.WithModel(m => m.SerializeToDto());
+        var names = dto.Nodes.Select(n => n.Name).ToList();
+        Assert.True(names.IndexOf("App*sln") < names.IndexOf("web"));
+
+        var loaded = new ModelMgr(new StateMgr());
+        using (var model = loaded.UseModel())
+        {
+            foreach (var node in dto.Nodes)
+                structure.SetNodeDto(model, node);
+        }
+        loaded.WithModel(m =>
+        {
+            Assert.Equal("App*sln", m.Nodes[NodeId.FromName("web")].Parent.Name);
+            Assert.Equal(dto.Nodes.Count, m.Nodes.Count);
         });
     }
 

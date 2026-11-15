@@ -303,7 +303,7 @@ class Model : IModel
                     Source = p.Source,
                 }),
             ],
-            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
+            Nodes = [.. ParentsFirst(nodes.Values).Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
@@ -439,6 +439,38 @@ class Model : IModel
             : a.Layers is { Count: >= 2 } layers ? string.Join('\n', layers)
             : $"{a.From}\n{a.To}";
         return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
+    }
+
+    // The nodes in their own order, but each after its parent: loading adds a node to its
+    // parent, and a node moved to a parent made after it (SourceNesting, a hand move) would
+    // otherwise come first and be placed in a stand-in parent.
+    static IEnumerable<Node> ParentsFirst(IEnumerable<Node> nodes)
+    {
+        HashSet<Node> done = [];
+        Dictionary<Node, List<Node>> waiting = [];
+        foreach (var node in nodes)
+        {
+            if (node.IsRoot || done.Contains(node.Parent))
+            {
+                Stack<Node> ready = new([node]);
+                while (ready.TryPop(out var next))
+                {
+                    done.Add(next);
+                    yield return next;
+                    if (waiting.Remove(next, out var children))
+                        for (var index = children.Count - 1; index >= 0; index--)
+                            ready.Push(children[index]);
+                }
+            }
+            else if (waiting.TryGetValue(node.Parent, out var children))
+                children.Add(node);
+            else
+                waiting[node.Parent] = [node];
+        }
+
+        // Never left out, even under a parent that is not in the model
+        foreach (var node in waiting.Values.SelectMany(children => children))
+            yield return node;
     }
 
     static RuleDto ToDto(ArchitectureRule r) =>

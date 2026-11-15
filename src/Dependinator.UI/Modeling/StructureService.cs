@@ -418,6 +418,25 @@ class StructureService(ILineService linesService) : IStructureService
             .Distinct()
             .ToList();
 
+        // What a line keeps when it comes back: its description, and the route of a line inside
+        // the node, whose points are in a node that moves along (a line's label waits by itself,
+        // Model.RemoveLine)
+        var kept = links
+            .SelectMany(link => link.Lines)
+            .Distinct()
+            .Select(line =>
+                (
+                    line.Id,
+                    line.Description,
+                    line.DescriptionUpdateStamp,
+                    Points: line.Source.IsAtOrInside(node) && line.Target.IsAtOrInside(node)
+                        ? line.SegmentPoints.ToList()
+                        : null,
+                    line.IsSegmentsUserSet
+                )
+            )
+            .ToList();
+
         links.ForEach(model.RemoveLink);
 
         node.Parent.RemoveChild(node);
@@ -429,6 +448,18 @@ class StructureService(ILineService linesService) : IStructureService
 
         // Re-add link and lines again
         links.ForEach(l => AddLink(model, l));
+
+        foreach (var line in kept)
+        {
+            if (!model.Lines.TryGetValue(line.Id, out var newLine))
+                continue;
+            newLine.SetDescription(line.Description, line.DescriptionUpdateStamp);
+            if (line.Points is not null)
+            {
+                newLine.SetSegmentPoints(line.Points);
+                newLine.IsSegmentsUserSet = line.IsSegmentsUserSet;
+            }
+        }
     }
 
     void AddLink(IModel model, Models.Link link)

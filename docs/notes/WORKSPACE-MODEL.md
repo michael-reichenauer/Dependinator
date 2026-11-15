@@ -30,7 +30,9 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   three options, https://claude.ai/artifact/TjJ7nqiLUDeiHgd7f9L4v2): in the deepest node of
   another source that stands for a folder above the source's folder, a C# project or another
   source's root. In this repository the extension is in Dependinator.sln and NodeParser in the
-  Dependinator.TypeScriptParser project. Sources in one folder stay side by side, and a source
+  Dependinator.TypeScriptParser project. Two sources in one folder stay side by side, but a
+  source beside a C# project file (a package.json next to the .csproj) is inside that project,
+  and a source at the workspace folder (a monorepo's package.json) holds the others. A source
   whose holder is left out of the model is at the top again. The next phase lets the user choose
   the place ("Shown in" in the sources dialog, "Show Inside …" on a source's root).
 - The model is beside the per-source models, not instead of them. VS Code starts a workspace
@@ -129,12 +131,17 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
 - **A source inside another (`SourceNesting`).** After each parse (in `ModelService`, for the
   whole model, so also for the sources a refresh did not parse) every source's root is moved to
   the deepest holder of another source: that source's root (the folder of its key) or one of its
-  project nodes (`Node.ProjectFolder`, which the Roslyn parser sets from the project file; not
-  saved, since every opened model is parsed again). A folder holds only the folders below it, so
-  two sources cannot be inside each other through their roots; a C# project outside its
-  solution's folder could make a loop, and then the first source stays at the top. A moved root
-  is placed anew in its new parent (`Boundary` none, both parents flagged for layout); what is
-  inside it keeps its places. A parsed root comes from its parser without a parent, so
+  project nodes (`Node.ProjectFolder`, which the Roslyn parser sets from the project file; saved
+  relative to the model's folder like a `FileSpan`, so a model opened again nests the same way
+  while the solution's parse fails or has not run). A root holds only the folders below its
+  own, so two sources cannot be inside each other through their roots; a project holds its own
+  folder too and goes before a root of the same folder. A C# project outside its solution's
+  folder could make a loop, and then the first source stays at the top. A moved root is placed
+  anew in its new parent (`Boundary` none, both parents flagged for layout); what is inside it
+  keeps its places, and the lines inside it their routes (`StructureService.MoveNodeToParent`
+  re-creates the lines of a moved node: it keeps their descriptions, and the points of the
+  lines inside the node). A model saves each node after its parent (`Model.ParentsFirst`): a
+  root moved into a node made after it would otherwise load into a stand-in parent. A parsed root comes from its parser without a parent, so
   `SourceNesting.KeepParents` gives it the one it has in the model first, or every refresh of
   it would move it out and back. Only roots move, so node names do not change. The walks that go
   by a source's tree stop at the roots of other sources (`KeepNodeTree`'s `otherRoots`): a kept
@@ -191,9 +198,8 @@ side. The design with its alternatives is https://claude.ai/artifact/6f9JbUbR7w2
   case can differ), the workspace model opened by the other spelling is a second saved copy,
   and asks for its sources once more. One canonical path for every model that is opened would
   settle it for all kinds.
-- A refresh that parses only some kinds of sources nests by the project folders the model has
-  from its last parse of the others. A model loaded from a save has none until its first full
-  parse (the one that starts when it is opened): should that fail, a script project in a C#
-  project's folder goes into the solution's root until a parse of the solution succeeds.
+- A nested source's problems and links count in its holder project and the solution, as for
+  any node inside them (the problem badges, the lines from the solution). Left as it is: the
+  source is shown as part of the project.
 - Keeping two same-named C# projects of different solutions apart (the folder in the project's
   name, as for a root) needs the rename to be remembered per project, as it is per root.

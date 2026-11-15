@@ -96,7 +96,10 @@ paths:
     parse on the whole model). A parser that has project-like containers in other folders than
     its root (a Go module in a `go.work`, a TypeScript project reference) sets
     `NodeProperties.ProjectFolder` on them so sources in those folders go inside; the root's
-    folder comes from the source's key. A walk over a source's tree must stop at the roots of
+    folder comes from the source's key. `ProjectFolder` is saved (`NodePropertiesDto`, relative
+    like a `FileSpan`): unsaved, a reopened model whose solution failed moved the nested source
+    out to the solution's root and lost its place (found in review). Saving needs a node after
+    its parent (`Model.ParentsFirst`), since a moved root can be older than its new parent. A walk over a source's tree must stop at the roots of
     other sources (`DescendantsAndSelfPreOrder(isSkipped)`, `KeepNodeTree`'s `otherRoots`):
     without it a kept solution kept a script project the user had taken out (found in tests).
   - A source's key (`WorkspaceSources.Key`) and the workspace path are handled as text, never
