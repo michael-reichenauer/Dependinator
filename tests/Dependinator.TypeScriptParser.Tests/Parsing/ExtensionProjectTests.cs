@@ -3,7 +3,7 @@ using Dependinator.TypeScriptParser.Tests.Parsing.Utils;
 
 namespace Dependinator.TypeScriptParser.Tests.Parsing;
 
-// Parses this repository's VS Code extension (src/DependinatorVsCode): a real project, parsed
+// Parses this repository's VS Code extension (src/Dependinator.VsCodeExt): a real project, parsed
 // as it is checked out, with or without its packages installed.
 public class ExtensionProjectTests
 {
@@ -15,20 +15,20 @@ public class ExtensionProjectTests
         );
 
         // Named after its folder, like the model, not after the package ("dependinator")
-        Assert.Equal(NodeType.Solution, items.Node("DependinatorVsCode").Properties.Type);
-        var activate = items.Node("DependinatorVsCode.src.extension*ts.activate");
+        Assert.Equal(NodeType.Solution, items.Node("Dependinator*VsCodeExt").Properties.Type);
+        var activate = items.Node("Dependinator*VsCodeExt.src.extension*ts.activate");
         Assert.Equal(NodeType.FunctionMember, activate.Properties.Type);
         Assert.Null(activate.Properties.IsPrivate);
 
         // extension.ts starts the language server, which logs
         Assert.Contains(items.Links(), l =>
-            l.Source.StartsWith("DependinatorVsCode.src.extension*ts.")
-            && l.Target == "DependinatorVsCode.src.languageServer*ts.startLanguageServer"
+            l.Source.StartsWith("Dependinator*VsCodeExt.src.extension*ts.")
+            && l.Target == "Dependinator*VsCodeExt.src.languageServer*ts.startLanguageServer"
         );
         Assert.True(
             items.HasLink(
-                "DependinatorVsCode.src.languageServer*ts.startLanguageServer",
-                "DependinatorVsCode.src.logger*ts.log"
+                "Dependinator*VsCodeExt.src.languageServer*ts.startLanguageServer",
+                "Dependinator*VsCodeExt.src.logger*ts.log"
             )
         );
         Assert.True(items.Nodes().Count() > 100, $"Only {items.Nodes().Count()} nodes");

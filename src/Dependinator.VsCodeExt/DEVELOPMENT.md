@@ -7,9 +7,9 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 
 ## Local development
 
-1. Build and copy the WASM assets into `DependinatorVsCode/media`:
+1. Build and copy the WASM assets into `Dependinator.VsCodeExt/media`:
    - `scripts/prepare-wasm.sh`
-2. In `DependinatorVsCode`, install dependencies and compile:
+2. In `Dependinator.VsCodeExt`, install dependencies and compile:
    - `npm install`
    - `npm run compile`
 3. Press F5 in VS Code to launch the extension host.
@@ -26,18 +26,18 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 
 ## Build a VSIX locally
 
-1. From `DependinatorVsCode/`, install dependencies:
+1. From `Dependinator.VsCodeExt/`, install dependencies:
    - `npm install`
 2. Create a per-platform VSIX (builds WASM assets, publishes the language server, compiles TS):
    - `npm run package:linux-x64`
    - `npm run package:win32-x64`
    - `npm run package:darwin-arm64`
    - `npm run package:darwin-x64`
-3. The output is `DependinatorVsCode/dependinator-<version>.vsix`.
+3. The output is `Dependinator.VsCodeExt/dependinator-<version>.vsix`.
 
 ## Publish to the Marketplace
 
-1. Update `DependinatorVsCode/package.json`:
+1. Update `Dependinator.VsCodeExt/package.json`:
    - Set `publisher` to your Marketplace publisher ID.
    - Increment `version`.
 2. Create a Personal Access Token (VSCE) and publish:

@@ -221,7 +221,7 @@ write("1-context.svg", d, "Context view of Dependinator: developers use the VS C
 # 2. Hosts view: where the code runs
 # ------------------------------------------------------------------------------------------
 d = Diagram(1500, 700, "Dependinator hosts view")
-d.group(20, 60, 520, 620, "VS Code (the product)", "src/DependinatorVsCode · one .vsix per platform on the Marketplace")
+d.group(20, 60, 520, 620, "VS Code (the product)", "src/Dependinator.VsCodeExt · one .vsix per platform on the Marketplace")
 d.box("ext", 50, 110, 460, 145, "Extension host · TypeScript", [
     "extension.ts: commands, status bar, follow the active editor,",
     "    auto refresh on file changes, open a node's source",
@@ -290,7 +290,7 @@ d.box("h-web", 60, 100, 190, 90, "Dependinator.Web", ["Blazor Server dev host", 
 d.box("h-wasm", 270, 100, 190, 90, "Dependinator.Wasm", ["WebAssembly app", "0.1k lines"])
 d.box("h-lsp", 480, 100, 190, 90, "Dependinator.Lsp", ["language server", "1.0k lines"])
 d.box("h-api", 690, 100, 190, 90, "Api", ["Azure Functions", "0.7k lines"])
-d.box("h-ext", 900, 100, 220, 90, "DependinatorVsCode", ["TypeScript, npm, not in the .sln", "2.0k lines"], dashed=True)
+d.box("h-ext", 900, 100, 220, 90, "Dependinator.VsCodeExt", ["TypeScript, npm, not in the .sln", "2.0k lines"], dashed=True)
 
 d.group(30, 240, 1110, 170, "Dependinator.UI · 41.6k lines", "Blazor + MudBlazor, shared by every host")
 d.box("u-app", 60, 285, 240, 110, "App/", ["app bar and menus, model list,", "Settings dialog, breadcrumb, progress,", "problem indicator, cloud sync button"])

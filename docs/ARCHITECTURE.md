@@ -329,11 +329,11 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | The in-memory model | `src/Dependinator.UI/Modeling/Models/Model.cs`, `Node.cs` |
 | Rendering and zoom | `src/Dependinator.UI/Diagrams/`: `Svg/SvgService.cs` (tile cache), `Svg/NodeTreeSvg.cs` (drawing), `Lines/RepLineService.cs`, `NodeViewPolicy.cs` |
 | Layout | `src/Dependinator.UI/Modeling/NodeLayout.cs`, `Layout/LayeredEngine.cs` |
-| The VS Code bridge | `src/DependinatorVsCode/src/extension.ts`, `src/Dependinator.Lsp/LspMessageHandler.cs`, `src/Dependinator.Core/Rpc/` |
+| The VS Code bridge | `src/Dependinator.VsCodeExt/src/extension.ts`, `src/Dependinator.Lsp/LspMessageHandler.cs`, `src/Dependinator.Core/Rpc/` |
 | Cloud sync | `src/Dependinator.UI/Shared/CloudSync/AppCloudSyncService.cs`, `src/Api/ModelFunctions.cs` |
 | Cycles and rules | `src/Dependinator.UI/Diagrams/Cycles/CycleService.cs`, `Rules/RuleService.cs` |
 | The AI features | `src/Dependinator.UI/Diagrams/Ai/AiProvider.cs`, `AiService.cs`, `AiOpinion.razor`; `Diagrams/Ask/AskModel.cs`; `src/Dependinator.Claude/ClaudeService.cs` |
-| The MCP server and model tools | `src/Dependinator.Mcp/ModelTools.cs`, `src/Dependinator.UI/Diagrams/Ai/ModelQueries.cs`, `src/DependinatorVsCode/src/mcpServer.ts` |
+| The MCP server and model tools | `src/Dependinator.Mcp/ModelTools.cs`, `src/Dependinator.UI/Diagrams/Ai/ModelQueries.cs`, `src/Dependinator.VsCodeExt/src/mcpServer.ts` |
 | Settings | `src/Dependinator.UI/App/SettingsDialog.razor`, `Shared/ConfigService.cs` |
 | Hosts and service wiring | each host's `Program.cs` |
 | Conventions, commands and traps | [CLAUDE.md](../CLAUDE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), `.claude/rules/` |

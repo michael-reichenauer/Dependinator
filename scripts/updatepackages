@@ -38,7 +38,7 @@ while getopts "um" opt; do
 done
 
 # Directory holding the TypeScript VS Code extension
-vscode_ext_dir="$PWD/src/DependinatorVsCode"
+vscode_ext_dir="$PWD/src/Dependinator.VsCodeExt"
 
 # Directory holding the TypeScript parser's Node.js helper (bundled into Dependinator.TypeScriptParser)
 ts_helper_dir="$PWD/src/Dependinator.TypeScriptParser/NodeParser"

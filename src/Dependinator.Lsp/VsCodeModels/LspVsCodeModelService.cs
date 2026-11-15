@@ -9,7 +9,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 namespace Dependinator.Lsp.VsCodeModels;
 
 // Requests to the extension, which asks VS Code's Language Model API
-// (DependinatorVsCode/src/languageModels.ts): the models it offers, and an answer from one.
+// (Dependinator.VsCodeExt/src/languageModels.ts): the models it offers, and an answer from one.
 public record VsCodeModelsParams
 {
     public static readonly string Method = "dependinator/lm/models";

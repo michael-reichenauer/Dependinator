@@ -31,10 +31,10 @@ This writes:
 | `favicon.ico` | 16/32/48 | `src/Dependinator.Wasm/wwwroot` |
 | `icon-192.png` | 192 | `src/Dependinator.Wasm/wwwroot` |
 | `apple-touch-icon.png` | 180 | `src/Dependinator.Wasm/wwwroot`, `src/Dependinator.Web/wwwroot` |
-| `icon-tree-dark.svg` / `icon-tree-light.svg` | vector | `src/DependinatorVsCode/resources` (title-bar button) |
-| `icon-toolbar.png` | 54 | `src/DependinatorVsCode/resources` (inline icon in the extension README) |
+| `icon-tree-dark.svg` / `icon-tree-light.svg` | vector | `src/Dependinator.VsCodeExt/resources` (title-bar button) |
+| `icon-toolbar.png` | 54 | `src/Dependinator.VsCodeExt/resources` (inline icon in the extension README) |
 
-The VS Code extension icon (`src/DependinatorVsCode/media/icon-192.png`,
+The VS Code extension icon (`src/Dependinator.VsCodeExt/media/icon-192.png`,
 referenced by `package.json`) is **generated** from the Wasm `wwwroot` by
-`src/DependinatorVsCode/scripts/prepare-wasm.sh`, so it picks up changes
+`src/Dependinator.VsCodeExt/scripts/prepare-wasm.sh`, so it picks up changes
 automatically on the next extension build (`./scripts/build-ext`).

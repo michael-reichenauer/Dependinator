@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Publishes the LSP server into DependinatorVsCode/server/<rid>/ so the packaged
+# Publishes the LSP server into Dependinator.VsCodeExt/server/<rid>/ so the packaged
 # extension can launch the runtime matching the machine it executes on
 # (languageServer.ts resolves server/<rid>/ from process.platform/process.arch).
 #
@@ -14,7 +14,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
 server_project="$repo_root/Dependinator.Lsp/Dependinator.Lsp.csproj"
-target_root="$repo_root/DependinatorVsCode/server"
+target_root="$repo_root/Dependinator.VsCodeExt/server"
 
 # RIDs bundled into the universal sideload package. Deliberately excludes
 # win-arm64 and osx-x64 to keep the universal .vsix smaller; those platforms

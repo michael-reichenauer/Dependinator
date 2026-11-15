@@ -5,7 +5,7 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server;
 namespace Dependinator.Lsp.Claude;
 
 // Requests to the extension, which keeps the Claude API key in VS Code's secret storage
-// (DependinatorVsCode/src/claudeApiKey.ts): the stored key, or a key the user enters now.
+// (Dependinator.VsCodeExt/src/claudeApiKey.ts): the stored key, or a key the user enters now.
 public record ClaudeApiKeyParams
 {
     public static readonly string Method = "dependinator/claude/apiKey";

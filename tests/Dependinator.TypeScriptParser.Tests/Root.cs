@@ -23,7 +23,7 @@ static class Root
 
     // This repository's VS Code extension
     public static string ExtensionConfigPath { get; } =
-        Path.Combine(RepoFolderPath, "src", "DependinatorVsCode", "tsconfig.json");
+        Path.Combine(RepoFolderPath, "src", "Dependinator.VsCodeExt", "tsconfig.json");
 
     static string GetThisFilePath([CallerFilePath] string path = "") => path;
 }

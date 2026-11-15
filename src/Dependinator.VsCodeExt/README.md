@@ -90,7 +90,7 @@ next, so please [report bugs and ideas](https://github.com/michael-reichenauer/D
 1. Install the extension and open a folder containing a `.sln`, `.slnx` or `.bicep` file.
 2. Open the command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run
    **Dependinator: Open**, or click the Dependinator icon
-   <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
+   <img src="https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/Dependinator.VsCodeExt/resources/icon-toolbar.png" alt="Dependinator title-bar icon" height="16" align="top" />
    in the editor title bar.
 3. The dependency map opens in a new tab. Zoom into nodes (or double-click
    one) to drill in, drag to pan, and press `Ctrl+F` to find a node by name.
@@ -99,7 +99,7 @@ The **Help** button in the Dependinator app bar opens the
 [user guide](https://dependinator.com/help) with detailed usage instructions,
 navigation tips, and keyboard/mouse controls.
 
-![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/DependinatorVsCode/resources/demo.gif)
+![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](https://github.com/michael-reichenauer/Dependinator/raw/HEAD/src/Dependinator.VsCodeExt/resources/demo.gif)
 
 ## Commands
 

@@ -92,8 +92,8 @@ tests under `tests/`. The dependency direction is `Hosts → UI → Core → Sha
 
 **VS Code extension** (not part of the solution)
 
-- `src/DependinatorVsCode/`: TypeScript extension packaging the web UI and the
-  language server. See its [DEVELOPMENT.md](src/DependinatorVsCode/DEVELOPMENT.md).
+- `src/Dependinator.VsCodeExt/`: TypeScript extension packaging the web UI and the
+  language server. See its [DEVELOPMENT.md](src/Dependinator.VsCodeExt/DEVELOPMENT.md).
 
 ## Conventions
 

@@ -106,7 +106,7 @@ runs on VS Code's own Node.js runtime (run `npm install` in the project, so its 
 
 ### In action
 
-![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](src/DependinatorVsCode/resources/demo.gif)
+![Navigating to a node with search, exploring its dependencies in the Dependencies explorer, then zooming in until the type opens into its member card and hovering it for tooltips](src/Dependinator.VsCodeExt/resources/demo.gif)
 
 ## Web app and device sync
 
