@@ -116,7 +116,9 @@ export class ModelBuilder {
         this.addProblems();
 
         return [
-            ...[...this.nodes].map(([Name, Properties]) => ({ Node: { Name, Properties } })),
+            ...[...this.nodes].map(([Name, Properties]) => ({
+                Node: { Name, Properties: withoutStaleDescription(Properties) },
+            })),
             ...[...this.links.values()].map(Link => ({ Link })),
             ...this.problems,
         ];
@@ -488,12 +490,20 @@ export class ModelBuilder {
         return name ?? (this.project.parts.length > 1 ? this.declarationPlaces.get(placeOf(file.fileName, file)) : undefined);
     }
 
-    // The declaration's JSDoc comment text
+    // The declaration's comment: its JSDoc (as the compiler reads it, tags left out), or else the
+    // plain comment lines directly above it, the way the C# parser reads a declaration's comment.
     documentation(declaration: ts.Node): string | undefined {
         const name = (declaration as ts.NamedDeclaration).name;
         const symbol = name ? this.checker.getSymbolAtLocation(name) : undefined;
         const text = symbol ? ts.displayPartsToString(symbol.getDocumentationComment(this.checker)).trim() : "";
-        return text || undefined;
+        if (text) {
+            return text;
+        }
+        // A constructor, "export default ..." or "exports.x = ..." has no name to ask the checker
+        const host = commentHost(declaration);
+        const jsDocs = ts.getJSDocCommentsAndTags(host).filter(ts.isJSDoc);
+        const jsDoc = jsDocs.length > 0 ? (ts.getTextOfJSDocComment(jsDocs[jsDocs.length - 1].comment) ?? "").trim() : "";
+        return jsDoc || leadingComment(host);
     }
 
     // --- Pass 2: links --------------------------------------------------------------------
@@ -898,6 +908,16 @@ export class ModelBuilder {
 
 // --- Helpers ------------------------------------------------------------------------------
 
+// NoValue (Dependinator.Core's Parsing.NoValue.String) for a file or declaration without a
+// comment: null would keep the description of an earlier parse after its comment was removed.
+const NoValue = "\u0000";
+
+function withoutStaleDescription(properties: NodeProperties): NodeProperties {
+    return properties.FileSpan && properties.Type !== "Solution" && !properties.Description
+        ? { ...properties, Description: NoValue }
+        : properties;
+}
+
 // A declaration's place in the source: the same in every program that has the file.
 function placeOf(fileName: string, node: ts.Node): string {
     return `${fileName}\n${node.pos}\n${node.end}\n${node.kind}`;
@@ -1056,6 +1076,59 @@ function fileDescription(file: ts.SourceFile): string | undefined {
 }
 
 const HasEmptyLine = /\n[ \t]*\r?\n/;
+
+// Tool directives and markers, which describe nothing: // eslint-disable-next-line, // @ts-ignore,
+// /// <reference ... />, // #region
+const ToolDirective = /^(eslint[- ]|@ts-|prettier-ignore|istanbul |c8 |biome-ignore|tslint:|#?(end)?region\b|<reference |<amd-)/i;
+
+// The node whose leading comments are a declaration's: a variable's statement (for its first
+// variable: "// Port to listen on" above "const port = 80, host = ...") and the statement of a
+// CommonJS export assignment.
+function commentHost(declaration: ts.Node): ts.Node {
+    const parent = declaration.parent;
+    if (
+        ts.isVariableDeclaration(declaration) &&
+        ts.isVariableDeclarationList(parent) &&
+        parent.declarations[0] === declaration &&
+        ts.isVariableStatement(parent.parent)
+    ) {
+        return parent.parent;
+    }
+    if (ts.isBinaryExpression(declaration) && ts.isExpressionStatement(parent)) {
+        return parent;
+    }
+    return declaration;
+}
+
+// The plain comment directly above a node: the block of // lines and /* */ comments that ends on
+// the line above it, up to an empty line. A comment with an empty line below it is no
+// declaration's (at the top of a file it is the file's, see fileDescription), JSDoc is the
+// compiler's (documentation), and tool directives and a license header are left out.
+function leadingComment(node: ts.Node): string | undefined {
+    const file = node.getSourceFile();
+    const text = file.text;
+    const ranges = ts.getLeadingCommentRanges(text, Math.max(node.getFullStart(), ts.getShebang(text)?.length ?? 0)) ?? [];
+    const lines: string[] = [];
+    let end = node.getStart(file);
+    let first = ranges.length;
+    for (let index = ranges.length - 1; index >= 0; index--) {
+        const range = ranges[index];
+        const comment = text.slice(range.pos, range.end);
+        if (HasEmptyLine.test(text.slice(range.end, end)) || comment.startsWith("/**")) {
+            break;
+        }
+        lines.unshift(...commentLines(comment).filter(line => !ToolDirective.test(line.trim())));
+        end = range.pos;
+        first = index;
+    }
+
+    const description = lines.join("\n").trim();
+    const isFileHeader = node === file.statements[0] && first === 0;
+    if (!description || (isFileHeader && /copyright|license/i.test(description))) {
+        return undefined;
+    }
+    return description;
+}
 
 function commentLines(comment: string): string[] {
     if (comment.startsWith("//")) {
