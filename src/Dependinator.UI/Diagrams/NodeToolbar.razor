@@ -81,11 +81,14 @@ else if (HasSelectedLine)
                    PopoverClass="@MenuClass" OpenChanged="open => isColorMenuOpen = open"
                    data-testid="node-set-color">
             <div class="d-flex" style="gap:4px;">
-              <div>
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
-                @IconColorMenuItems
-              </div>
-              <MudDivider Vertical="true" FlexItem="true" />
+              @if (CanTintSelectedIcon)
+              {
+                <div>
+                  <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Icon</MudText>
+                  @IconColorMenuItems
+                </div>
+                <MudDivider Vertical="true" FlexItem="true" />
+              }
               <div>
                 <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary" title="Border and background when open">
                   Container
@@ -252,10 +255,13 @@ else if (HasSelectedLine)
                          data-testid="node-menu-alias">
               Display Name …
             </MudMenuItem>
-            <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
-                     Dense="true" PopoverClass="@MenuClass" data-testid="node-menu-icon-color">
-              @IconColorMenuItems
-            </MudMenu>
+            @if (CanTintSelectedIcon)
+            {
+              <MudMenu Label="Icon Color" StartIcon="@MudBlazor.Icons.Material.Outlined.Palette" IconColor="Color.Secondary"
+                       Dense="true" PopoverClass="@MenuClass" data-testid="node-menu-icon-color">
+                @IconColorMenuItems
+              </MudMenu>
+            }
           }
           <MudMenu Label="@(IsSelectedNodeZone ? "Zone Color" : "Container Color")"
                    StartIcon="@MudBlazor.Icons.Material.Outlined.FormatColorFill"
@@ -468,6 +474,8 @@ else if (HasSelectedLine)
   bool IsSelectedNodeManual => SelectedNodeIs(node => node.IsManual);
   bool IsSelectedNodeNote => SelectedNodeIs(node => node.IsNote);
   bool IsSelectedNodeZone => SelectedNodeIs(node => node.IsZone);
+  // A language tile or a cloud icon keeps its own colors: no icon color is offered for it.
+  bool CanTintSelectedIcon => SelectedNodeIs(Icon.CanTintIcon);
   bool HasSelectedLine => selectionService.SelectedNodePosition != Shared.Types.Pos.None;
 
   // The selected node's id, when the selection is a node.
@@ -769,9 +777,7 @@ else if (HasSelectedLine)
       if (!model.Nodes.TryGetValue(nodeId, out var node))
         return;
       currentIconName = node.CustomIconName;
-      // The icon the node has without a pick: the parser's (a language tile, an Azure icon) or the type's
-      defaultIconName =
-          node.IconName is { } parsedIcon && IconLibrary.Contains(parsedIcon) ? parsedIcon : Icon.GetIconName(node.Type);
+      defaultIconName = Icon.GetDefaultIconName(node);
     }
 
     var parameters = new DialogParameters

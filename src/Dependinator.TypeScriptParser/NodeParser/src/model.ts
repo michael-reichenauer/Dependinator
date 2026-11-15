@@ -31,6 +31,9 @@ export interface ParseOptions {
 }
 
 const TestFile = /\.(test|spec|e2e)\.[cm]?[jt]sx?$/i;
+// The root's icon per language: ids of the UI's icon library, as in Core's LanguageIcons.
+const LanguageIcons = { TypeScript: "TypeScript", JavaScript: "JavaScript" } as const;
+
 const TestFolders = new Set(["test", "tests", "__tests__", "__mocks__", "e2e"]);
 
 interface OwnFile {
@@ -102,7 +105,7 @@ export class ModelBuilder {
             Type: "Solution",
             Description: this.project.packageDescription ?? `${this.languageName()} project`,
             // The language's tile, as every parser gives its root (Core's LanguageIcons)
-            IconName: this.languageName(),
+            IconName: LanguageIcons[this.languageName()],
             // The file that defines the project, to open from the node
             FileSpan: { Path: path.normalize(this.project.entryPath), StartLine: 0, EndLine: 0 },
         });
@@ -160,7 +163,7 @@ export class ModelBuilder {
         return [...owners.values()].sort((a, b) => a.file.fileName.localeCompare(b.file.fileName));
     }
 
-    languageName(): string {
+    languageName(): "TypeScript" | "JavaScript" {
         return this.ownFiles.some(f => /\.[cm]?tsx?$/i.test(f.file.fileName)) ? "TypeScript" : "JavaScript";
     }
 

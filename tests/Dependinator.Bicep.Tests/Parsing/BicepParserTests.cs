@@ -48,7 +48,7 @@ public class BicepParserTests(BicepFixture fixture)
 
         var root = items.Node("Demo*bicep");
         Assert.Equal(NodeType.Solution, root.Properties.Type);
-        Assert.Equal("Subscription", root.Properties.IconName);
+        Assert.Equal(LanguageIcons.Bicep, root.Properties.IconName);
         Assert.True(items.Nodes().Count() > 400, $"Only {items.Nodes().Count()} nodes");
         Assert.True(items.HasNode("Demo*bicep.rgPlatform.networking"));
         Assert.DoesNotContain(items.Nodes(), n => n.Name.StartsWith("webshop*bicep"));

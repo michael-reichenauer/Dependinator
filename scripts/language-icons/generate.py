@@ -32,6 +32,11 @@ CENTER_Y = 12.0
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 out = os.path.join(root, "src/Dependinator.UI/Diagrams/Icons/Library/Languages")
 font_path = sys.argv[1] if len(sys.argv) > 1 else "/usr/share/fonts/opentype/inter/Inter-Bold.otf"
+if not os.path.exists(font_path):
+    sys.exit(
+        f"Font not found: {font_path}. Install Inter (fonts-inter, or https://rsms.me/inter/) "
+        "and pass the path of Inter-Bold.otf."
+    )
 font = TTFont(font_path)
 glyphs = font.getGlyphSet()
 cmap = font.getBestCmap()
@@ -44,6 +49,8 @@ def letters_path(text):
     pens = []
     x = 0
     for ch in text:
+        if ord(ch) not in cmap:
+            sys.exit(f"The font has no glyph for '{ch}' in '{text}'.")
         name = cmap[ord(ch)]
         pens.append((name, x))
         x += glyphs[name].width

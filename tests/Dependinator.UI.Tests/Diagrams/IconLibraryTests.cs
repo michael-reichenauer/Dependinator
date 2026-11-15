@@ -133,6 +133,7 @@ public class IconLibraryTests
     [InlineData("key-vault", "key vault")]
     [InlineData("Message_Queue", "Message Queue")]
     [InlineData("api-gateway_v2", "api gateway v2")]
+    [InlineData("CSharp", "C#")]
     public void ToDisplayName_ShouldConvertSeparatorsToSpaces(string name, string expected)
     {
         Assert.Equal(expected, IconLibrary.ToDisplayName(name));
@@ -325,6 +326,44 @@ public class IconLibraryTests
             .ToList();
 
         Assert.Equal(ids.Count, ids.Distinct().Count());
+    }
+
+    [Fact]
+    public void GetDefaultIconName_ShouldBeTheParsedLanguageIcon_ForASourceRoot()
+    {
+        var node = CreateNode(NodeType.Solution);
+        node.IconName = LanguageIcons.CSharp;
+        node.CustomIconName = "Database";
+
+        // The icon dialog's Default row: what the node shows once the user's pick is cleared.
+        Assert.Equal(LanguageIcons.CSharp, Icon.GetDefaultIconName(node));
+        Assert.Equal("Solution", Icon.GetDefaultIconName(CreateNode(NodeType.Solution)));
+    }
+
+    [Fact]
+    public void CanTintIcon_ShouldBeFalse_ForALanguageTile_AndTrueForAPickedLibraryIcon()
+    {
+        var node = CreateNode(NodeType.Solution);
+        node.IconName = LanguageIcons.TypeScript;
+        node.CustomIconColor = "Blue";
+
+        // A language tile keeps its own color, so a tint is neither offered nor drawn.
+        Assert.False(Icon.CanTintIcon(node));
+        Assert.Equal(LanguageIcons.TypeScript, Icon.GetIconName(node));
+
+        node.CustomIconName = "Database";
+        Assert.True(Icon.CanTintIcon(node));
+        Assert.Equal("Database--Blue", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void IsTintable_ShouldBeTrueOnlyForTheVioletGroups()
+    {
+        Assert.True(IconLibrary.IsTintable("Solution"));
+        Assert.True(IconLibrary.IsTintable("Database"));
+        Assert.False(IconLibrary.IsTintable(LanguageIcons.Go));
+        Assert.False(IconLibrary.IsTintable("Key-Vault"));
+        Assert.False(IconLibrary.IsTintable("No-Such-Icon"));
     }
 
     [Fact]
