@@ -37,7 +37,7 @@ project works.
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
-  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers, and a language tile (C#, TS, JS, Bicep) on each source's icon.
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers, and a language tile (C#, TS, JS, Bicep) on each source's icon, and alignment guides while dragging nodes.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
   each inside the source whose folder holds it, or where the user puts it.
@@ -650,6 +650,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   edge), not its left edge. "Re-route line" on the line toolbar and "Reset Lines" in the node
   menu (beside Reset Children Layout) route one line or all lines between a node's children
   again around the nodes where they stand, hand-set bends included, keeping the nodes in place.
+- **Smart alignment guides (Nov 16).** While a node is dragged, it snaps to a nearby sibling
+  when one of its edges or its centre comes within a few pixels of the same edge or centre of
+  that sibling (or an edge of a node beside or above it), and a thin magenta guide joins the
+  aligned nodes; at most one guide per axis, only siblings within reach. An aligned axis keeps
+  the alignment on drop instead of snapping to the 20-unit grid, so nodes of different sizes
+  line up by their centres; the other axis still snaps to the grid. A group or a zone moves
+  with the node under the pointer. A finger gets a wider snap than the mouse.
 - **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
   the edge of the view where the line leaves names the node at that end; a click goes there
   (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.

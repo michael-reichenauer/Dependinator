@@ -13,7 +13,9 @@ interface INodeEditService
 
     // The same for a group of selected nodes, as one undo step: each node moves by the pointer
     // delta in its own container's scale. A node whose ancestor is in the group moves with it.
-    void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds);
+    // The lead (the node under the pointer, or the group node that holds it) is the one aligned
+    // with its siblings, and the whole group shifts with it.
+    void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds, NodeId? leadId = null);
     void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds);
 
     // A move of one or more nodes starts: forgets a move whose end was missed (a release outside
@@ -47,7 +49,8 @@ interface INodeEditService
 }
 
 [Scoped]
-class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INodeEditService
+class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlignmentGuideService alignmentGuides)
+    : INodeEditService
 {
     const double MaxZoom = 1.0;
     const double MinZoom = 1.0 / 10.0;
@@ -77,41 +80,145 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 return;
 
             nodeId = node.Id;
-            var nodeZoom = node.GetZoom() * zoom;
-            var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
-            newBoundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy };
+            var scale = node.GetZoom() * zoom;
+            var raw = MoveRaw(node, e, scale);
+            var alignment = Align(node, raw, scale, e, [node]);
+            newBoundary = raw with { X = raw.X + alignment.Dx, Y = raw.Y + alignment.Dy };
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
-            moveStarts.TryAdd(node, node.Boundary);
         }
 
         Do(new NodeEditCommand(nodeId) { Boundary = newBoundary });
     }
 
-    public void MoveSelectedNodes(PointerEvent e, double zoom, IReadOnlyCollection<NodeId> nodeIds) =>
-        Apply(
-            nodeIds,
-            node =>
+    public void MoveSelectedNodes(
+        PointerEvent e,
+        double zoom,
+        IReadOnlyCollection<NodeId> nodeIds,
+        NodeId? leadId = null
+    )
+    {
+        var commands = new List<Command>();
+        using (var model = modelMgr.UseModel())
+        {
+            var nodes = Resolve(model, nodeIds, isTopLevelOnly: true).Where(node => !node.Type.IsMember).ToList();
+            var raws = nodes.ToDictionary(node => node, node => MoveRaw(node, e, node.GetZoom() * zoom));
+
+            // The lead's alignment shift, in screen pixels: each node shifts by it in its own scale.
+            var (shiftX, shiftY) = (0.0, 0.0);
+            if (Lead(model, nodes, leadId) is { } lead)
             {
-                if (node.Type.IsMember)
-                    return null;
-                var nodeZoom = node.GetZoom() * zoom;
-                var (dx, dy) = (e.MovementX * nodeZoom, e.MovementY * nodeZoom);
+                var scale = lead.GetZoom() * zoom;
+                var alignment = Align(lead, raws[lead], scale, e, nodes);
+                (shiftX, shiftY) = (alignment.Dx / scale, alignment.Dy / scale);
+            }
+            else
+                SetAlignment(AlignmentSnap.Result.None, []);
+
+            foreach (var node in nodes)
+            {
+                var scale = node.GetZoom() * zoom;
+                var raw = raws[node];
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
-                moveStarts.TryAdd(node, node.Boundary);
-                return new NodeEditCommand(node.Id)
-                {
-                    Boundary = node.Boundary with { X = node.Boundary.X + dx, Y = node.Boundary.Y + dy },
-                };
-            },
-            isTopLevelOnly: true
-        );
+                commands.Add(
+                    new NodeEditCommand(node.Id)
+                    {
+                        Boundary = raw with { X = raw.X + shiftX * scale, Y = raw.Y + shiftY * scale },
+                    }
+                );
+            }
+        }
+        if (commands.Count == 0)
+            return;
+        Do(commands.Count == 1 ? commands[0] : new CompositeCommand([.. commands]));
+    }
 
     public void BeginMove()
     {
         moveStarts.Clear();
+        rawBoundaries.Clear();
+        alignment = AlignmentSnap.Result.None;
+        alignmentGuides.Clear();
         lastMoveCommand = null;
+    }
+
+    // Where the pointer alone puts the node (the drag so far without the alignment snaps, so a
+    // snapped node lets go again once the pointer moves on), and records where its move started.
+    Rect MoveRaw(Node node, PointerEvent e, double scale)
+    {
+        moveStarts.TryAdd(node, node.Boundary);
+        var origin = rawBoundaries.TryGetValue(node, out var raw) ? raw : node.Boundary;
+        var moved = origin with { X = origin.X + e.MovementX * scale, Y = origin.Y + e.MovementY * scale };
+        rawBoundaries[node] = moved;
+        return moved;
+    }
+
+    // The group node that is or holds the node under the pointer; null when there is none.
+    static Node? Lead(IModel model, IReadOnlyList<Node> nodes, NodeId? leadId)
+    {
+        if (leadId is not { } id || !model.Nodes.TryGetValue(id, out var node))
+            return null;
+        var group = nodes.ToHashSet();
+        while (!group.Contains(node) && !node.IsRoot)
+            node = node.Parent;
+        return group.Contains(node) ? node : null;
+    }
+
+    // Aligns the node's raw box with its nearby siblings (not those that move with it) and shows
+    // the guides; the result's shift is in the node's container units.
+    AlignmentSnap.Result Align(Node node, Rect raw, double scale, PointerEvent e, IReadOnlyCollection<Node> moving)
+    {
+        if (node.IsRoot || scale <= 0)
+        {
+            SetAlignment(AlignmentSnap.Result.None, []);
+            return AlignmentSnap.Result.None;
+        }
+
+        var moved = moving.ToHashSet();
+        var others = node
+            .Parent.Children.Where(sibling =>
+                !moved.Contains(sibling)
+                && !sibling.Type.IsMember
+                && sibling.Visibility != NodeVisibility.Hidden
+                && sibling.Boundary.Width > 0
+                && sibling.Boundary.Height > 0
+            )
+            .Select(sibling => sibling.Boundary)
+            .ToList();
+        var snapPixels = e.PointerType == "touch" ? AlignmentSnap.TouchSnapPixels : AlignmentSnap.MouseSnapPixels;
+        var result = AlignmentSnap.Find(
+            raw,
+            others,
+            snapPixels * scale,
+            AlignmentSnap.ReachPixels * scale,
+            AlignmentSnap.OvershootPixels * scale
+        );
+        SetAlignment(result, GuideLines(node.Parent, result));
+        return result;
+    }
+
+    void SetAlignment(AlignmentSnap.Result result, IReadOnlyList<GuideLine> lines)
+    {
+        alignment = result;
+        alignmentGuides.Set(lines);
+    }
+
+    // The guides from the container's children-local units to canvas coordinates.
+    static IReadOnlyList<GuideLine> GuideLines(Node parent, AlignmentSnap.Result result)
+    {
+        var (parentPos, parentZoom) = parent.GetPosAndZoom();
+        var originX = parentPos.X + parent.ContainerOffset.X * parentZoom;
+        var originY = parentPos.Y + parent.ContainerOffset.Y * parentZoom;
+        var zoom = parentZoom * parent.ContainerZoom;
+        Pos Canvas(double x, double y) => new(originX + x * zoom, originY + y * zoom);
+
+        var lines = new List<GuideLine>(2);
+        if (result.Vertical is { } vertical)
+            lines.Add(new GuideLine(Canvas(vertical.At, vertical.From), Canvas(vertical.At, vertical.To)));
+        if (result.Horizontal is { } horizontal)
+            lines.Add(new GuideLine(Canvas(horizontal.From, horizontal.At), Canvas(horizontal.To, horizontal.At)));
+        return lines;
     }
 
     public void EndMove()
@@ -131,7 +238,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                 linesCommand = new LinePointsCommand(points.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
         }
         var step = lastMoveCommand;
-        BeginMove();
+        BeginMove(); // Also clears the guides
 
         if (linesCommand is null)
             return;
@@ -147,6 +254,15 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
     readonly Dictionary<Node, Rect> moveStarts = [];
     Command? lastMoveCommand;
 
+    // Where the pointer alone has put each moved node, and the alignment of the latest step: an
+    // aligned axis is not snapped to the grid at the end, or the snap would undo the alignment.
+    readonly Dictionary<Node, Rect> rawBoundaries = [];
+    AlignmentSnap.Result alignment = AlignmentSnap.Result.None;
+
+    double SnapX(double x) => alignment.IsAlignedX ? x : NodeGrid.Snap(x);
+
+    double SnapY(double y) => alignment.IsAlignedY ? y : NodeGrid.Snap(y);
+
     void Do(Command command)
     {
         if (moveStarts.Count > 0 && lastMoveCommand is not null)
@@ -156,7 +272,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
         lastMoveCommand = moveStarts.Count > 0 ? command : null;
     }
 
-    // Snaps the group after a drag. Every node gets a command, also one already on the grid, so
+    // Snaps the group after a drag (an axis the drag aligned with a sibling stays). Every node gets a command, also one already on the grid, so
     // the step has the drag composite's merge key and folds into that undo step; with no node
     // off the grid there is no step at all.
     public void SnapSelectedNodesToGrid(IReadOnlyCollection<NodeId> nodeIds)
@@ -167,10 +283,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
                 .Any(node =>
                     !node.Type.IsMember
-                    && (
-                        NodeGrid.Snap(node.Boundary.X) != node.Boundary.X
-                        || NodeGrid.Snap(node.Boundary.Y) != node.Boundary.Y
-                    )
+                    && (SnapX(node.Boundary.X) != node.Boundary.X || SnapY(node.Boundary.Y) != node.Boundary.Y)
                 );
         }
         if (!isAnyOffGrid)
@@ -186,11 +299,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
                     node.Parent.IsChildrenLayoutCustomized = true;
                 return new NodeEditCommand(node.Id)
                 {
-                    Boundary = node.Boundary with
-                    {
-                        X = NodeGrid.Snap(node.Boundary.X),
-                        Y = NodeGrid.Snap(node.Boundary.Y),
-                    },
+                    Boundary = node.Boundary with { X = SnapX(node.Boundary.X), Y = SnapY(node.Boundary.Y) },
                 };
             },
             isTopLevelOnly: true
@@ -266,8 +375,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService) : INod
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
             nodeId = node.Id;
-            var snappedX = NodeGrid.Snap(node.Boundary.X);
-            var snappedY = NodeGrid.Snap(node.Boundary.Y);
+            var snappedX = SnapX(node.Boundary.X);
+            var snappedY = SnapY(node.Boundary.Y);
             if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
                 return;
 

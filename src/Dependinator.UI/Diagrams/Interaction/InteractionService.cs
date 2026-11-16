@@ -708,9 +708,9 @@ class InteractionService(
             }
             isDraggingSelectedNode = true;
             if (selectionService.SelectedNodeCount > 1)
-                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
+                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds, mouseDownId.NodeId);
             else if (zoneDragIds is { } zoneIds)
-                nodeEditService.MoveSelectedNodes(e, Zoom, zoneIds);
+                nodeEditService.MoveSelectedNodes(e, Zoom, zoneIds, mouseDownId.NodeId);
             else
                 nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
