@@ -112,7 +112,7 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.UpAsync();
         await WaitUntilAsync(async () => await LabelCenterXAsync(label) > middleX + 20, "the label moved right");
 
-        // Double-clicking the label edits it, and "To the middle" puts it back.
+        // Double-clicking the label edits it, and "Place automatically" puts it back where it was.
         await App.RepeatUntilVisibleAsync(
             async () =>
             {
@@ -125,7 +125,7 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("line-label-save").ClickAsync();
         await WaitUntilAsync(
             async () => Math.Abs(await LabelCenterXAsync(label) - middleX) < 2,
-            "the label is back in the middle"
+            "the label is back in its automatic place"
         );
     }
 

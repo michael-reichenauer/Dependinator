@@ -345,7 +345,7 @@ class StructureService(ILineService linesService) : IStructureService
         if (lineLayoutDto.Label is not null || lineLayoutDto.LabelDescription is not null)
         {
             line.SetLabel(lineLayoutDto.Label, lineLayoutDto.LabelDescription);
-            line.SetLabelPosition(lineLayoutDto.LabelPosition ?? Line.DefaultLabelPosition);
+            line.SetLabelPosition(lineLayoutDto.LabelPosition);
         }
     }
 

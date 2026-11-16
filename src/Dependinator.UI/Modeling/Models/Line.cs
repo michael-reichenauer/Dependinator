@@ -109,16 +109,23 @@ class Line : IItem
     public string? HtmlLabelDescription { get; private set; }
     public bool HasLabel => Label is not null || LabelDescription is not null;
 
-    // Where along the line its label sits, as a fraction of the line's length: the middle unless
-    // the user dragged it. A fraction (not a point) keeps the label on its line when nodes move or
-    // the line is rerouted.
+    // Where along the line its label sits, as a fraction of the line's length: where the user
+    // dragged it, else where LabelPlacement put it, clear of nodes and other labels (the middle
+    // when that is free). A fraction (not a point) keeps the label on its line when nodes move or
+    // the line is rerouted. Only the user's place is saved.
     public const double DefaultLabelPosition = 0.5;
     const double MinLabelPosition = 0.05;
     const double MaxLabelPosition = 0.95;
-    public double LabelPosition { get; private set; } = DefaultLabelPosition;
-    public bool IsLabelMoved => LabelPosition != DefaultLabelPosition;
+    double? movedLabelPosition;
+    public double LabelPosition => movedLabelPosition ?? AutoLabelPosition;
+    public bool IsLabelMoved => movedLabelPosition is not null;
 
-    public void SetLabelPosition(double position) => LabelPosition = ToLabelPosition(position);
+    // Runtime only: set each time the lines are synced for a tile (LabelPlacement).
+    public double AutoLabelPosition { get; internal set; } = DefaultLabelPosition;
+
+    // The user's place for the label; null lets it be placed automatically.
+    public void SetLabelPosition(double? position) =>
+        movedLabelPosition = position is double p ? ToLabelPosition(p) : null;
 
     // A position as it is stored: off the line's ends, rounded.
     public static double ToLabelPosition(double position) =>

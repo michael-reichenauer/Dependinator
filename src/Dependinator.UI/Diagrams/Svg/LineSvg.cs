@@ -303,7 +303,7 @@ static class LineSvg
     internal static bool IsInnerMemberLine(Line line) =>
         line.Source.Type.IsMember && line.Target.Type.IsMember && line.Source.Parent == line.Target.Parent;
 
-    // The user's label on the line (at its middle unless dragged: Line.LabelPosition), with its
+    // The user's label on the line (where dragged, else placed by LabelPlacement: Line.LabelPosition), with its
     // description under it in a smaller italic. The texts are quieter than node names (a label
     // annotates a line, it is not a node): smaller, and they stop growing with the zoom earlier.
     // What is drawn is limited, one clipped row for the label and a few wrapped rows for the
@@ -380,6 +380,17 @@ static class LineSvg
                 : labelY + fontSize * 0.6;
         var box = new Rect(at.X - width / 2, top, width, bottom - top);
         return new LabelLayout(at, fontSize, descriptionFontSize, rowHeight, labelText, rows, labelY, firstRowY, box);
+    }
+
+    // The label's hit box around its point on the line (the box minus that point), in the line's
+    // children-local space at text zoom 1: labels are largest there in local units (at a higher
+    // zoom their text stops growing), so a place clear at this size stays clear when zoomed in.
+    // What LabelPlacement keeps apart from nodes and other labels.
+    internal static Rect GetLocalLabelBoxAroundPoint(Line line, IReadOnlyList<Pos> localPoints)
+    {
+        var layout = GetLabelLayout(line, localPoints, 1);
+        var box = layout.HitBox;
+        return new Rect(box.X - layout.At.X, box.Y - layout.At.Y, box.Width, box.Height);
     }
 
     // The label's texts, and its hit target (see LabelHitSvg); both "" without a label.

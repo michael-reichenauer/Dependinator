@@ -26,6 +26,8 @@ static class NodeTreeSvg
         for (var round = 0; round < MaxRenderRounds; round++)
         {
             RepLineService.Sync(model, zoom, rootContext.Flags.Reveal);
+            var flags = rootContext.Flags;
+            LabelPlacement.Place(model.Lines.Values, flags.RevealHidden, flags.Filter, flags.Rows);
             var generation = NodeLayout.Generation;
             content = RenderNodeContent(model.Root, rootContext);
             if (NodeLayout.Generation == generation)

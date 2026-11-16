@@ -376,7 +376,20 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
     line breaks); the hover card shows them in full (Michael, Nov 13).
   - `Line.LabelPosition` is a fraction of the line's length (not a point), so the label stays
     on its line when nodes move or the line is rerouted; saved only when moved
-    (`LineDto.LabelPosition`, also in `PendingLineLabel`). The label's transparent hit rect
+    (`LineDto.LabelPosition`, also in `PendingLineLabel`). An unmoved label is placed by
+    `LabelPlacement` (Nov 16, point 6 of Michael's label polish): it runs right after every line
+    sync (`SvgService.SyncLines`, also when a prefetch or a cached tile syncs the lines back,
+    and each round of `NodeTreeSvg.RenderRootContent`), so the places follow the shown tile,
+    which a label drag starts from; running it per container while drawing left the places of
+    the last tile drawn, which may be one drawn ahead at another zoom. It sets the runtime
+    `Line.AutoLabelPosition` (never saved), which `LabelPosition` returns while the user has not
+    dragged it (`SetLabelPosition(null)` gives it back). It covers the drawn labelled lines as
+    `NodeLinesSvg` picks them without the tile checks (active reps and the user's direct lines,
+    not hidden, filtered or pass-through), grouped by `LinePathGeometry.TryGetOwnerNode`, in
+    children-local units at text zoom 1, so a label keeps its place across tiles. Obstacles are
+    each child's box and, except for member rows, the estimated name and description strip
+    below it, as two areas (description rows wrapped at `DescriptionMinWidth` as an icon draws
+    them). The label's transparent hit rect
     (`LineSvg.LabelHitSvg`) has the element id `PointerId.LineLabelElementId`, which `Parse`
     reads back as the line with `IsLineLabel` (equal to the line's id, so selecting, menus
     and hover cards treat it as the line); only the edit-mode drag (`InteractionService`,

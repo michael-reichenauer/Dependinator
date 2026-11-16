@@ -42,7 +42,8 @@ project works.
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
   each inside the source whose folder holds it, or where the user puts it.
   Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
-  Line labels that are quieter and limited in length, and can be dragged along their line.
+  Line labels that are quieter and limited in length, find a free spot on their line by
+  themselves, and can be dragged along it.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -629,6 +630,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hovering it shows the line's card, a click selects the line, a double-click in edit mode
   edits it, and an edit-mode drag slides it along the line (saved as a fraction of the line's
   length, so it follows when nodes move; undo, and "To the middle" in the label dialog).
+- **Line labels placed automatically (Nov 16).** A label the user has not dragged no longer
+  sits at the middle of its line whatever is there: it takes the first spot along the line,
+  from the middle outwards, that is clear of the container's nodes (with the name and
+  description under an icon) and of the other labels, or else the one that overlaps them the
+  least (`LabelPlacement`). Dragged labels stay put and the others make room for them. The
+  place is worked out when the container is drawn, the same in every tile and at every zoom,
+  and is not saved; "Place automatically" in the label dialog replaces "To the middle".
 - **Calmer node and line toolbars (Nov 13).** The toolbars over a selected node, note or line
   are one white (or dark grey) card with grey icons that turn purple under the pointer, thin
   dividers between groups of buttons instead of a purple line between every button, and
