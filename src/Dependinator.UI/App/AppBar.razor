@@ -11,7 +11,6 @@
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
 @inject IModelListService modelListService
-@inject IConfigService configService
 @inject IModelService modelService
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
@@ -23,6 +22,8 @@
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @inject Dependinator.UI.Diagrams.Dependencies.IDependenciesService dependenciesService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
+@inject Dependinator.UI.Diagrams.IPanelService panelService
+@inject Dependinator.UI.Diagrams.IViewSettingsService viewSettings
 @inject Dependinator.UI.Diagrams.Navigation.IPathFinderService pathFinderService
 @inject Dependinator.UI.Diagrams.IHiddenNodeService hiddenNodeService
 @inject Dependinator.UI.Diagrams.Tours.ICoachService coachService
@@ -122,7 +123,7 @@
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="ToggleRevealHiddenNodes"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="viewSettings.ToggleRevealHiddenNodes"
                              data-checked="@(viewOptions.RevealHiddenNodes ? "true" : "false")"
                              title="Draws hidden nodes faintly, to find them again (not saved)."
                              data-testid="menu-reveal-hidden-nodes">
@@ -142,27 +143,27 @@
                     Show Notes Sidebar
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="ToggleMinimapAsync"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="viewSettings.ToggleMinimapAsync"
                              title="A small overview in the corner; click or drag in it to move the view."
                              data-checked="@(viewOptions.IsMinimapShown ? "true" : "false")"
                              data-testid="menu-minimap">
                     Show Minimap
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="ToggleLegend"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="viewSettings.ToggleLegend"
                              data-checked="@(viewOptions.IsLegendShown ? "true" : "false")"
                              data-testid="menu-legend">
                     Show Legend
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="panelService.ToggleCycles"
                              title="Lists circular dependencies and draws their lines in red."
                              data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
                              data-testid="menu-cycles">
                     Show Cycles
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="ToggleRules"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="panelService.ToggleRules"
                              title="Declare which parts must not depend on which (or layers), and see the dependencies that break those rules."
                              data-checked="@(viewOptions.IsRulesShown ? "true" : "false")"
                              data-testid="menu-rules">
@@ -194,25 +195,25 @@
                          Dense="true" PopoverClass="@MenuClass" data-testid="menu-lines">
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideExternal)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
                                  title="Lines to or from external packages and framework assemblies."
                                  data-checked="@(LineFilter.HideExternal ? "true" : "false")" data-testid="menu-lines-external">
                         Lines to Externals
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideInheritance)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
                                  title="Base class and interface implementation lines (hollow arrow heads)."
                                  data-checked="@(LineFilter.HideInheritance ? "true" : "false")" data-testid="menu-lines-inheritance">
                         Inheritance Lines
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideMember)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
                                  title="Lines that start or end at a method, property, field or event."
                                  data-checked="@(LineFilter.HideMember ? "true" : "false")" data-testid="menu-lines-member">
                         Member Lines
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideConfiguration)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideConfiguration = !LineFilter.HideConfiguration })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideConfiguration = !LineFilter.HideConfiguration })"
                                  title="Lines that only carry values into parameters and variables (Bicep); the Dependencies explorer still lists them."
                                  data-checked="@(LineFilter.HideConfiguration ? "true" : "false")" data-testid="menu-lines-configuration">
                         Configuration Lines
@@ -223,7 +224,7 @@
                     @foreach (var (count, label) in MinLinkChoices)
                     {
                         <MudMenuItem IconColor="Color.Secondary" Icon="@RadioIcon(LineFilter.MinLinkCount == count)"
-                                     OnClick="() => SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
+                                     OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
                                      data-checked="@(LineFilter.MinLinkCount == count ? "true" : "false")"
                                      data-testid="@($"menu-lines-min-{count}")">
                             @label
@@ -235,25 +236,25 @@
                          Dense="true" PopoverClass="@MenuClass" data-testid="menu-rows">
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideParameters)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideParameters = !RowFilter.HideParameters })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideParameters = !RowFilter.HideParameters })"
                                  title="Parameter rows (Bicep) and their lines; the Dependencies explorer and search still list them."
                                  data-checked="@(RowFilter.HideParameters ? "true" : "false")" data-testid="menu-rows-parameters">
                         Parameter Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideVariables)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideVariables = !RowFilter.HideVariables })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideVariables = !RowFilter.HideVariables })"
                                  title="Variable rows (Bicep) and their lines."
                                  data-checked="@(RowFilter.HideVariables ? "true" : "false")" data-testid="menu-rows-variables">
                         Variable Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideOutputs)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideOutputs = !RowFilter.HideOutputs })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideOutputs = !RowFilter.HideOutputs })"
                                  title="Output rows (Bicep) and their lines."
                                  data-checked="@(RowFilter.HideOutputs ? "true" : "false")" data-testid="menu-rows-outputs">
                         Output Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideSettings)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideSettings = !RowFilter.HideSettings })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideSettings = !RowFilter.HideSettings })"
                                  title="Rows for role assignments, diagnostic settings, locks and other resources that configure the resource above them (Bicep)."
                                  data-checked="@(RowFilter.HideSettings ? "true" : "false")" data-testid="menu-rows-settings">
                         Setting Rows
@@ -443,7 +444,7 @@
         </MudTooltip>
     }
 
-    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+    <ProblemIndicator OnShowCycles="panelService.ShowCycles" OnShowRules="panelService.ShowRules" />
     <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
     @* Help is the last button, where it is easy to find; the indicators come and go before it. *@
@@ -691,7 +692,7 @@
 
         // A new empty model is only useful with editing enabled; opening an existing
         // design model later leaves the toggle as the user last set it.
-        await SetEditModeAsync(true);
+        await viewSettings.SetEditingAsync(true);
         await canvasService.LoadAsync(name);
         snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
         Severity.Info);
@@ -722,80 +723,12 @@
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
 
-    async Task ToggleMinimapAsync()
-    {
-        var newValue = !viewOptions.IsMinimapShown;
-        viewOptions.SetMinimapShown(newValue);
-        await configService.SetAsync(config => config.ShowMinimap = newValue);
-        applicationEvents.TriggerUIStateChanged();
-    }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
     string AskIcon => CheckIcon(viewOptions.IsAskShown);
     string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
 
     void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
-
-    // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
-    // lines, so opening one closes the others.
-    void ToggleRules()
-    {
-        if (!viewOptions.IsRulesShown)
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetHiddenNodesShown(false);
-            viewOptions.SetAskShown(false);
-            viewOptions.SetTourShown(false);
-            pathFinderService.Close();
-        }
-        viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
-        modelService.ClearCache(); // Violating lines are drawn differently, baked into the tiles
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    void ToggleCycles()
-    {
-        if (!viewOptions.IsCyclesShown)
-        {
-            pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
-            viewOptions.SetRulesShown(false);
-            viewOptions.SetHiddenNodesShown(false);
-            viewOptions.SetAskShown(false);
-            viewOptions.SetTourShown(false);
-        }
-        viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
-        modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    // From the problem indicator: opens the panel (unfolded), or leaves it open.
-    void ShowCycles()
-    {
-        if (!viewOptions.IsCyclesShown)
-            ToggleCycles();
-        else if (viewOptions.IsCyclesMinimized)
-        {
-            viewOptions.SetCyclesMinimized(false);
-            applicationEvents.TriggerUIStateChanged();
-        }
-    }
-
-    void ShowRules()
-    {
-        if (!viewOptions.IsRulesShown)
-            ToggleRules();
-        else if (viewOptions.IsRuleSuggestionsShown)
-        {
-            viewOptions.SetRuleSuggestionsShown(false);
-            applicationEvents.TriggerUIStateChanged();
-        }
-    }
-
-    void ToggleLegend()
-    {
-        viewOptions.SetLegendShown(!viewOptions.IsLegendShown);
-        applicationEvents.TriggerUIStateChanged();
-    }
 
     static readonly (int Count, string Label)[] MinLinkChoices =
     [
@@ -810,58 +743,14 @@
     // The submenu label says when a filter is active, since the diagram then hides lines.
     string LinesMenuLabel => LineFilter.IsAny ? "Lines (filtered)" : "Lines";
 
-    async Task SetLineFilterAsync(LineFilter filter)
-    {
-        viewOptions.SetLineFilter(filter);
-        await configService.SetAsync(config =>
-        {
-            config.HideExternalLines = filter.HideExternal;
-            config.HideInheritanceLines = filter.HideInheritance;
-            config.HideMemberLines = filter.HideMember;
-            config.HideConfigurationLines = filter.HideConfiguration;
-            config.MinLinkCount = filter.MinLinkCount;
-        });
-        modelService.ClearCache(); // Which lines a tile holds depends on the filter
-        applicationEvents.TriggerUIStateChanged();
-    }
-
     RowFilter RowFilter => viewOptions.RowFilter;
     string RowsMenuLabel => RowFilter.IsAny ? "Rows (filtered)" : "Rows";
 
-    async Task SetRowFilterAsync(RowFilter filter)
-    {
-        viewOptions.SetRowFilter(filter);
-        await configService.SetAsync(config =>
-        {
-            config.HideParameterRows = filter.HideParameters;
-            config.HideVariableRows = filter.HideVariables;
-            config.HideOutputRows = filter.HideOutputs;
-            config.HideSettingRows = filter.HideSettings;
-        });
-        modelService.ClearCache(); // Which rows and lines a tile holds depends on the filter
-        applicationEvents.TriggerUIStateChanged();
-    }
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
     string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
 
-    Task ToggleEditMode() => SetEditModeAsync(!viewOptions.IsEditingEnabled);
-
-    async Task SetEditModeAsync(bool isEnabled)
-    {
-        viewOptions.SetIsEditingEnabled(isEnabled);
-        await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
-        // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
-        // cleared for the toggle to take effect immediately.
-        modelService.ClearCache();
-        applicationEvents.TriggerUIStateChanged();
-    }
+    Task ToggleEditMode() => viewSettings.SetEditingAsync(!viewOptions.IsEditingEnabled);
 
     Task ShowSettingsAsync() => SettingsDialog.ShowAsync(dialogService);
 
-    void ToggleRevealHiddenNodes()
-    {
-        viewOptions.SetRevealHiddenNodes(!viewOptions.RevealHiddenNodes);
-        modelService.ClearCache();
-        applicationEvents.TriggerUIStateChanged();
-    }
 }

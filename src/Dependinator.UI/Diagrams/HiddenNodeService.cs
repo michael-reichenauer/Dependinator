@@ -50,7 +50,7 @@ class HiddenNodeService(
     IModelMgr modelMgr,
     ICommandService commandService,
     IViewOptions viewOptions,
-    IPathFinderService pathFinderService,
+    IPanelService panelService,
     IApplicationEvents applicationEvents
 ) : IHiddenNodeService
 {
@@ -118,19 +118,9 @@ class HiddenNodeService(
             commandService.Do(new SetNodeVisibilityCommand(nodeIds, NodeVisibility.Visible));
     }
 
-    // The panel shares the top-right corner with the analysis panels, so it closes them; their
-    // highlighted lines are baked into the tiles.
     public void OpenPanel(NodeId? parentId = null)
     {
-        if (viewOptions.IsCyclesShown || viewOptions.IsRulesShown)
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetRulesShown(false);
-            applicationEvents.TriggerModelChanged();
-        }
-        pathFinderService.Close();
-        viewOptions.SetAskShown(false);
-        viewOptions.SetTourShown(false);
+        panelService.CloseOthers(Panel.HiddenNodes);
         scopeModelPath = modelMgr.WithModel(m => m.Path);
         viewOptions.SetHiddenNodesShown(true, parentId);
         applicationEvents.TriggerUIStateChanged();

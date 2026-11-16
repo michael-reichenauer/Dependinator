@@ -26,7 +26,7 @@ public class HiddenNodeServiceTests
             modelMgr,
             commandService,
             new ViewOptions(),
-            Mock.Of<IPathFinderService>(),
+            Mock.Of<IPanelService>(),
             Mock.Of<IApplicationEvents>()
         );
     }
@@ -138,7 +138,7 @@ public class HiddenNodeServiceTests
             modelMgr,
             commandService,
             viewOptions,
-            Mock.Of<IPathFinderService>(),
+            new PanelService(viewOptions, Mock.Of<IApplicationEvents>()),
             Mock.Of<IApplicationEvents>()
         );
         var parent = AddNode("P");
@@ -166,7 +166,7 @@ public class HiddenNodeServiceTests
             modelMgr,
             commandService,
             viewOptions,
-            Mock.Of<IPathFinderService>(),
+            new PanelService(viewOptions, Mock.Of<IApplicationEvents>()),
             Mock.Of<IApplicationEvents>()
         );
         var parent = AddNode("P");
