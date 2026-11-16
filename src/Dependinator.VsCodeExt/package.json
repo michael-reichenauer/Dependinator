@@ -111,19 +111,19 @@
                     "type": "boolean",
                     "default": true,
                     "order": 1,
-                    "description": "Show the node for the file you switch to in the editor, so the diagram follows your work."
+                    "description": "Show the node for the file you switch to in the editor, so the diagram follows your work. Also in the diagram's Settings dialog (Menu › Settings …)."
                 },
                 "dependinator.autoRefresh.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Automatically refresh the diagram when workspace source files change. When off, a dot on the Re-parse button shows that the source has changed.",
+                    "description": "Automatically refresh the diagram when workspace source files change. When off, a dot on the Re-parse button shows that the source has changed. Also in the diagram's Settings dialog (Menu › Settings …).",
                     "order": 2
                 },
                 "dependinator.autoRefresh.delaySeconds": {
                     "type": "number",
                     "default": 3,
                     "minimum": 1,
-                    "description": "Delay in seconds after the last source file change before the diagram is refreshed.",
+                    "description": "Delay in seconds after the last source file change before the diagram is refreshed. Also in the diagram's Settings dialog (Menu › Settings …).",
                     "order": 3
                 },
                 "dependinator.cloudSync.baseUrl": {

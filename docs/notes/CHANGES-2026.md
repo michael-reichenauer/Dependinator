@@ -78,6 +78,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and
   a button back to the workspace model used last. The browser app, which has no workspace, is
   unchanged.
+- **VS Code settings in the app (Nov 16).** The Settings dialog has a VS Code section, only in
+  VS Code, with Follow the active editor, Refresh the diagram when source files change and the
+  refresh delay. It reads and writes VS Code's own settings through the extension
+  (`VsCodeSettingsService`, `vsCodeSettings.ts`), so there is one value: Settings Sync and
+  workspace settings keep working, and a change made in VS Code's Settings shows in the open
+  dialog. The settings stay in VS Code's Settings too, which now point to the dialog.
 
 ## Parsing
 
