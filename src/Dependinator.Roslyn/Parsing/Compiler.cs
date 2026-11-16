@@ -76,6 +76,8 @@ static class Compiler
         return GetAllNamedTypes(compilation.Assembly.GlobalNamespace);
     }
 
+    public static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol ns) => GetAllNamedTypes(ns);
+
     // Compilation.GetSemanticModel creates a fresh model (empty binding cache) on every call,
     // so cache one model per syntax tree to reuse binding work across the many members parsed
     // from the same file. Weak-keyed by compilation so models are released with it.

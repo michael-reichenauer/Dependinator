@@ -7,6 +7,16 @@ static class LinkParser
     public static Link Parse(string sourceName, ISymbol symbol, bool isInheritance = false)
     {
         ISymbol declaration = GetDeclaration(symbol);
+
+        // A generated member of the user's own type has no node (see GeneratedCode), so the
+        // link goes to its type instead of dangling
+        if (
+            declaration is not INamedTypeSymbol
+            && declaration.ContainingType is { } type
+            && GeneratedCode.IsGenerated(declaration)
+        )
+            declaration = type.OriginalDefinition;
+
         var targetName = Names.GetFullName(declaration);
         var nodeType = NodeTypes.ToNodeType(declaration);
 

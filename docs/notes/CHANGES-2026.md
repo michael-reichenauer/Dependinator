@@ -190,6 +190,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon; a
   `metadata icon` in the file still wins, as does an icon the user picks. The tiles are a new
   Languages group in the icon picker, made by `scripts/language-icons/generate.py`.
+- **No generated code in C# models (Nov 16).** Code a source generator wrote is left out: the
+  `System.Text.RegularExpressions.Generated` types of `[GeneratedRegex]` (103 nodes in
+  Dependinator.UI) and the Functions worker's executor and metadata provider in Api. A type or
+  member is left out when each of its declarations carries `[GeneratedCode]` or
+  `[CompilerGenerated]`, so the user's own `[GeneratedRegex]` method, a partial class a
+  generator completes, and Razor components all stay. A use of a generated member of the
+  user's type links to the type. Michael's question, no setting to bring it back for now.
 
 ## Viewing, navigation and analysis
 

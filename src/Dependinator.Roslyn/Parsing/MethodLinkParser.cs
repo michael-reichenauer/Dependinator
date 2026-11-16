@@ -162,7 +162,7 @@ static class MethodLinkParser
 
     static IEnumerable<Link> AddSymbolLink(ISymbol? symbol, IMethodSymbol member, string fullMethodName)
     {
-        if (symbol is null)
+        if (symbol is null || IsOwnGeneratedMember(symbol, member))
             yield break;
 
         if (symbol is IFieldSymbol fieldSymbol) // Method field
@@ -222,6 +222,13 @@ static class MethodLinkParser
             }
         }
     }
+
+    // A generated member has no node and its links go to its type (LinkParser), which would be a
+    // link from a member to its own type when the type uses its own generated member.
+    static bool IsOwnGeneratedMember(ISymbol symbol, IMethodSymbol member) =>
+        symbol is IFieldSymbol or IPropertySymbol or IMethodSymbol or IEventSymbol
+        && SymbolEqualityComparer.Default.Equals(symbol.ContainingType?.OriginalDefinition, member.ContainingType)
+        && GeneratedCode.IsGenerated(symbol.OriginalDefinition);
 
     static IEnumerable<SyntaxNode> GetMethodBodyNodes(BaseMethodDeclarationSyntax methodDeclaration)
     {
