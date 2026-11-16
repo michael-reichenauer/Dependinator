@@ -27,7 +27,11 @@ public class MovedNodeLinesTests
     public MovedNodeLinesTests()
     {
         commandService = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
-        service = new NodeEditService(modelMgr, commandService);
+        service = new NodeEditService(
+            modelMgr,
+            commandService,
+            new AlignmentGuideService(Mock.Of<IApplicationEvents>())
+        );
         using var model = modelMgr.UseModel();
         parent = AddNode(model, model.Root, "P", new Rect(0, 0, 1000, 1000));
         a = AddNode(model, parent, "P.A", new Rect(0, 0, 100, 100));

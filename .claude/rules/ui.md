@@ -285,6 +285,17 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   between the root's children can only be re-routed one by one) share `LineRoutes` with the
   move; they use `LinePointsCommand(..., isLayoutSet: true)`, which hands hand-set lines back
   to the layout (`IsSegmentsUserSet` false) as one undo step.
+- Smart guides (Nov 16 2026, Michael said yes to guides over a coarser grid): a dragged node
+  snaps to a nearby sibling's edge or centre (`AlignmentSnap`, in `Diagrams/Editing/AlignmentGuides.cs`)
+  and `AlignmentGuideService` holds the guides in canvas coordinates; `CanvasService.GetView`
+  draws them over the tile (`CanvasView.Guides`, non-scaling stroke). `NodeEditService` keeps
+  each moved node's raw position (`rawBoundaries`: the drag without the snaps, so a snapped node
+  lets go again) and the last alignment, and the drop's grid snap leaves an aligned axis alone.
+  A group or zone aligns its lead (the node under the pointer, `MoveSelectedNodes(..., leadId)`)
+  and shifts with it in screen pixels. Guides are cleared in `BeginMove`/`EndMove` (which repaint).
+  Boxes are aligned, not the icon artwork, which has its own padding inside the box. Not done
+  yet: guides for resizing, equal-spacing hints, Align/Distribute commands, a key to drag
+  without snapping.
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
   `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.

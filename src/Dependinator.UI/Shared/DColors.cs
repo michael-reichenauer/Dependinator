@@ -196,6 +196,11 @@ class DColors
     // The corner brackets of a node a "go to" took the view to (NodeSvg.HighlightSvg): amber, so it is never
     // taken for the blue hover or selection; a touch lighter on the dark canvas.
     public static string Highlight => IsDark ? "#FBBF24" : "#F59E0B";
+
+    // The smart guides of a node drag (AlignmentGuideService): teal, a calm helper that is not taken for the
+    // selection blue, the go to amber or the purple icons (Michael found magenta signalled an error, Nov 16);
+    // lighter on the dark canvas.
+    public static string AlignmentGuide => IsDark ? "#2DD4BF" : "#0D9488";
     public static string ToolBarIcon => MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)

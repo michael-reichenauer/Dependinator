@@ -20,7 +20,11 @@ public class NodeEditServiceGroupTests
     public NodeEditServiceGroupTests()
     {
         commandService = new CommandService(Mock.Of<IApplicationEvents>(), modelMgr);
-        service = new NodeEditService(modelMgr, commandService);
+        service = new NodeEditService(
+            modelMgr,
+            commandService,
+            new AlignmentGuideService(Mock.Of<IApplicationEvents>())
+        );
     }
 
     static Node AddNode(IModel model, string name, Node parent, double containerZoom = 1)
