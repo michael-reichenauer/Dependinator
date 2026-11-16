@@ -1,7 +1,9 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.HiddenNodes;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;

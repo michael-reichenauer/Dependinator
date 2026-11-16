@@ -7,6 +7,7 @@ using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Navigation;
 using Dependinator.UI.Diagrams.NodeHelp;
+using Dependinator.UI.Diagrams.Queries;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;

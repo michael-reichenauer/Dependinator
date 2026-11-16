@@ -1,6 +1,7 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 using static Dependinator.UI.Diagrams.Svg.SvgText;
