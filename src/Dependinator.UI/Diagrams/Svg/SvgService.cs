@@ -232,7 +232,12 @@ class SvgService : ISvgService
         // the current state.
         var flags = Flags with { IsEditing = false, DimUnrelated = false, SelectedCycleLines = null };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
-        return NodeTreeSvg.RenderRootContent(model, zoom, context);
+        var svg = NodeTreeSvg.RenderRootContent(model, zoom, context);
+        // The export synced the lines and placed the labels for its own zoom: back to the shown
+        // tile, which a label drag and hit testing read.
+        if (syncedKey != TileKey.Empty)
+            SyncLines(model, syncedKey, LineEmphasis.FindSelection(model));
+        return svg;
     }
 
     // The canvas area (canvas units) a tile renders: its rect with the margin, in level

@@ -43,15 +43,22 @@ static class LabelPlacement
             return;
 
         foreach (var (container, labels) in byContainer)
-            Place(container, labels, revealHidden);
+            Place(container, labels, revealHidden, rows);
     }
 
-    static void Place(Node container, List<(Line Line, IReadOnlyList<Pos> Points, Rect Box)> labels, bool revealHidden)
+    static void Place(
+        Node container,
+        List<(Line Line, IReadOnlyList<Pos> Points, Rect Box)> labels,
+        bool revealHidden,
+        RowFilter rows
+    )
     {
         var nodes = new List<Rect>();
         foreach (var child in container.Children)
         {
             if (child.IsZone || child.IsFoldedAway || child.Visibility == NodeVisibility.Hidden && !revealHidden)
+                continue;
+            if (rows.Hides(child.Type))
                 continue;
             nodes.Add(child.Boundary);
             if (TextBelow(child) is { } text)
@@ -70,7 +77,7 @@ static class LabelPlacement
         foreach (var (line, points, box) in toPlace)
         {
             var bestPosition = Line.DefaultLabelPosition;
-            Rect? bestBox = null;
+            var bestBox = BoxAt(points, bestPosition, box);
             var bestOverlap = double.MaxValue;
             foreach (var position in Candidates)
             {
@@ -84,7 +91,7 @@ static class LabelPlacement
             }
 
             line.AutoLabelPosition = bestPosition;
-            taken.Add(bestBox!);
+            taken.Add(bestBox);
         }
     }
 
@@ -108,8 +115,8 @@ static class LabelPlacement
 
     // The name and description that an icon node draws below its box, estimated as NodeSvg
     // draws them at text zoom 1 (so like the labels, in the container's units). A member row
-    // draws its texts inside its box. An open container has none below it either; keeping the
-    // room anyway keeps a label's place when the zoom opens the node.
+    // draws its texts inside its box. An open container or a card draws its name inside its box
+    // too; keeping the room anyway keeps a label's place when the zoom opens the node.
     static Rect? TextBelow(Node node)
     {
         if (node.Type.IsMember)
