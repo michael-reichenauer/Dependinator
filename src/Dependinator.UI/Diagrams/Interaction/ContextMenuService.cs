@@ -1,4 +1,5 @@
 using Dependinator.Core;
+using Dependinator.UI.Diagrams.Annotations;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Diagrams.NodeHelp;

@@ -100,10 +100,12 @@ the MCP server (`IClaudeService`, `IVsCodeModelService`, `IModelQueryService`), 
 in-memory model, the automatic layout and the undoable commands; `Diagrams/` renders and handles
 interaction, and holds the analysis features, one folder (and namespace) each: the canvas and view
 state in its root, `Svg/` and `Tiles/` render, `Lines/` decides which lines show and where they run,
-`Interaction/` takes input (pan, zoom, selection) and `Editing/` changes the model, then the
-features `Cycles/`, `Rules/`, `Navigation/` (search, paths), `Dependencies/`, `Tooltips/` (hover
-cards), `Icons/`, `Export/`, `Tours/`, `Ask/` and `NodeHelp/`, with `Ai/` the plumbing the AI
-features share (view 8); `App/` is the shell (app bar, model list, the Settings dialog); `Shared/`
+`Interaction/` takes input (pan, zoom, selection), `Editing/` changes the model and `Annotations/`
+holds notes, zones and line labels, `Toolbars/` and `Overlays/` (minimap, legend, mode banner) sit
+on the canvas, then the features `Cycles/`, `Rules/`, `Problems/`, `HiddenNodes/`, `Navigation/`
+(search, paths), `Dependencies/`, `Tooltips/` (hover cards), `Icons/`, `Export/`, `Tours/`, `Ask/`
+and `NodeHelp/`, with `Ai/` the plumbing the AI features share and `Queries/` the answers to the
+MCP tools (view 8); `App/` is the shell (app bar, model list, the Settings dialog); `Shared/`
 holds the cross-cutting services. Adding a language means adding a library with an `ISourceParser`,
 registering it in the Lsp and Web hosts, and adding an architecture rule; little else changes (a
 node type and an icon where the language has a new kind of thing, as files and functions were for
@@ -259,7 +261,7 @@ so they need regenerating when the parser or the UI changes visibly.
 The AI features are optional help on top of the map: a second opinion on a cycle or on a
 dependency that breaks a rule, suggested rules and line labels, a guided tour, better comments, and
 the Ask panel for questions about the model or the selected nodes. They share one design, in
-`Diagrams/Ai/`.
+`Diagrams/Ai/` (and the answers to the MCP tools in `Diagrams/Queries/`).
 
 **A feature asks.** Each feature builds a prompt (the model's facts, with source excerpts where
 they help) and the JSON schema of the answer it wants, and gives both to `IAiService` with the
@@ -333,7 +335,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | Cloud sync | `src/Dependinator.UI/Shared/CloudSync/AppCloudSyncService.cs`, `src/Api/ModelFunctions.cs` |
 | Cycles and rules | `src/Dependinator.UI/Diagrams/Cycles/CycleService.cs`, `Rules/RuleService.cs` |
 | The AI features | `src/Dependinator.UI/Diagrams/Ai/AiProvider.cs`, `AiService.cs`, `AiOpinion.razor`; `Diagrams/Ask/AskModel.cs`; `src/Dependinator.Claude/ClaudeService.cs` |
-| The MCP server and model tools | `src/Dependinator.Mcp/ModelTools.cs`, `src/Dependinator.UI/Diagrams/Ai/ModelQueries.cs`, `src/Dependinator.VsCodeExt/src/mcpServer.ts` |
+| The MCP server and model tools | `src/Dependinator.Mcp/ModelTools.cs`, `src/Dependinator.UI/Diagrams/Queries/ModelQueries.cs`, `src/Dependinator.VsCodeExt/src/mcpServer.ts` |
 | Settings | `src/Dependinator.UI/App/SettingsDialog.razor`, `Shared/ConfigService.cs` |
 | Hosts and service wiring | each host's `Program.cs` |
 | Conventions, commands and traps | [CLAUDE.md](../CLAUDE.md), [CONTRIBUTING.md](../CONTRIBUTING.md), `.claude/rules/` |

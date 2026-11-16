@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams.Lines;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
