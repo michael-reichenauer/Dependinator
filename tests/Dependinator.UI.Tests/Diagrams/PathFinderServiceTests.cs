@@ -222,7 +222,7 @@ public class PathFinderServiceTests
             modelMgr,
             Moq.Mock.Of<IModelService>(),
             Moq.Mock.Of<IApplicationEvents>(),
-            new ViewOptions()
+            Moq.Mock.Of<IPanelService>()
         );
         Assert.Null(service.GetPathLineIds());
 
@@ -264,7 +264,7 @@ public class PathFinderServiceTests
             modelMgr,
             Moq.Mock.Of<IModelService>(),
             Moq.Mock.Of<IApplicationEvents>(),
-            new ViewOptions()
+            Moq.Mock.Of<IPanelService>()
         );
         service.Show(a.Id, b.Id);
         Assert.Contains(LineId.From(a.Name, b.Name), service.GetPathLineIds()!);

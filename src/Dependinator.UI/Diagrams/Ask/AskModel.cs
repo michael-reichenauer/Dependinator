@@ -403,10 +403,9 @@ interface IAskModelService
 [Scoped]
 class AskModelService(
     IModelMgr modelMgr,
-    IModelService modelService,
     IAiService aiService,
     IViewOptions viewOptions,
-    IPathFinderService pathFinderService,
+    IPanelService panelService,
     IApplicationEvents applicationEvents,
     IModelQueries modelQueries,
     ISelectionService selectionService
@@ -592,16 +591,7 @@ class AskModelService(
     {
         if (viewOptions.IsAskShown)
             return;
-        // The analysis panels share the top-right corner; their highlighted lines are baked into
-        // the tiles.
-        if (viewOptions.IsCyclesShown || viewOptions.IsRulesShown)
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetRulesShown(false);
-            modelService.ClearCache();
-        }
-        viewOptions.SetHiddenNodesShown(false);
-        pathFinderService.Close();
+        panelService.CloseOthers(Panel.Ask);
         viewOptions.SetAskShown(true);
         applicationEvents.TriggerUIStateChanged();
     }

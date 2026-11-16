@@ -25,10 +25,9 @@ public class CodebaseTourTests
     {
         service = new TourService(
             modelMgr,
-            Mock.Of<IModelService>(),
             Mock.Of<IAiService>(),
             new ViewOptions(),
-            Mock.Of<IPathFinderService>(),
+            Mock.Of<IPanelService>(),
             navigation.Object,
             Mock.Of<IApplicationEvents>()
         );

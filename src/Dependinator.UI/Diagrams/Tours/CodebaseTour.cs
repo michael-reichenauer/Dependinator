@@ -283,28 +283,25 @@ interface ITourService
 class TourService : ITourService
 {
     readonly IModelMgr modelMgr;
-    readonly IModelService modelService;
     readonly IAiService aiService;
     readonly IViewOptions viewOptions;
-    readonly IPathFinderService pathFinderService;
+    readonly IPanelService panelService;
     readonly INavigationService navigationService;
     readonly IApplicationEvents applicationEvents;
 
     public TourService(
         IModelMgr modelMgr,
-        IModelService modelService,
         IAiService aiService,
         IViewOptions viewOptions,
-        IPathFinderService pathFinderService,
+        IPanelService panelService,
         INavigationService navigationService,
         IApplicationEvents applicationEvents
     )
     {
         this.modelMgr = modelMgr;
-        this.modelService = modelService;
         this.aiService = aiService;
         this.viewOptions = viewOptions;
-        this.pathFinderService = pathFinderService;
+        this.panelService = panelService;
         this.navigationService = navigationService;
         this.applicationEvents = applicationEvents;
         applicationEvents.ModelChanged += OnModelChanged;
@@ -445,16 +442,7 @@ class TourService : ITourService
     {
         if (viewOptions.IsTourShown)
             return;
-        // The panels share the top-right corner; the analysis panels' highlighted lines are baked
-        // into the tiles.
-        if (viewOptions.IsCyclesShown || viewOptions.IsRulesShown)
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetRulesShown(false);
-            modelService.ClearCache();
-        }
-        viewOptions.SetHiddenNodesShown(false);
-        pathFinderService.Close();
+        panelService.CloseOthers(Panel.Tour);
         viewOptions.SetTourShown(true);
         applicationEvents.TriggerUIStateChanged();
     }

@@ -66,13 +66,32 @@ interface IPathFinderService
 }
 
 [Scoped]
-class PathFinderService(
-    IModelMgr modelMgr,
-    IModelService modelService,
-    IApplicationEvents applicationEvents,
-    IViewOptions viewOptions
-) : IPathFinderService
+class PathFinderService : IPathFinderService
 {
+    readonly IModelMgr modelMgr;
+    readonly IModelService modelService;
+    readonly IApplicationEvents applicationEvents;
+    readonly IPanelService panelService;
+
+    public PathFinderService(
+        IModelMgr modelMgr,
+        IModelService modelService,
+        IApplicationEvents applicationEvents,
+        IPanelService panelService
+    )
+    {
+        this.modelMgr = modelMgr;
+        this.modelService = modelService;
+        this.applicationEvents = applicationEvents;
+        this.panelService = panelService;
+        // It shares the top-right corner with the other panels: another one opening closes it.
+        panelService.Opening += panel =>
+        {
+            if (panel != Panel.PathFinder)
+                Close();
+        };
+    }
+
     // More than this many equally short chains is noise; the first ones (by name) are kept.
     internal const int MaxPaths = 10;
 
@@ -111,11 +130,7 @@ class PathFinderService(
     public void Open()
     {
         IsOpen = true;
-        viewOptions.SetCyclesShown(false); // The analysis panels sit top-right and all recolor lines
-        viewOptions.SetRulesShown(false);
-        viewOptions.SetHiddenNodesShown(false); // It sits in the same corner
-        viewOptions.SetAskShown(false);
-        viewOptions.SetTourShown(false);
+        panelService.CloseOthers(Panel.PathFinder);
         Notify();
     }
 
