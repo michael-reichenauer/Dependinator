@@ -169,4 +169,41 @@ public class AlignmentSnapTests
         Assert.Equal(110, b.Boundary.X, 6);
         Assert.Equal(210, c.Boundary.X, 6);
     }
+
+    [Fact]
+    public void MoveSelectedNode_ShouldGoOnFromWhereANodeIs_WhenSomethingElseMovedItDuringTheDrag()
+    {
+        AddNode("A", new Rect(110, 100, 60, 60));
+        var b = AddNode("B", new Rect(200, 300, 60, 60));
+        var pointer = PointerId.FromNode(b.Id);
+
+        service.BeginMove();
+        service.MoveSelectedNode(new PointerEvent { MovementX = Pixels(-86) }, zoom: 1, pointer); // Snaps to 110
+        b.Boundary = b.Boundary with { X = 400 }; // Say a refresh moved it
+        service.MoveSelectedNode(new PointerEvent { MovementX = Pixels(20) }, zoom: 1, pointer);
+
+        Assert.Equal(420, b.Boundary.X, 6);
+    }
+
+    [Fact]
+    public void SnapSelectedNodesToGrid_ShouldSnapAGroupNodeInAnotherContainer_AlsoOnAnAlignedAxis()
+    {
+        AddNode("A", new Rect(110, 100, 60, 60));
+        var b = AddNode("B", new Rect(200, 300, 60, 60));
+        var other = AddNode("P", new Rect(1000, 1000, 200, 200));
+        Node c;
+        using (var model = modelMgr.UseModel())
+        {
+            c = new Node("P.C", other) { Boundary = new Rect(40, 40, 60, 60), Type = NodeType.ClassType };
+            other.AddChild(c);
+            model.TryAddNode(c);
+        }
+
+        service.BeginMove();
+        service.MoveSelectedNodes(new PointerEvent { MovementX = Pixels(-86) }, zoom: 1, [b.Id, c.Id], b.Id);
+        service.SnapSelectedNodesToGrid([b.Id, c.Id]);
+
+        Assert.Equal(110, b.Boundary.X, 6); // Aligned
+        Assert.Equal(NodeGrid.Snap(c.Boundary.X), c.Boundary.X, 6); // Its own container's grid
+    }
 }

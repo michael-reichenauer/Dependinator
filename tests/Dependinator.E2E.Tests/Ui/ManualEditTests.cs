@@ -50,12 +50,9 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.NodeLabel(MenuNodeIcon)).ToBeVisibleAsync();
     }
 
-    [E2EFact]
+    [E2EFact(SkipOnWebKit = "headless WebKit sends movementX/Y 0, so a mouse drag does not move a node")]
     public async Task DraggedNode_ShouldShowAGuideAndSnap_WhenItLinesUpWithASibling()
     {
-        // Headless WebKit sends movementX/Y 0, so a mouse drag does not move a node there.
-        if (Environment.GetEnvironmentVariable("BROWSER") == "webkit")
-            return;
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 

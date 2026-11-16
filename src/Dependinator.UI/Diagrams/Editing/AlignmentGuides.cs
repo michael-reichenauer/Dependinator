@@ -50,12 +50,12 @@ static class AlignmentSnap
         var dx = FindShift(moving, near, snap, isX: true);
         var dy = FindShift(moving, near, snap, isX: false);
         var aligned = new Rect(moving.X + (dx ?? 0), moving.Y + (dy ?? 0), moving.Width, moving.Height);
-        return new Result(
-            dx ?? 0,
-            dy ?? 0,
-            dx is null ? null : GuideFor(aligned, near, isX: true, overshoot),
-            dy is null ? null : GuideFor(aligned, near, isX: false, overshoot)
-        );
+        var vertical = dx is null ? null : GuideFor(aligned, near, isX: true, overshoot);
+        var horizontal = dy is null ? null : GuideFor(aligned, near, isX: false, overshoot);
+
+        // A shift without a guide (rounding at far coordinates) is no alignment: the drop would
+        // snap that axis to the grid anyway, so the node does not jump to it.
+        return new Result(vertical is null ? 0 : dx ?? 0, horizontal is null ? 0 : dy ?? 0, vertical, horizontal);
     }
 
     // The smallest shift on one axis that lines up an edge or the centre of the box with the same

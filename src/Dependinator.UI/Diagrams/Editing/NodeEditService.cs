@@ -84,6 +84,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
             var raw = MoveRaw(node, e, scale);
             var alignment = Align(node, raw, scale, e, [node]);
             newBoundary = raw with { X = raw.X + alignment.Dx, Y = raw.Y + alignment.Dy };
+            shownBoundaries[node] = newBoundary;
             if (!node.IsRoot)
                 node.Parent.IsChildrenLayoutCustomized = true;
         }
@@ -113,7 +114,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
                 (shiftX, shiftY) = (alignment.Dx / scale, alignment.Dy / scale);
             }
             else
-                SetAlignment(AlignmentSnap.Result.None, []);
+                SetAlignment(AlignmentSnap.Result.None, [], null);
 
             foreach (var node in nodes)
             {
@@ -121,12 +122,9 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
                 var raw = raws[node];
                 if (!node.IsRoot)
                     node.Parent.IsChildrenLayoutCustomized = true;
-                commands.Add(
-                    new NodeEditCommand(node.Id)
-                    {
-                        Boundary = raw with { X = raw.X + shiftX * scale, Y = raw.Y + shiftY * scale },
-                    }
-                );
+                var boundary = raw with { X = raw.X + shiftX * scale, Y = raw.Y + shiftY * scale };
+                shownBoundaries[node] = boundary;
+                commands.Add(new NodeEditCommand(node.Id) { Boundary = boundary });
             }
         }
         if (commands.Count == 0)
@@ -138,17 +136,25 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
     {
         moveStarts.Clear();
         rawBoundaries.Clear();
+        shownBoundaries.Clear();
         alignment = AlignmentSnap.Result.None;
+        alignedParent = null;
         alignmentGuides.Clear();
         lastMoveCommand = null;
     }
 
     // Where the pointer alone puts the node (the drag so far without the alignment snaps, so a
     // snapped node lets go again once the pointer moves on), and records where its move started.
+    // A node that something else moved during the drag (an undo, a refresh) goes on from there.
     Rect MoveRaw(Node node, PointerEvent e, double scale)
     {
         moveStarts.TryAdd(node, node.Boundary);
-        var origin = rawBoundaries.TryGetValue(node, out var raw) ? raw : node.Boundary;
+        var origin =
+            rawBoundaries.TryGetValue(node, out var raw)
+            && shownBoundaries.TryGetValue(node, out var shown)
+            && shown == node.Boundary
+                ? raw
+                : node.Boundary;
         var moved = origin with { X = origin.X + e.MovementX * scale, Y = origin.Y + e.MovementY * scale };
         rawBoundaries[node] = moved;
         return moved;
@@ -171,7 +177,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
     {
         if (node.IsRoot || scale <= 0)
         {
-            SetAlignment(AlignmentSnap.Result.None, []);
+            SetAlignment(AlignmentSnap.Result.None, [], null);
             return AlignmentSnap.Result.None;
         }
 
@@ -194,13 +200,14 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
             AlignmentSnap.ReachPixels * scale,
             AlignmentSnap.OvershootPixels * scale
         );
-        SetAlignment(result, GuideLines(node.Parent, result));
+        SetAlignment(result, GuideLines(node.Parent, result), node.Parent);
         return result;
     }
 
-    void SetAlignment(AlignmentSnap.Result result, IReadOnlyList<GuideLine> lines)
+    void SetAlignment(AlignmentSnap.Result result, IReadOnlyList<GuideLine> lines, Node? parent)
     {
         alignment = result;
+        alignedParent = parent;
         alignmentGuides.Set(lines);
     }
 
@@ -256,12 +263,20 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
 
     // Where the pointer alone has put each moved node, and the alignment of the latest step: an
     // aligned axis is not snapped to the grid at the end, or the snap would undo the alignment.
+    // Only the aligned node's container keeps the axis: a group node elsewhere (another scale)
+    // snaps to its own grid. In the same container the group stays as it was dragged, rigid.
     readonly Dictionary<Node, Rect> rawBoundaries = [];
+    readonly Dictionary<Node, Rect> shownBoundaries = [];
     AlignmentSnap.Result alignment = AlignmentSnap.Result.None;
+    Node? alignedParent;
 
-    double SnapX(double x) => alignment.IsAlignedX ? x : NodeGrid.Snap(x);
+    double SnapX(Node node) =>
+        alignment.IsAlignedX && IsInAlignedContainer(node) ? node.Boundary.X : NodeGrid.Snap(node.Boundary.X);
 
-    double SnapY(double y) => alignment.IsAlignedY ? y : NodeGrid.Snap(y);
+    double SnapY(Node node) =>
+        alignment.IsAlignedY && IsInAlignedContainer(node) ? node.Boundary.Y : NodeGrid.Snap(node.Boundary.Y);
+
+    bool IsInAlignedContainer(Node node) => !node.IsRoot && node.Parent == alignedParent;
 
     void Do(Command command)
     {
@@ -281,10 +296,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
         using (var model = modelMgr.UseModel())
         {
             isAnyOffGrid = Resolve(model, nodeIds, isTopLevelOnly: true)
-                .Any(node =>
-                    !node.Type.IsMember
-                    && (SnapX(node.Boundary.X) != node.Boundary.X || SnapY(node.Boundary.Y) != node.Boundary.Y)
-                );
+                .Any(node => !node.Type.IsMember && (SnapX(node) != node.Boundary.X || SnapY(node) != node.Boundary.Y));
         }
         if (!isAnyOffGrid)
             return;
@@ -299,7 +311,7 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
                     node.Parent.IsChildrenLayoutCustomized = true;
                 return new NodeEditCommand(node.Id)
                 {
-                    Boundary = node.Boundary with { X = SnapX(node.Boundary.X), Y = SnapY(node.Boundary.Y) },
+                    Boundary = node.Boundary with { X = SnapX(node), Y = SnapY(node) },
                 };
             },
             isTopLevelOnly: true
@@ -375,8 +387,8 @@ class NodeEditService(IModelMgr modelMgr, ICommandService commandService, IAlign
             if (!model.Nodes.TryGetValue(NodeId.FromId(pointerId.Id), out var node) || node.Type.IsMember)
                 return;
             nodeId = node.Id;
-            var snappedX = SnapX(node.Boundary.X);
-            var snappedY = SnapY(node.Boundary.Y);
+            var snappedX = SnapX(node);
+            var snappedY = SnapY(node);
             if (snappedX == node.Boundary.X && snappedY == node.Boundary.Y)
                 return;
 
