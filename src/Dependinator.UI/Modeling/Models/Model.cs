@@ -113,7 +113,7 @@ record PendingLineLabel(
     public void ApplyTo(Line line)
     {
         line.SetLabel(Label, Description);
-        line.SetLabelPosition(Position ?? Line.DefaultLabelPosition);
+        line.SetLabelPosition(Position);
     }
 }
 

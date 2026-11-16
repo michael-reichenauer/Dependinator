@@ -70,9 +70,9 @@
     }
     @if (IsMoved && !isPositionReset)
     {
-      @* A label dragged along its line goes back to the line's middle (with Save, one undo step each). *@
-      <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.VerticalAlignCenter" OnClick="ResetPosition"
-                 title="Put the label back at the middle of the line" data-testid="line-label-reset-position">To the middle</MudButton>
+      @* A label dragged along its line is placed automatically again (with Save, one undo step each). *@
+      <MudButton StartIcon="@MudBlazor.Icons.Material.Outlined.AutoFixHigh" OnClick="ResetPosition"
+                 title="Let the label find its own place on the line again, clear of nodes and other labels" data-testid="line-label-reset-position">Place automatically</MudButton>
     }
     <MudSpacer />
     <MudButton OnClick="Cancel" data-testid="line-label-cancel">Cancel</MudButton>
@@ -87,7 +87,7 @@
   [Parameter] public string Description { get; set; } = "";
   [Parameter] public bool HasLabel { get; set; }
 
-  // The label was dragged away from the line's middle (Line.LabelPosition).
+  // The label was dragged to a place of the user's own (Line.IsLabelMoved).
   [Parameter] public bool IsMoved { get; set; }
 
   bool isPositionReset;

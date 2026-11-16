@@ -78,7 +78,7 @@ class LineLabelService(
         var description = result.Clear ? "" : result.Description;
         List<Command> commands = [];
         if (result.IsPositionReset && !result.Clear)
-            commands.Add(new LineLabelPositionCommand(lineId) { Position = Line.DefaultLabelPosition });
+            commands.Add(new LineLabelPositionCommand(lineId) { Position = null });
         if (label != currentLabel || description != currentDescription)
             commands.Add(new LineLabelCommand(lineId) { Label = label, Description = description });
 

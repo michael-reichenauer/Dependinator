@@ -2,7 +2,8 @@ using Dependinator.UI.Modeling.Models;
 
 namespace Dependinator.UI.Modeling.Commands;
 
-// Moves a line's label along the line (Line.LabelPosition). Execute stores the previous position;
+// Moves a line's label along the line (Line.LabelPosition), or with a null Position gives it back
+// to the automatic placement. Execute stores the previous position;
 // Revert swaps it back, so Execute/Revert can be replayed for redo/undo. A drag sends one command
 // per pointer move, and they merge into one undo step (same type and line); its own type keeps a
 // move from merging with a label text edit or a bend-point edit.
@@ -12,25 +13,31 @@ class LineLabelPositionCommand(LineId lineId) : Command
 
     public override string MergeKey => lineId.Value;
 
-    public double Position { get; set; } = Line.DefaultLabelPosition;
+    public double? Position { get; set; }
+
+    // The user's place before Execute (null: placed automatically); isExecuted tells that apart
+    // from not run yet.
     public double? PositionCopy { get; private set; }
+    bool isExecuted;
 
     public override void Execute(IModel model)
     {
         if (!model.Lines.TryGetValue(lineId, out var line))
             return;
 
-        PositionCopy = line.LabelPosition;
+        PositionCopy = line.IsLabelMoved ? line.LabelPosition : null;
+        isExecuted = true;
         line.SetLabelPosition(Position);
     }
 
     public override void Revert(IModel model)
     {
-        if (!model.Lines.TryGetValue(lineId, out var line) || PositionCopy is not { } previous)
+        if (!model.Lines.TryGetValue(lineId, out var line) || !isExecuted)
             return;
 
-        Position = line.LabelPosition;
-        line.SetLabelPosition(previous);
+        Position = line.IsLabelMoved ? line.LabelPosition : null;
+        line.SetLabelPosition(PositionCopy);
         PositionCopy = null;
+        isExecuted = false;
     }
 }

@@ -31,7 +31,7 @@ class LineLabelCommand(LineId lineId) : Command
         if (!line.HasLabel && line.IsLabelMoved)
         {
             PositionCopy = line.LabelPosition;
-            line.SetLabelPosition(Line.DefaultLabelPosition);
+            line.SetLabelPosition(null);
         }
     }
 
