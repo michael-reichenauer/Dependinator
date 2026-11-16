@@ -102,7 +102,7 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
         Assert.Equal("The shop's entry point: starts the server.", Items.Node(Main).Properties.Description);
         Assert.Equal("The shop's data: what is sold and what it costs.", Items.Node(Model).Properties.Description);
         // A file that starts with its imports and a declaration's own comment has none
-        Assert.Null(Items.Node("shop.src.cart*ts").Properties.Description);
+        Assert.Equal(NoValue.String, Items.Node("shop.src.cart*ts").Properties.Description);
     }
 
     [Fact]

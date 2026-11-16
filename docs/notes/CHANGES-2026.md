@@ -141,6 +141,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   unless Settings › Include test files is on. Go to code, hover cards (declarations read like
   TypeScript), the AI prompts and Improve Comments know files and functions. The helper approach
   is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`.
+- **TypeScript comments (Nov 15).** Declarations and members are described by the plain `//`
+  lines or `/* */` block directly above them too, not only by JSDoc, as C# reads comments
+  (constructors and CommonJS exports included; tool directives and license headers left out),
+  `-> Target: text` lines describe dependency lines, and a removed comment clears the
+  description on a refresh.
 - **.slnx solutions (Nov 15).** The XML solution format is parsed like an `.sln` (the bundled
   Roslyn reads it; Dependinator's own solution gives the same model in both formats) and found in
   the workspace, the Models dialog and the VS Code file watcher. Of an `.sln` with an `.slnx` of

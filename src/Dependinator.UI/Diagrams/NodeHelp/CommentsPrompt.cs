@@ -138,7 +138,7 @@ static class CommentsPrompt
 
     const string ScriptPlaces = """
         - A TypeScript or JavaScript file's comment goes at the very top of the file (below a `#!` line), as `//` lines or a `/* */` block, with an empty line below it. A comment directly above the first declaration is read as that declaration's, not the file's.
-        - A class's, interface's, enum's or type's comment is the JSDoc comment (`/** ... */`) right above its declaration.
+        - A class's, interface's, enum's or type's comment goes right above its declaration, with no blank line between them, in the style the file or the codebase already uses: a JSDoc comment (`/** ... */`) or `//` lines.
 
         """;
 

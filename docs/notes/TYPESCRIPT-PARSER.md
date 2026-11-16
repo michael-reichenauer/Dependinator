@@ -112,9 +112,20 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   Promise<void>`, `: number`. Declared types as written, otherwise what the compiler infers (a
   literal's kind, not its value; nothing when it only knows `any`), cut at 50 characters. The
   tooltip shows a member of a script file in the same order, not the C# order.
-- **Descriptions:** JSDoc for declarations. A file's is its top comment when an empty line or the
-  imports follow it and it is not a license; a comment directly above the first declaration
-  belongs to that declaration (Improve Comments tells the AI this).
+- **Descriptions:** a declaration's (also a member's, an enum member's, a constructor's) is its
+  JSDoc text without the tags, or else the plain `//` lines or `/* */` block directly above it, up
+  to an empty line, as the C# parser reads comments; tool directives (`eslint-disable`,
+  `@ts-ignore`, `#region`, `/* global … */`), whole, and license headers are left out (also
+  from a file's top comment), and a comment at the end of a line describes nothing. A
+  variable's statement comment is its first variable's (also the first name of a `const { a, b
+  }`), a CommonJS `exports.x = …` takes the comment above the assignment. `-> Target: text`
+  lines describe the diagram line to Target, as in C# (`CommentDescriptions`); the helper
+  finds Target written as shown (`lib.user.service.ts.UserService`), in full or below one of
+  the source's ancestors. A file's top comment is its first block of comments that is no
+  license and not only directives. Not read: a comment between a decorator and its class. A file's is its top comment when an empty line or the imports
+  follow it and it is not a license; a comment directly above the first declaration belongs to
+  that declaration (Improve Comments tells the AI this). A file or declaration without a comment
+  gets `NoValue`, so a removed comment's description is cleared on a refresh.
 - **Links** go from the declaration that contains a reference to the declaration it resolves to
   (through import aliases and re-exports), so `main.ts.start → cart.ts.Cart.add`. An import by
   itself is no link, only use is, except where an import is the use: a side-effect import
