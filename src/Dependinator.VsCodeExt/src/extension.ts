@@ -8,6 +8,7 @@ import {
 import * as logger from "./logger";
 import * as claudeApiKey from "./claudeApiKey";
 import * as languageModels from "./languageModels";
+import * as vsCodeSettings from "./vsCodeSettings";
 import type { WebviewMessage } from "./types";
 import {
     createDependinatorWebviewPanel,
@@ -448,8 +449,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         activePanel = panel;
         const autoRefresh = registerAutoRefresh(panel);
+        const settingsForwarding = vsCodeSettings.registerSettingsChangeForwarding(panel.webview);
         panel.onDidDispose(() => {
             autoRefresh.dispose();
+            settingsForwarding.dispose();
             if (activePanel === panel)
                 activePanel = undefined;
             setStatus("idle");
@@ -470,6 +473,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (message.type === "vscode/Status") {
                 setStatus(String(message.message ?? "idle"));
+                return;
+            }
+
+            // The Settings dialog's VS Code section (vsCodeSettings.ts)
+            if (message.type === "vscode/GetSettings") {
+                vsCodeSettings.sendSettings(panel.webview);
+                return;
+            }
+
+            if (message.type === "vscode/SetSetting") {
+                await vsCodeSettings.setSetting(message.message);
                 return;
             }
 

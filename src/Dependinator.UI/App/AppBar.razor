@@ -262,7 +262,7 @@
             <ModelsMenu />
 
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Settings" OnClick="ShowSettingsAsync"
-                         title="Theme, layout density, badges, mouse zoom, this model's test projects and the AI."
+                         title="@SettingsTitle"
                          data-testid="menu-settings">
                 Settings …
             </MudMenuItem>
@@ -553,5 +553,10 @@
     Task ToggleEditMode() => viewSettings.SetEditingAsync(!viewOptions.IsEditingEnabled);
 
     Task ShowSettingsAsync() => SettingsDialog.ShowAsync(dialogService);
+
+    static string SettingsTitle =>
+        Build.IsVsCodeExtWasm
+            ? "Theme, layout density, badges, mouse zoom, this model's test projects, the AI, following the editor and refreshing."
+            : "Theme, layout density, badges, mouse zoom, this model's test projects and the AI.";
 
 }

@@ -557,6 +557,11 @@ body {
     min-width: 110px;
 }
 
+.dep-settings__number {
+    flex: 0 0 140px;
+    margin: 0;
+}
+
 .dep-settings__hint {
     font-size: 0.75rem;
     color: var(--mud-palette-text-secondary);

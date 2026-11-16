@@ -21,6 +21,7 @@ class VsCodeMessageService(
     IJSInterop jSInterop,
     IJsonRpcService jsonRpcService,
     IVsCodeReceiveService vsCodeIntegrationService,
+    IVsCodeSettingsService vsCodeSettingsService,
     IApplicationEvents applicationEvents
 ) : IVsCodeMessageService, IAsyncDisposable
 {
@@ -69,6 +70,12 @@ class VsCodeMessageService(
             // user must see it rather than wait for a diagram that never comes.
             Log.Error("Communication Error", message);
             applicationEvents.TriggerErrorReported($"VS Code: {message}");
+            return;
+        }
+
+        if (type == "ui/vsCodeSettings")
+        {
+            vsCodeSettingsService.Received(message);
             return;
         }
 
