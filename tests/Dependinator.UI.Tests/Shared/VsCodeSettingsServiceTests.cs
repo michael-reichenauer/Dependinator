@@ -67,6 +67,20 @@ public class VsCodeSettingsServiceTests
     }
 
     [Fact]
+    public async Task LoadAsync_ShouldShareAnAnswerWithALoadStillWaiting()
+    {
+        var sut = CreateSut();
+
+        var first = sut.LoadAsync();
+        var second = sut.LoadAsync();
+        sut.Received(SettingsJson);
+
+        Assert.Equal(new VsCodeSettings(false, true, 5), await first);
+        Assert.Equal(new VsCodeSettings(false, true, 5), await second);
+        Assert.Single(posted);
+    }
+
+    [Fact]
     public async Task LoadAsync_ShouldReturnNullOutsideVsCode()
     {
         var sut = CreateSut(isVsCode: false);

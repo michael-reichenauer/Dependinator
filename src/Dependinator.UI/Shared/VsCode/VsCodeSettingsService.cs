@@ -30,9 +30,9 @@ interface IVsCodeSettingsService
 class VsCodeSettingsService(IJSInterop jSInterop) : IVsCodeSettingsService
 {
     // Setting keys under "dependinator", the extension's package.json names.
-    public const string FollowActiveEditorKey = "followActiveEditor";
-    public const string AutoRefreshEnabledKey = "autoRefresh.enabled";
-    public const string AutoRefreshDelaySecondsKey = "autoRefresh.delaySeconds";
+    const string FollowActiveEditorKey = "followActiveEditor";
+    const string AutoRefreshEnabledKey = "autoRefresh.enabled";
+    const string AutoRefreshDelaySecondsKey = "autoRefresh.delaySeconds";
 
     public const double MinDelaySeconds = 1;
 
@@ -47,14 +47,30 @@ class VsCodeSettingsService(IJSInterop jSInterop) : IVsCodeSettingsService
 
     public async Task<VsCodeSettings?> LoadAsync()
     {
+        // A load that is still waiting (the dialog closed and opened again) shares the answer.
+        if (pendingLoad is { } waiting)
+            return await WaitAsync(waiting);
+
         var load = new TaskCompletionSource<VsCodeSettings?>(TaskCreationOptions.RunContinuationsAsynchronously);
         pendingLoad = load;
         if (!await jSInterop.Call<bool>("postVsCodeMessage", new { type = "vscode/GetSettings", message = "" }))
+        {
+            pendingLoad = null;
             return null; // Not in VS Code
+        }
 
+        return await WaitAsync(load);
+    }
+
+    async Task<VsCodeSettings?> WaitAsync(TaskCompletionSource<VsCodeSettings?> load)
+    {
         var answered = await Task.WhenAny(load.Task, Task.Delay(LoadTimeout));
         if (answered != load.Task)
+        {
             Log.Warn("No answer from VS Code with its settings");
+            if (pendingLoad == load)
+                pendingLoad = null;
+        }
         return Settings;
     }
 
