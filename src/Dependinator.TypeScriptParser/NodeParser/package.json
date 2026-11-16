@@ -9,7 +9,7 @@
         "build": "npm run check && npm run bundle"
     },
     "devDependencies": {
-        "@types/node": "^22.0.0",
+        "@types/node": "^26.6.6",
         "esbuild": "^0.28.2",
         "typescript": "6.0.3"
     }
