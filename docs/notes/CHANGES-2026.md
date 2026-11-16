@@ -652,7 +652,7 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   again around the nodes where they stand, hand-set bends included, keeping the nodes in place.
 - **Smart alignment guides (Nov 16).** While a node is dragged, it snaps to a nearby sibling
   when one of its edges or its centre comes within a few pixels of the same edge or centre of
-  that sibling (or an edge of a node beside or above it), and a thin magenta guide joins the
+  that sibling (or an edge of a node beside or above it), and a thin teal guide joins the
   aligned nodes; at most one guide per axis, only siblings within reach. An aligned axis keeps
   the alignment on drop instead of snapping to the 20-unit grid, so nodes of different sizes
   line up by their centres; the other axis still snaps to the grid. A group or a zone moves

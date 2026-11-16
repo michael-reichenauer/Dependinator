@@ -197,9 +197,10 @@ class DColors
     // taken for the blue hover or selection; a touch lighter on the dark canvas.
     public static string Highlight => IsDark ? "#FBBF24" : "#F59E0B";
 
-    // The smart guides of a node drag (AlignmentGuideService): magenta, as in most drawing tools, so it is not
-    // taken for the selection blue or the go to amber; a touch lighter on the dark canvas.
-    public static string AlignmentGuide => IsDark ? "#FF5FB0" : "#E5007E";
+    // The smart guides of a node drag (AlignmentGuideService): teal, a calm helper that is not taken for the
+    // selection blue, the go to amber or the purple icons (Michael found magenta signalled an error, Nov 16);
+    // lighter on the dark canvas.
+    public static string AlignmentGuide => IsDark ? "#2DD4BF" : "#0D9488";
     public static string ToolBarIcon => MudBlazor.Colors.DeepPurple.Lighten5;
 
     public static string ColorBasedOnName(string name)
