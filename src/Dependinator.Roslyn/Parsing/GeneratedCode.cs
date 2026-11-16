@@ -6,19 +6,35 @@ namespace Dependinator.Roslyn.Parsing;
 // Code a source generator wrote, such as the System.Text.RegularExpressions.Generated types of
 // [GeneratedRegex] or the Functions worker's executor, is left out of the model: nobody wrote it
 // and nobody can change it, so it only adds nodes and lines. A type or member is generated when
-// every one of its declarations carries [GeneratedCode] or [CompilerGenerated] (or it is inside
-// a generated type). The attributes of a partial type or method are merged from all its parts,
-// so a user's partial class or [GeneratedRegex] method that a generator completes still has a
-// declaration of its own without them, and stays; what the generator adds inside its part of the
-// class goes. Razor components are generated trees too, but without these attributes, so they
-// stay as well.
+// every one of its declarations is in a source generator's output and carries [GeneratedCode] or
+// [CompilerGenerated] (or is inside such a declaration of a type around it).
+// - Checked-in or build-step generated code (resx Resources, NSwag or gRPC clients) is in the
+//   project's own documents, not a generator's output: the user depends on it, so it stays.
+// - A user's partial class or partial method that a generator completes (a JSON context, a
+//   [GeneratedRegex] method) has a declaration of the user's own, so it stays; what the
+//   generator adds inside its part of the class goes.
+// - Razor components are a generator's output too, but carry neither attribute, so they stay.
 static class GeneratedCode
 {
     static readonly ConditionalWeakTable<ISymbol, StrongBox<bool>> cache = new();
+    static readonly ConditionalWeakTable<SyntaxTree, object> generatorOutput = new();
+
+    // Marks the compilation's syntax trees that are not the project's own documents, that is,
+    // the source generators' output.
+    public static void MarkGeneratorOutput(Compilation compilation, IEnumerable<string?> documentPaths)
+    {
+        var paths = documentPaths.OfType<string>().ToHashSet(StringComparer.Ordinal);
+        foreach (var tree in compilation.SyntaxTrees.Where(t => !paths.Contains(t.FilePath)))
+            MarkGeneratorOutput(tree);
+    }
+
+    public static void MarkGeneratorOutput(SyntaxTree tree) => generatorOutput.AddOrUpdate(tree, tree);
+
+    public static bool IsGeneratorOutput(SyntaxTree tree) => generatorOutput.TryGetValue(tree, out _);
 
     public static bool IsGenerated(ISymbol symbol)
     {
-        // The generator's implementation of a partial member is the user's declared member
+        // A partial member is one member: the generator's part and the user's part count as one
         symbol = symbol switch
         {
             IMethodSymbol { PartialDefinitionPart: { } definition } => definition,
@@ -36,8 +52,14 @@ static class GeneratedCode
     // A namespace that holds only generated types (System.Text.RegularExpressions.Generated)
     public static bool IsGeneratedOnly(INamespaceSymbol ns)
     {
-        var types = Compiler.GetAllTypes(ns).Where(t => !t.IsImplicitlyDeclared).ToList();
-        return types.Count > 0 && types.All(IsGenerated);
+        var hasTypes = false;
+        foreach (var type in Compiler.GetAllNamedTypes(ns).Where(t => !t.IsImplicitlyDeclared))
+        {
+            if (!IsGenerated(type))
+                return false;
+            hasTypes = true;
+        }
+        return hasTypes;
     }
 
     static bool IsGeneratedSymbol(ISymbol symbol)
@@ -45,9 +67,15 @@ static class GeneratedCode
         if (symbol.ContainingType is { } containingType && IsGenerated(containingType))
             return true;
 
+        var parts = PartsOf(symbol);
+        var declarations = parts.SelectMany(p => p.DeclaringSyntaxReferences).ToList();
+        if (!declarations.All(d => IsGeneratorOutput(d.SyntaxTree)))
+            return false;
+
         // The declarations that carry the attributes, of the symbol or of a type around it: a
         // member the generator adds to the user's partial class is inside its attributed part
-        var attributedDeclarations = SymbolAndContainingTypes(symbol)
+        var attributedDeclarations = parts
+            .SelectMany(SymbolAndContainingTypes)
             .SelectMany(s => s.GetAttributes())
             .Where(IsGeneratedAttribute)
             .Select(a => a.ApplicationSyntaxReference?.GetSyntax().Parent?.Parent)
@@ -57,10 +85,20 @@ static class GeneratedCode
             return false;
 
         // A field's declaration is its variable declarator, inside the attributed field declaration
-        return symbol.DeclaringSyntaxReferences.All(reference =>
+        return declarations.All(reference =>
             reference.GetSyntax().AncestorsAndSelf().Any(attributedDeclarations.Contains)
         );
     }
+
+    // The definition and the implementation of a partial member, whichever of them the user
+    // wrote (a [GeneratedRegex] method's definition, a generated partial hook's implementation)
+    static IReadOnlyList<ISymbol> PartsOf(ISymbol symbol) =>
+        symbol switch
+        {
+            IMethodSymbol { PartialImplementationPart: { } implementation } => [symbol, implementation],
+            IPropertySymbol { PartialImplementationPart: { } implementation } => [symbol, implementation],
+            _ => [symbol],
+        };
 
     static IEnumerable<ISymbol> SymbolAndContainingTypes(ISymbol symbol)
     {

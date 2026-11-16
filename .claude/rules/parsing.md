@@ -39,12 +39,14 @@ paths:
   Running a loadable one again defines its types twice: that gave 49 false compile errors in Api
   and 12 in UI until Oct 21, found once the problem indicator showed them.
 - **Generated code** (Nov 16): `GeneratedCode.IsGenerated` leaves out a type or member when each
-  of its declarations carries `[GeneratedCode]`/`[CompilerGenerated]` (on itself or a type around
-  it), and `IgnoredTypes` then drops links to it. Never decide by file instead (generated
-  trees, `*.g.cs`, paths not on disk): every Razor component is a generated tree too, as are the
-  Regex and Functions outputs, and tests use made-up paths. Partial members merge attributes
-  from all parts, so a declaration without them keeps the user's partial class or
-  `[GeneratedRegex]` method.
+  of its declarations is in a source generator's output (`Compiler.GetCompilationAsync` marks
+  the trees that are not project documents) and carries `[GeneratedCode]`/`[CompilerGenerated]`
+  (on itself or a type around it); `IgnoredTypes` then drops links to it. Both are needed:
+  every Razor component is generator output without the attributes, and checked-in or
+  build-step code with the attribute (resx `Resources`, NSwag and gRPC clients) is what the
+  user's code depends on. A partial member counts both its parts, so a `[GeneratedRegex]`
+  method and the user's body for a generator's partial hook stay (found in review). A test
+  compilation marks its generator trees itself (`MarkGeneratorOutput(tree)`).
 - **Razor locations:** a component's types live in generated trees whose paths are not on disk.
   Take spans with `Locations.GetSourceSpan` (never `GetLineSpan()`): it follows `#line` to the
   `.razor` line for `@code` members, and maps the class itself to the whole `.razor` file named by
