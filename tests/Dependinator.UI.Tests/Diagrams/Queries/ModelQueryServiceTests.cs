@@ -1,5 +1,4 @@
 using Dependinator.Core.ModelQueries;
-using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Diagrams.Queries;
 
 namespace Dependinator.UI.Tests.Diagrams.Queries;

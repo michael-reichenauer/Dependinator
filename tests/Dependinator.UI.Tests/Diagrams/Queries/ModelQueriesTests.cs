@@ -1,7 +1,6 @@
 using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Parsing;
 using Dependinator.Core.Shared;
-using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Diagrams.Navigation;

@@ -1,6 +1,5 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Export;
-using Dependinator.UI.Diagrams.Svg;
 
 namespace Dependinator.UI.Tests.Diagrams.Export;
 

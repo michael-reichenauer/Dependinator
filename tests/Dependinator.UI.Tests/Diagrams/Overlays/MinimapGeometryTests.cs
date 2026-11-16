@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Overlays;
 using Dependinator.UI.Shared.Types;
 

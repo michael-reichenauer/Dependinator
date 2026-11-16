@@ -1,4 +1,3 @@
-using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Shared;

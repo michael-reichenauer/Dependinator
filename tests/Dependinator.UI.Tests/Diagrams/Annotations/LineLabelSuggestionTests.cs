@@ -1,7 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Diagrams.Annotations;
-using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
