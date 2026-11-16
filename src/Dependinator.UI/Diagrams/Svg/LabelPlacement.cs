@@ -4,40 +4,59 @@ using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Svg;
 
-// Places the labels a container draws (on its sibling and edge lines) that the user has not
-// dragged: each goes to the first place along its line, from the middle outwards, where its box is
-// clear of the container's nodes and of the labels placed before it, or else where it overlaps
-// them the least (Line.AutoLabelPosition). Dragged labels stay where they are and count as taken.
+// Places the labels the user has not dragged: each goes to the first place along its line, from
+// the middle outwards, where its box is clear of the nodes of the line's container and of the
+// labels placed before it there, or else where it overlaps them the least
+// (Line.AutoLabelPosition). Dragged labels stay where they are and count as taken.
 //
-// It works in the container's children-local space with the label's size at text zoom 1, and
-// looks at every child and every labelled line of the container, not only what the tile draws,
-// so a label has the same place in every tile and at every zoom. Shorter lines go first: they
-// have the fewest places to choose from.
+// It runs over the drawn lines (RepLineService.Sync decides which those are, for the zoom), each
+// time they are synced: so the places follow the tile that is shown, which a label drag starts
+// from, and not the last tile drawn, which may be one drawn ahead. It works in each container's
+// children-local space with the label's size at text zoom 1, and looks at every child and every
+// labelled line of the container, not only what a tile draws, so a label has the same place in
+// every tile. Shorter lines go first: they have the fewest places to choose from.
 static class LabelPlacement
 {
     // From the middle outwards, alternating sides; never at the ends, where the arrow head and
     // the start circle are.
     static readonly double[] Candidates = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82, 0.12, 0.88];
 
-    public static void Place(Node container)
+    public static void Place(IEnumerable<Line> lines, bool revealHidden, LineFilter filter, RowFilter rows)
     {
-        List<(Line Line, IReadOnlyList<Pos> Points, Rect Box)>? labels = null;
-        foreach (var line in ContainerLines(container))
+        Dictionary<Node, List<(Line Line, IReadOnlyList<Pos> Points, Rect Box)>>? byContainer = null;
+        foreach (var line in lines)
         {
-            if (!line.HasLabel)
+            if (!line.HasLabel || !IsDrawn(line, revealHidden, filter, rows))
+                continue;
+            if (!LinePathGeometry.TryGetOwnerNode(line, out var container) || IsDegenerate(line, container))
                 continue;
             var points = LinePathGeometry.GetLocalPolylinePoints(line);
             if (points.Count < 2)
                 continue;
-            (labels ??= []).Add((line, points, LineSvg.GetLocalLabelBoxAroundPoint(line, points)));
+
+            byContainer ??= [];
+            if (!byContainer.TryGetValue(container, out var labels))
+                byContainer[container] = labels = [];
+            labels.Add((line, points, LineSvg.GetLocalLabelBoxAroundPoint(line, points)));
         }
-        if (labels is null)
+        if (byContainer is null)
             return;
 
-        var nodes = container
-            .Children.Where(child => !child.IsZone && child.Visibility != NodeVisibility.Hidden)
-            .Select(NodeArea)
-            .ToList();
+        foreach (var (container, labels) in byContainer)
+            Place(container, labels, revealHidden);
+    }
+
+    static void Place(Node container, List<(Line Line, IReadOnlyList<Pos> Points, Rect Box)> labels, bool revealHidden)
+    {
+        var nodes = new List<Rect>();
+        foreach (var child in container.Children)
+        {
+            if (child.IsZone || child.IsFoldedAway || child.Visibility == NodeVisibility.Hidden && !revealHidden)
+                continue;
+            nodes.Add(child.Boundary);
+            if (TextBelow(child) is { } text)
+                nodes.Add(text);
+        }
 
         // Dragged labels first: they are fixed, the others make room for them.
         var taken = new List<Rect>();
@@ -46,12 +65,12 @@ static class LabelPlacement
 
         var toPlace = labels
             .Where(label => !label.Line.IsLabelMoved)
-            .OrderBy(label => Length(label.Points))
+            .OrderBy(label => LinePathGeometry.Length(label.Points))
             .ThenBy(label => label.Line.Id.Value, StringComparer.Ordinal);
         foreach (var (line, points, box) in toPlace)
         {
             var bestPosition = Line.DefaultLabelPosition;
-            var bestBox = BoxAt(points, bestPosition, box);
+            Rect? bestBox = null;
             var bestOverlap = double.MaxValue;
             foreach (var position in Candidates)
             {
@@ -65,49 +84,53 @@ static class LabelPlacement
             }
 
             line.AutoLabelPosition = bestPosition;
-            taken.Add(bestBox);
+            taken.Add(bestBox!);
         }
     }
 
-    // The lines the container draws (as NodeLinesSvg.DrawnNodeLines, without what depends on the
-    // tile or the view): from its edge to its children, between them, and from them to its edge.
-    static IEnumerable<Line> ContainerLines(Node container)
+    // As NodeLinesSvg draws a container's lines, without what depends on the tile.
+    static bool IsDrawn(Line line, bool revealHidden, LineFilter filter, RowFilter rows)
     {
-        foreach (var line in container.SourceLines)
-        {
-            if (line.Target.Parent == container && line.IsActiveRep)
-                yield return line;
-        }
-        foreach (var child in container.Children)
-        {
-            foreach (var line in child.SourceLines)
-            {
-                if (line.IsActiveRep && line.Target.Parent != line.Source)
-                    yield return line;
-            }
-        }
+        // A user's direct line is drawn whatever the line representatives are.
+        return (line.IsDirect || line.IsActiveRep)
+            && (line.Visibility != NodeVisibility.Hidden || revealHidden)
+            && !LineEmphasis.IsLineFilteredOut(line, filter, rows);
     }
 
-    // The node's box and, below it, the name and description that an icon node draws there
-    // (estimated as SvgText draws them at text zoom 1, so like the labels in the container's
-    // units). An open container has no texts below it; keeping the room anyway keeps a label's
-    // place the same at every zoom.
-    static Rect NodeArea(Node node)
+    // A pass-through node covers its parent, so the segment between them is not drawn.
+    static bool IsDegenerate(Line line, Node container) =>
+        !line.IsDirect
+        && line.RenderAncestor is null
+        && (
+            line.Source == container && line.Target.IsPassThrough
+            || line.Target == container && line.Source.IsPassThrough
+        );
+
+    // The name and description that an icon node draws below its box, estimated as NodeSvg
+    // draws them at text zoom 1 (so like the labels, in the container's units). A member row
+    // draws its texts inside its box. An open container has none below it either; keeping the
+    // room anyway keeps a label's place when the zoom opens the node.
+    static Rect? TextBelow(Node node)
     {
+        if (node.Type.IsMember)
+            return null;
+
         var box = node.Boundary;
-        var nameWidth = SvgText.EstimateTextWidth(node.DisplayName, SvgText.FontSize);
+        var width = SvgText.EstimateTextWidth(node.DisplayName, SvgText.FontSize);
         var height = SvgText.FontSize + SvgText.DescriptionLineGap;
-        if (!string.IsNullOrWhiteSpace(node.Description))
+        var rows = SvgText.GetDescriptionLines(
+            node.Description,
+            SvgText.DescriptionMinWidth,
+            SvgText.IconDescriptionMaxLines
+        );
+        if (rows.Count > 0)
         {
-            var rowHeight = SvgText.DescriptionFontSize * SvgText.DescriptionLineHeightFactor;
-            var textWidth = node.Description.Length * SvgText.DescriptionFontSize * SvgText.DescriptionCharWidthFactor;
-            var rows = Math.Min(SvgText.IconDescriptionMaxLines, Math.Ceiling(textWidth / Math.Max(box.Width, 1)));
-            height += rows * rowHeight;
+            var charWidth = SvgText.DescriptionFontSize * SvgText.DescriptionCharWidthFactor;
+            width = Math.Max(width, rows.Max(row => row.Length) * charWidth);
+            height += rows.Count * SvgText.DescriptionFontSize * SvgText.DescriptionLineHeightFactor;
         }
 
-        var width = Math.Max(box.Width, nameWidth);
-        var x = box.X + box.Width / 2 - width / 2;
-        return new Rect(Math.Min(box.X, x), box.Y, Math.Max(box.Width, width), box.Height + height);
+        return new Rect(box.X + box.Width / 2 - width / 2, box.Y + box.Height, width, height);
     }
 
     static Rect BoxAt(IReadOnlyList<Pos> points, double position, Rect boxAroundPoint)
@@ -126,18 +149,6 @@ static class LabelPlacement
             var height = Math.Min(box.Y + box.Height, other.Y + other.Height) - Math.Max(box.Y, other.Y);
             if (width > 0 && height > 0)
                 total += width * height;
-        }
-        return total;
-    }
-
-    static double Length(IReadOnlyList<Pos> points)
-    {
-        var total = 0.0;
-        for (var i = 1; i < points.Count; i++)
-        {
-            var dx = points[i].X - points[i - 1].X;
-            var dy = points[i].Y - points[i - 1].Y;
-            total += Math.Sqrt(dx * dx + dy * dy);
         }
         return total;
     }

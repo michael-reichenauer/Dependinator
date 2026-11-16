@@ -272,6 +272,12 @@ class SvgService : ISvgService
                 Area = GetCanvasArea(tileKey.GetTileRect(), tileKey.GetTileRectWithMargin(), tileZoom),
             };
         RepLineService.Sync(model, tileZoom, reveal);
+        LabelPlacement.Place(
+            model.Lines.Values,
+            viewOptions.RevealHiddenNodes,
+            viewOptions.LineFilter,
+            viewOptions.RowFilter
+        );
         syncedKey = tileKey;
         return reveal;
     }

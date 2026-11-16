@@ -25,7 +25,7 @@ class LineLabelCommand(LineId lineId) : Command
         LabelCopy = line.Label ?? "";
         DescriptionCopy = line.LabelDescription ?? "";
         line.SetLabel(Label ?? LabelCopy, Description ?? DescriptionCopy);
-        // A removed label takes its place along the line with it: a new one starts at the middle.
+        // A removed label takes its place along the line with it: a new one is placed automatically.
         // Only then is the place this command's to restore; a drag has its own command.
         PositionCopy = null;
         if (!line.HasLabel && line.IsLabelMoved)

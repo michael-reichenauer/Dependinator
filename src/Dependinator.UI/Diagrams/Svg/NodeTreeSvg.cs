@@ -26,6 +26,8 @@ static class NodeTreeSvg
         for (var round = 0; round < MaxRenderRounds; round++)
         {
             RepLineService.Sync(model, zoom, rootContext.Flags.Reveal);
+            var flags = rootContext.Flags;
+            LabelPlacement.Place(model.Lines.Values, flags.RevealHidden, flags.Filter, flags.Rows);
             var generation = NodeLayout.Generation;
             content = RenderNodeContent(model.Root, rootContext);
             if (NodeLayout.Generation == generation)
@@ -80,8 +82,6 @@ static class NodeTreeSvg
             .Children.Where(child => !child.IsZone)
             .Select(child => RenderNode(child, childrenContext))
             .Where(svg => svg.Length > 0);
-        // Before the lines: a selected line's handles and the labels read where the labels go.
-        LabelPlacement.Place(node);
         var linesSvg = NodeLinesSvg.RenderNodeLines(node, childrenCanvasOffset, childrenZoom, context);
 
         // The lines' labels draw above the child nodes: a short line's label would otherwise

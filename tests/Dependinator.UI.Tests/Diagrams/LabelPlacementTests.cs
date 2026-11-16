@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
@@ -36,8 +37,19 @@ public class LabelPlacementTests
         return new Rect(at.X + box.X, at.Y + box.Y, box.Width, box.Height);
     }
 
-    static bool Overlaps(Rect a, Rect b) =>
-        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
+    static bool Overlaps(Rect a, Rect b) => a.Intersects(b);
+
+    // As a tile's line sync does: every line of the model, shown as the view options say.
+    static void Place(Node root) =>
+        LabelPlacement.Place(
+            root.Children.SelectMany(child => child.SourceLines),
+            revealHidden: false,
+            LineFilter.None with
+            {
+                MinLinkCount = 0,
+            }, // the test lines carry no links
+            RowFilter.None
+        );
 
     [Fact]
     public void Place_ShouldKeepTheLabelInTheMiddle_WhenTheMiddleIsFree()
@@ -47,7 +59,7 @@ public class LabelPlacementTests
         var b = AddNode(root, "b", new Rect(300, 0, 100, 100));
         var line = AddLine(a, b, "orders");
 
-        LabelPlacement.Place(root);
+        Place(root);
 
         Assert.Equal(Line.DefaultLabelPosition, line.LabelPosition);
         Assert.False(line.IsLabelMoved);
@@ -62,7 +74,7 @@ public class LabelPlacementTests
         var middle = AddNode(root, "middle", new Rect(185, 35, 30, 30));
         var line = AddLine(a, b, "orders");
 
-        LabelPlacement.Place(root);
+        Place(root);
 
         Assert.NotEqual(Line.DefaultLabelPosition, line.LabelPosition);
         Assert.False(Overlaps(LabelBox(line), middle.Boundary));
@@ -78,7 +90,7 @@ public class LabelPlacementTests
         var there = AddLine(a, b, "orders");
         var back = AddLine(b, a, "payments");
 
-        LabelPlacement.Place(root);
+        Place(root);
 
         Assert.False(Overlaps(LabelBox(there), LabelBox(back)));
         Assert.False(Overlaps(LabelBox(back), a.Boundary));
@@ -95,7 +107,7 @@ public class LabelPlacementTests
         var placed = AddLine(a, b, "orders");
         dragged.SetLabelPosition(0.5); // the user's own place, right in the middle
 
-        LabelPlacement.Place(root);
+        Place(root);
 
         Assert.Equal(0.5, dragged.LabelPosition);
         Assert.True(dragged.IsLabelMoved);
@@ -112,11 +124,45 @@ public class LabelPlacementTests
         var there = AddLine(a, b, "orders");
         var back = AddLine(b, a, "payments");
 
-        LabelPlacement.Place(root);
+        Place(root);
         var first = (there.LabelPosition, back.LabelPosition);
-        LabelPlacement.Place(root);
+        Place(root);
 
         Assert.Equal(first, (there.LabelPosition, back.LabelPosition));
+    }
+
+    [Fact]
+    public void Place_ShouldMoveTheLabelOffTheNameBelowANode()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "a", new Rect(0, 0, 100, 100));
+        var b = AddNode(root, "b", new Rect(300, 0, 100, 100));
+        // A small icon above the middle of the line, with its name below it, down to the line.
+        var icon = AddNode(root, "AVeryLongNameBelowTheIcon", new Rect(190, 20, 20, 20));
+        var name = new Rect(200 - 60, 40, 120, 9); // 25 chars * 8 * 0.6 wide, centered, 8 + 1 high
+        var line = AddLine(a, b, "orders");
+        Assert.True(Overlaps(LabelBox(line), name)); // in the middle, it would cover the name
+        Assert.False(Overlaps(LabelBox(line), icon.Boundary)); // but not the icon
+
+        Place(root);
+
+        Assert.NotEqual(Line.DefaultLabelPosition, line.LabelPosition);
+        Assert.False(Overlaps(LabelBox(line), name));
+    }
+
+    [Fact]
+    public void Place_ShouldLeaveRoomOnlyForDrawnLabels()
+    {
+        var root = CreateRoot();
+        var a = AddNode(root, "a", new Rect(0, 0, 100, 100));
+        var b = AddNode(root, "b", new Rect(300, 0, 100, 100));
+        var shown = AddLine(a, b, "orders");
+        var notDrawn = AddLine(b, a, "payments");
+        notDrawn.IsActiveRep = false; // replaced by lines between the nodes inside, at this zoom
+
+        Place(root);
+
+        Assert.Equal(Line.DefaultLabelPosition, shown.LabelPosition);
     }
 
     [Fact]

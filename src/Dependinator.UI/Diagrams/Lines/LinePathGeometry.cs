@@ -217,7 +217,7 @@ static class LinePathGeometry
         return bestAlong / total;
     }
 
-    static double Length(IReadOnlyList<Pos> points)
+    internal static double Length(IReadOnlyList<Pos> points)
     {
         var total = 0.0;
         for (var i = 1; i < points.Count; i++)

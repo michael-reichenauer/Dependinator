@@ -120,7 +120,7 @@ class Line : IItem
     public double LabelPosition => movedLabelPosition ?? AutoLabelPosition;
     public bool IsLabelMoved => movedLabelPosition is not null;
 
-    // Runtime only: set each time the line's container is drawn (LabelPlacement).
+    // Runtime only: set each time the lines are synced for a tile (LabelPlacement).
     public double AutoLabelPosition { get; internal set; } = DefaultLabelPosition;
 
     // The user's place for the label; null lets it be placed automatically.
