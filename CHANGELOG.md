@@ -9,6 +9,19 @@ with the next official release.
 
 ## [Unreleased]
 
+### New
+
+- The root of each solution, Bicep deployment and script project shows a tile in its language's color with its letters (C#, TS, JS, Bicep), also offered in a new Languages group of the icon picker; a Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon, unless the file or the user picked another icon
+
+### Improved
+
+- TypeScript and JavaScript declarations and members are described by the `//` lines or `/* */` block directly above them too, not only by JSDoc, as C# comments are read; tool directives (eslint, `@ts-`, `#region`) and license headers are left out, and `-> Target: text` comment lines describe dependency lines; a removed comment clears its description on the next refresh
+- The icon dialog's Default row shows the icon the parser gives the node
+
+### Fixed
+
+- Icon colors are no longer offered for icons that keep their own colors, such as language tiles and cloud icons, where a picked color was ignored
+
 ## [v0.92.459054] - 2026-11-15
 
 ### New
