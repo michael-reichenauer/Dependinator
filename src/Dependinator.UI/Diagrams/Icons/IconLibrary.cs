@@ -39,6 +39,7 @@ static class IconLibrary
     [
         ("Default", "Default", true),
         ("General", "General", true),
+        ("Languages", "Languages", false),
         ("Azure", "Azure", false),
         ("Aws", "AWS", false),
         ("Google", "Google", false),
@@ -68,6 +69,11 @@ static class IconLibrary
 
     // The id of an icon's color variant in the library/defs, e.g. ("Type", "Blue") -> "Type--Blue".
     public static string VariantName(string name, string color) => $"{name}--{color}";
+
+    // Whether the icon has tint variants (the hand-authored violet groups do, icons with their
+    // own colors do not).
+    public static bool IsTintable(string name) =>
+        IconColors.Count > 0 && Contains(VariantName(name, IconColors[0].Name));
 
     public static string Get(string name)
     {
@@ -191,8 +197,10 @@ static class IconLibrary
     }
 
     // Icon library file names can contain '-'/'_' separators (common in e.g. Azure/AWS icon
-    // sets); the display name shown in icon lists uses spaces instead.
-    internal static string ToDisplayName(string name) => name.Replace('-', ' ').Replace('_', ' ').Trim();
+    // sets); the display name shown in icon lists uses spaces instead. A name a file cannot
+    // carry is spelled out here.
+    internal static string ToDisplayName(string name) =>
+        name == "CSharp" ? "C#" : name.Replace('-', ' ').Replace('_', ' ').Trim();
 
     static string ReadResource(Assembly assembly, string resourceName)
     {

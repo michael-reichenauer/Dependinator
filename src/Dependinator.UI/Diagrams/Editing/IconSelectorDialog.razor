@@ -103,7 +103,8 @@
   [Parameter]
   public string? CurrentIconName { get; set; }
 
-  // The name of the node's type-based default icon (e.g. "Solution"), shown on the "Default"
+  // The name of the node's default icon (the parser's, such as a language tile, else the type's,
+  // e.g. "Solution"), shown on the "Default"
   // row so it previews what the node reverts to; that icon is omitted from the list below.
   [Parameter]
   public string? DefaultIconName { get; set; }

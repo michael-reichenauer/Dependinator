@@ -1,5 +1,3 @@
-using Bicep.Core.TypeSystem;
-
 namespace Dependinator.Bicep.Parsing;
 
 // Maps Azure resource types to the ids of the Azure icons embedded in the UI's icon library
@@ -153,14 +151,4 @@ static class AzureIcons
 
         return Fallback;
     }
-
-    // The icon of a deployment's target scope (the model's root node); null keeps the default.
-    public static string? ForScope(ResourceScope scope) =>
-        scope switch
-        {
-            ResourceScope.ResourceGroup => "Resource-Group",
-            ResourceScope.Subscription => "Subscription",
-            ResourceScope.ManagementGroup => "Management-Group",
-            _ => null,
-        };
 }

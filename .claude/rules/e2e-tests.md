@@ -172,4 +172,7 @@ open menu overlay swallows them).
   test mode, a "TaskExtensions" cycle the break case.
 
 After `./scripts/gen-demo csharp` run the full e2e suite (a regeneration once broke nine tests);
-regenerating the Bicep demo is safe.
+regenerating the Bicep demo is safe. A change that only adds a property to a few items can be
+patched into the existing gzipped JSON instead (the language icon on the root, Nov 15 2026): a
+regeneration then picked up that day's code changes, and the shifted lines broke
+`LineToolbarTests` and `LineStubTests`.

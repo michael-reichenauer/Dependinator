@@ -53,16 +53,17 @@ public class IconLibraryTests
         var icons = IconLibrary.All;
 
         // The Default group holds the node-type icons; General holds the extra selectable
-        // icons; the cloud groups hold the curated official provider icons (imported via
+        // icons; Languages the source root icons (scripts/language-icons); the cloud groups hold the curated official provider icons (imported via
         // ./scripts/import-icons — update the counts when the manifests change).
         Assert.Equal(20, icons.Count(icon => icon.Group == "Default"));
         Assert.Equal(20, icons.Count(icon => icon.Group == "General"));
+        Assert.Equal(5, icons.Count(icon => icon.Group == "Languages"));
         Assert.Equal(83, icons.Count(icon => icon.Group == "Azure"));
         Assert.Equal(61, icons.Count(icon => icon.Group == "Aws"));
         Assert.Equal(55, icons.Count(icon => icon.Group == "Google"));
         Assert.Equal(
             icons.Count,
-            icons.Count(icon => icon.Group is "Default" or "General" or "Azure" or "Aws" or "Google")
+            icons.Count(icon => icon.Group is "Default" or "General" or "Languages" or "Azure" or "Aws" or "Google")
         );
         Assert.All(icons, icon => Assert.Contains("<svg", icon.Svg));
     }
@@ -82,7 +83,7 @@ public class IconLibraryTests
     {
         var groups = IconLibrary.All.Select(icon => icon.Group).Distinct().ToList();
 
-        Assert.Equal(["Default", "General", "Azure", "Aws", "Google"], groups);
+        Assert.Equal(["Default", "General", "Languages", "Azure", "Aws", "Google"], groups);
 
         // Icons are contiguous per group (the picker's group headers rely on it).
         var sequence = IconLibrary.All.Select(icon => icon.Group).ToList();
@@ -92,8 +93,14 @@ public class IconLibraryTests
     [Fact]
     public void Groups_ShouldExposeLabels_InDisplayOrder()
     {
-        Assert.Equal(["Default", "General", "Azure", "Aws", "Google"], IconLibrary.Groups.Select(group => group.Name));
-        Assert.Equal(["Default", "General", "Azure", "AWS", "Google"], IconLibrary.Groups.Select(group => group.Label));
+        Assert.Equal(
+            ["Default", "General", "Languages", "Azure", "Aws", "Google"],
+            IconLibrary.Groups.Select(group => group.Name)
+        );
+        Assert.Equal(
+            ["Default", "General", "Languages", "Azure", "AWS", "Google"],
+            IconLibrary.Groups.Select(group => group.Label)
+        );
         Assert.Equal("AWS", IconLibrary.GroupLabel("Aws"));
     }
 
@@ -126,6 +133,7 @@ public class IconLibraryTests
     [InlineData("key-vault", "key vault")]
     [InlineData("Message_Queue", "Message Queue")]
     [InlineData("api-gateway_v2", "api gateway v2")]
+    [InlineData("CSharp", "C#")]
     public void ToDisplayName_ShouldConvertSeparatorsToSpaces(string name, string expected)
     {
         Assert.Equal(expected, IconLibrary.ToDisplayName(name));
@@ -169,6 +177,25 @@ public class IconLibraryTests
         {
             Assert.False(IconLibrary.Contains(IconLibrary.VariantName(icon.Name, color.Name)));
         }
+    }
+
+    [Fact]
+    public void LanguageIcons_ShouldExistInTheIconLibrary_WithoutColorVariants()
+    {
+        // The parsers' root icons keep the language's own color: the Languages group is untinted.
+        string[] names =
+        [
+            LanguageIcons.CSharp,
+            LanguageIcons.TypeScript,
+            LanguageIcons.JavaScript,
+            LanguageIcons.Bicep,
+            LanguageIcons.Go,
+        ];
+        Assert.All(names, name =>
+        {
+            Assert.Equal("Languages", IconLibrary.All.Single(icon => icon.Name == name).Group);
+            Assert.False(IconLibrary.Contains(IconLibrary.VariantName(name, IconLibrary.IconColors[0].Name)));
+        });
     }
 
     [Fact]
@@ -299,6 +326,44 @@ public class IconLibraryTests
             .ToList();
 
         Assert.Equal(ids.Count, ids.Distinct().Count());
+    }
+
+    [Fact]
+    public void GetDefaultIconName_ShouldBeTheParsedLanguageIcon_ForASourceRoot()
+    {
+        var node = CreateNode(NodeType.Solution);
+        node.IconName = LanguageIcons.CSharp;
+        node.CustomIconName = "Database";
+
+        // The icon dialog's Default row: what the node shows once the user's pick is cleared.
+        Assert.Equal(LanguageIcons.CSharp, Icon.GetDefaultIconName(node));
+        Assert.Equal("Solution", Icon.GetDefaultIconName(CreateNode(NodeType.Solution)));
+    }
+
+    [Fact]
+    public void CanTintIcon_ShouldBeFalse_ForALanguageTile_AndTrueForAPickedLibraryIcon()
+    {
+        var node = CreateNode(NodeType.Solution);
+        node.IconName = LanguageIcons.TypeScript;
+        node.CustomIconColor = "Blue";
+
+        // A language tile keeps its own color, so a tint is neither offered nor drawn.
+        Assert.False(Icon.CanTintIcon(node));
+        Assert.Equal(LanguageIcons.TypeScript, Icon.GetIconName(node));
+
+        node.CustomIconName = "Database";
+        Assert.True(Icon.CanTintIcon(node));
+        Assert.Equal("Database--Blue", Icon.GetIconName(node));
+    }
+
+    [Fact]
+    public void IsTintable_ShouldBeTrueOnlyForTheVioletGroups()
+    {
+        Assert.True(IconLibrary.IsTintable("Solution"));
+        Assert.True(IconLibrary.IsTintable("Database"));
+        Assert.False(IconLibrary.IsTintable(LanguageIcons.Go));
+        Assert.False(IconLibrary.IsTintable("Key-Vault"));
+        Assert.False(IconLibrary.IsTintable("No-Such-Icon"));
     }
 
     [Fact]

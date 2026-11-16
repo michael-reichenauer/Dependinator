@@ -58,16 +58,28 @@ static class Icon
     // stale persisted) names or colors fall back to the next level / the base icon.
     public static string GetIconName(Modeling.Models.Node node)
     {
-        var name =
-            node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName) ? customIconName
-            : node.IconName is { } iconName && IconLibrary.Contains(iconName) ? iconName
-            : GetIconName(node.Type);
+        var name = GetBaseIconName(node);
 
         if (node.CustomIconColor is { } color && IconLibrary.Contains(IconLibrary.VariantName(name, color)))
             return IconLibrary.VariantName(name, color);
 
         return name;
     }
+
+    // The icon a node has without the user's pick: the parser's (a language tile, an Azure
+    // icon), else its type's. The icon dialog's Default row shows it.
+    public static string GetDefaultIconName(Modeling.Models.Node node) =>
+        node.IconName is { } iconName && IconLibrary.Contains(iconName) ? iconName : GetIconName(node.Type);
+
+    // The node's icon before any tint: the user's pick, else the default.
+    public static string GetBaseIconName(Modeling.Models.Node node) =>
+        node.CustomIconName is { } customIconName && IconLibrary.Contains(customIconName)
+            ? customIconName
+            : GetDefaultIconName(node);
+
+    // Whether an icon color applies to the node: an icon of its own colors (a language tile, a
+    // cloud icon) has no tints, so the color choices are not offered for it.
+    public static bool CanTintIcon(Modeling.Models.Node node) => IconLibrary.IsTintable(GetBaseIconName(node));
 
     // Icon for a node, honoring a user-selected custom icon.
     public static string GetIcon(Modeling.Models.Node node) => IconLibrary.Get(GetIconName(node));

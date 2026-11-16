@@ -75,6 +75,7 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
 
         Assert.Equal(NodeType.Solution, root.Properties.Type);
         Assert.StartsWith("A small shop", root.Properties.Description);
+        Assert.Equal(LanguageIcons.TypeScript, root.Properties.IconName);
     }
 
     [Fact]
