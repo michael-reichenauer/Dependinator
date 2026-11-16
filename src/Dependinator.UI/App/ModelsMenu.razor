@@ -1,0 +1,181 @@
+@using Dependinator.Core
+@using Dependinator.Core.Shared
+@using Dependinator.UI.Shared.CloudSync
+@inject IModelListService modelListService
+@inject Modeling.Models.IModelMgr modelMgr
+@inject ICanvasService canvasService
+@inject IAppCloudSyncService appCloudSyncService
+@inject IApplicationEvents applicationEvents
+@inject IDialogService dialogService
+@inject ISnackbar snackbar
+@inject IThemeService themeService
+@inject Dependinator.UI.Diagrams.IViewSettingsService viewSettings
+@implements IDisposable
+
+@* The app bar's Models submenu: the models to switch between (ModelMenuItems), the Models
+   dialog, and making, parsing and deleting a model. Inside the app bar's menu, so it re-renders
+   on its own events, not with its parent. *@
+<MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
+    @* A host with a workspace lists its own models first; the dialog holds the others. *@
+    @if (!modelListService.HasWorkspace)
+    {
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                     data-testid="menu-manage-models">
+            Manage Models …
+        </MudMenuItem>
+
+        <MudDivider />
+    }
+
+    <ModelMenuItems />
+
+    @if (modelListService.HasWorkspace)
+    {
+        <MudDivider />
+
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
+                     title="Cloud, design and demo models, and models of other folders."
+                     data-testid="menu-manage-models">
+            Other Models …
+        </MudMenuItem>
+    }
+
+    <MudDivider />
+
+    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="NewModelAsync"
+                 data-testid="menu-new-model">
+        New Model …
+    </MudMenuItem>
+
+    @if (CanParse(modelMgr.ModelPath))
+    {
+        <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Autorenew"
+                     OnClick="canvasService.RefreshAsync" data-testid="menu-parse">
+            Parse
+        </MudMenuItem>
+    }
+
+    <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
+                 OnClick="DeleteModelAsync" data-testid="menu-delete-model">
+        Delete Current Model
+    </MudMenuItem>
+</MudMenu>
+
+@* ShowAsync shows a copy of the box through the dialog service, so it can live in the menu. *@
+<MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Do you want to delete the current model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
+    </MessageContent>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Delete
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="deleteLocalOrRemoteModelBox" Title="Delete Current Model" CancelText="Cancel">
+    <MessageContent>
+        <MudText>Do you want to delete only the local model, or both the local and the remote (cloud) model?</MudText>
+        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
+    </MessageContent>
+    <NoButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Error">
+            Local Only
+        </MudButton>
+    </NoButton>
+    <YesButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
+            Local and Remote
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    MudMessageBox deleteLocalModelBox { get; set; } = null!;
+    MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
+
+    string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
+
+    // Whether the model can be parsed again here: the hosts that can read source, and a model
+    // that comes from source (not a design, cloud or demo model). The app bar's Parse button too.
+    public static bool CanParse(string modelPath) =>
+        (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelPath);
+
+    protected override void OnInitialized()
+    {
+        applicationEvents.UIStateChanged += OnChanged;
+        appCloudSyncService.Changed += OnChanged;
+    }
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnChanged;
+        appCloudSyncService.Changed -= OnChanged;
+    }
+
+    void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    bool HasRemoteCopyOfCurrentModel =>
+        appCloudSyncService.AuthState.IsAuthenticated
+        && appCloudSyncService.CurrentNormalizedModelPath is string currentModelPath
+        && appCloudSyncService.CloudModels.Any(cloudModel =>
+            string.Equals(cloudModel.NormalizedPath, currentModelPath, StringComparison.OrdinalIgnoreCase)
+        );
+
+    async Task DeleteModelAsync()
+    {
+        if (!HasRemoteCopyOfCurrentModel)
+        {
+            if (await deleteLocalModelBox.ShowAsync() != true)
+                return;
+
+            await canvasService.RemoveAsync();
+            return;
+        }
+
+        // Yes = delete local and remote, No = delete local only, null = cancel.
+        bool? choice = await deleteLocalOrRemoteModelBox.ShowAsync();
+        if (choice is null)
+            return;
+
+        if (choice is true && await appCloudSyncService.DeleteCurrentCloudModelAsync() is Error error)
+        {
+            snackbar.Add(error.Message, Severity.Error);
+            return;
+        }
+
+        await canvasService.RemoveAsync();
+    }
+
+    async Task ManageModelsAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await dialogService.ShowAsync<ModelsDialog>((string?)null, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: false, Data: "new" })
+            await NewModelAsync();
+    }
+
+    async Task NewModelAsync()
+    {
+        List<string> existingPaths = modelListService.GetModelItems().Select(item => item.Path).ToList();
+        var parameters = new DialogParameters<NewModelDialog> { { d => d.ExistingPaths, existingPaths } };
+        var dialog = await dialogService.ShowAsync<NewModelDialog>("New Model", parameters);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        string name = (string)result.Data!;
+
+        // A new empty model is only useful with editing enabled; opening an existing
+        // design model later leaves the toggle as the user last set it.
+        await viewSettings.SetEditingAsync(true);
+        await canvasService.LoadAsync(name);
+        snackbar.Add(
+            "Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
+            Severity.Info
+        );
+        applicationEvents.TriggerUIStateChanged();
+    }
+}
