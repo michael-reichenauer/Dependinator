@@ -12,11 +12,14 @@ with the next official release.
 ### New
 
 - The root of each solution, Bicep deployment and script project shows a tile in its language's color with its letters (C#, TS, JS, Bicep), also offered in a new Languages group of the icon picker; a Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon, unless the file or the user picked another icon
+- Alignment guides while dragging nodes in edit mode: a dragged node snaps to the edges and centres of nearby nodes beside it, a thin teal line shows the alignment, and the aligned position is kept on drop instead of snapping to the grid
 
 ### Improved
 
 - TypeScript and JavaScript declarations and members are described by the `//` lines or `/* */` block directly above them too, not only by JSDoc, as C# comments are read; tool directives (eslint, `@ts-`, `#region`) and license headers are left out, and `-> Target: text` comment lines describe dependency lines; a removed comment clears its description on the next refresh
 - The icon dialog's Default row shows the icon the parser gives the node
+- Line labels find a free spot on their line by themselves, the first one from the middle outwards that is clear of nodes, the names under icons and other labels; a label dragged by hand stays where it was put, and **Place automatically** in the label dialog (was **To the middle**) gives it back to the placement
+- In VS Code, Settings has a VS Code section with **Follow the active editor**, **Refresh the diagram when source files change** and the refresh delay; they are VS Code's own settings, so a change in either place shows in the other
 
 ### Fixed
 
