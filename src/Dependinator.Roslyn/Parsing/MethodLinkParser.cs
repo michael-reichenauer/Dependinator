@@ -47,7 +47,7 @@ static class MethodLinkParser
 
     static IEnumerable<Link> ParseBodyLinks(IMethodSymbol member, string fullMethodName, Compilation compilation)
     {
-        foreach (var syntaxRef in member.DeclaringSyntaxReferences)
+        foreach (var syntaxRef in BodyDeclarations(member))
         {
             var syntax = syntaxRef.GetSyntax();
             IEnumerable<SyntaxNode> bodyNodes;
@@ -164,6 +164,7 @@ static class MethodLinkParser
     {
         if (symbol is null)
             yield break;
+        var isOwnGeneratedMember = IsOwnGeneratedMember(symbol, member);
 
         if (symbol is IFieldSymbol fieldSymbol) // Method field
         {
@@ -173,8 +174,8 @@ static class MethodLinkParser
             foreach (var fieldTypeLink in AddTypeLinks(fieldSymbol.Type, member, fullMethodName))
                 yield return fieldTypeLink;
 
-            var fieldItem = LinkParser.Parse(fullMethodName, fieldSymbol);
-            yield return fieldItem;
+            if (!isOwnGeneratedMember)
+                yield return LinkParser.Parse(fullMethodName, fieldSymbol);
         }
 
         if (symbol is IPropertySymbol propertySymbol) // Method property access
@@ -185,8 +186,8 @@ static class MethodLinkParser
             foreach (var propertyTypeLink in AddTypeLinks(propertySymbol.Type, member, fullMethodName))
                 yield return propertyTypeLink;
 
-            var propertyItem = LinkParser.Parse(fullMethodName, propertySymbol);
-            yield return propertyItem;
+            if (!isOwnGeneratedMember)
+                yield return LinkParser.Parse(fullMethodName, propertySymbol);
         }
 
         if (symbol is IMethodSymbol methodSymbol) // Method call to other method
@@ -209,8 +210,8 @@ static class MethodLinkParser
             if (methodSymbol.ContainingType is INamedTypeSymbol methodType && IgnoredTypes.IsIgnored(methodType))
                 yield break;
 
-            var methodItem = LinkParser.Parse(fullMethodName, methodSymbol);
-            yield return methodItem;
+            if (!isOwnGeneratedMember)
+                yield return LinkParser.Parse(fullMethodName, methodSymbol);
 
             foreach (var returnTypeLink in AddTypeLinks(methodSymbol.ReturnType, member, fullMethodName))
                 yield return returnTypeLink;
@@ -222,6 +223,24 @@ static class MethodLinkParser
             }
         }
     }
+
+    // A partial method's body is in its implementation, which the user writes for a hook a
+    // generator declares; a generator's implementation (of a [GeneratedRegex] method) is not
+    // the user's code.
+    static IEnumerable<SyntaxReference> BodyDeclarations(IMethodSymbol member) =>
+        member.PartialImplementationPart is { } implementation
+            ? member.DeclaringSyntaxReferences.Concat(
+                implementation.DeclaringSyntaxReferences.Where(r => !GeneratedCode.IsGeneratorOutput(r.SyntaxTree))
+            )
+            : member.DeclaringSyntaxReferences;
+
+    // A generated member has no node and links to it go to its type (LinkParser), which would be
+    // a link from a member to its own type when the type uses its own generated member. The links
+    // to the types the generated member uses stay.
+    static bool IsOwnGeneratedMember(ISymbol symbol, IMethodSymbol member) =>
+        symbol is IFieldSymbol or IPropertySymbol or IMethodSymbol or IEventSymbol
+        && SymbolEqualityComparer.Default.Equals(symbol.ContainingType?.OriginalDefinition, member.ContainingType)
+        && GeneratedCode.IsGenerated(symbol.OriginalDefinition);
 
     static IEnumerable<SyntaxNode> GetMethodBodyNodes(BaseMethodDeclarationSyntax methodDeclaration)
     {
