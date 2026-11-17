@@ -13,7 +13,7 @@
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.15" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.15" />
-        <PackageVersion Include="MudBlazor" Version="9.13.0" />
+        <PackageVersion Include="MudBlazor" Version="9.14.0" />
         <PackageVersion Include="Scrutor" Version="7.0.0" />
         <PackageVersion Include="ICSharpCode.Decompiler" Version="11.2.0.10050" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.15" />
@@ -39,7 +39,7 @@
              Dependabot (.github/dependabot.yml): bump it deliberately and build. -->
         <PackageVersion Include="Azure.Bicep.Core" Version="0.49.2" />
         <!-- Anthropic's official C# SDK, for asking Claude with the user's own API key (src/Dependinator.Claude). -->
-        <PackageVersion Include="Anthropic" Version="13.8.0" />
+        <PackageVersion Include="Anthropic" Version="13.9.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.12.0" />
