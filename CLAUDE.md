@@ -8,7 +8,7 @@ Dependinator is a tool for visualizing and exploring software dependencies. It h
 
 ## Solution Structure
 
-The active solution is `Dependinator.slnx` targeting `net10.0` (SDK pinned in `global.json`: the .NET 11 SDK, needed for the C# 15 union patterns of `Result`/`Result<T>`; `Directory.Build.props` sets `LangVersion` 15 and makes CS8509 an error). The solution file stays at the repo root; all project folders live under `src/`.
+The active solution is `Dependinator.slnx` targeting `net11.0`, except `src/Api`, `src/Shared` and `tests/Api.Tests`, which stay on `net10.0` until Azure Static Web Apps runs .NET 11 functions (`docs/notes/NET11-UPGRADE.md`). The SDK is pinned in `global.json` (the .NET 11 SDK, also needed for the C# 15 union patterns of `Result`/`Result<T>`); `Directory.Build.props` makes CS8509 an error. The solution file stays at the repo root; all project folders live under `src/`.
 
 **Runtime/host projects:**
 - `src/Dependinator.Web/` — Blazor Server host for local development

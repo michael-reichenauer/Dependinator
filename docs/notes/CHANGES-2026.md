@@ -743,7 +743,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
   types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. On Nov 10, the day .NET 11
   shipped, the build moved to the GA SDK (`LangVersion` 15, no preview). The projects stay on
-  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md).
+  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md). On Nov 18
+  every project but the Api and Shared (and Api.Tests) moved to net11.0, with Blazor 11 and MSBuild
+  18.12; only those two wait for Azure Static Web Apps now, and the union polyfill is gone.
 - **Packages.** MudBlazor 9.5 (May). `./scripts/updatepackages` also handles npm packages (Jun).
 
 ## Testing, CI/CD and releases

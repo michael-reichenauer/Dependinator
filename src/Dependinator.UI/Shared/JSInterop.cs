@@ -103,7 +103,10 @@ public class JSInterop : IJSInterop, IAsyncDisposable
             ? $"./_content/Dependinator.UI/jsInterop.js?v={version}"
             : $"{baseUri}_content/Dependinator.UI/jsInterop.js?v={version}";
 
+        // Not caught: without the module no interop works, so a failed import must surface.
+#pragma warning disable BL0016
         return await jsRuntime.InvokeAsync<IJSObjectReference>(identifier: "import", args: modulePath);
+#pragma warning restore BL0016
     }
 
     static async Task<string?> TryGetBaseUriAsync(IJSRuntime jsRuntime)

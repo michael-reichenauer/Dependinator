@@ -1,9 +1,9 @@
 # .NET 11 / C# 15 follow-up checklist
 
 The `Result` / `Result<T>` union types (`src/Dependinator.Core/Utils/Result.cs`) need the C# 15 compiler,
-so the repo builds with the **.NET 11 SDK** (`global.json`) while every project still targets
-**net10.0**. Phase A, the move from the RC1 SDK to the GA SDK, is done. Phase B, the move of the target
-framework, is optional and waits for Azure Static Web Apps.
+so the repo builds with the **.NET 11 SDK** (`global.json`). Phase A, the move from the RC1 SDK to the
+GA SDK, is done. Phase B1, the move of every project but the Api to **net11.0**, is done. Phase B2, the
+move of `src/Api`, `src/Shared` and `tests/Api.Tests`, waits for Azure Static Web Apps.
 Background: the `result-union-kit.md` notes (kept outside the repo), section 7.
 
 ## Phase A: .NET 11 GA SDK, target framework stays net10.0 (done Nov 10, 2026)
@@ -42,14 +42,35 @@ dotnet test Dependinator.slnx                      # read every "Passed!" line, 
 dotnet publish src/Dependinator.Wasm/Dependinator.Wasm.csproj -c Release -o /tmp/wasm
 dotnet publish src/Dependinator.Lsp/Dependinator.Lsp.csproj -c Release -r linux-x64 --self-contained true -o /tmp/lsp
 dotnet publish src/Api/Api.csproj -c Release -o /tmp/api
-./scripts/gen-demo                                 # runs to completion; "Using MSBuild 10.x" stays until phase B
+./scripts/gen-demo                                 # runs to completion; logs "Using MSBuild 11.x" since phase B1
 ```
 
-## Phase B (optional): move the target framework to net11.0
+## Phase B1: every project but the Api to net11.0 (done Nov 18, 2026)
 
-net10.0 is LTS (supported to November 2028); net11.0 is STS. Move only when every host supports it.
-Gate: the **Azure Functions isolated worker** (`src/Api`) and **Azure Static Web Apps** must support
-.NET 11; the Api project can stay on net10.0 alone if needed (it does not reference `Dependinator.Core`).
+Static Web Apps only uploads the prebuilt Wasm app (`skip_app_build: true` in the deploy steps), so
+only its managed functions, the Api, are limited to the runtimes it lists. `src/Shared` stays with the
+Api; a net11.0 project references the net10.0 Shared without trouble, and Shared has no unions.
+
+- All `*.csproj` but `src/Api`, `src/Shared` and `tests/Api.Tests` target `net11.0`, `src/Dependinator.DemoGen`
+  included.
+- `UnionPolyfill.cs` is deleted: only Core declared it (internal, under `#if !NET11_0_OR_GREATER`), and
+  Core and UI now get `UnionAttribute`/`IUnion` from the base class library. `<LangVersion>15</LangVersion>`
+  is gone from `Directory.Build.props` (C# 15 is the net11.0 default; the Api and Shared use no C# 15).
+- Packages: `Microsoft.AspNetCore.Components.Web`, `.WebAssembly`, `.WebAssembly.DevServer` 10.0.15 →
+  11.0.0 (MudBlazor 9.14's net11.0 target requires 11.0.0, else NU1605); `Microsoft.Build`,
+  `.Framework`, `Microsoft.NET.StringTools` 18.9.6 → 18.12.2 (the MSBuild of the 11.0.100 SDK), and
+  their Dependabot `ignore` entries are deleted. Only net11.0 projects reference them.
+- Blazor 11's analyzers flagged three spots: `AskPanel.razor` (BL0012, `StateHasChanged` after an
+  `EventCallback`) and `JSInterop.cs` (BL0016, the module import, deliberately not caught).
+- `MSBuildLocator` now offers the net11.0 processes the 11.x SDK, so the Roslyn parser, its tests and
+  `./scripts/gen-demo` load MSBuild 11.x.
+- Paths: `languageServer.ts` (dev fallback), `.vscode/launch.json` (Web host), `e2e.yml` (Playwright).
+- CI keeps `dotnet-version: "10.0.x"`, now for the Api, Api.Tests and CSharpier. The devcontainer and
+  `scripts/installdevtools` keep installing both SDKs.
+
+## Phase B2: the Api and Shared to net11.0
+
+net10.0 is LTS; net11.0 is STS. Move when Azure Static Web Apps supports .NET 11 functions.
 
 Status on Nov 10, 2026: Azure Functions announced .NET 11 as generally available for the isolated
 worker, and it requires the new `Azure.Functions.Sdk` project SDK (1.0.1 or later) in `src/Api/Api.csproj`.
@@ -57,41 +78,25 @@ Azure Static Web Apps, which hosts the Api as managed functions, lists `dotnet-i
 newest `apiRuntime`, no 11.0. So the gate is not met: check the Static Web Apps "Supported languages
 and runtimes" page again before starting.
 
-- [ ] Every `*.csproj` under `src/` and `tests/` (18 projects, including `src/Dependinator.DemoGen`
-      which is outside `Dependinator.slnx`): `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
-- [ ] Delete `src/Dependinator.Core/Utils/UnionPolyfill.cs`: the base class library ships
-      `UnionAttribute` and `IUnion` (the file is `#if !NET11_0_OR_GREATER`, so it is already empty on
-      net11.0). Keep the `[Union]`/`IUnion` uses in `Result.cs` and `SyncDownOutcome.cs` as they are.
-- [ ] `Directory.Build.props`: remove `<LangVersion>` (C# 15 is the default). Keep `WarningsAsErrors`
-      with `CS8509`.
+- [ ] `src/Api/Api.csproj`, `src/Shared/Shared.csproj`, `tests/Api.Tests/Api.Tests.csproj`:
+      `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
+- [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
+      require; `Microsoft.Azure.Functions.Worker*` to versions that support net11.0.
+- [ ] **`src/Dependinator.Wasm/staticwebapp.config.json`: fix `platform.apiRuntime`.** It still says
+      `dotnet-isolated:8.0` although the Api has targeted net10.0 for a while (found Nov 18, 2026, left
+      as it is then since cloud sync works). Set it to the 11.0 value (`dotnet-isolated:11.0`), and check
+      on the PR's test site that cloud sync still works.
 - [ ] Workflows: remove the `dotnet-version: "10.0.x"` line in `.github/workflows/unit-tests.yml`,
       `e2e.yml`, `release.yml` and `azure-static-web-apps-polite-island-0e6a6eb03.yml` (the
-      11 SDK carries the 11 runtime). In `e2e.yml` change the Playwright path
-      `tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1` to `net11.0`.
+      11 SDK carries the 11 runtime), unless CSharpier still needs it (below).
 - [ ] `.devcontainer/Dockerfile`: `FROM mcr.microsoft.com/dotnet/sdk:11.0`, delete the
       `dotnet-install.sh` RUN block and its comment. `scripts/installdevtools`: delete the install line
-      and its echo. `.config/dotnet-tools.json`: the csharpier tool has `"rollForward": false`, so its
-      version must support the net11 runtime (or set `rollForward` to `true`).
-- [ ] Hardcoded `net10.0` paths: `src/Dependinator.VsCodeExt/src/languageServer.ts` (two entries, the dev
-      fallback to `bin/{Debug,Release}/net10.0/Dependinator.Lsp.dll`), `.vscode/launch.json`
-      (`Dependinator.Web.dll`), `.vscode/tasks.json` (Api `cwd`), `.vscode/settings.json`
+      and its echo. `scripts/cloud-setup`: drop SDK 10. `.config/dotnet-tools.json`: the csharpier tool
+      has `"rollForward": false`, so its version must support the net11 runtime (or set `rollForward`
+      to `true`).
+- [ ] Hardcoded `net10.0` paths: `.vscode/tasks.json` (Api `cwd`), `.vscode/settings.json`
       (`azureFunctions.deploySubpath`).
-- [ ] `Directory.Packages.props`: `Microsoft.AspNetCore.Components.WebAssembly`,
-      `Microsoft.AspNetCore.Components.WebAssembly.DevServer`, `Microsoft.AspNetCore.Components.Web`
-      10.0.x → 11.0.x; `Microsoft.Azure.Functions.Worker*` to versions that support net11.0;
-      `./scripts/updatepackages -m` for the rest.
-- [ ] `Directory.Packages.props`: `Microsoft.Build`, `.Framework`, `Microsoft.NET.StringTools` 18.9.6 →
-      the 18.10+ line that ships with the 11 SDK, and delete their `ignore` entries in
-      `.github/dependabot.yml`.
-- [ ] `dotnet workload restore Dependinator.slnx` on the new band (a no-op today because
-      `WasmBuildNative` is false; keep the CI step either way).
-- [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
-      require, and set `apiRuntime` in `src/Dependinator.Wasm/staticwebapp.config.json` to the 11.0 value.
-- [ ] Docs: `README.md` (Solution structure and Prerequisites), `CLAUDE.md` line 11,
-      `src/Dependinator.VsCodeExt/DEVELOPMENT.md`; the "net10.0" mentions in `Directory.Build.props` and
-      `UnionPolyfill.cs` comments disappear with those edits.
-- [ ] `src/Dependinator.Core/Parsing/Utils/MSBuildLocatorHelper.cs`: no code change, but note that a
-      net11.0 process is offered the 11.x SDK by `MSBuildLocator` (today it is offered only 10.x), so
-      `./scripts/gen-demo` and the Roslyn tests then log "Using MSBuild 11.x".
-- [ ] Run the Phase A verification list again, plus `./scripts/build-ext` and an install of the VSIX
-      (`./scripts/install-ext`), since the extension publishes the LSP self-contained per RID.
+- [ ] Docs: `README.md`, `CLAUDE.md` line 11, `CONTRIBUTING.md`, `src/Dependinator.VsCodeExt/DEVELOPMENT.md`,
+      `docs/ARCHITECTURE.md` (Stack row, "Two target frameworks" risk).
+- [ ] Run the Phase A verification list again, including the Api publish and `./scripts/e2e -s`
+      (cloud sync).
