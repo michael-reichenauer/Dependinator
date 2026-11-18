@@ -22,7 +22,7 @@
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
         <!-- .devcontainer/post-create.sh and scripts/cloud-setup install the browsers for this version -->
-        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.65.0" />
+        <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.65.1" />
         <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="2.4.0" />
         <PackageVersion Include="ModelContextProtocol.Core" Version="2.4.0" />
         <PackageVersion Include="OmniSharp.Extensions.LanguageServer" Version="0.19.11" />
