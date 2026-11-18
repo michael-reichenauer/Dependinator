@@ -526,7 +526,7 @@ d.note(850, 600, ["**What the API enforces",
                   "· every call needs a valid token; users only reach their own folder",
                   "· at most 10 MB of models per user (CloudSyncOptions)",
                   "· a model's key is its normalized path, the same on every device",
-                  "· tokens count as valid for 180 days after issue: a workaround for",
+                  "· tokens count as valid for 365 days after issue: a workaround for",
                   "  the 7-day limit of Clerk's free tier"], size=11)
 
 d.port("bui.r1", 390, 120); d.port("clerk.l1", 612, 120)

@@ -696,7 +696,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   either to production or to local Azurite.
 - **Clerk sign-in (Mar 21).** All hosts sign in with Clerk, and the API validates Clerk JWTs via
   JWKS. VS Code signs in through a local Clerk page and keeps the token in secrets. Tokens last
-  180 days (Jun), and auto login got faster (Jul).
+  180 days (Jun), and auto login got faster (Jul). Since Nov 18 a VS Code sign-in lasts a year
+  (`MaxTokenAgeDays` 365); the browser hosts stay signed in for the Clerk session lifetime, set
+  in the Clerk Dashboard (the 180 days never applied to them).
 - **"Device sync" (Jul).** Login/Logout became Enable/Disable device sync, the texts say device
   sync, and the user storage key is hashed again.
 - **Model handling.**
