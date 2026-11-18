@@ -19,25 +19,36 @@
 
   string url = AiChatPage.DefaultUrl;
 
+  bool isDisposed;
+
   protected override async Task OnInitializedAsync()
   {
-    aiService.ChoiceChanged += OnChoiceChanged;
+    aiService.ChatUrlChanged += OnChatUrlChanged;
     url = await aiService.GetChatUrlAsync();
   }
 
   // A page set in Settings › AI while the button shows is the one it opens.
-  void OnChoiceChanged() => InvokeAsync(async () =>
+  void OnChatUrlChanged() => _ = InvokeAsync(async () =>
   {
-    url = await aiService.GetChatUrlAsync();
-    StateHasChanged();
+    try
+    {
+      url = await aiService.GetChatUrlAsync();
+      if (!isDisposed)
+        StateHasChanged();
+    }
+    catch (Exception e) when (e.IsNotFatal())
+    {
+      Log.Warn("Could not read the AI chat page", e.Message);
+    }
   });
 
-  public void Dispose() => aiService.ChoiceChanged -= OnChoiceChanged;
-
-  // Read again: another window may have set it since.
-  async Task OpenAsync()
+  public void Dispose()
   {
-    url = await aiService.GetChatUrlAsync();
-    await vsCodeSendService.OpenExternalAsync(url);
+    isDisposed = true;
+    aiService.ChatUrlChanged -= OnChatUrlChanged;
   }
+
+  // The address already read: another await before window.open could cost the click's user
+  // activation, and the browser would block the new tab.
+  Task OpenAsync() => vsCodeSendService.OpenExternalAsync(url);
 }

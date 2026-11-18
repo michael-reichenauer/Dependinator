@@ -158,7 +158,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         ILocator url = Page.GetByTestId("ai-settings-chat-url");
         await Expect(row).ToHaveAttributeAsync("data-value", "");
 
-        await App.FillReliablyAsync(url, "claude.ai/new");
+        await App.FillReliablyAsync(url, "not a page");
         await url.PressAsync("Tab");
         await Expect(row).ToContainTextAsync("A web address");
         await Expect(row).ToHaveAttributeAsync("data-value", "");

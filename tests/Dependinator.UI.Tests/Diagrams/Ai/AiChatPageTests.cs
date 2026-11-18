@@ -34,7 +34,7 @@ public class AiChatPageTests
     {
         var service = Service();
         var changes = 0;
-        service.ChoiceChanged += () => changes++;
+        service.ChatUrlChanged += () => changes++;
 
         Assert.True(await service.SetChatUrlAsync($"  {ProjectUrl} "));
         Assert.Equal(ProjectUrl, stored.AiChatUrl);
@@ -47,8 +47,8 @@ public class AiChatPageTests
     }
 
     [Theory]
-    [InlineData("claude.ai/new")]
     [InlineData("javascript:alert(1)")]
+    [InlineData("chat")]
     [InlineData("file:///etc/passwd")]
     [InlineData("not a url")]
     public async Task SetChatUrlAsync_ShouldNotSaveWhatIsNoWebAddress(string url)
@@ -57,6 +57,16 @@ public class AiChatPageTests
 
         Assert.False(await Service().SetChatUrlAsync(url));
         Assert.Equal(ProjectUrl, stored.AiChatUrl);
+    }
+
+    [Theory]
+    [InlineData("claude.ai/code/project/x", "https://claude.ai/code/project/x")]
+    [InlineData("https://chatgpt.com", "https://chatgpt.com")]
+    [InlineData("https://example.com/chat?q=a%2Bb", "https://example.com/chat?q=a%2Bb")]
+    [InlineData("http://localhost:8080/", "http://localhost:8080/")]
+    public void Normalize_ShouldKeepTheAddressAsWritten_WithHttpsAddedWhenLeftOut(string url, string saved)
+    {
+        Assert.Equal(saved, AiChatPage.Normalize(url));
     }
 
     [Fact]

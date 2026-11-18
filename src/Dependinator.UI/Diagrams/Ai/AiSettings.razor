@@ -220,10 +220,11 @@
     chatUrlError = "";
     if (!await aiService.SetChatUrlAsync(chatUrlText))
     {
-      chatUrlError = "A web address, starting with https://";
+      chatUrlError = "A web address, such as https://claude.ai/new";
       return;
     }
     await ChangedAsync();
+    chatUrlText = chatUrl == AiChatPage.DefaultUrl ? "" : chatUrl;
   }
 
   // The listed models, and the picked one when the list lacks it (no key yet, the list could not

@@ -8,15 +8,27 @@ public static class AiChatPage
 {
     public const string DefaultUrl = "https://claude.ai/new";
 
-    // The page for a stored address: the default for none, or one that is no web address.
-    public static string UrlOf(string? stored) => Parse(stored) is { } uri ? uri.AbsoluteUri : DefaultUrl;
+    // The page for a stored address, as the user wrote it (opened verbatim, not re-encoded): the
+    // default for none, or one that is no web address.
+    public static string UrlOf(string? stored) => Normalize(stored) ?? DefaultUrl;
 
-    // A web address (http or https), trimmed; null for anything else, which is not saved (a
-    // javascript: or file: address must not be opened from a button).
-    public static Uri? Parse(string? url) =>
-        Uri.TryCreate(url?.Trim(), UriKind.Absolute, out var uri)
+    // A web address (http or https) as it is saved: trimmed, with https:// added when the user left
+    // out the scheme, as an address bar shows it ("claude.ai/new"); null for anything else, which
+    // is not saved (a javascript: or file: address must not be opened from a button).
+    public static string? Normalize(string? url)
+    {
+        var text = url?.Trim() ?? "";
+        if (text == "" || text.Any(char.IsWhiteSpace))
+            return null;
+        if (!text.Contains("://") && !text.Contains(':'))
+            text = "https://" + text;
+        return Parse(text) is null ? null : text;
+    }
+
+    static Uri? Parse(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri)
         && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
-        && uri.Host != ""
+        && (uri.Host.Contains('.') || uri.IsLoopback)
             ? uri
             : null;
 
@@ -24,5 +36,7 @@ public static class AiChatPage
     public static string OpenText(string url) => $"Open {SiteName(url)}";
 
     public static string SiteName(string url) =>
-        Parse(url) is { } uri ? (uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host) : "claude.ai";
+        Normalize(url) is { } text && Parse(text) is { } uri
+            ? (uri.Host.StartsWith("www.") ? uri.Host[4..] : uri.Host)
+            : "claude.ai";
 }

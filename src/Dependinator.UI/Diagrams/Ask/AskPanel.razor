@@ -249,7 +249,7 @@
       @if (otherAiNote is not null)
       {
         <div class="dep-ai__suggest-note dep-ask__other-note" data-testid="ask-other-note">@otherAiNote</div>
-        @if (otherAiNote == PromptCopiedNote)
+        @if (isOtherPromptCopied)
         {
           <OpenChatButton TestId="ask-other-open-chat" Class="dep-ask__other-note" />
         }
@@ -578,7 +578,7 @@
     if (modelPath != "")
     {
       entries.Clear();
-      (otherAiNote, otherAiError) = (null, null);
+      (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     }
     modelPath = path;
   }
@@ -616,7 +616,7 @@
     var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context), Context = context };
     entries.Add(entry);
     question = "";
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     isExamplesShown = false;
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
@@ -689,7 +689,7 @@
   void Clear()
   {
     entries.Clear();
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
   }
 
   Task ShowAllAsync(ModelAnswer answer) => navigationService.ShowNodesAsync([.. answer.Links.Values.Select(l => l.Id).Distinct()]);
@@ -700,6 +700,9 @@
   // What came of copying the question's prompt or handing it to Copilot Chat; gone with the next
   // question asked.
   string? otherAiNote;
+
+  // The note is the copied prompt's (its text can change after: the MCP address is published late).
+  bool isOtherPromptCopied;
   string? otherAiError;
 
   bool CanAskInCopilotChat => choice.Providers.Any(p => p.Source is AiSource.Copilot);
@@ -730,6 +733,7 @@
     var prompt = OtherAiPrompt();
     var isCopied = prompt != "" && await clipboardService.CopyAsync(prompt);
     otherAiNote = isCopied ? PromptCopiedNote : null;
+    isOtherPromptCopied = isCopied;
     otherAiError = isCopied ? null : prompt == "" ? NoModelError : "Could not copy to the clipboard.";
   }
 
@@ -742,7 +746,7 @@
     if (isHandingToCopilotChat)
       return;
     isHandingToCopilotChat = true;
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     StateHasChanged();
     var askedPath = modelPath;
     try
