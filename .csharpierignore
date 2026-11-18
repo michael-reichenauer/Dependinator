@@ -1,1 +1,3 @@
 **/_Snapshots/**/*.cs
+# The solution file keeps the layout dotnet sln and Visual Studio write (2-space indent).
+Dependinator.slnx

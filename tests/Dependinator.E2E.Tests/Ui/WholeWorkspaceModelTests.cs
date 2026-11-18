@@ -142,7 +142,8 @@ public class WholeWorkspaceModelTests(ITestOutputHelper output) : E2ETestBase(ou
         await App.OpenSubMenuItemAsync("menu-models", "menu-choose-sources");
         await App.ClickUntilVisibleAsync(App.MenuItem("menu-choose-sources"), Page.GetByTestId("sources-dialog"));
         await Expect(Place("shop")).ToHaveAttributeAsync("data-value", new Regex("^node:"));
-        ILocator topLevel = Page.Locator(".mud-popover-open .mud-list-item").Filter(new() { HasTextRegex = new Regex("^Top level$") });
+        ILocator topLevel = Page.Locator(".mud-popover-open .mud-list-item")
+            .Filter(new() { HasTextRegex = new Regex("^Top level$") });
         await App.ClickUntilVisibleAsync(Place("shop").Locator(".mud-select").First, topLevel);
         await App.ClickUntilGoneAsync(topLevel);
         await Expect(Place("shop")).ToHaveAttributeAsync("data-value", "top");
