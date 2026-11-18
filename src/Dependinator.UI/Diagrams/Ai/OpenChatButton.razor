@@ -1,0 +1,43 @@
+@inject IAiService aiService
+@inject IVsCodeSendService vsCodeSendService
+@implements IDisposable
+
+@* "Open claude.ai" beside a copied prompt: opens the page the user pastes prompts into (Settings ›
+   AI, AiChatPage), claude.ai's new chat unless they set another, such as a Claude Code project.
+   The text names the page's site; the tooltip has the whole address. *@
+<MudButton Size="Size.Small" Variant="@Variant" Color="@(Variant == Variant.Text ? Color.Default : Color.Primary)"
+           EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew" Class="@Class"
+           title="@($"Open {url} in the browser, to paste the prompt into (Settings › AI)")"
+           OnClick="OpenAsync" data-testid="@TestId" data-url="@url">@AiChatPage.OpenText(url)</MudButton>
+
+@code {
+  [Parameter, EditorRequired] public string TestId { get; set; } = "";
+
+  [Parameter] public Variant Variant { get; set; } = Variant.Text;
+
+  [Parameter] public string? Class { get; set; }
+
+  string url = AiChatPage.DefaultUrl;
+
+  protected override async Task OnInitializedAsync()
+  {
+    aiService.ChoiceChanged += OnChoiceChanged;
+    url = await aiService.GetChatUrlAsync();
+  }
+
+  // A page set in Settings › AI while the button shows is the one it opens.
+  void OnChoiceChanged() => InvokeAsync(async () =>
+  {
+    url = await aiService.GetChatUrlAsync();
+    StateHasChanged();
+  });
+
+  public void Dispose() => aiService.ChoiceChanged -= OnChoiceChanged;
+
+  // Read again: another window may have set it since.
+  async Task OpenAsync()
+  {
+    url = await aiService.GetChatUrlAsync();
+    await vsCodeSendService.OpenExternalAsync(url);
+  }
+}

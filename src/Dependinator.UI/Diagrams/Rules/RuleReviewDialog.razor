@@ -65,6 +65,10 @@
     @if (copyNote is not null)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="rule-review-copied">@copyNote</div>
+      @if (isFixPromptCopied)
+      {
+        <OpenChatButton TestId="rule-review-open-chat" />
+      }
     }
     @if (copyError is not null)
     {
@@ -163,6 +167,7 @@
   RuleSuggestion? selected;
   string? prefilledReason;
   string? copyNote;
+  bool isFixPromptCopied;
   string? copyError;
 
   // An AI suggests fixing it: copying the fix prompt is the main action, allowing it the override.
@@ -193,6 +198,7 @@
   {
     selected = answer;
     copyNote = null;
+    isFixPromptCopied = false;
     copyError = null;
     if (string.IsNullOrWhiteSpace(Reason) || Reason == prefilledReason)
       UseReason(ReasonFrom(answer));
@@ -216,6 +222,7 @@
       return;
     var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
     copyNote = isCopied ? FixPromptCopiedNote : null;
+    isFixPromptCopied = isCopied;
     copyError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
@@ -224,6 +231,7 @@
   async Task FixWithCopilotAsync()
   {
     copyNote = null;
+    isFixPromptCopied = false;
     copyError = null;
     var handed = await aiService.FixWithCopilotAsync(FixPromptText());
     copyNote = handed is Error ? null : AiService.CopilotFixNote;

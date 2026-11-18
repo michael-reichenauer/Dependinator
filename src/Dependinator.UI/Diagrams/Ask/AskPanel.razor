@@ -126,6 +126,10 @@
                   @if (entry.ChangeNote is { } changeNote)
                   {
                     <div class="dep-ai__suggest-note" data-testid="ask-change-note">@changeNote</div>
+                    @if (changeNote == ChangePromptCopiedNote)
+                    {
+                      <OpenChatButton TestId="ask-change-open-chat" />
+                    }
                   }
                   @if (entry.ChangeError is { } changeError)
                   {
@@ -245,6 +249,10 @@
       @if (otherAiNote is not null)
       {
         <div class="dep-ai__suggest-note dep-ask__other-note" data-testid="ask-other-note">@otherAiNote</div>
+        @if (otherAiNote == PromptCopiedNote)
+        {
+          <OpenChatButton TestId="ask-other-open-chat" Class="dep-ask__other-note" />
+        }
       }
       @if (otherAiError is not null)
       {
