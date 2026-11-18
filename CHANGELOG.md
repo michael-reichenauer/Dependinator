@@ -20,6 +20,7 @@ with the next official release.
 - The icon dialog's Default row shows the icon the parser gives the node
 - Line labels find a free spot on their line by themselves, the first one from the middle outwards that is clear of nodes, the names under icons and other labels; a label dragged by hand stays where it was put, and **Place automatically** in the label dialog (was **To the middle**) gives it back to the placement
 - In VS Code, Settings has a VS Code section with **Follow the active editor**, **Refresh the diagram when source files change** and the refresh delay; they are VS Code's own settings, so a change in either place shows in the other
+- C# diagrams no longer show code a source generator wrote, such as the helper types behind `[GeneratedRegex]` and the Azure Functions worker's executor; your own partial classes that a generator completes, Razor components and checked-in generated code stay, and a use of a generated member links to its type
 
 ### Fixed
 
