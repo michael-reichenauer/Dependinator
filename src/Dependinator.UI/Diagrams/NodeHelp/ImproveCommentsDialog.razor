@@ -108,7 +108,7 @@
     @if (copyNote is not null)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-copied">@copyNote</div>
-      @if (copyNote == PromptCopiedNote)
+      @if (isPromptCopied && copyNote is not null)
       {
         <OpenChatButton TestId="improve-comments-open-chat" />
       }
@@ -148,7 +148,8 @@
   [Parameter] public bool CanRun { get; set; }
 
   [Parameter, EditorRequired] public Func<bool, CommentsScope> GetScope { get; set; } = null!;
-  [Parameter, EditorRequired] public Func<bool, string> GetPrompt { get; set; } = null!;
+  // The prompt for the scope (isBelow) and who it is for (PromptTarget).
+  [Parameter, EditorRequired] public Func<bool, PromptTarget, string> GetPrompt { get; set; } = null!;
 
   ClaudeCodeFix? fixPanel;
   AiChoice choice = AiChoice.ChatOnly;
@@ -216,6 +217,7 @@
   async Task ImproveWithCopilotAsync()
   {
     copyNote = null;
+    isPromptCopied = false;
     copilotError = null;
     isHandingToCopilot = true;
     var handed = await aiService.FixWithCopilotAsync(Prompt());
@@ -233,19 +235,23 @@
     isBelow = value;
     scope = GetScope(isBelow);
     copyNote = null;
+    isPromptCopied = false;
     copilotError = null;
   }
 
-  string Prompt() => GetPrompt(isBelow);
+  string Prompt() => GetPrompt(isBelow, PromptTarget.LocalAgent);
 
   async Task CopyPromptAsync()
   {
     copilotError = null;
-    copyNote = await clipboardService.CopyAsync(Prompt()) ? PromptCopiedNote : "Could not copy to the clipboard.";
+    var target = await aiService.GetCopyTargetAsync();
+    isPromptCopied = await clipboardService.CopyAsync(GetPrompt(isBelow, target));
+    copyNote = isPromptCopied
+      ? PromptTargets.CopiedNote(target, "the diagram shows the new comments.", "The prompt")
+      : "Could not copy to the clipboard.";
   }
 
-  const string PromptCopiedNote =
-    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code, then re-parse to see the comments.";
+  bool isPromptCopied;
 
   Task ShowPromptAsync() => PromptDialog.ShowAsync(dialogService, Prompt());
 

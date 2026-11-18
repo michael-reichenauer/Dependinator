@@ -32,6 +32,13 @@ public static class AiChatPage
             ? uri
             : null;
 
+    // A Claude Code project or session on the web works in its own copy of the repository.
+    public static bool IsCodingAgent(string url) =>
+        Normalize(url) is { } text
+        && Parse(text) is { } uri
+        && uri.Host == "claude.ai"
+        && (uri.AbsolutePath == "/code" || uri.AbsolutePath.StartsWith("/code/", StringComparison.Ordinal));
+
     // The button's text names the site: "Open claude.ai", "Open chatgpt.com".
     public static string OpenText(string url) => $"Open {SiteName(url)}";
 

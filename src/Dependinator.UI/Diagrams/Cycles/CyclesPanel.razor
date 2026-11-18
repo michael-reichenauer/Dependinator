@@ -269,13 +269,14 @@
   // From the To fix list, where only the planned change is kept.
   async Task CopyFixPromptAsync(Cycle cycle, string plannedChange)
   {
-    var prompt = cyclePromptService.GetFixPrompt(cycle, new CycleSuggestion(false, "", "", "", plannedChange));
+    var (prompt, target) =
+      await cyclePromptService.GetCopiedFixPromptAsync(cycle, new CycleSuggestion(false, "", "", "", plannedChange));
     if (!await clipboardService.CopyAsync(prompt))
     {
       applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
       return;
     }
-    applicationEvents.TriggerInfoReported(AcceptCycleDialog.FixPromptCopiedNote);
+    applicationEvents.TriggerInfoReported(AcceptCycleDialog.FixPromptCopiedNote(target));
   }
 
   async Task ReviewAsync(Cycle cycle)
@@ -291,6 +292,7 @@
         : null;
     var result = await ShowDialogAsync(cycle.ContainerName, Join(cycle.Members.Select(m => m.Name)),
       reason, isEdit: false, suggest, s => cyclePromptService.GetFixPrompt(cycle, s),
+      s => cyclePromptService.GetCopiedFixPromptAsync(cycle, s),
       () => cyclePromptService.GetPromptAsync(cycle), () => cycleService.GetCycles().All(c => c.Key != cycle.Key),
       suggestBreak, accepted => cyclePromptService.GetPromptAsync(cycle, accepted));
     if (result is null)
@@ -314,7 +316,9 @@
 
   async Task<AcceptCycleDialogResult?> ShowDialogAsync(string containerName, string members, string reason, bool isEdit,
     Func<AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggest = null,
-    Func<CycleSuggestion, string>? fixPrompt = null, Func<Task<string>>? copyPrompt = null, Func<bool>? isCycleGone = null,
+    Func<CycleSuggestion, string>? fixPrompt = null,
+    Func<CycleSuggestion, Task<(string Prompt, PromptTarget Target)>>? copyFixPrompt = null,
+    Func<Task<string>>? copyPrompt = null, Func<bool>? isCycleGone = null,
     Func<CycleSuggestion, AiSource, Action<SuggestStep>, Task<Result<CycleSuggestion>>>? suggestBreak = null,
     Func<CycleSuggestion, Task<string>>? copyBreakPrompt = null)
   {
@@ -326,6 +330,7 @@
       { nameof(AcceptCycleDialog.IsEdit), isEdit },
       { nameof(AcceptCycleDialog.Suggest), suggest },
       { nameof(AcceptCycleDialog.FixPrompt), fixPrompt },
+      { nameof(AcceptCycleDialog.CopyFixPrompt), copyFixPrompt },
       { nameof(AcceptCycleDialog.CopyPrompt), copyPrompt },
       { nameof(AcceptCycleDialog.IsCycleGone), isCycleGone },
       { nameof(AcceptCycleDialog.SuggestBreak), suggestBreak },

@@ -66,6 +66,75 @@ static class PromptParts
         }
     }
 
+    // For an agent with its own copy of the repository (PromptTarget.CodingAgent): where the paths
+    // start, that its copy may differ from the user's, and to hand the change back for review.
+    // Also right for an agent in the user's own folder (the claude command in a terminal), which
+    // the switch in Settings › AI covers too: the branch and pull request are for a copy of its own.
+    internal static void AppendCodingAgentSection(StringBuilder text, IModel model)
+    {
+        // Model paths are text, not paths of this machine (a Windows path in the browser app).
+        var name = model.Path.Split('/', '\\').Last();
+        text.AppendLine().AppendLine("## Where you work").AppendLine();
+        text.AppendLine(
+            name == "" ? "- The paths above are relative to the folder of the model in the repository."
+            : ModelPaths.IsWorkspace(model.Path) ? "- The paths above are relative to the repository's root folder."
+            : $"- The paths above are relative to the folder of `{name}` in the repository."
+        );
+        text.AppendLine(
+            "- If you work in a copy of the repository of your own (a cloud session, say), it may lack the user's "
+                + "latest local changes: if the code differs from what this prompt says, follow the code and say so. "
+                + "Make the change on a new branch, commit it, and open a pull request, following the repository's "
+                + "own rules for branches and pull requests (its CLAUDE.md or contributing guide), and link the pull "
+                + "request in your summary."
+        );
+    }
+
+    // For an AI chat that sees only the prompt (PromptTarget.Chat): the code to change, or where it
+    // is when the host cannot read the files (the standalone browser app).
+    internal static void AppendChatSource(
+        StringBuilder text,
+        IModel model,
+        IReadOnlyList<SourceSection> sources,
+        IReadOnlyList<string> files
+    )
+    {
+        if (sources.Count > 0)
+            AppendSource(
+                text,
+                model,
+                sources,
+                "The code to change, as it is now. Long types are cut to the parts that matter here."
+            );
+        // The files the prompt names and shows no code of: unread, left out by a limit, or none read.
+        var shown = sources.SelectMany(s => s.Excerpts).Select(e => DisplayPath(model, e.Path)).ToHashSet();
+        var missing = files.Where(f => !shown.Contains(f)).ToList();
+        if (missing.Count == 0)
+            return;
+        if (sources.Count == 0)
+            text.AppendLine().AppendLine("## Source");
+        text.AppendLine()
+            .AppendLine(
+                (sources.Count == 0 ? "The code is not included" : "Not included here")
+                    + $": {string.Join(", ", missing)}. Ask me for what you need of it."
+            );
+    }
+
+    // The task for an AI chat (PromptTarget.Chat): it cannot see more than the prompt, so it
+    // checks the change against the code shown and gives the edits back to paste in.
+    internal static string ChatEditTask(string change, string after) =>
+        $"""
+            ## Your task
+
+            You see only this prompt, not the rest of the codebase.
+
+            1. Check that the suggested change fits the code above. If it does not, or it needs code that is not shown, say so, and propose another change or ask for the files you need.
+            2. {change}
+            3. Reply with the edits, one per file: the file's path, then each changed type or member in full as it should be after the change, in a code block, so that I can paste it over the old one. Show new files in full.
+            4. List the other places that must change too, such as callers of what you moved or renamed, which you cannot see.
+            5. {after}
+
+            """;
+
     // A path relative to the model's folder (where the .sln is), when inside it.
     internal static string DisplayPath(IModel model, string path) => DisplayPath(model.Path, path);
 

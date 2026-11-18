@@ -470,6 +470,7 @@
       { d => d.TargetName, violation.TargetLongName },
       { d => d.Suggest, suggest },
       { d => d.FixPrompt, s => ruleReviewService.GetFixPrompt(rule, violation, s) },
+      { d => d.CopyFixPrompt, s => ruleReviewService.GetCopiedFixPromptAsync(rule, violation, s) },
       { d => d.CopyPrompt, () => ruleReviewService.GetPromptAsync(rule, violation) },
       { d => d.IsViolationGone, () => !IsViolated(rule, violation) },
     };
@@ -505,12 +506,13 @@
 
   async Task CopyFixPromptAsync(Modeling.Models.ArchitectureRule rule, RuleViolation violation, ToFixReport toFix)
   {
-    if (!await clipboardService.CopyAsync(ruleReviewService.GetFixPrompt(rule, violation, PlannedFix(toFix))))
+    var (prompt, target) = await ruleReviewService.GetCopiedFixPromptAsync(rule, violation, PlannedFix(toFix));
+    if (!await clipboardService.CopyAsync(prompt))
     {
       applicationEvents.TriggerErrorReported("Could not copy the fix prompt to the clipboard.");
       return;
     }
-    applicationEvents.TriggerInfoReported(RuleReviewDialog.FixPromptCopiedNote);
+    applicationEvents.TriggerInfoReported(RuleReviewDialog.FixPromptCopiedNote(target));
   }
 
   // The planned change as a fixing answer, for the fix prompt.

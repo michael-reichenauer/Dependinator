@@ -126,7 +126,7 @@
                   @if (entry.ChangeNote is { } changeNote)
                   {
                     <div class="dep-ai__suggest-note" data-testid="ask-change-note">@changeNote</div>
-                    @if (changeNote == ChangePromptCopiedNote)
+                    @if (entry.IsChangePromptCopied)
                     {
                       <OpenChatButton TestId="ask-change-open-chat" />
                     }
@@ -294,6 +294,7 @@
     public AskContext Context { get; init; } = AskContext.Model;
     public ClaudeCodeFix? FixPanel { get; set; }
     public string? ChangeNote { get; set; }
+    public bool IsChangePromptCopied { get; set; }
     public string? ChangeError { get; set; }
 
     // Claude Code's summary of the change with the nodes it names, as of the model then (Stamp).
@@ -450,15 +451,14 @@
       StateHasChanged();
   }
 
-  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
-  const string ChangePromptCopiedNote =
-    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
-    + "is made, re-parse to see the new structure.";
-
+  // There is no answer to paste back: the AI changes the code (or an AI chat gives the edits to
+  // apply), and a re-parse shows the result.
   async Task CopyChangePromptAsync(Entry entry, ModelAnswer answer)
   {
-    var isCopied = await clipboardService.CopyAsync(ChangePrompt(entry, answer));
-    entry.ChangeNote = isCopied ? ChangePromptCopiedNote : null;
+    var (prompt, target) = await askModelService.GetCopiedChangePromptAsync(answer, entry.Context, entry.AboutNames);
+    var isCopied = await clipboardService.CopyAsync(prompt);
+    entry.ChangeNote = isCopied ? PromptTargets.CopiedNote(target, "the diagram shows the new structure.", "The prompt") : null;
+    entry.IsChangePromptCopied = isCopied;
     entry.ChangeError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
@@ -466,6 +466,7 @@
   async Task ChangeWithCopilotAsync(Entry entry, ModelAnswer answer)
   {
     entry.ChangeNote = null;
+    entry.IsChangePromptCopied = false;
     entry.ChangeError = null;
     var handed = await aiService.FixWithCopilotAsync(ChangePrompt(entry, answer));
     entry.ChangeNote = handed is Error ? null : AiService.CopilotFixNote;

@@ -104,8 +104,16 @@ static class CyclePrompt
 
     // The prompt for an AI that can change the code (Claude Code, say), to break the cycle as
     // Claude's verdict suggested: the cycle, the suggested change with the assumptions to check
-    // first, and where to look. It shows no source, since such an AI reads the code itself.
-    public static string BuildFix(IModel model, Cycle cycle, CycleSuggestion suggestion)
+    // first, and where to look. It shows no source, since such an AI reads the code itself. Copied
+    // for another target: an agent with its own copy of the repository also gets where the paths
+    // start and to open a pull request; an AI chat gets the code (sources) and gives the edits back.
+    public static string BuildFix(
+        IModel model,
+        Cycle cycle,
+        CycleSuggestion suggestion,
+        PromptTarget target = PromptTarget.LocalAgent,
+        IReadOnlyList<SourceSection>? sources = null
+    )
     {
         if (!model.Nodes.TryGetValue(cycle.ContainerId, out var container))
             return "";
@@ -130,6 +138,12 @@ static class CyclePrompt
             .Select(u => DisplayPath(model, u.Span.Path))
             .Distinct()
             .ToList();
+        if (target is PromptTarget.Chat)
+        {
+            AppendChatSource(text, model, sources ?? [], files);
+            text.AppendLine().Append(ChatFixTask);
+            return text.ToString();
+        }
         if (files.Count > 0)
         {
             text.AppendLine().AppendLine("## Where to look").AppendLine();
@@ -138,9 +152,16 @@ static class CyclePrompt
                 text.AppendLine($"- {file}");
         }
 
+        if (target is PromptTarget.CodingAgent)
+            AppendCodingAgentSection(text, model);
         text.AppendLine().Append(FixTaskSection);
         return text.ToString();
     }
+
+    static readonly string ChatFixTask = ChatEditTask(
+        "Work out the smallest change that removes one direction of the cycle, without changing behavior.",
+        "Say how to check it: build, run the tests, and Dependinator shows whether the cycle is gone after its next parse."
+    );
 
     const string FixTaskSection = """
         ## Your task

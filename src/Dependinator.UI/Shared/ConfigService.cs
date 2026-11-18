@@ -89,6 +89,11 @@ class Config
     // The page a copied prompt is pasted into, opened by "Open claude.ai" (AiChatPage, Settings ›
     // AI): a Claude Code project, say; none opens claude.ai's new chat.
     public string? AiChatUrl { get; set; }
+
+    // Whether the AI at that page reads the code itself (a coding agent with its own copy of the
+    // repository), which decides how a copied prompt that changes code is written (PromptTarget);
+    // none: decided by the address (AiChatPage.IsCodingAgent).
+    public bool? AiChatReadsCode { get; set; }
 }
 
 interface IConfigService

@@ -163,9 +163,18 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(row).ToContainTextAsync("A web address");
         await Expect(row).ToHaveAttributeAsync("data-value", "");
 
+        // A web chat sees only the prompt; a Claude Code project reads the code itself, which decides
+        // how a copied fix prompt is written, and the user can say otherwise.
+        ILocator readsCode = Page.GetByTestId("ai-settings-chat-reads-code");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
         await App.FillReliablyAsync(url, ProjectUrl);
         await url.PressAsync("Tab");
         await Expect(row).ToHaveAttributeAsync("data-value", ProjectUrl);
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
         await App.CloseSettingsAsync();
 
         // Copying a prompt offers to open that page.
@@ -185,6 +194,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await url.FillAsync("");
         await url.PressAsync("Tab");
         await Expect(row).ToHaveAttributeAsync("data-value", "");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
         await App.CloseSettingsAsync();
     }
 

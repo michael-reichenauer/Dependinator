@@ -66,8 +66,16 @@ interface IAiService
     // that is none.
     Task<bool> SetChatUrlAsync(string? url);
 
-    // Raised when Settings › AI changes that page.
-    event Action? ChatUrlChanged;
+    // Raised when Settings › AI changes that page, or whether the AI there reads the code.
+    event Action? ChatPageChanged;
+
+    // Whether the AI at that page reads the code itself (Config.AiChatReadsCode, or by the address:
+    // AiChatPage.IsCodingAgent), and the target that makes a copied prompt for (PromptTarget).
+    Task<bool> GetChatReadsCodeAsync();
+
+    Task SetChatReadsCodeAsync(bool readsCode);
+
+    Task<PromptTarget> GetCopyTargetAsync();
 
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
@@ -181,7 +189,7 @@ class AiService(
 
     public async Task<string> GetChatUrlAsync() => AiChatPage.UrlOf((await configService.GetAsync()).AiChatUrl);
 
-    public event Action? ChatUrlChanged;
+    public event Action? ChatPageChanged;
 
     public async Task<bool> SetChatUrlAsync(string? url)
     {
@@ -189,10 +197,35 @@ class AiService(
         var normalized = AiChatPage.Normalize(url);
         if (!isDefault && normalized is null)
             return false;
-        await configService.SetAsync(config => config.AiChatUrl = normalized);
-        ChatUrlChanged?.Invoke();
+        // A new address decides again whether the AI there reads the code.
+        await configService.SetAsync(config =>
+        {
+            if (config.AiChatUrl != normalized)
+                config.AiChatReadsCode = null;
+            config.AiChatUrl = normalized;
+        });
+        ChatPageChanged?.Invoke();
         return true;
     }
+
+    public async Task<bool> GetChatReadsCodeAsync()
+    {
+        var config = await configService.GetAsync();
+        return config.AiChatReadsCode ?? AiChatPage.IsCodingAgent(AiChatPage.UrlOf(config.AiChatUrl));
+    }
+
+    // Saved only when it differs from what the address says.
+    public async Task SetChatReadsCodeAsync(bool readsCode)
+    {
+        await configService.SetAsync(config =>
+            config.AiChatReadsCode =
+                readsCode == AiChatPage.IsCodingAgent(AiChatPage.UrlOf(config.AiChatUrl)) ? null : readsCode
+        );
+        ChatPageChanged?.Invoke();
+    }
+
+    public async Task<PromptTarget> GetCopyTargetAsync() =>
+        await GetChatReadsCodeAsync() ? PromptTarget.CodingAgent : PromptTarget.Chat;
 
     // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI
     // needs it, so it is kept a minute (an empty one a few seconds: Copilot may be starting).

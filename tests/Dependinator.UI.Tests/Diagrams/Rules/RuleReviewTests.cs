@@ -90,6 +90,24 @@ public class RuleReviewTests
     }
 
     [Fact]
+    public void BuildFix_ShouldCarryTheCode_ForAnAiChat()
+    {
+        using var model = modelMgr.UseModel();
+        var (rule, violation) = Setup(model);
+        var suggestion = new RuleSuggestion(true, "UI should not query.", "None", "", "Pass the data in.");
+        var excerpt = new SourceExcerpt("/repo/src/View.cs", 1, ["class View", "{", "}"]);
+
+        var prompt = RulePrompt
+            .BuildFix(model, rule, violation, suggestion, PromptTarget.Chat, [new SourceSection("x", [excerpt])])
+            .ReplaceLineEndings("\n");
+
+        Assert.Contains("```csharp\nclass View\n", prompt);
+        Assert.Contains("Reply with the edits, one per file", prompt);
+        Assert.Contains("Dependinator shows whether the rule is kept after its next parse.", prompt);
+        Assert.DoesNotContain("## Where to look", prompt);
+    }
+
+    [Fact]
     public void Parse_ShouldReadAFixingVerdict_AndDropTheReasonOfAFix()
     {
         var suggestion = AssertOk(
