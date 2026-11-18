@@ -66,6 +66,69 @@ static class PromptParts
         }
     }
 
+    // For an agent with its own copy of the repository (PromptTarget.CodingAgent): where the paths
+    // start, that its copy may differ from the user's, and to hand the change back for review.
+    internal static void AppendCodingAgentSection(StringBuilder text, IModel model)
+    {
+        var folder = model.Path != "" ? Path.GetFileName(model.Path) : "";
+        text.AppendLine().AppendLine("## Working in your copy of the repository").AppendLine();
+        text.AppendLine(
+            folder != ""
+                ? $"- The paths above are relative to the folder of `{folder}` in the repository."
+                : "- The paths above are relative to the repository's folder of the model."
+        );
+        text.AppendLine(
+            "- This was written from the user's own working copy, which may have changes your copy does not. If the "
+                + "code differs from what this prompt says, follow the code and say so."
+        );
+        text.AppendLine(
+            "- Make the change on a new branch, commit it, and open a pull request, following the repository's own "
+                + "rules for branches and pull requests (its CLAUDE.md or contributing guide). Link the pull request "
+                + "in your summary."
+        );
+    }
+
+    // For an AI chat that sees only the prompt (PromptTarget.Chat): the code to change, or where it
+    // is when the host cannot read the files (the standalone browser app).
+    internal static void AppendChatSource(
+        StringBuilder text,
+        IModel model,
+        IReadOnlyList<SourceSection> sources,
+        IReadOnlyList<string> files
+    )
+    {
+        if (sources.Count > 0)
+            AppendSource(
+                text,
+                model,
+                sources,
+                "The code to change, as it is now. Long types are cut to the parts that matter here."
+            );
+        else if (files.Count > 0)
+            text.AppendLine()
+                .AppendLine("## Source")
+                .AppendLine()
+                .AppendLine(
+                    "The code is not included. Ask me for the files you need: " + string.Join(", ", files) + "."
+                );
+    }
+
+    // The task for an AI chat (PromptTarget.Chat): it cannot see more than the prompt, so it
+    // checks the change against the code shown and gives the edits back to paste in.
+    internal static string ChatEditTask(string change, string after) =>
+        $"""
+            ## Your task
+
+            You see only this prompt, not the rest of the codebase.
+
+            1. Check that the suggested change fits the code above. If it does not, or it needs code that is not shown, say so, and propose another change or ask for the files you need.
+            2. {change}
+            3. Reply with the edits, one per file: the file's path, then each changed type or member in full as it should be after the change, in a code block, so that I can paste it over the old one. Show new files in full.
+            4. List the other places that must change too, such as callers of what you moved or renamed, which you cannot see.
+            5. {after}
+
+            """;
+
     // A path relative to the model's folder (where the .sln is), when inside it.
     internal static string DisplayPath(IModel model, string path) => DisplayPath(model.Path, path);
 

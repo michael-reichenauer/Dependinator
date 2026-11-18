@@ -97,6 +97,17 @@
                             Error="@(chatUrlError != "")" ErrorText="@chatUrlError"
                             HelperText="Where Open goes after you copy a prompt, such as a Claude Code project. Empty: claude.ai"
                             Clearable="true" data-testid="ai-settings-chat-url" />
+              @* Decides how a copied prompt that changes code is written (PromptTarget): for a
+                 coding agent with its own copy of the repository, or with the code inside for an
+                 AI chat. On by itself for a Claude Code link. *@
+              <MudSwitch T="bool" Value="chatReadsCode" ValueChanged="SetChatReadsCodeAsync" Color="Color.Primary"
+                         Label="This AI can read the code" Class="mt-1"
+                         data-testid="ai-settings-chat-reads-code" data-checked="@(chatReadsCode ? "true" : "false")" />
+              <div class="dep-ai__route-meta">
+                @(chatReadsCode
+                  ? "A coding agent, such as a Claude Code project: copied fix prompts ask it to make the change on a branch and open a pull request."
+                  : "An AI chat that sees only the prompt: copied fix prompts include the code, and ask for the edits back.")
+              </div>
             </div>
           }
           @if (provider == AiProvider.ClaudeCode && isConfirmingClaudeCode)
@@ -150,6 +161,7 @@
   string chatUrl = AiChatPage.DefaultUrl;
   string chatUrlText = "";
   string chatUrlError = "";
+  bool chatReadsCode;
   bool isDisposed;
 
   // Claude Code's names for the latest model of each kind; it has no command that lists its models.
@@ -211,6 +223,13 @@
     claudeModelId = await aiService.GetClaudeModelIdAsync();
     claudeCodeModel = await aiService.GetClaudeCodeModelAsync();
     chatUrl = await aiService.GetChatUrlAsync();
+    chatReadsCode = await aiService.GetChatReadsCodeAsync();
+  }
+
+  async Task SetChatReadsCodeAsync(bool readsCode)
+  {
+    await aiService.SetChatReadsCodeAsync(readsCode);
+    await ChangedAsync();
   }
 
   // Saved when the field is left: an address that is no web page is not saved, and says so.

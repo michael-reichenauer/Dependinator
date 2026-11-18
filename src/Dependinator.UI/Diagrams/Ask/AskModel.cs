@@ -370,6 +370,14 @@ interface IAskModelService
     // aboutNames names what the question was about as it was asked (the nodes may be gone since).
     string GetChangePrompt(ModelAnswer answer, AskContext context, string aboutNames);
 
+    // The same, copied for the AI set in Settings › AI (IAiService.GetCopyTargetAsync), and where
+    // it goes: an AI chat gets the code of what it is about.
+    Task<(string Prompt, PromptTarget Target)> GetCopiedChangePromptAsync(
+        ModelAnswer answer,
+        AskContext context,
+        string aboutNames
+    );
+
     // The question as a prompt for an AI outside the panel, which uses Dependinator's MCP server
     // when it has it ("Copy prompt", "Ask in Copilot Chat").
     string GetPromptForOtherAi(string question, IReadOnlyList<AskExchange> earlier, AskContext context);
@@ -409,7 +417,8 @@ class AskModelService(
     IPanelService panelService,
     IApplicationEvents applicationEvents,
     IModelQueries modelQueries,
-    ISelectionService selectionService
+    ISelectionService selectionService,
+    IWorkspaceFileService workspaceFileService
 ) : IAskModelService
 {
     public bool IsAvailable => aiService.IsAvailable;
@@ -432,6 +441,27 @@ class AskModelService(
     {
         using var model = modelMgr.UseModel();
         return AskChangePrompt.Build(model, answer, context, aboutNames);
+    }
+
+    public async Task<(string Prompt, PromptTarget Target)> GetCopiedChangePromptAsync(
+        ModelAnswer answer,
+        AskContext context,
+        string aboutNames
+    )
+    {
+        var target = await aiService.GetCopyTargetAsync();
+        IReadOnlyList<SourceRequest> requests = [];
+        if (target is PromptTarget.Chat && PromptParts.CanReadSource)
+        {
+            using var model = modelMgr.UseModel();
+            requests = AskChangePrompt.GetSourceRequests(model, answer, context);
+        }
+
+        // Read without holding the model, since in VS Code the files come from the LSP process.
+        var sources = await PromptParts.ReadSourcesAsync(workspaceFileService, requests);
+
+        using (var model = modelMgr.UseModel())
+            return (AskChangePrompt.Build(model, answer, context, aboutNames, target, sources), target);
     }
 
     public async Task<Result<ModelAnswer>> AskAsync(

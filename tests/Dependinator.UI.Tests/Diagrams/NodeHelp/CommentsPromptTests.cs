@@ -1,5 +1,6 @@
 using Dependinator.Core.Parsing;
 using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Diagrams.NodeHelp;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
@@ -158,5 +159,22 @@ public class CommentsPromptTests
         using var model = modelMgr.UseModel();
 
         Assert.Equal("", CommentsPrompt.Build(model, []));
+    }
+
+    [Fact]
+    public void Build_ShouldAskAnAiChatForTheCommentsToPaste_AndACodingAgentForAPullRequest()
+    {
+        using var model = modelMgr.UseModel();
+        var (app, _) = Setup(model);
+        var targets = CommentsPrompt.Targets([app], isBelow: true);
+
+        var chat = CommentsPrompt.Build(model, targets, PromptTarget.Chat).ReplaceLineEndings("\n");
+        var agent = CommentsPrompt.Build(model, targets, PromptTarget.CodingAgent).ReplaceLineEndings("\n");
+
+        Assert.Contains("You see only this prompt, not the code.", chat);
+        Assert.Contains("Reply with one code block per comment", chat);
+        Assert.DoesNotContain("## When you are done", chat);
+        Assert.Contains("open a pull request", agent);
+        Assert.Contains("## When you are done", agent);
     }
 }

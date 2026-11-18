@@ -158,6 +158,10 @@
   // The prompt that asks an AI that can change the code to remove the dependency as suggested.
   [Parameter] public Func<RuleSuggestion, string>? FixPrompt { get; set; }
 
+  // The same prompt, copied for the AI set in Settings › AI, and where it goes (PromptTarget); the
+  // FixPrompt where none is given.
+  [Parameter] public Func<RuleSuggestion, Task<(string Prompt, PromptTarget Target)>>? CopyFixPrompt { get; set; }
+
   // Whether the dependency is gone from the model, after "Fix with Claude Code".
   [Parameter] public Func<bool>? IsViolationGone { get; set; }
 
@@ -220,8 +224,9 @@
   {
     if (selected is not { } s || FixPrompt is null)
       return;
-    var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
-    copyNote = isCopied ? FixPromptCopiedNote : null;
+    var (prompt, target) = CopyFixPrompt is not null ? await CopyFixPrompt(s) : (FixPrompt(s), PromptTarget.LocalAgent);
+    var isCopied = await clipboardService.CopyAsync(prompt);
+    copyNote = isCopied ? FixPromptCopiedNote(target) : null;
     isFixPromptCopied = isCopied;
     copyError = isCopied ? null : "Could not copy to the clipboard.";
   }
@@ -239,9 +244,8 @@
   }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
-  public const string FixPromptCopiedNote =
-    "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
-    + "is made, re-parse: the dependency should be gone from the rule's list.";
+  public static string FixPromptCopiedNote(PromptTarget target) =>
+    PromptTargets.CopiedNote(target, "the dependency should be gone from the rule's list.");
 
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
   void OnKeyDown(KeyboardEventArgs e)

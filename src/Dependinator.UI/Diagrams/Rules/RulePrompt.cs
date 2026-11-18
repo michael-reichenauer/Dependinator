@@ -69,11 +69,14 @@ static class RulePrompt
     // The prompt for an AI that can change the code (Claude Code, say), to remove the dependency
     // as the review suggested: the rule, the dependency, the suggested change with the assumptions
     // to check first, and where to look. It shows no source, since such an AI reads the code itself.
+    // Copied for another target, as CyclePrompt.BuildFix.
     public static string BuildFix(
         IModel model,
         ArchitectureRule rule,
         RuleViolation violation,
-        RuleSuggestion suggestion
+        RuleSuggestion suggestion,
+        PromptTarget promptTarget = PromptTarget.LocalAgent,
+        IReadOnlyList<SourceSection>? sources = null
     )
     {
         if (Ends(model, violation) is not var (source, target))
@@ -100,6 +103,12 @@ static class RulePrompt
             .Select(u => DisplayPath(model, u.Span.Path))
             .Distinct()
             .ToList();
+        if (promptTarget is PromptTarget.Chat)
+        {
+            AppendChatSource(text, model, sources ?? [], files);
+            text.AppendLine().Append(ChatFixTask);
+            return text.ToString();
+        }
         if (files.Count > 0)
         {
             text.AppendLine().AppendLine("## Where to look").AppendLine();
@@ -108,9 +117,16 @@ static class RulePrompt
                 text.AppendLine($"- {file}");
         }
 
+        if (promptTarget is PromptTarget.CodingAgent)
+            AppendCodingAgentSection(text, model);
         text.AppendLine().Append(FixTaskSection);
         return text.ToString();
     }
+
+    static readonly string ChatFixTask = ChatEditTask(
+        "Work out the smallest change that removes the dependency, without changing behavior and without adding another dependency that breaks the rule.",
+        "Say how to check it: build, run the tests, and Dependinator shows whether the rule is kept after its next parse."
+    );
 
     const string FixTaskSection = """
         ## Your task

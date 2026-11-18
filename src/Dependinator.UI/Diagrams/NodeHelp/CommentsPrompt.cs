@@ -1,5 +1,6 @@
 using System.Text;
 using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
@@ -50,7 +51,14 @@ static class CommentsPrompt
     // A C# project, whose description is an attribute (or its project file's property), not a comment.
     public static bool IsProject(Node node) => node.Type is NodeType.Assembly;
 
-    public static string Build(IModel model, IReadOnlyList<Node> targets)
+    // Copied for another target (PromptTarget): an agent with its own copy of the repository also
+    // gets where the paths start and to open a pull request; an AI chat, which cannot read the code,
+    // writes each comment from what the prompt lists and gives them back to paste in.
+    public static string Build(
+        IModel model,
+        IReadOnlyList<Node> targets,
+        PromptTarget promptTarget = PromptTarget.LocalAgent
+    )
     {
         if (targets.Count == 0)
             return "";
@@ -101,7 +109,12 @@ static class CommentsPrompt
         if (targets.Count > MaxTargets)
             text.AppendLine($"(… and {targets.Count - MaxTargets} more, left for another run.)").AppendLine();
 
-        text.Append(Done);
+        if (promptTarget is PromptTarget.CodingAgent)
+        {
+            AppendCodingAgentSection(text, model);
+            text.AppendLine();
+        }
+        text.Append(promptTarget is PromptTarget.Chat ? ChatDone : Done);
         return text.ToString();
     }
 
@@ -156,6 +169,15 @@ static class CommentsPrompt
         ## When you are done
 
         Summarize what you did: how many comments you added and rewrote, which you left as they were and why, and which need a closer look. List every file you changed.
+
+        """;
+
+    const string ChatDone = """
+        ## Your task
+
+        You see only this prompt, not the code. Write each comment from what is listed for it: its name, where it is, its comment now, and the parts it uses and that use it. Where that is not enough to tell what it is for, say so instead of guessing.
+
+        Reply with one code block per comment, under the name of what it is for and its file and line, written as it goes in the code (`//` lines, a `///` summary, a Bicep `@description`, or the project's attribute), so that I can paste it in. Leave out the ones that are already good, and say which they are.
 
         """;
 

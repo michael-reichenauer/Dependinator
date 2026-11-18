@@ -303,4 +303,44 @@ public class AskModelTests
         model.TryAddNode(node);
         return node;
     }
+
+    [Fact]
+    public void ChangePrompt_ShouldCarryTheCode_ForAnAiChat_AndAskForAPullRequest_FromACodingAgent()
+    {
+        using var model = modelMgr.UseModel();
+        var view = model.Nodes[NodeId.FromName("UI.View")];
+        view.Update(
+            new Dependinator.Core.Parsing.Node(
+                "UI.View",
+                new NodeProperties
+                {
+                    Type = Dependinator.Core.Parsing.NodeType.Type,
+                    FileSpan = new FileSpan("/src/UI/View.cs", 0, 2),
+                }
+            )
+        );
+        var answer = new ModelAnswer("Split `UI.View` in two.", [])
+        {
+            Question = "Should it be split?",
+            Change = "Split View into a view and a model.",
+        };
+        var context = new AskContext([view.Id], false);
+        var requests = AskChangePrompt.GetSourceRequests(model, answer, context);
+        Assert.Equal("/src/UI/View.cs", Assert.Single(Assert.Single(requests).Units).Span.Path);
+        var excerpt = new SourceExcerpt("/src/UI/View.cs", 1, ["class View", "{", "}"]);
+
+        var chat = AskChangePrompt
+            .Build(model, answer, context, "`UI.View`", PromptTarget.Chat, [new SourceSection("x", [excerpt])])
+            .Replace("\r", "");
+        var agent = AskChangePrompt
+            .Build(model, answer, context, "`UI.View`", PromptTarget.CodingAgent)
+            .Replace("\r", "");
+
+        Assert.Contains("```csharp\nclass View\n", chat);
+        Assert.Contains("Reply with the edits, one per file", chat);
+        Assert.DoesNotContain("## Where to look", chat);
+        Assert.Contains("## Where to look", agent);
+        Assert.Contains("open a pull request", agent);
+        Assert.DoesNotContain("## Source", agent);
+    }
 }

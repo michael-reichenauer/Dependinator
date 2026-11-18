@@ -89,6 +89,14 @@ interface IRuleReviewService
     // The text that asks an AI that can change the code to remove the dependency as suggested.
     string GetFixPrompt(ArchitectureRule rule, RuleViolation violation, RuleSuggestion suggestion);
 
+    // The same, copied for the AI set in Settings › AI (IAiService.GetCopyTargetAsync): an agent
+    // with its own copy of the repository, or an AI chat, which gets the code to change.
+    Task<(string Prompt, PromptTarget Target)> GetCopiedFixPromptAsync(
+        ArchitectureRule rule,
+        RuleViolation violation,
+        RuleSuggestion suggestion
+    );
+
     // Asks Claude (or Claude Code) about the dependency, see IAiService.AskAsync.
     Task<Result<RuleSuggestion>> SuggestAsync(
         ArchitectureRule rule,
@@ -124,6 +132,27 @@ class RuleReviewService(IModelMgr modelMgr, IWorkspaceFileService workspaceFileS
     {
         using var model = modelMgr.UseModel();
         return RulePrompt.BuildFix(model, rule, violation, suggestion);
+    }
+
+    public async Task<(string Prompt, PromptTarget Target)> GetCopiedFixPromptAsync(
+        ArchitectureRule rule,
+        RuleViolation violation,
+        RuleSuggestion suggestion
+    )
+    {
+        var target = await aiService.GetCopyTargetAsync();
+        IReadOnlyList<SourceRequest> requests = [];
+        if (target is PromptTarget.Chat && CanReadSource)
+        {
+            using var model = modelMgr.UseModel();
+            requests = RulePrompt.GetSourceRequests(model, violation);
+        }
+
+        // Read without holding the model, since in VS Code the files come from the LSP process.
+        var sources = await ReadSourcesAsync(workspaceFileService, requests);
+
+        using (var model = modelMgr.UseModel())
+            return (RulePrompt.BuildFix(model, rule, violation, suggestion, target, sources), target);
     }
 
     public async Task<Result<RuleSuggestion>> SuggestAsync(

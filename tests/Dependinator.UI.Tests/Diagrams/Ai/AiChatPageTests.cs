@@ -84,4 +84,39 @@ public class AiChatPageTests
     {
         Assert.Equal(text, AiChatPage.OpenText(url));
     }
+
+    [Theory]
+    [InlineData("https://claude.ai/code/project/chan_0123456789abcdef", true)]
+    [InlineData("https://claude.ai/code", true)]
+    [InlineData("https://claude.ai/new", false)]
+    [InlineData("https://claude.ai/codex", false)]
+    [InlineData("https://chatgpt.com", false)]
+    public void IsCodingAgent_ShouldBeTrue_ForAClaudeCodeLink(string url, bool isAgent)
+    {
+        Assert.Equal(isAgent, AiChatPage.IsCodingAgent(url));
+    }
+
+    [Fact]
+    public async Task GetCopyTargetAsync_ShouldFollowTheAddress_UntilTheUserSetsIt_AndANewAddressDecidesAgain()
+    {
+        var service = Service();
+        Assert.Equal(PromptTarget.Chat, await service.GetCopyTargetAsync());
+
+        await service.SetChatUrlAsync(ProjectUrl);
+        Assert.Equal(PromptTarget.CodingAgent, await service.GetCopyTargetAsync());
+
+        await service.SetChatReadsCodeAsync(false);
+        Assert.False(stored.AiChatReadsCode);
+        Assert.Equal(PromptTarget.Chat, await service.GetCopyTargetAsync());
+
+        // Set back to what the address says, nothing is kept.
+        await service.SetChatReadsCodeAsync(true);
+        Assert.Null(stored.AiChatReadsCode);
+
+        await service.SetChatReadsCodeAsync(false);
+        await service.SetChatUrlAsync("https://example.com/agent");
+        Assert.Null(stored.AiChatReadsCode);
+        await service.SetChatReadsCodeAsync(true);
+        Assert.Equal(PromptTarget.CodingAgent, await service.GetCopyTargetAsync());
+    }
 }

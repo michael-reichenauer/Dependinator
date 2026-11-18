@@ -510,6 +510,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   new chat (`AiChatPage`, `Config.AiChatUrl`). Every copied prompt now has that Open button beside
   its note (`OpenChatButton`): the fix prompts, Improve comments, About Node and the Ask panel's.
   The page opens empty: no AI chat takes a prompt in its address.
+  Below it, "This AI can read the code" (on by itself for a claude.ai/code link) decides how a copied
+  prompt that changes code is written (`PromptTarget`): for an AI chat the fix, "Do it" and Improve
+  comments prompts carry the code and ask for the edits back to paste in; for a coding agent with
+  its own copy of the repository they say where the paths start, that its copy may lack local
+  changes, and to make the change on a branch and open a pull request. The routes the app runs
+  itself (Claude Code, Copilot) get the prompts as before.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
