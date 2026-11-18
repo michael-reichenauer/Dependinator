@@ -787,9 +787,10 @@ public sealed class AppPage
     Task<LocatorBoundingBoxResult> WaitForStableNodeBoxAsync(string label, float timeoutSeconds = 15) =>
         WaitForStableBoxAsync(Node(label), $"Node '{label}'", timeoutSeconds);
 
-    // The bounds of an element on the canvas, once it is rendered and holds still. A single
-    // BoundingBoxAsync read returns null while the canvas re-renders (the tile with the element
-    // is being replaced), and the place it reports can be a frame old during a pan or zoom.
+    // The bounds of an element on the canvas, once it is rendered and holds still (place and
+    // size the same in two reads 100 ms apart). A single BoundingBoxAsync read returns null
+    // while the canvas re-renders (the tile with the element is being replaced), and the place
+    // it reports can be a frame old during a pan or zoom.
     public async Task<LocatorBoundingBoxResult> WaitForStableBoxAsync(
         ILocator locator,
         string what,
@@ -803,14 +804,22 @@ public sealed class AppPage
         while (stopwatch.Elapsed < timeout)
         {
             LocatorBoundingBoxResult? box = null;
-            if (await locator.CountAsync() > 0)
-                box = await locator.BoundingBoxAsync();
+            try
+            {
+                // A short timeout: the element can be detached between the count and the read,
+                // and the read would then wait out Playwright's whole action timeout.
+                if (await locator.CountAsync() > 0)
+                    box = await locator.BoundingBoxAsync(new() { Timeout = 1_000 });
+            }
+            catch (Exception e) when (IsRetryable(e)) { }
 
             bool isStable =
                 box is not null
                 && previous is not null
                 && Math.Abs(box.X - previous.X) < 1
-                && Math.Abs(box.Y - previous.Y) < 1;
+                && Math.Abs(box.Y - previous.Y) < 1
+                && Math.Abs(box.Width - previous.Width) < 1
+                && Math.Abs(box.Height - previous.Height) < 1;
             if (isStable)
                 return box!;
 
