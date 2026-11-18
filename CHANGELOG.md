@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.93.463127] - 2026-11-18
+
 ### New
 
 - The root of each solution, Bicep deployment and script project shows a tile in its language's color with its letters (C#, TS, JS, Bicep), also offered in a new Languages group of the icon picker; a Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon, unless the file or the user picked another icon
