@@ -61,10 +61,12 @@ Api; a net11.0 project references the net10.0 Shared without trouble, and Shared
   `.Framework`, `Microsoft.NET.StringTools` 18.9.6 → 18.12.2 (the MSBuild of the 11.0.100 SDK), and
   their Dependabot `ignore` entries are deleted. Only net11.0 projects reference them.
 - Blazor 11's analyzers flagged three spots: `AskPanel.razor` (BL0012, `StateHasChanged` after an
-  `EventCallback`) and `JSInterop.cs` (BL0016, the module import, deliberately not caught).
+  `EventCallback`, which renders the panel itself) and `JSInterop.cs` (BL0016, the module import, now logged and rethrown).
 - `MSBuildLocator` now offers the net11.0 processes the 11.x SDK, so the Roslyn parser, its tests and
   `./scripts/gen-demo` load MSBuild 11.x.
 - Paths: `languageServer.ts` (dev fallback), `.vscode/launch.json` (Web host), `e2e.yml` (Playwright).
+- Still to try by hand: `./scripts/install-ext` (the extension publishes the LSP self-contained per
+  RID, now on .NET 11, and packs the Blazor 11 webview).
 - CI keeps `dotnet-version: "10.0.x"`, now for the Api, Api.Tests and CSharpier. The devcontainer and
   `scripts/installdevtools` keep installing both SDKs.
 

@@ -138,7 +138,7 @@
                   @* Always there (it shows nothing until a run): a run or its report must not go
                      away when Claude Code is turned off meanwhile. *@
                   <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
-                                 OnStateChanged="StateHasChanged" ConfirmTitle="Change the code with Claude Code?"
+                                 OnStateChanged="() => { }" ConfirmTitle="Change the code with Claude Code?"
                                  ConfirmYesText="Change anyway">
                     <SummaryContent Context="summary">@ReportSummary(entry, summary)</SummaryContent>
                   </ClaudeCodeFix>
