@@ -108,6 +108,10 @@
     @if (copyNote is not null)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="improve-comments-copied">@copyNote</div>
+      @if (copyNote == PromptCopiedNote)
+      {
+        <OpenChatButton TestId="improve-comments-open-chat" />
+      }
     }
     @if (copilotError is not null)
     {
@@ -237,10 +241,11 @@
   async Task CopyPromptAsync()
   {
     copilotError = null;
-    copyNote = await clipboardService.CopyAsync(Prompt())
-      ? "The prompt is copied. Paste it into Claude Code, or another AI that can change the code, then re-parse to see the comments."
-      : "Could not copy to the clipboard.";
+    copyNote = await clipboardService.CopyAsync(Prompt()) ? PromptCopiedNote : "Could not copy to the clipboard.";
   }
+
+  const string PromptCopiedNote =
+    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code, then re-parse to see the comments.";
 
   Task ShowPromptAsync() => PromptDialog.ShowAsync(dialogService, Prompt());
 

@@ -85,6 +85,10 @@ class Config
     // The model Claude Code is started with (--model: an alias such as "sonnet", or a model's
     // full name, Settings › AI); none leaves it to Claude Code's own setting.
     public string? ClaudeCodeModel { get; set; }
+
+    // The page a copied prompt is pasted into, opened by "Open claude.ai" (AiChatPage, Settings ›
+    // AI): a Claude Code project, say; none opens claude.ai's new chat.
+    public string? AiChatUrl { get; set; }
 }
 
 interface IConfigService

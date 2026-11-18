@@ -57,6 +57,18 @@ interface IAiService
     // Raised when Settings › AI changes the providers or the default.
     event Action? ChoiceChanged;
 
+    // The page "Open claude.ai" opens to paste a copied prompt into (AiChatPage, Config.AiChatUrl;
+    // OpenChatButton opens it): claude.ai's new chat unless the user set another. Also in the
+    // standalone browser app.
+    Task<string> GetChatUrlAsync();
+
+    // Saves a web address (AiChatPage.Normalize; null or "" for claude.ai again); false for one
+    // that is none.
+    Task<bool> SetChatUrlAsync(string? url);
+
+    // Raised when Settings › AI changes that page.
+    event Action? ChatUrlChanged;
+
     // Asks Claude (with the API key) or Claude Code for an answer matching the schema. Without a
     // key, or with one Claude did not accept, the user is asked for a key first (once per call);
     // onStep tells the dialog what is going on. The prompt is built only once it is needed.
@@ -165,6 +177,21 @@ class AiService(
     {
         await configService.SetAsync(config => config.DefaultAiProvider = source);
         ChoiceChanged?.Invoke();
+    }
+
+    public async Task<string> GetChatUrlAsync() => AiChatPage.UrlOf((await configService.GetAsync()).AiChatUrl);
+
+    public event Action? ChatUrlChanged;
+
+    public async Task<bool> SetChatUrlAsync(string? url)
+    {
+        var isDefault = string.IsNullOrWhiteSpace(url);
+        var normalized = AiChatPage.Normalize(url);
+        if (!isDefault && normalized is null)
+            return false;
+        await configService.SetAsync(config => config.AiChatUrl = normalized);
+        ChatUrlChanged?.Invoke();
+        return true;
     }
 
     // The list crosses the webview, the LSP and the extension, and every dialog that asks an AI

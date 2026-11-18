@@ -505,6 +505,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   up with Dependinator's MCP server when it has it and to say so when it has not
   (`AskModelPrompt.BuildForOtherAi`). In VS Code "Ask in Copilot Chat" hands the same prompt to
   Copilot Chat in agent mode. The answer shows there, not in the panel.
+- **Open prompts where you want (Nov 18).** Settings › AI has "Open prompts in" under Your AI chat:
+  a web address, such as a Claude Code project, that "Open claude.ai" goes to instead of claude.ai's
+  new chat (`AiChatPage`, `Config.AiChatUrl`). Every copied prompt now has that Open button beside
+  its note (`OpenChatButton`): the fix prompts, Improve comments, About Node and the Ask panel's.
+  The page opens empty: no AI chat takes a prompt in its address.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs

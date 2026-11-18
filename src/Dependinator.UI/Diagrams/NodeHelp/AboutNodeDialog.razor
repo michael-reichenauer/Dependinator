@@ -53,6 +53,10 @@
         @if (copyNote is not null)
         {
           <div class="dep-ai__suggest-note" data-testid="about-node-prompt-copied">@copyNote</div>
+          @if (copyNote == PromptCopiedNote)
+          {
+            <OpenChatButton TestId="about-node-open-chat" />
+          }
         }
       </div>
     }
@@ -146,9 +150,11 @@
   async Task CopyPromptAsync()
   {
     copyNote = await clipboardService.CopyAsync(await GetPrompt(NodePrompt.DefaultQuestion))
-      ? "The prompt is copied, with the node, its links and its code. Paste it into your AI chat."
+      ? PromptCopiedNote
       : "Could not copy to the clipboard.";
   }
+
+  const string PromptCopiedNote = "The prompt is copied, with the node, its links and its code. Paste it into your AI chat.";
 
   void Close() => MudDialog.Close();
 

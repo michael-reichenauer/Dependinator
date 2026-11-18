@@ -87,6 +87,18 @@
               </MudSelect>
             </div>
           }
+          @if (provider == AiProvider.Chat)
+          {
+            @* Where "Open claude.ai" goes after a prompt is copied (AiChatPage): a Claude Code
+               project, say, which can then change the code itself. *@
+            <div class="dep-ai-settings__model" data-testid="ai-settings-chat-url-row" data-value="@(chatUrl == AiChatPage.DefaultUrl ? "" : chatUrl)">
+              <MudTextField T="string" Value="@chatUrlText" ValueChanged="SetChatUrlAsync" Margin="Margin.Dense"
+                            Variant="Variant.Outlined" Label="Open prompts in" Placeholder="@AiChatPage.DefaultUrl"
+                            Error="@(chatUrlError != "")" ErrorText="@chatUrlError"
+                            HelperText="Where Open goes after you copy a prompt, such as a Claude Code project. Empty: claude.ai"
+                            Clearable="true" data-testid="ai-settings-chat-url" />
+            </div>
+          }
           @if (provider == AiProvider.ClaudeCode && isConfirmingClaudeCode)
           {
             <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2" data-testid="ai-settings-claude-code-warning">
@@ -135,6 +147,9 @@
   string? claudeCodeModel;
   bool isOtherClaudeCodeModel;
   string claudeCodeModelError = "";
+  string chatUrl = AiChatPage.DefaultUrl;
+  string chatUrlText = "";
+  string chatUrlError = "";
   bool isDisposed;
 
   // Claude Code's names for the latest model of each kind; it has no command that lists its models.
@@ -157,6 +172,7 @@
     // Listed afresh: Copilot may have started or signed in since.
     copilotModels = await aiService.GetCopilotModelsAsync(isFresh: true);
     await RefreshAsync();
+    chatUrlText = chatUrl == AiChatPage.DefaultUrl ? "" : chatUrl;
     isOtherClaudeCodeModel = claudeCodeModel is { } model && ClaudeCodeAliases.All(a => a.Model != model);
     // Claude's models come over the network: the section shows first, the list when it arrives.
     _ = LoadClaudeModelsAsync();
@@ -194,6 +210,21 @@
 
     claudeModelId = await aiService.GetClaudeModelIdAsync();
     claudeCodeModel = await aiService.GetClaudeCodeModelAsync();
+    chatUrl = await aiService.GetChatUrlAsync();
+  }
+
+  // Saved when the field is left: an address that is no web page is not saved, and says so.
+  async Task SetChatUrlAsync(string? text)
+  {
+    chatUrlText = text?.Trim() ?? "";
+    chatUrlError = "";
+    if (!await aiService.SetChatUrlAsync(chatUrlText))
+    {
+      chatUrlError = "A web address, such as https://claude.ai/new";
+      return;
+    }
+    await ChangedAsync();
+    chatUrlText = chatUrl == AiChatPage.DefaultUrl ? "" : chatUrl;
   }
 
   // The listed models, and the picked one when the list lacks it (no key yet, the list could not
