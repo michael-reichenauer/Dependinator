@@ -9,6 +9,15 @@ with the next official release.
 
 ## [Unreleased]
 
+### New
+
+- **Open prompts in** in **Settings › AI**: the page that the Open button beside a copied prompt goes to, such as a Claude Code project, instead of a new chat on claude.ai; every copied prompt now has that button, the fix prompts, **Improve comments**, About Node and the Ask panel's prompts too
+
+### Improved
+
+- Copied change prompts fit the AI they go to: for an AI chat, the fix, "Do it" and **Improve comments** prompts carry the code and ask for the edits back to paste in; for a coding agent (**This AI can read the code** in **Settings › AI**, on by itself for a claude.ai/code address), they say where the paths start and ask it to make the change on a branch and open a pull request
+- VS Code stays signed in to cloud sync for a year after signing in (was 180 days)
+
 ## [v0.93.463127] - 2026-11-18
 
 ### New
@@ -121,7 +130,7 @@ with the next official release.
 ### Improved
 
 - **Suggest rules …** remembers the suggestions you dismissed and the ones it already made, and leaves them out of later answers; an added rule keeps the AI's reason, shown and editable in the Rules panel
-- **Improve Comments** also adds or rewrites a project's description
+- **Improve comments** also adds or rewrites a project's description
 - A selected container lights only the lines leading out of it; the lines inside it stay dimmed until a child is selected or hovered
 
 ## [v0.88.441194] - 2026-11-03
@@ -139,7 +148,7 @@ with the next official release.
 
 - Lines are drawn soft so busy diagrams look calmer: a selected node's lines show at full strength and unrelated ones fade further, while cycle, broken rule and path lines always stay at full strength; **Settings › Diagram › Soft lines** turns it off
 - The dark theme is softer: a very dark grey canvas instead of near black, pastel container frames instead of neon colors (a red frame no longer reads as an error), and off-white text
-- The **Improve Comments** dialog lays out its AI action like the review dialogs, with the AI menu beside it, and its button row only closes it
+- The **Improve comments** dialog lays out its AI action like the review dialogs, with the AI menu beside it, and its button row only closes it
 - The buttons that ask an AI look the same everywhere: a soft tint that is easy to spot without shouting, instead of a filled blue button in one dialog, a grey outline that looked like a dropdown in another, and no frame at all once there was an answer
 - The cycle and rule reviews have one fix button, **Fix with** the default AI that can change code, with a **▾** menu beside it for another AI or **Copy fix prompt**, like the ask button
 
