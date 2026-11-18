@@ -53,7 +53,7 @@ public class WebshopExampleTests
         // Subscription-scope root, resource groups and the modules deployed into them: "scope:
         // rgPlatform" nests the module under its resource group (the scope link is the nesting),
         // while a function scope such as resourceGroup(name) keeps the module at the root.
-        Assert.Equal("Subscription", items.Node(Main).Properties.IconName);
+        Assert.Equal(LanguageIcons.Bicep, items.Node(Main).Properties.IconName);
         Assert.Equal("Resource-Group", items.Node($"{Main}.rgData").Properties.IconName);
         AssertNode(items, $"{Main}.rgPlatform.networking");
         Assert.False(items.HasLink($"{Main}.rgPlatform.networking", $"{Main}.rgPlatform"));

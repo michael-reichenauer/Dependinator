@@ -163,13 +163,7 @@
   ICanvasService canvasService { get; set; } = null!;
 
   [Inject]
-  IConfigService configService { get; set; } = null!;
-
-  [Inject]
-  Modeling.IModelService modelService { get; set; } = null!;
-
-  [Inject]
-  IApplicationEvents applicationEvents { get; set; } = null!;
+  IViewSettingsService viewSettings { get; set; } = null!;
 
   [Inject]
   IScreenService screenService { get; set; } = null!;
@@ -228,16 +222,10 @@
     interactionService.ZoomOutOneLevel();
   }
 
-  // Same as the app bar toggle: persisted, and the tile cache is cleared so edit chrome
-  // appears/disappears right away.
   async Task ToggleEditMode()
   {
     contextMenuService.Close();
-    var isEnabled = !viewOptions.IsEditingEnabled;
-    viewOptions.SetIsEditingEnabled(isEnabled);
-    await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
-    modelService.ClearCache();
-    applicationEvents.TriggerUIStateChanged();
+    await viewSettings.SetEditingAsync(!viewOptions.IsEditingEnabled);
   }
 
   public void Dispose() => contextMenuService.StateChanged -= OnStateChanged;

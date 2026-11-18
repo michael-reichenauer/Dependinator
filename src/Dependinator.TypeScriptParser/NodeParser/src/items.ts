@@ -29,6 +29,7 @@ export interface NodeProperties {
     IsPrivate?: boolean;
     Signature?: string;
     FileSpan?: FileSpan;
+    IconName?: string; // an icon id of the UI's icon library
 }
 
 export interface LinkProperties {
@@ -39,5 +40,6 @@ export interface LinkProperties {
 export interface Item {
     Node?: { Name: string; Properties: NodeProperties };
     Link?: { Source: string; Target: string; Properties: LinkProperties };
+    LineDescription?: { Source: string; Target: string; Text: string };
     Problem?: { Message: string; ErrorCount: number; NodeName?: string; Source?: string };
 }

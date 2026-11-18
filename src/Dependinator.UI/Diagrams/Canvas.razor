@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <AppBar />
+<AppNotifications />
 <Breadcrumb />
 <ModeBanner />
 <NodeToolbar />
@@ -359,6 +360,7 @@
             @((MarkupString)IconDefs)
         </defs>
         @((MarkupString)view.Content)
+        @((MarkupString)view.Guides)
     </svg>
     </div>
 

@@ -1,5 +1,5 @@
 using Dependinator.UI.Diagrams;
-using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Diagrams.Queries;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.VsCode;

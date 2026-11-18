@@ -54,7 +54,15 @@ class SourceParser : ISourceParser
 
         var solutionName = Names.GetSolutionName(solutionPath);
         var description = SolutionDescriptionReader.TryReadFromReadme(solutionPath);
-        var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution, Description = description });
+        var solutionNode = new Node(
+            solutionName,
+            new()
+            {
+                Type = NodeType.Solution,
+                Description = description,
+                IconName = LanguageIcons.CSharp,
+            }
+        );
 
         var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToList();
 

@@ -1,0 +1,187 @@
+using Dependinator.Core.Parsing;
+using Dependinator.UI.Diagrams;
+using Dependinator.UI.Diagrams.Svg;
+using ModelNode = Dependinator.UI.Modeling.Models.Node;
+using Rect = Dependinator.UI.Shared.Types.Rect;
+
+namespace Dependinator.UI.Tests.Diagrams.Svg;
+
+public class NodeSvgTests
+{
+    [Fact]
+    public void IconName_ShouldReturnTypeDefault_WhenNoCustomIcon()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType };
+
+        Assert.Equal("Interface", NodeSvg.IconName(node));
+    }
+
+    [Fact]
+    public void IconName_ShouldReturnCustomIcon_WhenSetToKnownName()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType, CustomIconName = "Solution" };
+
+        Assert.Equal("Solution", NodeSvg.IconName(node));
+    }
+
+    [Fact]
+    public void IconName_ShouldFallBackToTypeDefault_WhenCustomIconIsUnknown()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        var node = new ModelNode("Node", root) { Type = NodeType.InterfaceType, CustomIconName = "DoesNotExist" };
+
+        Assert.Equal("Interface", NodeSvg.IconName(node));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("<summary></summary>")]
+    public void GetDescriptionLines_ShouldReturnEmpty_WhenEmptyOrTagsOnly(string? description)
+    {
+        Assert.Empty(SvgText.GetDescriptionLines(description, 25, 7));
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldStripXmlDocTags_AndCollapseWhitespace()
+    {
+        var lines = SvgText.GetDescriptionLines("<summary>\n  Parses\t code\n</summary>", 25, 7);
+
+        Assert.Equal(["Parses code"], lines);
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldWordWrap_AtMaxWidth()
+    {
+        var lines = SvgText.GetDescriptionLines("Parses the assemblies into a model", 25, 7);
+
+        Assert.Equal(["Parses the assemblies", "into a model"], lines);
+        Assert.All(lines, line => Assert.True(line.Length <= 25));
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldTruncateWithEllipsis_WhenExceedingMaxLines()
+    {
+        // maxLines = 1 (member behaviour): keep the first line, mark it with an ellipsis.
+        var lines = SvgText.GetDescriptionLines("Parses the assemblies into a model", 25, 1);
+
+        Assert.Equal(["Parses the assemblies…"], lines);
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldTrimLastLine_SoEllipsisFitsWidth()
+    {
+        // A single 30-char word hard-breaks; with maxLines = 1 the kept line is trimmed to
+        // leave room for the ellipsis (24 chars + "…" == 25).
+        var lines = SvgText.GetDescriptionLines(new string('x', 30), 25, 1);
+
+        Assert.Single(lines);
+        Assert.Equal(new string('x', 24) + "…", lines[0]);
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldHardBreak_WordsLongerThanWidth()
+    {
+        var lines = SvgText.GetDescriptionLines(new string('x', 30), 25, 7);
+
+        Assert.Equal([new string('x', 25), new string('x', 5)], lines);
+    }
+
+    [Fact]
+    public void GetDescriptionLines_ShouldNotTruncate_WhenWithinMaxLines()
+    {
+        var lines = SvgText.GetDescriptionLines("Parses code", 25, 7);
+
+        Assert.Equal(["Parses code"], lines);
+    }
+
+    [Fact]
+    public void DescriptionWidthForNode_ShouldFloor_WhenNodeIsNarrow()
+    {
+        // A small icon node stays at the readable minimum width.
+        Assert.Equal(25, SvgText.DescriptionWidthForNode(10, 6));
+    }
+
+    [Fact]
+    public void DescriptionWidthForNode_ShouldScaleWithWidth_ForWiderNodes()
+    {
+        // fontSize 6 * 0.45 char width = 2.7 px/char; 135 px => 50 chars.
+        Assert.Equal(50, SvgText.DescriptionWidthForNode(135, 6));
+    }
+
+    [Fact]
+    public void DescriptionWidthForNode_ShouldCap_ForVeryWideNodes()
+    {
+        Assert.Equal(100, SvgText.DescriptionWidthForNode(100000, 6));
+    }
+
+    static ModelNode CreateIconNode()
+    {
+        var root = new ModelNode("", null!) { Type = NodeType.Root };
+        return new ModelNode("Node", root) { Type = NodeType.ClassType, Boundary = new Rect(0, 0, 80, 40) };
+    }
+
+    [Fact]
+    public void GetNodeContainerSvg_ShouldFadeBackground_WhenZoomedIn()
+    {
+        var node = CreateIconNode();
+        node.Boundary = new Rect(0, 0, 100, 100); // The reference size of the zoom thresholds
+
+        var opened = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 2.0, "");
+        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 16.0, "");
+
+        Assert.Contains("fill-opacity=\"1\"", opened);
+        Assert.Contains("fill-opacity=\"0.5\"", deep);
+    }
+
+    [Fact]
+    public void GetNodeContainerSvg_LargeNode_ShouldFadeAtLowerZoom()
+    {
+        // The fade follows the node's on-screen size. A node twice the default size opens at the
+        // same zoom as a default one (2), is fully tinted for a doubling (to zoom 4) and gone at
+        // half the zoom a default node is (32 instead of 64): half faded midway, at 4 x sqrt(8).
+        var node = CreateIconNode();
+        node.Boundary = new Rect(0, 0, 200, 200);
+
+        var deep = NodeSvg.GetNodeContainerSvg(node, new Rect(0, 0, 80, 40), 4 * Math.Sqrt(8), "");
+
+        Assert.Contains("fill-opacity=\"0.5\"", deep);
+    }
+
+    [Fact]
+    public void GetNodeIconSvg_ShouldIncludeLinkHandle_WhenEditingEnabled()
+    {
+        var node = CreateIconNode();
+
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: true);
+
+        Assert.Contains("class=\"linkhandle\"", svg);
+        Assert.Contains($"{node.Id.Value}.lh", svg);
+    }
+
+    [Fact]
+    public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenNodeSelected()
+    {
+        var node = CreateIconNode();
+        node.IsSelected = true;
+
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: true);
+
+        // A selected node shows resize handles at its edge instead (their touch circles would
+        // swallow the handle's presses).
+        Assert.DoesNotContain("linkhandle", svg);
+    }
+
+    [Fact]
+    public void GetNodeIconSvg_ShouldOmitLinkHandle_WhenEditingDisabled()
+    {
+        var node = CreateIconNode();
+
+        var svg = NodeSvg.GetNodeIconSvg(node, new Rect(0, 0, 80, 40), 1.0, isEditing: false);
+
+        Assert.DoesNotContain("linkhandle", svg);
+    }
+}

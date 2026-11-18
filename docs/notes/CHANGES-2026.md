@@ -37,12 +37,13 @@ project works.
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
-  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers.
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers, and a language tile (C#, TS, JS, Bicep) on each source's icon, and alignment guides while dragging nodes.
   A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
   for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
   each inside the source whose folder holds it, or where the user puts it.
   Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
-  Line labels that are quieter and limited in length, and can be dragged along their line.
+  Line labels that are quieter and limited in length, find a free spot on their line by
+  themselves, and can be dragged along it.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -77,6 +78,12 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and
   a button back to the workspace model used last. The browser app, which has no workspace, is
   unchanged.
+- **VS Code settings in the app (Nov 16).** The Settings dialog has a VS Code section, only in
+  VS Code, with Follow the active editor, Refresh the diagram when source files change and the
+  refresh delay. It reads and writes VS Code's own settings through the extension
+  (`VsCodeSettingsService`, `vsCodeSettings.ts`), so there is one value: Settings Sync and
+  workspace settings keep working, and a change made in VS Code's Settings shows in the open
+  dialog. The settings stay in VS Code's Settings too, which now point to the dialog.
 
 ## Parsing
 
@@ -141,6 +148,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   unless Settings › Include test files is on. Go to code, hover cards (declarations read like
   TypeScript), the AI prompts and Improve Comments know files and functions. The helper approach
   is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`.
+- **TypeScript comments (Nov 15).** Declarations and members are described by the plain `//`
+  lines or `/* */` block directly above them too, not only by JSDoc, as C# reads comments
+  (constructors and CommonJS exports included; tool directives and license headers left out),
+  `-> Target: text` lines describe dependency lines, and a removed comment clears the
+  description on a refresh.
 - **.slnx solutions (Nov 15).** The XML solution format is parsed like an `.sln` (the bundled
   Roslyn reads it; Dependinator's own solution gives the same model in both formats) and found in
   the workspace, the Models dialog and the VS Code file watcher. Of an `.sln` with an `.slnx` of
@@ -171,6 +183,21 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   solution file). The user can show a source elsewhere: "Shown in" in the sources dialog, or
   "Show Inside" in a source's node menu (top level, or any other source or one of its
   projects; Nov 15). Design and what is left in `WORKSPACE-MODEL.md`.
+- **The language on a source's icon (Nov 15).** Every source's root had the same four-square
+  solution icon, so a TypeScript project in the workspace model looked like another solution.
+  Each parser now gives its root a tile in the language's color with its letters: C# (violet,
+  as before), TS, JS and Bicep, with Go ready for its parser (Michael's pick of four looks). A
+  Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon; a
+  `metadata icon` in the file still wins, as does an icon the user picks. The tiles are a new
+  Languages group in the icon picker, made by `scripts/language-icons/generate.py`.
+- **No generated code in C# models (Nov 16).** Code a source generator wrote is left out: the
+  `System.Text.RegularExpressions.Generated` types of `[GeneratedRegex]` (103 nodes in
+  Dependinator.UI) and the Functions worker's executor and metadata provider in Api. A type or
+  member is left out when each of its declarations is a generator's output and carries
+  `[GeneratedCode]` or `[CompilerGenerated]`, so the user's own `[GeneratedRegex]` method, a
+  partial class a generator completes, Razor components and checked-in generated code (resx,
+  API clients) all stay. A use of a generated member of the user's type links to the type, and
+  the body the user writes for a generator's partial method now has its links. Michael's question, no setting to bring it back for now.
 
 ## Viewing, navigation and analysis
 
@@ -617,6 +644,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   hovering it shows the line's card, a click selects the line, a double-click in edit mode
   edits it, and an edit-mode drag slides it along the line (saved as a fraction of the line's
   length, so it follows when nodes move; undo, and "To the middle" in the label dialog).
+- **Line labels placed automatically (Nov 16).** A label the user has not dragged no longer
+  sits at the middle of its line whatever is there: it takes the first spot along the line,
+  from the middle outwards, that is clear of the container's nodes (with the name and
+  description under an icon) and of the other labels, or else the one that overlaps them the
+  least (`LabelPlacement`). Dragged labels stay put and the others make room for them. The
+  place is worked out when the container is drawn, the same in every tile and at every zoom,
+  and is not saved; "Place automatically" in the label dialog replaces "To the middle".
 - **Calmer node and line toolbars (Nov 13).** The toolbars over a selected node, note or line
   are one white (or dark grey) card with grey icons that turn purple under the pointer, thin
   dividers between groups of buttons instead of a purple line between every button, and
@@ -638,6 +672,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   edge), not its left edge. "Re-route line" on the line toolbar and "Reset Lines" in the node
   menu (beside Reset Children Layout) route one line or all lines between a node's children
   again around the nodes where they stand, hand-set bends included, keeping the nodes in place.
+- **Smart alignment guides (Nov 16).** While a node is dragged, it snaps to a nearby sibling
+  when one of its edges or its centre comes within a few pixels of the same edge or centre of
+  that sibling (or an edge of a node beside or above it), and a thin teal guide joins the
+  aligned nodes; at most one guide per axis, only siblings within reach. An aligned axis keeps
+  the alignment on drop instead of snapping to the 20-unit grid, so nodes of different sizes
+  line up by their centres; the other axis still snaps to the grid. A group or a zone moves
+  with the node under the pointer. A finger gets a wider snap than the mouse.
 - **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
   the edge of the view where the line leaves names the node at that end; a click goes there
   (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.

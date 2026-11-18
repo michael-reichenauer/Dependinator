@@ -42,6 +42,7 @@ static class Compiler
         // MSBuildWorkspace.GetCompilationAsync runs the source generators it can load, but not
         // the Razor generator, so .razor components would be missing. Run that one manually.
         compilation = RunUnloadableSourceGenerators(project, compilation);
+        GeneratedCode.MarkGeneratorOutput(compilation, project.Documents.Select(d => d.FilePath));
 
         // Compile errors (e.g. missing references) can cause missing nodes/links in the model,
         // so they are reported (as a parse problem, see SourceParser). The parse still proceeds
@@ -88,7 +89,7 @@ static class Compiler
         return models.GetOrAdd(syntaxTree, tree => compilation.GetSemanticModel(tree));
     }
 
-    static IEnumerable<INamedTypeSymbol> GetAllNamedTypes(INamespaceSymbol ns)
+    internal static IEnumerable<INamedTypeSymbol> GetAllNamedTypes(INamespaceSymbol ns)
     {
         foreach (var member in ns.GetMembers())
         {

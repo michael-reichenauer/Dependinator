@@ -13,4 +13,15 @@ public sealed class E2EFactAttribute : FactAttribute
             Skip = "E2E tests are skipped unless E2E=1. Run them via ./scripts/e2e";
         }
     }
+
+    // Skips the test on WebKit, with this reason (the test then shows as skipped there, not passed).
+    public string? SkipOnWebKit
+    {
+        get => null;
+        set
+        {
+            if (value is not null && Skip is null && Environment.GetEnvironmentVariable("BROWSER") == "webkit")
+                Skip = $"Not on WebKit: {value}";
+        }
+    }
 }

@@ -31,6 +31,9 @@ export interface ParseOptions {
 }
 
 const TestFile = /\.(test|spec|e2e)\.[cm]?[jt]sx?$/i;
+// The root's icon per language: ids of the UI's icon library, as in Core's LanguageIcons.
+const LanguageIcons = { TypeScript: "TypeScript", JavaScript: "JavaScript" } as const;
+
 const TestFolders = new Set(["test", "tests", "__tests__", "__mocks__", "e2e"]);
 
 interface OwnFile {
@@ -101,6 +104,8 @@ export class ModelBuilder {
         this.addNode(this.root, {
             Type: "Solution",
             Description: this.project.packageDescription ?? `${this.languageName()} project`,
+            // The language's tile, as every parser gives its root (Core's LanguageIcons)
+            IconName: LanguageIcons[this.languageName()],
             // The file that defines the project, to open from the node
             FileSpan: { Path: path.normalize(this.project.entryPath), StartLine: 0, EndLine: 0 },
         });
@@ -115,11 +120,33 @@ export class ModelBuilder {
         }
         this.addProblems();
 
+        const nodes: Item[] = [];
+        const lineDescriptions: Item[] = [];
+        const nodeNames = this.nodeNamesAsShown();
+        for (const [Name, Properties] of this.nodes) {
+            const { description, lines } = commentDescriptions(Properties.Description);
+            nodes.push({ Node: { Name, Properties: withoutStaleDescription({ ...Properties, Description: description }) } });
+            for (const { target, text } of lines) {
+                const Target = lineTarget(Name, target, nodeNames);
+                lineDescriptions.push({ LineDescription: { Source: Name, Target, Text: text } });
+            }
+        }
         return [
-            ...[...this.nodes].map(([Name, Properties]) => ({ Node: { Name, Properties } })),
+            ...nodes,
             ...[...this.links.values()].map(Link => ({ Link })),
+            ...lineDescriptions,
             ...this.problems,
         ];
+    }
+
+    // Each node's name by its name as shown ("shop.src.store.ts.Store" for
+    // "shop.src.store*ts.Store"), for the targets of "-> Target: text" comment lines
+    nodeNamesAsShown(): Map<string, string> {
+        const shown = new Map<string, string>();
+        for (const name of this.nodes.keys()) {
+            shown.set(asShown(name), name);
+        }
+        return shown;
     }
 
     // --- Files ---------------------------------------------------------------------------
@@ -158,7 +185,7 @@ export class ModelBuilder {
         return [...owners.values()].sort((a, b) => a.file.fileName.localeCompare(b.file.fileName));
     }
 
-    languageName(): string {
+    languageName(): "TypeScript" | "JavaScript" {
         return this.ownFiles.some(f => /\.[cm]?tsx?$/i.test(f.file.fileName)) ? "TypeScript" : "JavaScript";
     }
 
@@ -488,12 +515,27 @@ export class ModelBuilder {
         return name ?? (this.project.parts.length > 1 ? this.declarationPlaces.get(placeOf(file.fileName, file)) : undefined);
     }
 
-    // The declaration's JSDoc comment text
+    // The declaration's comment: its JSDoc (as the compiler reads it, tags left out), or else the
+    // plain comment lines directly above it, the way the C# parser reads a declaration's comment.
     documentation(declaration: ts.Node): string | undefined {
         const name = (declaration as ts.NamedDeclaration).name;
         const symbol = name ? this.checker.getSymbolAtLocation(name) : undefined;
         const text = symbol ? ts.displayPartsToString(symbol.getDocumentationComment(this.checker)).trim() : "";
-        return text || undefined;
+        if (text) {
+            return text;
+        }
+        // A constructor, "export default ..." or "exports.x = ..." has no name to ask the checker
+        const host = commentHost(declaration);
+        // The nearest JSDoc with text (one with only tags can follow it)
+        const jsDoc =
+            ts
+                .getJSDocCommentsAndTags(host)
+                .filter(ts.isJSDoc)
+                .map(doc => (ts.getTextOfJSDocComment(doc.comment) ?? "").trim())
+                .filter(comment => comment !== "")
+                .pop() ?? "";
+        // A variable's own comment ("const a = 1, // ... b = 2") before its statement's
+        return jsDoc || (host !== declaration ? leadingComment(declaration) : undefined) || leadingComment(host);
     }
 
     // --- Pass 2: links --------------------------------------------------------------------
@@ -898,6 +940,16 @@ export class ModelBuilder {
 
 // --- Helpers ------------------------------------------------------------------------------
 
+// NoValue (Dependinator.Core's Parsing.NoValue.String) for a file or declaration without a
+// comment: null would keep the description of an earlier parse after its comment was removed.
+const NoValue = "\u0000";
+
+function withoutStaleDescription(properties: NodeProperties): NodeProperties {
+    return properties.FileSpan && properties.Type !== "Solution" && !properties.Description
+        ? { ...properties, Description: NoValue }
+        : properties;
+}
+
 // A declaration's place in the source: the same in every program that has the file.
 function placeOf(fileName: string, node: ts.Node): string {
     return `${fileName}\n${node.pos}\n${node.end}\n${node.kind}`;
@@ -1023,39 +1075,162 @@ function externalType(declaration: ts.Node): NodeType {
     return "Type";
 }
 
-// The comment at the top of the file, when it describes the file: the first block of comments,
-// followed by an empty line or by the imports (so it is not the first declaration's own), and
-// no license header or tool directive.
+// The comment at the top of the file, when it describes the file: the first block of comments
+// (comments up to an empty line) that is no license and not only tool directives, followed by an
+// empty line or by the imports (a block right above the first declaration is that declaration's).
 function fileDescription(file: ts.SourceFile): string | undefined {
     const text = file.text;
     const ranges = ts.getLeadingCommentRanges(text, ts.getShebang(text)?.length ?? 0) ?? [];
-    if (ranges.length === 0) {
-        return undefined;
-    }
-
-    const lines = commentLines(text.slice(ranges[0].pos, ranges[0].end));
-    let end = ranges[0].end;
-    for (const range of ranges.slice(1)) {
-        if (HasEmptyLine.test(text.slice(end, range.pos))) {
-            break;
-        }
-        lines.push(...commentLines(text.slice(range.pos, range.end)));
-        end = range.end;
-    }
-
     const firstStatement = file.statements[0];
-    const isFilesOwn =
-        !firstStatement ||
-        ts.isImportDeclaration(firstStatement) ||
-        HasEmptyLine.test(text.slice(end, firstStatement.getStart(file)));
-    const description = lines.join("\n").trim();
-    if (!isFilesOwn || !description || /copyright|license|eslint-|@ts-|prettier-ignore/i.test(description)) {
-        return undefined;
+    let index = 0;
+    while (index < ranges.length) {
+        const comments = [text.slice(ranges[index].pos, ranges[index].end)];
+        let end = ranges[index].end;
+        for (index++; index < ranges.length && !HasEmptyLine.test(text.slice(end, ranges[index].pos)); index++) {
+            comments.push(text.slice(ranges[index].pos, ranges[index].end));
+            end = ranges[index].end;
+        }
+        const isLast = index === ranges.length;
+        if (
+            isLast &&
+            firstStatement &&
+            !ts.isImportDeclaration(firstStatement) &&
+            !HasEmptyLine.test(text.slice(end, firstStatement.getStart(file)))
+        ) {
+            return undefined;
+        }
+        const description = commentText(comments.filter(comment => !IsLicense.test(comment)));
+        if (description) {
+            return description;
+        }
     }
-    return description;
+    return undefined;
 }
 
 const HasEmptyLine = /\n[ \t]*\r?\n/;
+
+// A comment that is a tool's directive or a marker, which describes nothing: eslint-disable,
+// @ts-ignore, prettier-ignore, /// <reference ... />, #region ... In a /* */ comment also
+// ESLint's /* global describe, it */ and /* exported main */.
+const ToolDirective =
+    /^(eslint-[a-z]|eslint\s|oxlint-|deno-lint-|noinspection\s|@ts-|prettier-ignore|istanbul ignore|c8 ignore|biome-ignore|tslint:|jshint\s|#(end)?region\b|<reference\s|<amd-|@jest-environment|@vitest-environment|@flow\b)/;
+const BlockDirective = /^(global|exported)\s+[\w$]+\s*(,|:|$)/;
+
+// A license or copyright header, which is not a description either
+const IsLicense = /copyright|©|\(c\) \d{4}|spdx-license|licen[sc]ed under|mit license|apache license/i;
+
+// The text of a block of comments, without the comments that are tool directives
+function commentText(comments: string[]): string {
+    return comments
+        .filter(comment => {
+            const first = commentLines(comment).find(line => line.trim() !== "")?.trim() ?? "";
+            return !ToolDirective.test(first) && !(comment.startsWith("/*") && BlockDirective.test(first));
+        })
+        .flatMap(commentLines)
+        .join("\n")
+        .trim();
+}
+
+// The node whose leading comments are a declaration's: a variable's statement for its first
+// variable ("// Port to listen on" above "const port = 80, host = ..." or "const { port, host }
+// = ..."), and the statement of a CommonJS export assignment.
+function commentHost(declaration: ts.Node): ts.Node {
+    let node = declaration;
+    // The first name bound by "const { a, b } = ...", "const [, a, b] = ..." stands for the whole
+    while (
+        ts.isBindingElement(node) &&
+        (ts.isObjectBindingPattern(node.parent) || ts.isArrayBindingPattern(node.parent)) &&
+        node.parent.elements.find(element => !ts.isOmittedExpression(element)) === node
+    ) {
+        node = node.parent.parent;
+    }
+    const parent = node.parent;
+    if (
+        ts.isVariableDeclaration(node) &&
+        ts.isVariableDeclarationList(parent) &&
+        parent.declarations[0] === node &&
+        ts.isVariableStatement(parent.parent)
+    ) {
+        return parent.parent;
+    }
+    if (ts.isBinaryExpression(node) && ts.isExpressionStatement(parent)) {
+        return parent;
+    }
+    return declaration;
+}
+
+// The plain comment directly above a node: the block of // lines and /* */ comments that ends on
+// the line above it, up to an empty line. A comment with an empty line below it is no
+// declaration's (at the top of a file it is the file's, see fileDescription), JSDoc is the
+// compiler's (documentation: one that comes here has only tags), and tool directives and a
+// license header at the top of the file are left out.
+function leadingComment(node: ts.Node): string | undefined {
+    const file = node.getSourceFile();
+    const text = file.text;
+    const ranges = ts.getLeadingCommentRanges(text, Math.max(node.getFullStart(), ts.getShebang(text)?.length ?? 0)) ?? [];
+    const isFileStart = node === file.statements[0];
+    const comments: string[] = [];
+    let end = node.getStart(file);
+    for (let index = ranges.length - 1; index >= 0; index--) {
+        const range = ranges[index];
+        if (HasEmptyLine.test(text.slice(range.end, end))) {
+            break;
+        }
+        const comment = text.slice(range.pos, range.end);
+        if (!comment.startsWith("/**") && !(isFileStart && index === 0 && IsLicense.test(comment))) {
+            comments.unshift(comment);
+        }
+        end = range.pos;
+    }
+    return commentText(comments) || undefined;
+}
+
+// A node's name as shown: a literal dot, $ and # as they are written (see names.encodePart)
+function asShown(name: string): string {
+    return name.replace(/\*/g, ".").replace(/＄/g, "$").replace(/＃/g, "#");
+}
+
+// The node a "-> Target" comment line of the source node names: Target as shown, in full or
+// below one of the source's ancestors (the nearest first), so "store.ts.Store" or
+// "user.service.ts.UserService" find their nodes. Else the target as written, which
+// Dependinator.Core resolves the same way by node names.
+function lineTarget(source: string, target: string, nodeNames: Map<string, string>): string {
+    const levels = source.split(".");
+    for (let count = levels.length - 1; count >= 1; count--) {
+        const name = nodeNames.get(`${asShown(levels.slice(0, count).join("."))}.${target}`);
+        if (name) {
+            return name;
+        }
+    }
+    return nodeNames.get(target) ?? target;
+}
+
+// Splits "-> Target: text" lines off a comment, as Dependinator.Core's CommentDescriptions does
+// for C# (keep the two alike): each describes the diagram line to Target, and lines after it
+// continue its text. The lines before the first arrow are the node's description.
+function commentDescriptions(comment: string | undefined): {
+    description: string | undefined;
+    lines: { target: string; text: string }[];
+} {
+    if (!comment || !comment.includes("->")) {
+        return { description: comment, lines: [] };
+    }
+    const descriptionLines: string[] = [];
+    const lines: { target: string; text: string }[] = [];
+    for (const line of comment.split("\n").map(line => line.trim())) {
+        const arrow = /^->\s*([^\s:]+)\s*:?\s*(.*)$/.exec(line);
+        if (arrow) {
+            lines.push({ target: arrow[1], text: arrow[2].trim() });
+        } else if (lines.length > 0) {
+            const last = lines[lines.length - 1];
+            last.text = last.text === "" ? line : `${last.text} ${line}`;
+        } else {
+            descriptionLines.push(line);
+        }
+    }
+    const description = descriptionLines.join("\n").trim();
+    return { description: description || undefined, lines };
+}
 
 function commentLines(comment: string): string[] {
     if (comment.startsWith("//")) {

@@ -1,7 +1,9 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Cycles;
+using Dependinator.UI.Diagrams.HiddenNodes;
 using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Navigation;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Modeling;
@@ -232,7 +234,12 @@ class SvgService : ISvgService
         // the current state.
         var flags = Flags with { IsEditing = false, DimUnrelated = false, SelectedCycleLines = null };
         var context = new RenderContext(offset, 1 / zoom, bounds, Pos.None, flags);
-        return NodeTreeSvg.RenderRootContent(model, zoom, context);
+        var svg = NodeTreeSvg.RenderRootContent(model, zoom, context);
+        // The export synced the lines and placed the labels for its own zoom: back to the shown
+        // tile, which a label drag and hit testing read.
+        if (syncedKey != TileKey.Empty)
+            SyncLines(model, syncedKey, LineEmphasis.FindSelection(model));
+        return svg;
     }
 
     // The canvas area (canvas units) a tile renders: its rect with the margin, in level
@@ -272,6 +279,12 @@ class SvgService : ISvgService
                 Area = GetCanvasArea(tileKey.GetTileRect(), tileKey.GetTileRectWithMargin(), tileZoom),
             };
         RepLineService.Sync(model, tileZoom, reveal);
+        LabelPlacement.Place(
+            model.Lines.Values,
+            viewOptions.RevealHiddenNodes,
+            viewOptions.LineFilter,
+            viewOptions.RowFilter
+        );
         syncedKey = tileKey;
         return reveal;
     }

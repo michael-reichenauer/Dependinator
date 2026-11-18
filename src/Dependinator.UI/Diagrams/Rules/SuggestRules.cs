@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Dependinator.Core.ModelQueries;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Ai;
+using Dependinator.UI.Diagrams.Queries;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using MudBlazor;

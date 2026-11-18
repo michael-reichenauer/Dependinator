@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -22,6 +23,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     const string DragTargetIcon = "Scheduler";
     const string DragCancelIcon = "Analytics";
     const string DragCanvasIcon = "Security";
+    const string AlignAnchorIcon = "Network";
+    const string AlignMovedIcon = "Communication";
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
@@ -46,6 +49,47 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Expect(App.NodeLabel(MenuNodeIcon)).ToBeVisibleAsync();
     }
+
+    [E2EFact(SkipOnWebKit = "headless WebKit sends movementX/Y 0, so a mouse drag does not move a node")]
+    public async Task DraggedNode_ShouldShowAGuideAndSnap_WhenItLinesUpWithASibling()
+    {
+        await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
+
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
+        await AddManualNodeAtAsync(AlignAnchorIcon, box.X + 150, box.Y + box.Height - 330);
+        await Expect(App.NodeLabel(AlignAnchorIcon)).ToBeVisibleAsync();
+        await AddManualNodeAtAsync(AlignMovedIcon, box.X + 350, box.Y + box.Height - 130);
+        await Expect(App.NodeLabel(AlignMovedIcon)).ToBeVisibleAsync();
+
+        // Select the new node and drag it until its left edge is 4 px right of the other's.
+        LocatorBoundingBoxResult anchor = await WaitForStableNodeBoxAsync(AlignAnchorIcon);
+        LocatorBoundingBoxResult moved = await WaitForStableNodeBoxAsync(AlignMovedIcon);
+        float pressX = moved.X + moved.Width / 2;
+        float pressY = moved.Y + moved.Height / 3;
+        await Page.Mouse.ClickAsync(pressX, pressY);
+        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+        await Page.Mouse.MoveAsync(pressX, pressY);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(pressX + anchor.X - moved.X + 4, pressY - 20, new() { Steps = 10 });
+
+        // While dragging, a guide shows the alignment; on the drop it goes, and the node stays
+        // lined up with the other (by its left edge, not by the grid).
+        ILocator guide = Page.Locator("#svgcanvas g.dep-alignment-guides line");
+        await Expect(guide).ToHaveCountAsync(1);
+        await Page.Mouse.UpAsync();
+        await Expect(guide).ToHaveCountAsync(0);
+
+        LocatorBoundingBoxResult anchorRect = await NodeRectAsync(AlignAnchorIcon);
+        LocatorBoundingBoxResult movedRect = await NodeRectAsync(AlignMovedIcon);
+        Assert.InRange(movedRect.X - anchorRect.X, -1, 1);
+    }
+
+    // The node's box (its hover group's rect), without its label, which is wider or narrower.
+    async Task<LocatorBoundingBoxResult> NodeRectAsync(string label) =>
+        await App.Node(label).Locator("rect").First.BoundingBoxAsync()
+        ?? throw new InvalidOperationException($"{label} is not rendered.");
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedByDoubleClick_AndPersistAcrossReload()

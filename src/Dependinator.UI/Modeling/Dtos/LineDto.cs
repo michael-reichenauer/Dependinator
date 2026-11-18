@@ -25,7 +25,7 @@ record LineDto
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? LabelDescription { get; init; }
 
-    // Where along the line the label sits (Line.LabelPosition); null for the middle.
+    // Where along the line the label sits (Line.LabelPosition); null where the user has not dragged it (placed automatically).
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? LabelPosition { get; init; }
 

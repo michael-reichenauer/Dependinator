@@ -489,7 +489,7 @@ public class StructureServiceTests
         Assert.Equal("Target", lineDto.Target);
 
         line.SetLabel(null);
-        line.SetLabelPosition(Line.DefaultLabelPosition);
+        line.SetLabelPosition(null);
         Assert.False(line.HasLabel);
         service.SetLineLayoutDto(model, lineDto);
 

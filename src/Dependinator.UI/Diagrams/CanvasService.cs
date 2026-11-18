@@ -21,7 +21,8 @@ namespace Dependinator.UI.Diagrams;
 
 // What the canvas shows: the svg content, its viewBox and the CSS transform that moves it to the
 // current view while the view moves (GestureTransform).
-record CanvasView(string Content, string ViewBox, string Style);
+// Guides: the drag's alignment guides (AlignmentGuideService), drawn over the content.
+record CanvasView(string Content, string ViewBox, string Style, string Guides = "");
 
 interface ICanvasService
 {
@@ -69,7 +70,8 @@ class CanvasService(
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory,
     ICommandService commandService,
-    App.IWorkspaceSourcesService workspaceSourcesService
+    App.IWorkspaceSourcesService workspaceSourcesService,
+    Editing.IAlignmentGuideService alignmentGuides
 ) : ICanvasService
 {
     double levelZoom = 1;
@@ -257,10 +259,20 @@ class CanvasService(
             && !isShownStale
             && GestureTransform.Get(shownOffset, shownZoom, offset, zoom, svgRect, shownTileArea) is { } transform
         )
-            return new CanvasView(content, ViewBox(shownOffset, shownZoom, svgRect), GestureTransform.Css(transform));
+            return new CanvasView(
+                content,
+                ViewBox(shownOffset, shownZoom, svgRect),
+                GestureTransform.Css(transform),
+                alignmentGuides.GetSvg(levelZoom, tileOffset)
+            );
 
         UpdateContent(viewRect, zoom);
-        return new CanvasView(content, ViewBox(offset, zoom, svgRect), "");
+        return new CanvasView(
+            content,
+            ViewBox(offset, zoom, svgRect),
+            "",
+            alignmentGuides.GetSvg(levelZoom, tileOffset)
+        );
     }
 
     public bool PrefetchNext()

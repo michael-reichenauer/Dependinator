@@ -594,7 +594,7 @@ d.note(57, 490, ["**What the app keeps to itself",
                  "  tour stops must be nodes, names become links",
                  "· decisions: nothing is accepted, allowed or",
                  "  added to the model until the user says so"], size=11)
-d.box("mq", 45, 680, 330, 130, "ModelQueries (Diagrams/Ai)", [
+d.box("mq", 45, 680, 330, 130, "ModelQueries (Diagrams/Queries)", [
     "answers IModelQueryService on the open", "diagram: the model's outline, node search,",
     "children, dependencies, paths, cycles, rules,", "a check of an unsaved rule, a node's source"], icon="Search", tint=ACCENT)
 d.edge("feat.b", "aisvc.t", "AskAsync(route, prompt, schema)", ACCENT, label_dx=6, anchor="start", label_dy=4)

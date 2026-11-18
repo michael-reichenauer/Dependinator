@@ -8,6 +8,7 @@ import {
 import * as logger from "./logger";
 import * as claudeApiKey from "./claudeApiKey";
 import * as languageModels from "./languageModels";
+import * as vsCodeSettings from "./vsCodeSettings";
 import type { WebviewMessage } from "./types";
 import {
     createDependinatorWebviewPanel,
@@ -57,7 +58,7 @@ let lastShownDocument: string | undefined;
 function followActiveEditor(editor: vscode.TextEditor | undefined): void {
     if (!editor || !activePanel || !activePanel.visible)
         return;
-    if (!vscode.workspace.getConfiguration("dependinator").get<boolean>("followActiveEditor", true))
+    if (!vsCodeSettings.readSettings().followActiveEditor)
         return;
     if (editor.document.uri.toString() === lastShownDocument)
         return;
@@ -217,9 +218,6 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     // The kinds the UI was told of while auto refresh was off: refreshed when it is switched on
     const unrefreshedKinds = new Set<string>();
 
-    // Read config at use time so toggling the setting needs no reload.
-    const config = () => vscode.workspace.getConfiguration("dependinator.autoRefresh");
-
     const refresh = (): void => {
         hasUnrefreshedChanges = false;
         // This refresh covers the changes a pending timer waits to report
@@ -243,12 +241,12 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
         if (canChangeSources(uri.path, isAddedOrRemoved))
             changedKinds.add("sources");
 
-        const delaySeconds = Math.max(1, config().get<number>("delaySeconds", 3));
+        const delaySeconds = vsCodeSettings.readSettings().autoRefreshDelaySeconds;
         if (pendingTimer)
             clearTimeout(pendingTimer);
         pendingTimer = setTimeout(() => {
             pendingTimer = undefined;
-            if (config().get<boolean>("enabled", true)) {
+            if (vsCodeSettings.readSettings().autoRefreshEnabled) {
                 refresh();
                 return;
             }
@@ -264,8 +262,8 @@ function registerAutoRefresh(panel: vscode.WebviewPanel): vscode.Disposable {
     };
 
     const configListener = vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration("dependinator.autoRefresh.enabled")
-            && hasUnrefreshedChanges && config().get<boolean>("enabled", true))
+        if (vsCodeSettings.affectsAutoRefreshEnabled(e)
+            && hasUnrefreshedChanges && vsCodeSettings.readSettings().autoRefreshEnabled)
             refresh();
     });
 
@@ -448,8 +446,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
         activePanel = panel;
         const autoRefresh = registerAutoRefresh(panel);
+        const settingsForwarding = vsCodeSettings.registerSettingsChangeForwarding(panel.webview);
         panel.onDidDispose(() => {
             autoRefresh.dispose();
+            settingsForwarding.dispose();
             if (activePanel === panel)
                 activePanel = undefined;
             setStatus("idle");
@@ -470,6 +470,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
             if (message.type === "vscode/Status") {
                 setStatus(String(message.message ?? "idle"));
+                return;
+            }
+
+            // The Settings dialog's VS Code section (vsCodeSettings.ts)
+            if (message.type === "vscode/GetSettings") {
+                vsCodeSettings.sendSettings(panel.webview);
+                return;
+            }
+
+            if (message.type === "vscode/SetSetting") {
+                await vsCodeSettings.setSetting(message.message, panel.webview);
                 return;
             }
 

@@ -74,6 +74,8 @@ static class TypeParser
                 continue;
             if (member is INamedTypeSymbol)
                 continue; // Nested type, handled by GetAllNamedTypes in SourceParser
+            if (GeneratedCode.IsGenerated(member))
+                continue; // Added by a generator, such as a JSON context's type info properties
 
             foreach (var item in MemberParser.ParseTypeMember(member, fullTypeName, compilation))
                 yield return item;
