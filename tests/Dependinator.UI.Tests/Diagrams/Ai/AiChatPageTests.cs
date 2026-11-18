@@ -34,7 +34,7 @@ public class AiChatPageTests
     {
         var service = Service();
         var changes = 0;
-        service.ChatUrlChanged += () => changes++;
+        service.ChatPageChanged += () => changes++;
 
         Assert.True(await service.SetChatUrlAsync($"  {ProjectUrl} "));
         Assert.Equal(ProjectUrl, stored.AiChatUrl);

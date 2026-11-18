@@ -66,8 +66,8 @@ interface IAiService
     // that is none.
     Task<bool> SetChatUrlAsync(string? url);
 
-    // Raised when Settings › AI changes that page.
-    event Action? ChatUrlChanged;
+    // Raised when Settings › AI changes that page, or whether the AI there reads the code.
+    event Action? ChatPageChanged;
 
     // Whether the AI at that page reads the code itself (Config.AiChatReadsCode, or by the address:
     // AiChatPage.IsCodingAgent), and the target that makes a copied prompt for (PromptTarget).
@@ -189,7 +189,7 @@ class AiService(
 
     public async Task<string> GetChatUrlAsync() => AiChatPage.UrlOf((await configService.GetAsync()).AiChatUrl);
 
-    public event Action? ChatUrlChanged;
+    public event Action? ChatPageChanged;
 
     public async Task<bool> SetChatUrlAsync(string? url)
     {
@@ -204,7 +204,7 @@ class AiService(
                 config.AiChatReadsCode = null;
             config.AiChatUrl = normalized;
         });
-        ChatUrlChanged?.Invoke();
+        ChatPageChanged?.Invoke();
         return true;
     }
 
@@ -221,7 +221,7 @@ class AiService(
             config.AiChatReadsCode =
                 readsCode == AiChatPage.IsCodingAgent(AiChatPage.UrlOf(config.AiChatUrl)) ? null : readsCode
         );
-        ChatUrlChanged?.Invoke();
+        ChatPageChanged?.Invoke();
     }
 
     public async Task<PromptTarget> GetCopyTargetAsync() =>

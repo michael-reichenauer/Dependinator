@@ -115,7 +115,15 @@ static class CommentsPrompt
             text.AppendLine();
         }
         text.Append(promptTarget is PromptTarget.Chat ? ChatDone : Done);
-        return text.ToString();
+        // An AI chat has only the prompt: what assumes reading the code is said for it instead.
+        return promptTarget is PromptTarget.Chat
+            ? text.ToString()
+                .Replace("True to the code: read the code before you write.", "True to what this prompt says of it.")
+                .Replace(
+                    "If you cannot tell what something is for, write what you can tell from the code, and say in your summary which ones need a closer look.",
+                    "If you cannot tell what something is for, say so instead of guessing."
+                )
+            : text.ToString();
     }
 
     const string GoodComment = """

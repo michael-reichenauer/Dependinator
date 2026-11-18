@@ -23,12 +23,12 @@
 
   protected override async Task OnInitializedAsync()
   {
-    aiService.ChatUrlChanged += OnChatUrlChanged;
+    aiService.ChatPageChanged += OnChatPageChanged;
     url = await aiService.GetChatUrlAsync();
   }
 
   // A page set in Settings › AI while the button shows is the one it opens.
-  void OnChatUrlChanged() => _ = InvokeAsync(async () =>
+  void OnChatPageChanged() => _ = InvokeAsync(async () =>
   {
     try
     {
@@ -45,7 +45,7 @@
   public void Dispose()
   {
     isDisposed = true;
-    aiService.ChatUrlChanged -= OnChatUrlChanged;
+    aiService.ChatPageChanged -= OnChatPageChanged;
   }
 
   // The address already read: another await before window.open could cost the click's user

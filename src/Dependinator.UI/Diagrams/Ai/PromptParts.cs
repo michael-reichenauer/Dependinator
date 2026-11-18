@@ -68,23 +68,24 @@ static class PromptParts
 
     // For an agent with its own copy of the repository (PromptTarget.CodingAgent): where the paths
     // start, that its copy may differ from the user's, and to hand the change back for review.
+    // Also right for an agent in the user's own folder (the claude command in a terminal), which
+    // the switch in Settings › AI covers too: the branch and pull request are for a copy of its own.
     internal static void AppendCodingAgentSection(StringBuilder text, IModel model)
     {
-        var folder = model.Path != "" ? Path.GetFileName(model.Path) : "";
-        text.AppendLine().AppendLine("## Working in your copy of the repository").AppendLine();
+        // Model paths are text, not paths of this machine (a Windows path in the browser app).
+        var name = model.Path.Split('/', '\\').Last();
+        text.AppendLine().AppendLine("## Where you work").AppendLine();
         text.AppendLine(
-            folder != ""
-                ? $"- The paths above are relative to the folder of `{folder}` in the repository."
-                : "- The paths above are relative to the repository's folder of the model."
+            name == "" ? "- The paths above are relative to the folder of the model in the repository."
+            : ModelPaths.IsWorkspace(model.Path) ? "- The paths above are relative to the repository's root folder."
+            : $"- The paths above are relative to the folder of `{name}` in the repository."
         );
         text.AppendLine(
-            "- This was written from the user's own working copy, which may have changes your copy does not. If the "
-                + "code differs from what this prompt says, follow the code and say so."
-        );
-        text.AppendLine(
-            "- Make the change on a new branch, commit it, and open a pull request, following the repository's own "
-                + "rules for branches and pull requests (its CLAUDE.md or contributing guide). Link the pull request "
-                + "in your summary."
+            "- If you work in a copy of the repository of your own (a cloud session, say), it may lack the user's "
+                + "latest local changes: if the code differs from what this prompt says, follow the code and say so. "
+                + "Make the change on a new branch, commit it, and open a pull request, following the repository's "
+                + "own rules for branches and pull requests (its CLAUDE.md or contributing guide), and link the pull "
+                + "request in your summary."
         );
     }
 
@@ -104,13 +105,18 @@ static class PromptParts
                 sources,
                 "The code to change, as it is now. Long types are cut to the parts that matter here."
             );
-        else if (files.Count > 0)
-            text.AppendLine()
-                .AppendLine("## Source")
-                .AppendLine()
-                .AppendLine(
-                    "The code is not included. Ask me for the files you need: " + string.Join(", ", files) + "."
-                );
+        // The files the prompt names and shows no code of: unread, left out by a limit, or none read.
+        var shown = sources.SelectMany(s => s.Excerpts).Select(e => DisplayPath(model, e.Path)).ToHashSet();
+        var missing = files.Where(f => !shown.Contains(f)).ToList();
+        if (missing.Count == 0)
+            return;
+        if (sources.Count == 0)
+            text.AppendLine().AppendLine("## Source");
+        text.AppendLine()
+            .AppendLine(
+                (sources.Count == 0 ? "The code is not included" : "Not included here")
+                    + $": {string.Join(", ", missing)}. Ask me for what you need of it."
+            );
     }
 
     // The task for an AI chat (PromptTarget.Chat): it cannot see more than the prompt, so it

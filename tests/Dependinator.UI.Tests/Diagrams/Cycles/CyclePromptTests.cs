@@ -436,6 +436,7 @@ public class CyclePromptTests
         Assert.Contains("Reply with the edits, one per file", prompt);
         Assert.DoesNotContain("## Where to look", prompt);
         Assert.DoesNotContain("pull request", prompt);
+        Assert.DoesNotContain("Not included here", prompt);
     }
 
     [Fact]

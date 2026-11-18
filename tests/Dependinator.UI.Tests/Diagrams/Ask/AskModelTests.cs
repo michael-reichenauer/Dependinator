@@ -342,5 +342,8 @@ public class AskModelTests
         Assert.Contains("## Where to look", agent);
         Assert.Contains("open a pull request", agent);
         Assert.DoesNotContain("## Source", agent);
+        // Code that could not be read is named, so the chat can ask for it.
+        var unread = AskChangePrompt.Build(model, answer, context, "`UI.View`", PromptTarget.Chat).Replace("\r", "");
+        Assert.Contains("The code is not included: /src/UI/View.cs. Ask me for what you need of it.", unread);
     }
 }

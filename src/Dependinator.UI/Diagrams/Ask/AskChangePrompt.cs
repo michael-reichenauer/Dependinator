@@ -23,11 +23,23 @@ static class AskChangePrompt
 
     public static IReadOnlyList<SourceRequest> GetSourceRequests(IModel model, ModelAnswer answer, AskContext context)
     {
+        // A member shows its type, cut to the member; a container asked about with what is inside
+        // shows the first types inside it, as Files lists them.
+        var asked = AskModelPrompt.ContextNodes(model, context);
         List<SourceUnit> units =
         [
             .. Nodes(model, answer, context)
-                .Where(HasSource)
-                .Select(n => new SourceUnit(n.FileSpan!, []))
+                .SelectMany(n =>
+                    HasSource(n) ? [n]
+                    : n.Type.IsMember && n.Parent is { } type && HasSource(type) ? [type]
+                    : context.IsBelow && asked.Contains(n)
+                        ? n.DescendantsAndSelfPreOrder()
+                            .Skip(1)
+                            .Where(d => d.Type.IsType && HasSource(d))
+                            .Take(MaxFilesInside)
+                    : []
+                )
+                .Select(n => new SourceUnit(n.FileSpan!, MemberLines(n, answer)))
                 .DistinctBy(u => (u.Span.Path, u.Span.StartLine))
                 .Take(MaxSourceUnits),
         ];
@@ -93,6 +105,16 @@ static class AskChangePrompt
         "Say how to check it: build and run the tests. Dependinator shows the new structure after its next parse."
     );
 
+    // The lines of the type's members the answer names, to keep when a long type is cut.
+    static IReadOnlyList<int> MemberLines(Node type, ModelAnswer answer) =>
+        [
+            .. answer
+                .Links.Values.Select(l => type.Children.FirstOrDefault(c => c.Id == l.Id))
+                .OfType<Node>()
+                .Where(m => m.FileSpan?.Path == type.FileSpan!.Path)
+                .Select(m => m.FileSpan!.StartLine),
+        ];
+
     // The nodes the question was about, then the ones the answer names.
     static IEnumerable<Node> Nodes(IModel model, ModelAnswer answer, AskContext context) =>
         AskModelPrompt
@@ -106,9 +128,7 @@ static class AskChangePrompt
     static List<(string Name, string File)> Files(IModel model, ModelAnswer answer, AskContext context)
     {
         var asked = AskModelPrompt.ContextNodes(model, context);
-        var nodes = asked
-            .Concat(answer.Links.Values.Select(l => model.Nodes.GetValueOrDefault(l.Id)).OfType<Node>())
-            .Distinct();
+        var nodes = Nodes(model, answer, context);
         List<(string, string)> files = [];
         foreach (var node in nodes)
         {

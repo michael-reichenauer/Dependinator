@@ -174,6 +174,7 @@ public class CommentsPromptTests
         Assert.Contains("You see only this prompt, not the code.", chat);
         Assert.Contains("Reply with one code block per comment", chat);
         Assert.DoesNotContain("## When you are done", chat);
+        Assert.DoesNotContain("read the code before you write", chat);
         Assert.Contains("open a pull request", agent);
         Assert.Contains("## When you are done", agent);
     }
