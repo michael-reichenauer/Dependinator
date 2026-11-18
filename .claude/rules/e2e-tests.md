@@ -80,6 +80,10 @@ page objects). Each rule below comes from a real CI or local failure.
   `NavigateToNodeWithoutSelectingAsync` only waits. When a navigation still selected, a test's own
   selection was replaced a moment later. Together these were a third of the CI flakes of Oct
   28-Nov 11 2026 (HiddenNodesTests).
+- Read a canvas element's place with `App.WaitForStableBoxAsync(locator, what)`, never
+  `(await x.BoundingBoxAsync())!`: a read during a re-render (its tile being replaced) returns
+  null, and the `!` turned it into a NullReferenceException (TooltipTests on Firefox in two
+  releases, LineLabelTests on Chromium, Nov 11-16 2026).
 - `App.SelectLineAsync` waits for the line toolbar, which proves nothing when a line is selected
   already: going from line to line, wait for the clicked line's selection overlay
   (`polyline[stroke-dasharray='3,50']` beside its hit target, found by the line's `data-name`;

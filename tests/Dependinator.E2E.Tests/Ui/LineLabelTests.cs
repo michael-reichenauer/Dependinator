@@ -99,11 +99,10 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         // SVG text inside the canvas's nested tile SVGs at the wrong place, so a press at the
         // text's reported center missed the label there.
         ILocator label = Page.Locator("#svgcanvas rect.line-label-hit").First;
-        float middleX = await LabelCenterXAsync(label);
-
         // The label takes the press (not the line under it) and follows the pointer along the line.
-        LocatorBoundingBoxResult box = (await label.BoundingBoxAsync())!;
+        LocatorBoundingBoxResult box = await App.WaitForStableBoxAsync(label, "The label");
         float x = box.X + box.Width / 2;
+        float middleX = x;
         float y = box.Y + box.Height / 2;
         await Page.Mouse.MoveAsync(x, y);
         await Page.Mouse.DownAsync();
@@ -116,7 +115,7 @@ public class LineLabelTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.RepeatUntilVisibleAsync(
             async () =>
             {
-                LocatorBoundingBoxResult moved = (await label.BoundingBoxAsync())!;
+                LocatorBoundingBoxResult moved = await App.WaitForStableBoxAsync(label, "The label");
                 await Page.Mouse.DblClickAsync(moved.X + moved.Width / 2, moved.Y + moved.Height / 2);
             },
             field

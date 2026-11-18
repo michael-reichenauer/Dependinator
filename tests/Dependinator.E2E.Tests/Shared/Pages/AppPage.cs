@@ -784,7 +784,18 @@ public sealed class AppPage
     // node's bounds stop moving between two reads before clicking; a single read can compute
     // a click point where the node was a frame ago (same approach as
     // WaitForStableNodePointAsync below).
-    async Task<LocatorBoundingBoxResult> WaitForStableNodeBoxAsync(string label, float timeoutSeconds = 15)
+    Task<LocatorBoundingBoxResult> WaitForStableNodeBoxAsync(string label, float timeoutSeconds = 15) =>
+        WaitForStableBoxAsync(Node(label), $"Node '{label}'", timeoutSeconds);
+
+    // The bounds of an element on the canvas, once it is rendered and holds still (place and
+    // size the same in two reads 100 ms apart). A single BoundingBoxAsync read returns null
+    // while the canvas re-renders (the tile with the element is being replaced), and the place
+    // it reports can be a frame old during a pan or zoom.
+    public async Task<LocatorBoundingBoxResult> WaitForStableBoxAsync(
+        ILocator locator,
+        string what,
+        float timeoutSeconds = 15
+    )
     {
         var timeout = TimeSpan.FromSeconds(timeoutSeconds);
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -793,14 +804,22 @@ public sealed class AppPage
         while (stopwatch.Elapsed < timeout)
         {
             LocatorBoundingBoxResult? box = null;
-            if (await Node(label).CountAsync() > 0)
-                box = await Node(label).BoundingBoxAsync();
+            try
+            {
+                // A short timeout: the element can be detached between the count and the read,
+                // and the read would then wait out Playwright's whole action timeout.
+                if (await locator.CountAsync() > 0)
+                    box = await locator.BoundingBoxAsync(new() { Timeout = 1_000 });
+            }
+            catch (Exception e) when (IsRetryable(e)) { }
 
             bool isStable =
                 box is not null
                 && previous is not null
                 && Math.Abs(box.X - previous.X) < 1
-                && Math.Abs(box.Y - previous.Y) < 1;
+                && Math.Abs(box.Y - previous.Y) < 1
+                && Math.Abs(box.Width - previous.Width) < 1
+                && Math.Abs(box.Height - previous.Height) < 1;
             if (isStable)
                 return box!;
 
@@ -808,7 +827,7 @@ public sealed class AppPage
             await Task.Delay(100);
         }
 
-        throw new InvalidOperationException($"Node '{label}' did not render/stabilize within {timeout.TotalSeconds}s.");
+        throw new InvalidOperationException($"{what} did not render/stabilize within {timeout.TotalSeconds}s.");
     }
 
     // Select a line by clicking a point on it, retrying until the line toolbar shows (a click
