@@ -74,7 +74,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
                 // 7 days. Standard 'exp' validation is therefore disabled and replaced by a
                 // custom max-age check on the 'iat' (issued-at) claim, so signed-in clients
                 // (mainly the VS Code extension, which stores a single long-lived token)
-                // stay valid for up to CloudSyncOptions.MaxTokenAgeDays (default 180 days).
+                // stay valid for up to CloudSyncOptions.MaxTokenAgeDays (default 365 days).
                 // Signature and issuer validation are unaffected, so tokens are still
                 // provably issued by the configured auth provider.
                 //

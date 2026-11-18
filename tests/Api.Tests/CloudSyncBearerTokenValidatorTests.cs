@@ -78,6 +78,23 @@ public class CloudSyncBearerTokenValidatorTests
         Assert.Equal("user-123", user.UserId);
     }
 
+    // A device signed in once must stay signed in for at least six months.
+    [Fact]
+    public async Task TryGetCurrentUserAsync_ShouldAcceptTokenIssuedSevenMonthsAgo()
+    {
+        CloudSyncBearerTokenValidator sut = CreateValidator();
+        TestHttpRequestData request = new(new TestFunctionContext());
+        request.Headers.Add(
+            "X-Dependinator-Authorization",
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddDays(-213), expires: DateTime.UtcNow.AddDays(-206), issuedAt: DateTime.UtcNow.AddDays(-213))}"
+        );
+
+        CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);
+
+        Assert.NotNull(user);
+        Assert.Equal("user-123", user.UserId);
+    }
+
     [Fact]
     public async Task TryGetCurrentUserAsync_ShouldReturnNull_WhenTokenIsOlderThanMaxTokenAge()
     {
@@ -85,7 +102,7 @@ public class CloudSyncBearerTokenValidatorTests
         TestHttpRequestData request = new(new TestFunctionContext());
         request.Headers.Add(
             "X-Dependinator-Authorization",
-            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddDays(-200), expires: DateTime.UtcNow.AddDays(-193), issuedAt: DateTime.UtcNow.AddDays(-200))}"
+            $"Bearer {CreateToken(ClerkIssuer, sub: "user-123", notBefore: DateTime.UtcNow.AddDays(-400), expires: DateTime.UtcNow.AddDays(-393), issuedAt: DateTime.UtcNow.AddDays(-400))}"
         );
 
         CloudUserInfo? user = await sut.TryGetCurrentUserAsync(request, CancellationToken.None);

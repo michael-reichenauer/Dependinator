@@ -226,9 +226,12 @@ can touch. Models are stored gzipped, with their hash and update time as blob me
 10 MB per user. A model's key is its normalized path, so the same model has the same key on every
 device; share links use that key.
 
-Points to discuss: tokens are accepted for 180 days after they were issued instead of until their
+Points to discuss: tokens are accepted for 365 days after they were issued instead of until their
 own expiry, a workaround for the 7-day limit of Clerk's free tier that should go once a paid plan
-allows longer lifetimes. Both clients send the token in a custom header as well as in
+allows longer lifetimes. It keeps VS Code signed in, which sends the one token it got at sign-in;
+the browser hosts ask their Clerk session for a fresh token on each call, so how long they stay
+signed in is the session lifetime set in the Clerk Dashboard (free to change on the development
+instance production uses). Both clients send the token in a custom header as well as in
 `Authorization`, because Static Web Apps may drop the standard header.
 
 ## 7. Delivery view: from a commit to production and the Marketplace
@@ -350,7 +353,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 - **A second toolchain in the build.** The TypeScript parser's helper is built with npm, so a
   solution build needs Node.js, and its packages (the TypeScript compiler, esbuild) are bumped by
   hand: Dependabot and the nightly package task only look at NuGet.
-- **Clerk free tier.** The 180-day token workaround (view 6) trades some security for convenience.
+- **Clerk free tier.** The 365-day token workaround (view 6) trades some security for convenience.
 - **Concentration in one library.** Three quarters of the product code is in `Dependinator.UI`,
   which grew by almost half in the three weeks the AI features were added.
 - **AI routes outside our control.** The Claude Code route depends on a policy that is not settled,
