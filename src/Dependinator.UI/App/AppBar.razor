@@ -14,6 +14,7 @@
 @inject IIssueReportService issueReportService
 @inject Dependinator.UI.Diagrams.Annotations.INoteService noteService
 @inject Dependinator.UI.Diagrams.Annotations.IZoneService zoneService
+@inject Dependinator.UI.Diagrams.Annotations.ILineLabelsService lineLabelsService
 @inject Dependinator.UI.Diagrams.Editing.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
 @inject Dependinator.UI.Diagrams.Dependencies.IDependenciesService dependenciesService
@@ -88,6 +89,13 @@
                                  OnClick="BeginAddZone" title="A labeled background area that groups the nodes drawn over it."
                                  data-testid="menu-add-zone">
                         Add Zone …
+                    </MudMenuItem>
+
+                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AutoAwesome"
+                                 OnClick="() => lineLabelsService.SuggestLabelsAsync(null)"
+                                 title="An AI suggests labels for the lines without one; you pick the ones to add."
+                                 data-testid="menu-suggest-line-labels">
+                        Suggest Line Labels …
                     </MudMenuItem>
                 }
             </MudMenu>
