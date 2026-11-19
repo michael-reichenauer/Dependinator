@@ -5,6 +5,14 @@
     "context": ".."
   },
   "remoteUser": "vscode",
+  // GitHub Codespaces: the default 2-core/8 GB machine runs out of memory during ./scripts/e2e
+  // (VS Code server and C# Dev Kit ~3 GB, the app ~1.4 GB, the browsers, the build servers). The
+  // Codespaces host then sends SIGTERM to the app and the browser processes, and every test fails
+  // with "Target crashed" or ERR_CONNECTION_REFUSED. Local Docker ignores this setting.
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
