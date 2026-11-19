@@ -137,6 +137,14 @@ class LineLabelsService(
             return Resolve(lineIds, TestModeAnswer(lineIds.Count) with { Source = route });
         }
 
+        // All the lines can be gone by now (a re-parse while the dialog is open): the prompt would
+        // be empty, so there is nothing to ask.
+        using (var model = modelMgr.UseModel())
+        {
+            if (!Lines(model, lineIds).OfType<Line>().Any())
+                return new Error("The lines are no longer in the model. Close the dialog and try again.");
+        }
+
         var json = await aiService.AskAsync(
             route,
             () => GetPromptAsync(lineIds),
