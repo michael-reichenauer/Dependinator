@@ -9,6 +9,10 @@ with the next official release.
 
 ## [Unreleased]
 
+### Fixed
+
+- The VS Code extension works in a GitHub codespace opened in the browser: its language server starts, where the diagram showed "Language server unavailable", **Dependinator: Connect Claude Code** works, and the cloud sync sign-in finishes
+
 ## [v0.94.464480] - 2026-11-19
 
 ### New
