@@ -70,6 +70,10 @@
     @if (copyNote is not null)
     {
       <div class="dep-ai__suggest-note mt-2" data-testid="accept-cycle-copied">@copyNote</div>
+      @if (isFixPromptCopied)
+      {
+        <OpenChatButton TestId="accept-cycle-open-chat" />
+      }
     }
     @if (copyError is not null)
     {
@@ -143,6 +147,10 @@
   // The prompt that asks an AI that can change the code to break the cycle as suggested.
   [Parameter] public Func<CycleSuggestion, string>? FixPrompt { get; set; }
 
+  // The same prompt, copied for the AI set in Settings › AI, and where it goes (PromptTarget); the
+  // FixPrompt where none is given.
+  [Parameter] public Func<CycleSuggestion, Task<(string Prompt, PromptTarget Target)>>? CopyFixPrompt { get; set; }
+
   // The prompt that asks any AI how to break the cycle, after an answer that suggested accepting
   // it, and asking Claude (or Claude Code) with it; null where the host cannot ask.
   [Parameter] public Func<CycleSuggestion, Task<string>>? CopyBreakPrompt { get; set; }
@@ -157,6 +165,7 @@
   CycleSuggestion? Selected;
   string? prefilledReason;
   string? copyNote;
+  bool isFixPromptCopied;
   string? copyError;
 
   // An AI suggests breaking the cycle: fixing it is the main action, accepting it the override.
@@ -197,6 +206,7 @@
   {
     Selected = answer;
     copyNote = null;
+    isFixPromptCopied = false;
     copyError = null;
     // The change asked for after an accepting answer keeps that answer's reason: the AI did not
     // suggest breaking the cycle, it was asked how.
@@ -222,8 +232,12 @@
   {
     if (Selected is not { } s || FixPrompt is null)
       return;
-    var isCopied = await clipboardService.CopyAsync(FixPrompt(s));
-    copyNote = isCopied ? FixPromptCopiedNote + " Or choose Fix later to keep the cycle on the list until then." : null;
+    var (prompt, target) = CopyFixPrompt is not null ? await CopyFixPrompt(s) : (FixPrompt(s), PromptTarget.LocalAgent);
+    var isCopied = await clipboardService.CopyAsync(prompt);
+    copyNote = isCopied
+      ? FixPromptCopiedNote(target) + " Or choose Fix later to keep the cycle on the list until then."
+      : null;
+    isFixPromptCopied = isCopied;
     copyError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
@@ -232,6 +246,7 @@
   async Task FixWithCopilotAsync()
   {
     copyNote = null;
+    isFixPromptCopied = false;
     copyError = null;
     var handed = await aiService.FixWithCopilotAsync(FixPromptText());
     copyNote = handed is Error ? null : AiService.CopilotFixNote + " Or choose Fix later to keep the cycle on the list until then.";
@@ -239,9 +254,8 @@
   }
 
   // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
-  public const string FixPromptCopiedNote =
-    "The fix prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
-    + "is made, re-parse: the cycle should be gone.";
+  public static string FixPromptCopiedNote(PromptTarget target) =>
+    PromptTargets.CopiedNote(target, "the cycle should be gone.");
 
   // Enter starts a new line in the reason; Ctrl+Enter (Cmd+Enter) saves.
   void OnKeyDown(KeyboardEventArgs e)

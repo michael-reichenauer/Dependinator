@@ -111,6 +111,7 @@ public class RulesTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByTestId("rule-review-copied")).ToContainTextAsync("fix prompt is copied");
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.StartsWith("Please remove a dependency that breaks an architecture rule", prompt);
+        Assert.Contains("Reply with the edits", prompt);
 
         // Claude is the default now: one button asks it again.
         await Page.GetByTestId("rule-review-ask").ClickAsync();

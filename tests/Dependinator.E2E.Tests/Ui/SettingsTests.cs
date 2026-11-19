@@ -139,6 +139,65 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.CloseSettingsAsync();
     }
 
+    // Settings › AI: the page "Open claude.ai" goes to after a prompt is copied is claude.ai's new
+    // chat unless another web address is set (a Claude Code project, say); one that is no web
+    // address is not saved.
+    [E2EFact]
+    public async Task AiSettings_ShouldOpenCopiedPromptsInThePageSet()
+    {
+        const string ProjectUrl = "https://claude.ai/code/project/chan_0123456789abcdef";
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+                + " window.open = url => { window.__openedUrl = url; return null; };"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.OpenSettingsAsync();
+        ILocator row = Page.GetByTestId("ai-settings-chat-url-row");
+        ILocator url = Page.GetByTestId("ai-settings-chat-url");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+
+        await App.FillReliablyAsync(url, "not a page");
+        await url.PressAsync("Tab");
+        await Expect(row).ToContainTextAsync("A web address");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+
+        // A web chat sees only the prompt; a Claude Code project reads the code itself, which decides
+        // how a copied fix prompt is written, and the user can say otherwise.
+        ILocator readsCode = Page.GetByTestId("ai-settings-chat-reads-code");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await App.FillReliablyAsync(url, ProjectUrl);
+        await url.PressAsync("Tab");
+        await Expect(row).ToHaveAttributeAsync("data-value", ProjectUrl);
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
+        await App.CloseSettingsAsync();
+
+        // Copying a prompt offers to open that page.
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+        await App.ClickNodeMenuItemAsync("node-menu-about");
+        await Page.GetByTestId("about-node-copy-prompt").ClickAsync();
+        ILocator open = Page.GetByTestId("about-node-open-chat");
+        await Expect(open).ToHaveTextAsync("Open claude.ai");
+        await open.ClickAsync();
+        IJSHandle openedUrl = await Page.WaitForFunctionAsync("() => window.__openedUrl");
+        Assert.Equal(ProjectUrl, await openedUrl.JsonValueAsync<string>());
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(open).ToHaveCountAsync(0);
+
+        // Back to claude.ai, for the tests that share the app's settings.
+        await App.OpenSettingsAsync();
+        await url.FillAsync("");
+        await url.PressAsync("Tab");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await App.CloseSettingsAsync();
+    }
+
     // Opens a model select and clicks the item with the text.
     async Task PickModelAsync(ILocator modelRow, string itemText)
     {

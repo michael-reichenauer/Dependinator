@@ -33,7 +33,7 @@ project works.
 - **Nov**: a Settings dialog, soft lines, a calmer dark theme and light by default, Copilot as a
   third AI provider in VS Code (answers, model lookups, fixes in Copilot Chat), one fix button,
   "Ask how to break it" for accepted cycles, an AI-planned tour of the codebase, AI-suggested
-  line labels, Suggest rules that remembers what was dismissed, with a reason on every rule,
+  line labels (one line, or all lines of a container at once), Suggest rules that remembers what was dismissed, with a reason on every rule,
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
   box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
@@ -505,6 +505,17 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   up with Dependinator's MCP server when it has it and to say so when it has not
   (`AskModelPrompt.BuildForOtherAi`). In VS Code "Ask in Copilot Chat" hands the same prompt to
   Copilot Chat in agent mode. The answer shows there, not in the panel.
+- **Open prompts where you want (Nov 18).** Settings › AI has "Open prompts in" under Your AI chat:
+  a web address, such as a Claude Code project, that "Open claude.ai" goes to instead of claude.ai's
+  new chat (`AiChatPage`, `Config.AiChatUrl`). Every copied prompt now has that Open button beside
+  its note (`OpenChatButton`): the fix prompts, Improve comments, About Node and the Ask panel's.
+  The page opens empty: no AI chat takes a prompt in its address.
+  Below it, "This AI can read the code" (on by itself for a claude.ai/code link) decides how a copied
+  prompt that changes code is written (`PromptTarget`): for an AI chat the fix, "Do it" and Improve
+  comments prompts carry the code and ask for the edits back to paste in; for a coding agent with
+  its own copy of the repository they say where the paths start, that its copy may lack local
+  changes, and to make the change on a branch and open a pull request. The routes the app runs
+  itself (Claude Code, Copilot) get the prompts as before.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
@@ -556,6 +567,15 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and the labels on other lines, for a matching style), with up to three other labels to pick
   from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
   at once, else "Use suggestion" fills them; nothing is saved before Save.
+- **AI labels for many lines at once (Nov 19).** Suggest Line Labels … (Edit menu and the canvas
+  menu for the whole model, a container's menu for the lines inside it; edit mode) asks any AI
+  provider for the labels of up to 40 unlabeled lines in one question, so they share a style
+  (`LineLabelsPrompt`: lines between siblings, outer levels and most links first, not to
+  Externals, rows or configuration plumbing; the ends with their comments, each line numbered
+  with its links, the code that makes most of them). The answer (`LineLabelsSuggestion`, a
+  chat's "<number>. <label> | <description>" lines read back) is a list to tick in
+  `LineLabelsDialog`; the ticked labels are added as one undo step (`LineLabelsCommand`), their
+  descriptions only when asked for. The first part of roadmap idea 8, tried on the Bicep webshop.
 - **Member cards (Nov 4).** An open type shows its members like a class box: a card with a
   section per kind (Fields, Constructors, Properties, Events, Methods; Bicep's Parameters,
   Variables, Resources, Outputs), public members first, flowed into as many columns as the box
@@ -696,7 +716,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   either to production or to local Azurite.
 - **Clerk sign-in (Mar 21).** All hosts sign in with Clerk, and the API validates Clerk JWTs via
   JWKS. VS Code signs in through a local Clerk page and keeps the token in secrets. Tokens last
-  180 days (Jun), and auto login got faster (Jul).
+  180 days (Jun), and auto login got faster (Jul). Since Nov 18 a VS Code sign-in lasts a year
+  (`MaxTokenAgeDays` 365); the browser hosts stay signed in for the Clerk session lifetime, set
+  in the Clerk Dashboard (the 180 days never applied to them).
 - **"Device sync" (Jul).** Login/Logout became Enable/Disable device sync, the texts say device
   sync, and the user storage key is hashed again.
 - **Model handling.**
@@ -730,7 +752,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
   types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. On Nov 10, the day .NET 11
   shipped, the build moved to the GA SDK (`LangVersion` 15, no preview). The projects stay on
-  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md).
+  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md). On Nov 18
+  every project but the Api and Shared (and Api.Tests) moved to net11.0, with Blazor 11 and MSBuild
+  18.12; only those two wait for Azure Static Web Apps now, and the union polyfill is gone.
 - **Packages.** MudBlazor 9.5 (May). `./scripts/updatepackages` also handles npm packages (Jun).
 
 ## Testing, CI/CD and releases

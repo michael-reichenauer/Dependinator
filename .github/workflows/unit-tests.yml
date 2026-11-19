@@ -50,7 +50,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x" # net10.0 runtime; global.json selects the .NET 11 SDK
+          dotnet-version: "10.0.x" # net10.0 runtime of the Api, its tests and CSharpier; global.json selects the .NET 11 SDK
           global-json-file: global.json
 
       # The solution includes the Blazor WebAssembly host; restore any workloads it needs

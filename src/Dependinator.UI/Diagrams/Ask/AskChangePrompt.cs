@@ -1,4 +1,5 @@
 using System.Text;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
@@ -8,7 +9,8 @@ namespace Dependinator.UI.Diagrams.Ask;
 // The prompt for an AI that can change the code (Claude Code, Copilot's agent, or another the
 // user pastes it into), to make the change an Ask answer proposed: the change, the question and
 // the answer it comes from, the files of the nodes it is about, and the architecture rules to
-// keep. It shows no source, since such an AI reads the code itself.
+// keep. It shows no source, since such an AI reads the code itself. Copied for another target, as
+// CyclePrompt.BuildFix: an AI chat gets the code of the types it names (GetSourceRequests).
 static class AskChangePrompt
 {
     internal const int MaxFiles = 25;
@@ -16,8 +18,43 @@ static class AskChangePrompt
 
     internal const int MaxFilesInside = 8;
 
+    // The types (modules, resources, files) to show an AI chat, from the nodes the prompt lists.
+    internal const int MaxSourceUnits = 8;
+
+    public static IReadOnlyList<SourceRequest> GetSourceRequests(IModel model, ModelAnswer answer, AskContext context)
+    {
+        // A member shows its type, cut to the member; a container asked about with what is inside
+        // shows the first types inside it, as Files lists them.
+        var asked = AskModelPrompt.ContextNodes(model, context);
+        List<SourceUnit> units =
+        [
+            .. Nodes(model, answer, context)
+                .SelectMany(n =>
+                    HasSource(n) ? [n]
+                    : n.Type.IsMember && n.Parent is { } type && HasSource(type) ? [type]
+                    : context.IsBelow && asked.Contains(n)
+                        ? n.DescendantsAndSelfPreOrder()
+                            .Skip(1)
+                            .Where(d => d.Type.IsType && HasSource(d))
+                            .Take(MaxFilesInside)
+                    : []
+                )
+                .Select(n => new SourceUnit(n.FileSpan!, MemberLines(n, answer)))
+                .DistinctBy(u => (u.Span.Path, u.Span.StartLine))
+                .Take(MaxSourceUnits),
+        ];
+        return units.Count > 0 ? [new SourceRequest("The code the change is about", units)] : [];
+    }
+
     // about names the nodes the question was asked about, as they were then ("" for the model).
-    public static string Build(IModel model, ModelAnswer answer, AskContext context, string about)
+    public static string Build(
+        IModel model,
+        ModelAnswer answer,
+        AskContext context,
+        string about,
+        PromptTarget target = PromptTarget.LocalAgent,
+        IReadOnlyList<SourceSection>? sources = null
+    )
     {
         if (answer.Change == "")
             return "";
@@ -35,7 +72,9 @@ static class AskChangePrompt
         text.AppendLine().AppendLine($"**Answer:** {answer.Text.Trim()}");
 
         var files = Files(model, answer, context);
-        if (files.Count > 0)
+        if (target is PromptTarget.Chat)
+            AppendChatSource(text, model, sources ?? [], [.. files.Select(f => f.File).Distinct().Take(MaxFiles)]);
+        else if (files.Count > 0)
         {
             text.AppendLine().AppendLine("## Where to look").AppendLine();
             text.AppendLine("The code of what the question and the answer are about:");
@@ -55,9 +94,33 @@ static class AskChangePrompt
                 text.AppendLine($"- … and {model.Rules.Count - MaxRules} more");
         }
 
-        text.AppendLine().Append(TaskSection);
+        if (target is PromptTarget.CodingAgent)
+            AppendCodingAgentSection(text, model);
+        text.AppendLine().Append(target is PromptTarget.Chat ? ChatTask : TaskSection);
         return text.ToString();
     }
+
+    static readonly string ChatTask = ChatEditTask(
+        "Work out the change without changing behavior, no larger than it needs to be. It was written from the dependency model and may be wrong in details.",
+        "Say how to check it: build and run the tests. Dependinator shows the new structure after its next parse."
+    );
+
+    // The lines of the type's members the answer names, to keep when a long type is cut.
+    static IReadOnlyList<int> MemberLines(Node type, ModelAnswer answer) =>
+        [
+            .. answer
+                .Links.Values.Select(l => type.Children.FirstOrDefault(c => c.Id == l.Id))
+                .OfType<Node>()
+                .Where(m => m.FileSpan?.Path == type.FileSpan!.Path)
+                .Select(m => m.FileSpan!.StartLine),
+        ];
+
+    // The nodes the question was about, then the ones the answer names.
+    static IEnumerable<Node> Nodes(IModel model, ModelAnswer answer, AskContext context) =>
+        AskModelPrompt
+            .ContextNodes(model, context)
+            .Concat(answer.Links.Values.Select(l => model.Nodes.GetValueOrDefault(l.Id)).OfType<Node>())
+            .Distinct();
 
     // The nodes the question was about, then the ones the answer names, each with the file its
     // code is in. A node without a file of its own (a namespace, a project) that was asked about
@@ -65,9 +128,7 @@ static class AskChangePrompt
     static List<(string Name, string File)> Files(IModel model, ModelAnswer answer, AskContext context)
     {
         var asked = AskModelPrompt.ContextNodes(model, context);
-        var nodes = asked
-            .Concat(answer.Links.Values.Select(l => model.Nodes.GetValueOrDefault(l.Id)).OfType<Node>())
-            .Distinct();
+        var nodes = Nodes(model, answer, context);
         List<(string, string)> files = [];
         foreach (var node in nodes)
         {

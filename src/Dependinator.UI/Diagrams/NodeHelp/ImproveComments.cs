@@ -26,7 +26,8 @@ interface IImproveCommentsService
     CommentsScope GetScope(IReadOnlyList<NodeId> nodeIds, bool isBelow);
 
     // The prompt for Claude Code; empty when nothing in the scope can have a comment.
-    string GetPrompt(IReadOnlyList<NodeId> nodeIds, bool isBelow);
+    // target: who it is for (PromptTarget), Claude Code or Copilot in the user's folder unless copied.
+    string GetPrompt(IReadOnlyList<NodeId> nodeIds, bool isBelow, PromptTarget target = PromptTarget.LocalAgent);
 }
 
 [Scoped]
@@ -56,7 +57,7 @@ class ImproveCommentsService(IModelMgr modelMgr, IAiService aiService, IDialogSe
             { d => d.HasChildren, hasChildren },
             { d => d.CanRun, await aiService.CanFixWithClaudeCodeAsync() },
             { d => d.GetScope, isBelow => GetScope(nodeIds, isBelow) },
-            { d => d.GetPrompt, isBelow => GetPrompt(nodeIds, isBelow) },
+            { d => d.GetPrompt, (isBelow, target) => GetPrompt(nodeIds, isBelow, target) },
         };
         var options = new DialogOptions
         {
@@ -84,10 +85,10 @@ class ImproveCommentsService(IModelMgr modelMgr, IAiService aiService, IDialogSe
         );
     }
 
-    public string GetPrompt(IReadOnlyList<NodeId> nodeIds, bool isBelow)
+    public string GetPrompt(IReadOnlyList<NodeId> nodeIds, bool isBelow, PromptTarget target = PromptTarget.LocalAgent)
     {
         using var model = modelMgr.UseModel();
-        return CommentsPrompt.Build(model, CommentsPrompt.Targets(Nodes(model, nodeIds), isBelow));
+        return CommentsPrompt.Build(model, CommentsPrompt.Targets(Nodes(model, nodeIds), isBelow), target);
     }
 
     static List<Node> Nodes(IModel model, IReadOnlyList<NodeId> nodeIds) =>

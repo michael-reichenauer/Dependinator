@@ -236,6 +236,8 @@ public class CyclesTests(ITestOutputHelper output) : E2ETestBase(output)
         string prompt = await Page.EvaluateAsync<string>("() => window.__copiedText");
         Assert.StartsWith("Please break a circular dependency", prompt);
         Assert.Contains("Test mode: move one member out of the cycle.", prompt);
+        // Copied for claude.ai (Settings › AI): an AI chat that sees only the prompt gives the edits back.
+        Assert.Contains("Reply with the edits", prompt);
 
         // Copying the fix prompt accepts nothing.
         await Page.GetByTestId("accept-cycle-cancel").ClickAsync();

@@ -15,13 +15,21 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 3. Press F5 in VS Code to launch the extension host.
 4. Run the `Dependinator: Open` command.
 
+The debug window runs on your normal VS Code profile, so it shares your user settings and the
+stored secrets (the device sync sign-in, the Claude API key) with the installed extension. The
+Dependinator settings are its own: `debug.code-workspace`, the workspace it opens, sets them, and
+a workspace setting wins over a user setting. Device sync there uses the Dev site
+(`dependinator.cloudSync.baseUrl`), the installed extension Production. Changing one of these
+settings in the debug window edits `debug.code-workspace`: revert the file rather than commit a
+personal choice.
+
 ## Notes
 
 - In vscode.dev, the UI can load, but the .NET language server will be disabled.
 - Use `Dependinator: Install in Dev Container` to jump to the Extensions view and install the extension in a dev container.
 - WASM assets are published in Release without AOT.
 - `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.
-- Packaging requires the .NET 11 SDK pinned in `global.json` plus the .NET 10 runtime (the language server and WASM target `net10.0`), and Node 22+ (`@vscode/vsce` pulls in Azure packages that require it).
+- Packaging requires the .NET 11 SDK pinned in `global.json` (the language server and WASM target `net11.0`) plus the .NET 10 runtime for CSharpier, and Node 22+ (`@vscode/vsce` pulls in Azure packages that require it).
 - Installed extensions use a self-contained language server, so `dotnet` is not required at runtime.
 
 ## Build a VSIX locally

@@ -6,7 +6,7 @@
     "CloudSync__ContainerName": "dependinator-models-local",
     "CloudSync__MaxUserQuotaBytes": "10485760",
     "CloudSync__ClerkIssuer": "https://renewed-hen-98.clerk.accounts.dev",
-    "CloudSync__MaxTokenAgeDays": "180"
+    "CloudSync__MaxTokenAgeDays": "365"
   },
   "Host": {
     "LocalHttpPort": 7071,

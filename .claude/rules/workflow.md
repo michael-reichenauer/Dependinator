@@ -68,6 +68,13 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   /workspaces/Dependinator` first. The README images (`docs/images/hero.png`, `bicep.png`) can be
   re-shot with a Playwright script that searches a node and steps the wheel zoom, saving a
   screenshot per step to pick from (zoom drifts away from the pointer as containers open).
+- In GitHub Codespaces a 2-core/8 GB machine is too small for `./scripts/e2e` (Nov 19): when
+  available memory falls under ~1 GB the Codespaces host sends SIGTERM to processes in the
+  container (seen with `strace`: `si_pid=0`, no kernel OOM kill), so the app logs "Application is
+  shutting down..." mid-run and nearly every test fails with "Target crashed" or
+  `ERR_CONNECTION_REFUSED`. `devcontainer.json` asks for 4 cores/16 GB (`hostRequirements`); an
+  existing codespace needs "Change machine type". `/dev/shm` (64 MB) was not the cause:
+  Playwright's Chromium does not use it.
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 

@@ -14,10 +14,15 @@ interface ICyclePromptService
 
     // The text that asks an AI that can change the code to break the cycle as suggested.
     string GetFixPrompt(Cycle cycle, CycleSuggestion suggestion);
+
+    // The same, copied for the AI set in Settings › AI (IAiService.GetCopyTargetAsync): an agent
+    // with its own copy of the repository, or an AI chat, which gets the code to change.
+    Task<(string Prompt, PromptTarget Target)> GetCopiedFixPromptAsync(Cycle cycle, CycleSuggestion suggestion);
 }
 
 [Scoped]
-class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFileService) : ICyclePromptService
+class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFileService, IAiService aiService)
+    : ICyclePromptService
 {
     public async Task<string> GetPromptAsync(Cycle cycle, CycleSuggestion? acceptedAnswer = null)
     {
@@ -39,5 +44,25 @@ class CyclePromptService(IModelMgr modelMgr, IWorkspaceFileService workspaceFile
     {
         using var model = modelMgr.UseModel();
         return CyclePrompt.BuildFix(model, cycle, suggestion);
+    }
+
+    public async Task<(string Prompt, PromptTarget Target)> GetCopiedFixPromptAsync(
+        Cycle cycle,
+        CycleSuggestion suggestion
+    )
+    {
+        var target = await aiService.GetCopyTargetAsync();
+        IReadOnlyList<SourceRequest> requests = [];
+        if (target is PromptTarget.Chat && CanReadSource)
+        {
+            using var model = modelMgr.UseModel();
+            requests = CyclePrompt.GetSourceRequests(model, cycle);
+        }
+
+        // Read without holding the model, since in VS Code the files come from the LSP process.
+        var sources = await ReadSourcesAsync(workspaceFileService, requests);
+
+        using (var model = modelMgr.UseModel())
+            return (CyclePrompt.BuildFix(model, cycle, suggestion, target, sources), target);
     }
 }

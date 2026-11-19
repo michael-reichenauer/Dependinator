@@ -126,6 +126,10 @@
                   @if (entry.ChangeNote is { } changeNote)
                   {
                     <div class="dep-ai__suggest-note" data-testid="ask-change-note">@changeNote</div>
+                    @if (entry.IsChangePromptCopied)
+                    {
+                      <OpenChatButton TestId="ask-change-open-chat" />
+                    }
                   }
                   @if (entry.ChangeError is { } changeError)
                   {
@@ -134,7 +138,7 @@
                   @* Always there (it shows nothing until a run): a run or its report must not go
                      away when Claude Code is turned off meanwhile. *@
                   <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
-                                 OnStateChanged="OnChangeStateChanged" ConfirmTitle="Change the code with Claude Code?"
+                                 OnStateChanged="() => { }" ConfirmTitle="Change the code with Claude Code?"
                                  ConfirmYesText="Change anyway">
                     <SummaryContent Context="summary">@ReportSummary(entry, summary)</SummaryContent>
                   </ClaudeCodeFix>
@@ -245,6 +249,10 @@
       @if (otherAiNote is not null)
       {
         <div class="dep-ai__suggest-note dep-ask__other-note" data-testid="ask-other-note">@otherAiNote</div>
+        @if (isOtherPromptCopied)
+        {
+          <OpenChatButton TestId="ask-other-open-chat" Class="dep-ask__other-note" />
+        }
       }
       @if (otherAiError is not null)
       {
@@ -286,6 +294,7 @@
     public AskContext Context { get; init; } = AskContext.Model;
     public ClaudeCodeFix? FixPanel { get; set; }
     public string? ChangeNote { get; set; }
+    public bool IsChangePromptCopied { get; set; }
     public string? ChangeError { get; set; }
 
     // Claude Code's summary of the change with the nodes it names, as of the model then (Stamp).
@@ -435,22 +444,14 @@
   string ChangePrompt(Entry entry, ModelAnswer answer) =>
     askModelService.GetChangePrompt(answer, entry.Context, entry.AboutNames);
 
-  // A run started or ended, or the model changed after one: nothing to draw while the panel is hidden.
-  void OnChangeStateChanged()
-  {
-    if (viewOptions.IsAskShown)
-      StateHasChanged();
-  }
-
-  // There is no answer to paste back: the AI changes the code, and a re-parse shows the result.
-  const string ChangePromptCopiedNote =
-    "The prompt is copied. Paste it into Claude Code, or another AI that can change the code. When the change "
-    + "is made, re-parse to see the new structure.";
-
+  // There is no answer to paste back: the AI changes the code (or an AI chat gives the edits to
+  // apply), and a re-parse shows the result.
   async Task CopyChangePromptAsync(Entry entry, ModelAnswer answer)
   {
-    var isCopied = await clipboardService.CopyAsync(ChangePrompt(entry, answer));
-    entry.ChangeNote = isCopied ? ChangePromptCopiedNote : null;
+    var (prompt, target) = await askModelService.GetCopiedChangePromptAsync(answer, entry.Context, entry.AboutNames);
+    var isCopied = await clipboardService.CopyAsync(prompt);
+    entry.ChangeNote = isCopied ? PromptTargets.CopiedNote(target, "the diagram shows the new structure.", "The prompt") : null;
+    entry.IsChangePromptCopied = isCopied;
     entry.ChangeError = isCopied ? null : "Could not copy to the clipboard.";
   }
 
@@ -458,6 +459,7 @@
   async Task ChangeWithCopilotAsync(Entry entry, ModelAnswer answer)
   {
     entry.ChangeNote = null;
+    entry.IsChangePromptCopied = false;
     entry.ChangeError = null;
     var handed = await aiService.FixWithCopilotAsync(ChangePrompt(entry, answer));
     entry.ChangeNote = handed is Error ? null : AiService.CopilotFixNote;
@@ -482,7 +484,12 @@
   }
 
   // Settings › AI changed (from the chip's menu or the app menu): a new default is followed at once.
-  void OnChoiceChanged() => InvokeAsync(OnSettingsChangedAsync);
+  void OnChoiceChanged() =>
+    InvokeAsync(async () =>
+    {
+      await OnSettingsChangedAsync();
+      StateHasChanged();
+    });
 
   async Task OnSettingsChangedAsync()
   {
@@ -490,7 +497,6 @@
     await RefreshRoutesAsync();
     if (choice.Default != oldDefault)
       (route, isRoutePicked) = (choice.DefaultFor(AiCapability.ModelTools), false);
-    StateHasChanged();
   }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
@@ -570,7 +576,7 @@
     if (modelPath != "")
     {
       entries.Clear();
-      (otherAiNote, otherAiError) = (null, null);
+      (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     }
     modelPath = path;
   }
@@ -608,7 +614,7 @@
     var entry = new Entry(text) { Route = route.Source, About = About, AboutNames = AboutNames(context), Context = context };
     entries.Add(entry);
     question = "";
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     isExamplesShown = false;
     isAsking = true;
     var askedPath = modelMgr.WithModel(m => m.Path);
@@ -681,7 +687,7 @@
   void Clear()
   {
     entries.Clear();
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
   }
 
   Task ShowAllAsync(ModelAnswer answer) => navigationService.ShowNodesAsync([.. answer.Links.Values.Select(l => l.Id).Distinct()]);
@@ -692,6 +698,9 @@
   // What came of copying the question's prompt or handing it to Copilot Chat; gone with the next
   // question asked.
   string? otherAiNote;
+
+  // The note is the copied prompt's (its text can change after: the MCP address is published late).
+  bool isOtherPromptCopied;
   string? otherAiError;
 
   bool CanAskInCopilotChat => choice.Providers.Any(p => p.Source is AiSource.Copilot);
@@ -722,6 +731,7 @@
     var prompt = OtherAiPrompt();
     var isCopied = prompt != "" && await clipboardService.CopyAsync(prompt);
     otherAiNote = isCopied ? PromptCopiedNote : null;
+    isOtherPromptCopied = isCopied;
     otherAiError = isCopied ? null : prompt == "" ? NoModelError : "Could not copy to the clipboard.";
   }
 
@@ -734,7 +744,7 @@
     if (isHandingToCopilotChat)
       return;
     isHandingToCopilotChat = true;
-    (otherAiNote, otherAiError) = (null, null);
+    (otherAiNote, otherAiError, isOtherPromptCopied) = (null, null, false);
     StateHasChanged();
     var askedPath = modelPath;
     try

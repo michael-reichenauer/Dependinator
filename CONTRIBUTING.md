@@ -32,8 +32,8 @@ repo in VS Code and choose "Reopen in Container", or use GitHub Codespaces.
 
 ### Prerequisites (outside the devcontainer)
 
-- **.NET SDK 11.0** (pinned in `global.json`; the C# 15 union patterns
-  need its compiler) plus the **.NET 10 SDK/runtime** for the `net10.0` target.
+- **.NET SDK 11.0** (pinned in `global.json`) plus the **.NET 10 runtime** for the
+  Api and Shared projects, which stay on `net10.0`, and for CSharpier.
   Run the `dotnet-install.sh` line from `scripts/installdevtools`.
 - **Node.js + npm** for the VS Code extension and the SWA CLI.
 - **Azurite** (`npm i -g azurite`), the local Azure Storage emulator, used by
@@ -63,7 +63,7 @@ The e2e tests target the running app at `http://localhost:5000`; see
 
 ## Repository layout
 
-`Dependinator.slnx` targets `net10.0`. Production projects live under `src/`,
+`Dependinator.slnx` targets `net11.0` (the Api and Shared projects `net10.0`, for Azure Static Web Apps). Production projects live under `src/`,
 tests under `tests/`. The dependency direction is `Hosts → UI → Core → Shared`
 (with `Roslyn → Core` and `Bicep → Core`), enforced by `tests/Dependinator.Architecture.Tests/`.
 

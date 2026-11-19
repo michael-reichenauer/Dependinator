@@ -19,7 +19,7 @@ own notes, icons and hand-drawn nodes on top.
 |---|---|
 | **Shipped as** | A VS Code extension on the Marketplace (the product), and a web app at [dependinator.com](https://dependinator.com) for viewing synced models from anywhere and making small adjustments (with demo models to get started) |
 | **Languages it reads** | C# (`.sln` or `.slnx` with C# projects, through Roslyn), Azure Bicep (an entry `.bicep` file and its local modules, through the Bicep compiler), and TypeScript and JavaScript (a `tsconfig.json`, `jsconfig.json` or `package.json` project, through the TypeScript compiler in a Node.js helper process) |
-| **Stack** | .NET 10 (built with the .NET 11 SDK for C# 15 unions), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in, the Anthropic and Model Context Protocol C# SDKs for the AI features |
+| **Stack** | .NET 11 (the Api and its shared DTOs on .NET 10 for Azure Static Web Apps), Blazor WebAssembly and Blazor Server, MudBlazor, StreamJsonRpc, OmniSharp LSP, TypeScript for the extension, Azure Static Web Apps, Azure Functions and Blob Storage, Clerk for sign-in, the Anthropic and Model Context Protocol C# SDKs for the AI features |
 | **Size** | About 58k lines of product code, three quarters of it in the shared UI library; about 34k lines of tests |
 | **Tests** | About 1,270 unit tests, a Playwright UI suite run in Chromium, Firefox and WebKit, and architecture tests that guard the layering |
 | **Releases** | Version 0.91 (beta), about 40 releases since July 2026. Previews and releases are made by hand with the Release workflow (`docs/RELEASING.md`) |
@@ -226,9 +226,12 @@ can touch. Models are stored gzipped, with their hash and update time as blob me
 10 MB per user. A model's key is its normalized path, so the same model has the same key on every
 device; share links use that key.
 
-Points to discuss: tokens are accepted for 180 days after they were issued instead of until their
+Points to discuss: tokens are accepted for 365 days after they were issued instead of until their
 own expiry, a workaround for the 7-day limit of Clerk's free tier that should go once a paid plan
-allows longer lifetimes. Both clients send the token in a custom header as well as in
+allows longer lifetimes. It keeps VS Code signed in, which sends the one token it got at sign-in;
+the browser hosts ask their Clerk session for a fresh token on each call, so how long they stay
+signed in is the session lifetime set in the Clerk Dashboard (free to change on the development
+instance production uses). Both clients send the token in a custom header as well as in
 `Authorization`, because Static Web Apps may drop the standard header.
 
 ## 7. Delivery view: from a commit to production and the Marketplace
@@ -314,7 +317,7 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 | A flat item list as the parser contract | New languages (Bicep was added in one release) only produce items; layout, rendering and analysis come for free. The list is plain JSON, so a parser can be a program in another language (TypeScript's runs on Node.js) | Language-specific meaning has to fit nodes, links and a few properties |
 | Lazy layout and tiled SVG rendering | Large solutions stay responsive; only what is on screen is computed | More moving parts: layout versions, refinement, tile cache budgets |
 | Local-first models with optional sync | Works offline and without an account; nothing leaves the machine by default | Two copies to reconcile when sync is on |
-| `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Builds with the .NET 11 SDK while the target stays net10.0 |
+| `Result` / `Error` unions instead of exceptions | Failures are visible in signatures and must be handled (the build fails on a missing case) | Needs the .NET 11 SDK and C# 15 |
 | Architecture rules as tests | The layering stays true without relying on review | A new project needs a new rule |
 | AI behind `[Rpc]` interfaces, with the user's own provider | No AI cost or key on our side; the UI, which also ships to the browser, holds no SDK and no secret | Four routes to keep working; CI tests them against stand-ins, the real services are tried by hand |
 | One MCP server for every AI that looks things up | The model tools are defined once, for outside agents and for the app's own features | The diagram must be open; in VS Code each tool call crosses the tunnel |
@@ -342,15 +345,15 @@ Ask panel's answers on a set of questions and should be run after a prompt or to
 
 ## Risks and open topics
 
-- **SDK ahead of the target framework.** The build needs the .NET 11 SDK for C# 15 unions while the
-  projects target net10.0 (LTS); the later move to net11.0 waits for Azure Static Web Apps, see
+- **Two target frameworks.** The projects target net11.0, except
+  the Api and Shared, which stay on net10.0 until Azure Static Web Apps runs .NET 11 functions, see
   [docs/notes/NET11-UPGRADE.md](notes/NET11-UPGRADE.md).
 - **C# parsing needs a .NET SDK on the user's machine** (Bicep does not). A user without one gets
   a clear error, but it is a step to install before the first map.
 - **A second toolchain in the build.** The TypeScript parser's helper is built with npm, so a
   solution build needs Node.js, and its packages (the TypeScript compiler, esbuild) are bumped by
   hand: Dependabot and the nightly package task only look at NuGet.
-- **Clerk free tier.** The 180-day token workaround (view 6) trades some security for convenience.
+- **Clerk free tier.** The 365-day token workaround (view 6) trades some security for convenience.
 - **Concentration in one library.** Three quarters of the product code is in `Dependinator.UI`,
   which grew by almost half in the three weeks the AI features were added.
 - **AI routes outside our control.** The Claude Code route depends on a policy that is not settled,

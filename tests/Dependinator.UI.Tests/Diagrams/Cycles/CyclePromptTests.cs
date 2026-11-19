@@ -403,7 +403,7 @@ public class CyclePromptTests
         files
             .Setup(f => f.ReadSourceFileAsync("/repo/src/Utils/Ext.cs"))
             .ReturnsAsync((Result<string>)"// Kept in Utils on purpose\nclass Ext\n{\n}\n");
-        var service = new CyclePromptService(modelMgr, files.Object);
+        var service = new CyclePromptService(modelMgr, files.Object, Mock.Of<IAiService>());
 
         var prompt = await service.GetPromptAsync(cycle);
 
@@ -413,4 +413,60 @@ public class CyclePromptTests
 
         Assert.DoesNotContain("## Source", await service.GetPromptAsync(cycle));
     }
+
+    [Fact]
+    public async Task GetCopiedFixPromptAsync_ShouldCarryTheCode_AndAskForTheEdits_ForAnAiChat()
+    {
+        var cycle = AddParsingUtilsCycle();
+        var files = new Mock<IWorkspaceFileService>();
+        files
+            .Setup(f => f.ReadSourceFileAsync("/repo/src/Utils/Ext.cs"))
+            .ReturnsAsync((Result<string>)"class Ext\n{\n}\n");
+        var ai = new Mock<IAiService>();
+        ai.Setup(a => a.GetCopyTargetAsync()).ReturnsAsync(PromptTarget.Chat);
+        var service = new CyclePromptService(modelMgr, files.Object, ai.Object);
+
+        var (prompt, target) = await service.GetCopiedFixPromptAsync(cycle, Suggestion);
+        prompt = prompt.ReplaceLineEndings("\n");
+
+        Assert.Equal(PromptTarget.Chat, target);
+        Assert.Contains("## The suggested change\n\nMove Ext into Parsing.", prompt);
+        Assert.Contains("src/Utils/Ext.cs, lines 1–3:\n\n```csharp\nclass Ext\n", prompt);
+        Assert.Contains("You see only this prompt", prompt);
+        Assert.Contains("Reply with the edits, one per file", prompt);
+        Assert.DoesNotContain("## Where to look", prompt);
+        Assert.DoesNotContain("pull request", prompt);
+        Assert.DoesNotContain("Not included here", prompt);
+    }
+
+    [Fact]
+    public async Task GetCopiedFixPromptAsync_ShouldAskForABranchAndAPullRequest_ForACodingAgent()
+    {
+        var cycle = AddParsingUtilsCycle();
+        var files = new Mock<IWorkspaceFileService>(MockBehavior.Strict);
+        var ai = new Mock<IAiService>();
+        ai.Setup(a => a.GetCopyTargetAsync()).ReturnsAsync(PromptTarget.CodingAgent);
+        var service = new CyclePromptService(modelMgr, files.Object, ai.Object);
+
+        var (prompt, _) = await service.GetCopiedFixPromptAsync(cycle, Suggestion);
+        prompt = prompt.ReplaceLineEndings("\n");
+
+        // No code is read: the agent reads its own copy.
+        Assert.Contains(
+            "## Where to look\n\nThe code behind the directions made by only one or two types:\n- src/Utils/Ext.cs\n",
+            prompt
+        );
+        Assert.Contains("- The paths above are relative to the folder of `App.sln` in the repository.", prompt);
+        Assert.Contains("open a pull request", prompt);
+        Assert.Contains("## Your task\n\n1. Check the assumptions above in the code first.", prompt);
+        Assert.DoesNotContain("## Source", prompt);
+    }
+
+    static readonly CycleSuggestion Suggestion = new(
+        false,
+        "One misplaced class.",
+        "None",
+        "",
+        "Move Ext into Parsing."
+    );
 }
