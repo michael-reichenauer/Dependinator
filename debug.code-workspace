@@ -3,5 +3,17 @@
         {
             "path": "."
         }
-    ]
+    ],
+    // The workspace of the debug window (.vscode/launch.json, "VSCodeExt"). The settings here win
+    // over the user's own settings, so the extension under debug has its own Dependinator
+    // settings: device sync talks to the Dev site, while the installed extension in the normal
+    // window stays on Production. A setting listed here is also saved here when it is changed in
+    // the debug window (the diagram's Settings dialog, or VS Code's Workspace settings), not in
+    // the user's settings.
+    "settings": {
+        "dependinator.cloudSync.baseUrl": "https://polite-island-0e6a6eb03-dev.westeurope.4.azurestaticapps.net",
+        "dependinator.followActiveEditor": true,
+        "dependinator.autoRefresh.enabled": true,
+        "dependinator.autoRefresh.delaySeconds": 3
+    }
 }
