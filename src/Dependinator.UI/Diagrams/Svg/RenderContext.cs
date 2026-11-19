@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams.Lines;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 
@@ -17,6 +18,10 @@ readonly record struct ViewFlags(bool IsEditing, bool RevealHidden, bool DimUnre
     public RenderSelection DimSelection { get; init; }
     public LineFilter Filter { get; init; } = LineFilter.None;
     public RowFilter Rows { get; init; } = RowFilter.None;
+
+    // What the selection asks of the lines (a selected stub's lines drawn end to end); none
+    // in an export and while cycles are shown.
+    public LineReveal Reveal { get; init; } = LineReveal.None;
 
     // Sibling lines that are part of a circular dependency; null while cycles are not shown.
     public IReadOnlySet<LineId>? CyclicLines { get; init; }

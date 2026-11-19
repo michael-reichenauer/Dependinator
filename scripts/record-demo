@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Re-records the VS Code extension demo gif
-# (src/DependinatorVsCode/resources/demo.gif).
+# (src/Dependinator.VsCodeExt/resources/demo.gif).
 #
 # The demo scenario itself is scripted in scripts/record-demo.mjs — edit the
 # steps there and re-run this script to regenerate the gif.

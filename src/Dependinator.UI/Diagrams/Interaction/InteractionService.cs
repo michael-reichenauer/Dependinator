@@ -1,4 +1,5 @@
 using Dependinator.Core;
+using Dependinator.UI.Diagrams.Annotations;
 using Dependinator.UI.Diagrams.Dependencies;
 using Dependinator.UI.Diagrams.Editing;
 using Dependinator.UI.Modeling;
@@ -15,7 +16,6 @@ interface IInteractionService
     // The selected node is an open UML card: its rows are not panned or zoomed inside it.
     bool IsCard { get; }
     bool CanShowSource { get; }
-    bool CanShowLineSource { get; }
     bool IsEditNodeMode { get; set; }
     Task InitAsync();
     void NodePanZoomToFit();
@@ -38,6 +38,7 @@ class InteractionService(
     ILineEditService lineEditService,
     IApplicationEvents applicationEvents,
     ISelectionService selectionService,
+    IHighlightService highlightService,
     IModelMgr modelMgr,
     IDependenciesService dependenciesService,
     IManualEditService manualEditService,
@@ -75,6 +76,9 @@ class InteractionService(
     IReadOnlyCollection<NodeId>? zoneDragIds;
     bool isResizingSelectedNode = false;
     bool isDraggingSelectedLinePoint = false;
+    bool isDraggingLineLabel = false;
+    Pos labelDragClient = Pos.None;
+    Pos pointDragClient = Pos.None;
     bool isDraggingLink = false;
     bool isAreaSelecting = false;
 
@@ -145,19 +149,6 @@ class InteractionService(
         }
     }
 
-    // A line has no own source location; "show source" navigates to the line's source node.
-    public bool CanShowLineSource
-    {
-        get
-        {
-            if (!Build.IsVsCodeExtWasm || !selectionService.SelectedId.IsLine)
-                return false;
-            if (!dependenciesService.TryGetLine(LineId.FromId(selectionService.SelectedId.Id), out var line))
-                return false;
-            return line.Source.FileSpanOrParentSpan is not null;
-        }
-    }
-
     public bool IsEditNodeMode
     {
         get
@@ -220,6 +211,7 @@ class InteractionService(
     // plus/minus zoom. (Search, undo/redo and fit live in the app bar; Delete in the toolbars.)
     void OnKeyDown(KeyPress key)
     {
+        highlightService.Clear(); // A go to's highlight lasts until the user's next action
         if (key.Is("Escape") && key.IsPlain)
         {
             CancelOrDeselect();
@@ -298,6 +290,8 @@ class InteractionService(
             manualEditService.CancelNameEntry();
         else if (selectionService.IsEditMode)
             selectionService.SetEditMode(false);
+        else if (selectionService.TrySelectExploredStub())
+            return; // Back from one of a stub's lines to the stub, its lines still drawn
         else if (selectionService.IsSelected)
             selectionService.Unselect();
         else
@@ -487,6 +481,14 @@ class InteractionService(
             return;
         }
 
+        // Double-click on a bend point of the selected line in edit mode removes it (a segment
+        // handle is the line, below).
+        if (viewOptions.IsEditingEnabled && pointerId.IsLinePoint)
+        {
+            lineEditService.RemoveSegmentPoint(pointerId);
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
+            return;
+        }
         // Double-click on a line in edit mode edits its label.
         if (viewOptions.IsEditingEnabled && pointerId.IsLine)
         {
@@ -531,9 +533,13 @@ class InteractionService(
         // A suppressed click (if any) would have fired before this next press; clear a stale flag
         // from a selection drag that was too long to produce a click event at all.
         suppressNextClick = false;
+        if (isDraggingSelectedNode)
+            nodeEditService.EndMove(); // The release was missed (outside the window): the lines still follow
         isDraggingSelectedNode = false;
         isResizingSelectedNode = false;
         isDraggingSelectedLinePoint = false;
+        isDraggingLineLabel = false;
+        lineEditService.EndLabelMove();
         isDraggingLink = false;
 
         // Shift+press starts a rubber band that selects the nodes inside it (a Shift+click
@@ -578,7 +584,7 @@ class InteractionService(
     }
 
     // Routes a left-button drag to exactly one gesture. The branch order is the gesture
-    // priority: link-handle drag → line-point drag → selected-node content pan (edit mode) →
+    // priority: link-handle drag → segment-handle drag (adds a line point) → line-point drag → line-label drag → selected-node content pan (edit mode) →
     // resize-handle drag → selected-node move → canvas pan (the fallback for everything else).
     // Each editing branch marks its flag for OnMouseUp and hides the toolbar while dragging.
     void OnMouseMove(PointerEvent e)
@@ -608,6 +614,37 @@ class InteractionService(
             return;
         }
 
+        // Dragging a selected line's segment handle bends the line there: once the pointer has
+        // moved a few pixels (a click or double-click on it is a click on the line) it becomes a
+        // new bend point under the pointer, and the rest of the drag moves that point.
+        if (
+            viewOptions.IsEditingEnabled
+            && mouseDownId.IsLineMidPoint
+            && selectionService.SelectedId.IsLine
+            && mouseDownId.Id == selectionService.SelectedId.Id
+        )
+        {
+            if (!IsBeyondDragThreshold(e))
+                return;
+            var pointId = lineEditService.InsertSegmentPoint(
+                mouseDownId,
+                e.ClientX - mouseDownClient.X,
+                e.ClientY - mouseDownClient.Y,
+                Zoom
+            );
+            // A segment that is gone (the line changed under the press) leaves a pan.
+            mouseDownId = pointId ?? PointerId.Empty;
+            if (pointId is null)
+                return;
+            pointDragClient = new Pos(e.ClientX, e.ClientY);
+            isDraggingSelectedLinePoint = true;
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
+        // A bend point moves once the pointer has moved a few pixels, so a click or double-click
+        // on it does not nudge it (a nudge back onto the straight line would remove it). Steps
+        // are taken between client positions, as for a label.
         if (
             viewOptions.IsEditingEnabled
             && mouseDownId.IsLinePoint
@@ -615,8 +652,28 @@ class InteractionService(
             && mouseDownId.Id == selectionService.SelectedId.Id
         )
         {
+            if (!isDraggingSelectedLinePoint && !IsBeyondDragThreshold(e))
+                return;
+            var from = isDraggingSelectedLinePoint ? pointDragClient : mouseDownClient;
+            pointDragClient = new Pos(e.ClientX, e.ClientY);
             isDraggingSelectedLinePoint = true;
-            lineEditService.MoveSegmentPoint(e, Zoom, mouseDownId);
+            lineEditService.MoveSegmentPoint(e.ClientX - from.X, e.ClientY - from.Y, Zoom, mouseDownId);
+            selectionService.HideSelectedPosition();
+            return;
+        }
+
+        // A line's label slides along its line (any labelled line, selected or not), once the
+        // pointer has moved a few pixels: a click or double-click on the label must not move it.
+        if (viewOptions.IsEditingEnabled && mouseDownId.IsLineLabel)
+        {
+            if (!isDraggingLineLabel && !IsBeyondDragThreshold(e))
+                return;
+            // Steps are taken between client positions, the first from the press, so the label
+            // keeps up with the pointer (movementX can be in device pixels on some browsers).
+            var from = isDraggingLineLabel ? labelDragClient : mouseDownClient;
+            labelDragClient = new Pos(e.ClientX, e.ClientY);
+            isDraggingLineLabel = true;
+            lineEditService.MoveLabel(e.ClientX - from.X, e.ClientY - from.Y, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
             return;
         }
@@ -646,12 +703,15 @@ class InteractionService(
             // A zone dragged on its own carries the nodes drawn inside it (the set is fixed when
             // the drag starts, so a node leaving the zone mid-drag still follows).
             if (!isDraggingSelectedNode)
+            {
                 zoneDragIds = ZoneDragSet(mouseDownId.NodeId);
+                nodeEditService.BeginMove();
+            }
             isDraggingSelectedNode = true;
             if (selectionService.SelectedNodeCount > 1)
-                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds);
+                nodeEditService.MoveSelectedNodes(e, Zoom, selectionService.SelectedNodeIds, mouseDownId.NodeId);
             else if (zoneDragIds is { } zoneIds)
-                nodeEditService.MoveSelectedNodes(e, Zoom, zoneIds);
+                nodeEditService.MoveSelectedNodes(e, Zoom, zoneIds, mouseDownId.NodeId);
             else
                 nodeEditService.MoveSelectedNode(e, Zoom, mouseDownId);
             selectionService.HideSelectedPosition();
@@ -666,6 +726,12 @@ class InteractionService(
     // toolbar position, and resets all gesture state.
     void OnMouseUp(PointerEvent e)
     {
+        // A go to's highlight lasts until the user's next action: a click, a tap, a pan (a wheel
+        // zoom keeps it, so the user can zoom out around the node). Cleared on the release, not
+        // the press: it lights its node's lines, and an inner member line can be hit only while
+        // lit, so a repaint between press and release took the click away from such a line. The
+        // click's target is already in this event, so the repaint now comes too late to matter.
+        highlightService.Clear();
         if (isAreaSelecting)
         {
             isAreaSelecting = false;
@@ -684,9 +750,16 @@ class InteractionService(
 
         if (isDraggingSelectedLinePoint && mouseDownId.IsLinePoint)
         {
-            lineEditService.SnapSegmentPointToGrid(mouseDownId);
+            lineEditService.EndSegmentPointMove(mouseDownId, Zoom);
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedLinePoint = false;
+        }
+
+        if (isDraggingLineLabel)
+        {
+            lineEditService.EndLabelMove();
+            selectionService.UpdateSelectedPositionAsync().RunInBackground();
+            isDraggingLineLabel = false;
         }
 
         if (isResizingSelectedNode && mouseDownId.IsResize)
@@ -704,6 +777,7 @@ class InteractionService(
                 nodeEditService.SnapSelectedNodesToGrid(zoneIds);
             else
                 nodeEditService.SnapSelectedNodeToGrid(mouseDownId);
+            nodeEditService.EndMove();
             selectionService.UpdateSelectedPositionAsync().RunInBackground();
             isDraggingSelectedNode = false;
         }
@@ -725,9 +799,15 @@ class InteractionService(
         }
     }
 
+    const double LabelDragThreshold = 4;
+
+    bool IsBeyondDragThreshold(PointerEvent e) =>
+        Math.Abs(e.ClientX - mouseDownClient.X) > LabelDragThreshold
+        || Math.Abs(e.ClientY - mouseDownClient.Y) > LabelDragThreshold;
+
     // A band can start anywhere except on the edit handles, which have their own drags.
     static bool CanStartRubberBand(PointerId pressedId) =>
-        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint;
+        !pressedId.IsLinkHandle && !pressedId.IsResize && !pressedId.IsLinePoint && !pressedId.IsLineMidPoint;
 
     // Selects the nodes inside the finished rubber band (null when it was canceled or too small).
     async Task CompleteRubberBandAsync(Task<Rect?> selection)

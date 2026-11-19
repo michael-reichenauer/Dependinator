@@ -14,7 +14,11 @@ interface ISelectionService
     Pos SelectedPosition { get; }
     Pos SelectedNodePosition { get; }
     Pos SelectedLinePosition { get; }
-    Pos SelectedLineClickPosition { get; }
+
+    // Where the selected line leaves the view toward its source or target node, when that end
+    // is out of view (the line-end tags, LineEndTags.razor); null otherwise.
+    LineOnScreen.EndTag? SelectedLineSourceTag { get; }
+    LineOnScreen.EndTag? SelectedLineTargetTag { get; }
 
     // Every selected node: the primary one (SelectedId, which anchors the toolbar) plus the
     // ones added with Shift/Ctrl+click. Group actions (move, hide, color, size, delete) apply
@@ -39,6 +43,10 @@ interface ISelectionService
     Task AddToSelectionAsync(IReadOnlyList<NodeId> nodeIds);
     void SetEditMode(bool isEditMode);
     void Unselect();
+
+    // With one of a stub's lines selected while the stub's lines are being explored, selects the
+    // stub again, its lines still drawn (Escape's first step); false when there is no such step.
+    bool TrySelectExploredStub();
     void SetSelectedNodesVisibility(NodeVisibility visibility);
 }
 
@@ -59,10 +67,25 @@ class SelectionService(
     const double MaxCover = 0.8;
 
     Pos selectedPosition = Pos.None;
-    Pos selectedLineClickPosition = Pos.None;
+
+    // How far along the selected line it was clicked (0 to 1), where its toolbar goes while that
+    // spot is in view (LineOnScreen.GetAnchor).
+    double lineClickFraction = 0.5;
+    LineOnScreen.EndTag? sourceTag;
+    LineOnScreen.EndTag? targetTag;
     double clickedRelativePosition = 0.5;
     PointerId selectedId = PointerId.Empty;
     bool isEditMode = false;
+
+    // The stub whose lines stay drawn while one of them is selected (Line.IsExplored): set when a
+    // line drawn for the selected stub is clicked, kept while the user goes from one of its lines
+    // to another, and cleared by any other selection.
+    // Its relative position is where the stub was clicked, for its toolbar when Escape selects it
+    // again. The click's screen position is not kept: after a pan or zoom it would point elsewhere
+    // (add-point goes by it), so the stub comes back as if selected without a click spot.
+    ExploredStub? exploredStub;
+
+    record ExploredStub(LineId StubId, double RelativePosition);
 
     // Nodes added to the selection beyond the primary one (insertion order kept).
     readonly List<NodeId> extraSelected = [];
@@ -80,7 +103,8 @@ class SelectionService(
     public Pos SelectedPosition => IsSelected ? selectedPosition : Pos.None;
     public Pos SelectedNodePosition => selectedId.IsNode ? SelectedPosition : Pos.None;
     public Pos SelectedLinePosition => selectedId.IsLine ? SelectedPosition : Pos.None;
-    public Pos SelectedLineClickPosition => selectedId.IsLine ? selectedLineClickPosition : Pos.None;
+    public LineOnScreen.EndTag? SelectedLineSourceTag => SelectedLinePosition != Pos.None ? sourceTag : null;
+    public LineOnScreen.EndTag? SelectedLineTargetTag => SelectedLinePosition != Pos.None ? targetTag : null;
 
     public void HideSelectedPosition()
     {
@@ -100,6 +124,7 @@ class SelectionService(
         if (await screenService.GetBoundingRectangle(id) is not ElementBoundingRectangle bound)
         {
             // Selected Element is not visible on the screen
+            (sourceTag, targetTag) = (null, null);
             if (selectedPosition != Pos.None)
             {
                 selectedPosition = Pos.None;
@@ -109,9 +134,18 @@ class SelectionService(
         }
         (double x, double y) = (bound.X, bound.Y);
 
+        if (selectedId.IsLine && await TryUpdateLinePositionAsync())
+            return;
+        if (sourceTag is not null || targetTag is not null)
+        {
+            (sourceTag, targetTag) = (null, null);
+            applicationEvents.TriggerUIStateChanged();
+        }
+
         if (selectedId.IsLine)
         {
-            // Calculate the clicked relative position on the line, to show the toolbar at the clicked position on the line
+            // A stub, drawn short at its child: the toolbar goes at the clicked relative position
+            // in the stub's measured box.
             x = bound.X + clickedRelativePosition * bound.Width - ToolbarOffsetX;
             y = bound.Y + clickedRelativePosition * bound.Height - ToolbarOffsetY;
 
@@ -131,6 +165,57 @@ class SelectionService(
 
         selectedPosition = new Pos(x, y);
         applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Places the selected line's toolbar on the line, at the clicked spot or on the part in view,
+    // and its end tags where it leaves the view; false for a line drawn as a stub, which is
+    // shorter than the line's geometry.
+    async Task<bool> TryUpdateLinePositionAsync()
+    {
+        if (await GetLineOnScreenAsync(selectedId.LineId) is not { } onScreen)
+            return false;
+        var (points, view) = onScreen;
+
+        var anchor = LineOnScreen.GetAnchor(points, view, lineClickFraction);
+        var position = anchor is { } a ? new Pos(a.X - ToolbarOffsetX, a.Y - ToolbarOffsetY) : Pos.None;
+        var source = LineOnScreen.GetEndTag(points, view, isTargetEnd: false);
+        var target = LineOnScreen.GetEndTag(points, view, isTargetEnd: true);
+        if (position == selectedPosition && source == sourceTag && target == targetTag)
+            return true;
+
+        (selectedPosition, sourceTag, targetTag) = (position, source, target);
+        applicationEvents.TriggerUIStateChanged();
+        return true;
+    }
+
+    // Margin inside the view's edges for the toolbar's spot and the end tags.
+    const double ViewMargin = 4;
+
+    // The line in client pixels and the part of the canvas in view (below the app bar and the
+    // breadcrumb); null for a stub or a line that is gone.
+    async Task<(IReadOnlyList<Pos> Points, Rect View)?> GetLineOnScreenAsync(LineId lineId)
+    {
+        if (await screenService.GetBoundingRectangle(PointerId.CanvasElementId) is not ElementBoundingRectangle svg)
+            return null;
+
+        IReadOnlyList<Pos> points;
+        using (var model = modelMgr.UseModel())
+        {
+            if (!model.Lines.TryGetValue(lineId, out var line) || LineStub.IsStub(line, isOnPath: false))
+                return null;
+            points = LineOnScreen.ToScreen(line, model.Offset, model.Zoom, new Pos(svg.X, svg.Y));
+        }
+        if (points.Count < 2)
+            return null;
+
+        var top = Math.Max(svg.Y, ToolbarPositioning.ChromeBottom) + ViewMargin;
+        var view = new Rect(
+            svg.X + ViewMargin,
+            top,
+            Math.Max(0, svg.Width - 2 * ViewMargin),
+            Math.Max(0, svg.Y + svg.Height - ViewMargin - top)
+        );
+        return (points, view);
     }
 
     public void SetEditMode(bool isEditMode)
@@ -215,6 +300,10 @@ class SelectionService(
 
     public async Task Select(PointerId pointerId, PointerEvent e)
     {
+        // A click on a segment handle is a click on its line (measured by the line's element).
+        if (pointerId.IsLineMidPoint)
+            pointerId = PointerId.FromLine(pointerId.LineId);
+
         if (IsSelected && selectedId.Id == pointerId.Id)
         {
             if (pointerId.IsLine)
@@ -225,6 +314,13 @@ class SelectionService(
                 // added, ahead of the render), so its toolbar is not placed yet: place it now.
                 await UpdateSelectedPositionAsync();
             }
+            return;
+        }
+
+        if (pointerId.IsLine)
+        {
+            // The line replaces the current selection itself, once it has been measured.
+            await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: true);
             return;
         }
 
@@ -253,15 +349,9 @@ class SelectionService(
             {
                 selectedId = pointerId;
                 this.isEditMode = false;
-                selectedLineClickPosition = Pos.None;
                 applicationEvents.TriggerModelChanged();
                 await UpdateSelectedPositionAsync();
             }
-        }
-
-        if (pointerId.IsLine)
-        {
-            await TrySelectOrRefreshLineAsync(pointerId, e, isNewSelection: true);
         }
     }
 
@@ -270,6 +360,15 @@ class SelectionService(
         if (!IsSelected)
             return;
 
+        ClearSelection();
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Clears the selection's state without telling anyone: the caller raises the events, at
+    // once or after it has selected something else.
+    void ClearSelection()
+    {
         if (selectedId.IsNode)
         {
             using (var model = modelMgr.UseModel())
@@ -287,40 +386,70 @@ class SelectionService(
             }
         }
         extraSelected.Clear();
-        if (selectedId.IsLine)
+        if (selectedId.IsLine || exploredStub is not null)
         {
             using (var model = modelMgr.UseModel())
             {
-                if (model.Lines.TryGetValue(selectedId.LineId, out var line))
+                if (selectedId.IsLine && model.Lines.TryGetValue(selectedId.LineId, out var line))
                     line.IsSelected = false;
+                if (exploredStub is not null && model.Lines.TryGetValue(exploredStub.StubId, out var stub))
+                    stub.IsExplored = false;
             }
         }
+        exploredStub = null;
         selectedId = PointerId.Empty;
         this.isEditMode = false;
-        selectedLineClickPosition = Pos.None;
         // Forget the toolbar position too: UpdateSelectedPositionAsync skips the repaint when
         // the position is unchanged, so re-selecting the same node at the same spot would
         // otherwise select it in the model without ever showing it (no border, no toolbar).
         selectedPosition = Pos.None;
-        applicationEvents.TriggerModelChanged();
-        applicationEvents.TriggerUIStateChanged();
     }
 
+    // A newly selected line replaces the current selection here, not in the caller, and only
+    // after it has been measured and without a repaint in between: a selected stub's lines are
+    // drawn end to end only while it is selected (RepLineService's LineReveal), so deselecting
+    // the stub first takes the clicked line off the screen, and a line that is not on screen
+    // cannot be selected. (The browser app repaints before the measuring call returns; there the
+    // click only deselected.)
     async Task<bool> TrySelectOrRefreshLineAsync(PointerId pointerId, PointerEvent e, bool isNewSelection)
     {
         if (await screenService.GetBoundingRectangle(pointerId.ElementId) is not ElementBoundingRectangle bound)
-            return false; // Selected line is not visible on the screen
+        {
+            if (isNewSelection)
+                Unselect(); // Clicked on a line that is no longer on the screen
+            return false;
+        }
+        // Where along the line it was clicked, for its toolbar. Measured before the selection is
+        // cleared below: nothing may be awaited between that and selecting the line (a repaint
+        // there takes a stub's lines off the screen). A press on the label, which lies beside
+        // the line, leaves the toolbar where it is.
+        if (isNewSelection || !pointerId.IsLineLabel)
+        {
+            lineClickFraction = await GetLineOnScreenAsync(pointerId.LineId) is { } onScreen
+                ? LinePathGeometry.FractionAt(onScreen.Points, new Pos(e.ClientX, e.ClientY))
+                : 0.5;
+        }
+        var stubToExplore = isNewSelection ? GetStubToExplore(pointerId.LineId) : null;
+        var stubRelativePosition =
+            exploredStub is { } explored && explored.StubId == stubToExplore
+                ? explored.RelativePosition
+                : clickedRelativePosition;
+        if (isNewSelection)
+            ClearSelection();
 
         var (x1, y1, x2, y2) = (bound.X, bound.Y, bound.Right, bound.Bottom);
         var (x, y) = (e.ClientX, e.ClientY);
-        selectedLineClickPosition = new Pos(x, y);
-
         using (var model = modelMgr.UseModel())
         {
             if (model.Lines.TryGetValue(pointerId.LineId, out var line))
             {
                 if (isNewSelection)
                     line.IsSelected = true;
+                if (stubToExplore is { } stubId && model.Lines.TryGetValue(stubId, out var stub))
+                {
+                    stub.IsExplored = true;
+                    exploredStub = new ExploredStub(stubId, stubRelativePosition);
+                }
 
                 // Calculate the clicked relative position on the line, this is used to
                 // show the toolbar at the clicked position on the line
@@ -345,6 +474,58 @@ class SelectionService(
 
         applicationEvents.TriggerModelChanged();
         await UpdateSelectedPositionAsync();
+        if (isNewSelection)
+            applicationEvents.TriggerUIStateChanged(); // Also when the toolbar did not move
+        return true;
+    }
+
+    // The stub to keep exploring when the clicked line is selected: the stub is selected now or
+    // is already being explored, and the clicked line is one of its lines, a line across
+    // containers with only the stub's links. (Not Line.IsRevealed: that holds the newest tile's
+    // lines, and a view can show several tiles.) Clicking the stub itself selects it as usual.
+    // The stub must be drawn as one: a labelled or hand-routed edge line draws no stub lines.
+    LineId? GetStubToExplore(LineId clickedId)
+    {
+        if (!selectedId.IsLine)
+            return null;
+        var stubId = exploredStub?.StubId ?? selectedId.LineId;
+        using var model = modelMgr.UseModel();
+        if (
+            !model.Lines.TryGetValue(stubId, out var stub)
+            || !LineStub.IsEdgeLine(stub)
+            || !LineStub.IsStub(stub, isOnPath: false)
+            || !model.Lines.TryGetValue(clickedId, out var clicked)
+            || !clicked.IsCousin
+            || clicked.Links.Count == 0
+            || !clicked.Links.All(stub.Contains)
+        )
+            return null;
+        return stubId;
+    }
+
+    public bool TrySelectExploredStub()
+    {
+        if (exploredStub is not { } explored || !selectedId.IsLine || selectedId.LineId == explored.StubId)
+            return false;
+        using (var model = modelMgr.UseModel())
+        {
+            // The stub's line can be gone (a refresh), or replaced by one that is not explored.
+            if (!model.Lines.TryGetValue(explored.StubId, out var stub) || !stub.IsExplored)
+            {
+                exploredStub = null;
+                return false;
+            }
+            // In the same lock as the check, so the stub cannot go in between (the lock is
+            // reentrant, ClearSelection takes it too).
+            ClearSelection();
+            stub.IsSelected = true;
+        }
+        selectedId = PointerId.FromLine(explored.StubId);
+        clickedRelativePosition = explored.RelativePosition;
+        lineClickFraction = 0.5;
+        applicationEvents.TriggerModelChanged();
+        applicationEvents.TriggerUIStateChanged();
+        UpdateSelectedPositionAsync().RunInBackground(); // The toolbar follows once the stub is measured
         return true;
     }
 

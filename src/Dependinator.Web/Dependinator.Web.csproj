@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <AssemblyName>Dependinator.Web</AssemblyName>
         <RootNamespace>Dependinator.Web</RootNamespace>
         <Nullable>enable</Nullable>
@@ -17,6 +17,7 @@
         <ProjectReference Include="..\Dependinator.Core\Dependinator.Core.csproj" />
         <ProjectReference Include="..\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
         <ProjectReference Include="..\Dependinator.Bicep\Dependinator.Bicep.csproj" />
+        <ProjectReference Include="..\Dependinator.TypeScriptParser\Dependinator.TypeScriptParser.csproj" />
         <ProjectReference Include="..\Dependinator.Claude\Dependinator.Claude.csproj" />
         <ProjectReference Include="..\Dependinator.Mcp\Dependinator.Mcp.csproj" />
     </ItemGroup>

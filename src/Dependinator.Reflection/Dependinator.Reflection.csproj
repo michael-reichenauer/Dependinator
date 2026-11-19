@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <AssemblyName>Dependinator.Reflection</AssemblyName>
         <RootNamespace>Dependinator.Reflection</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>

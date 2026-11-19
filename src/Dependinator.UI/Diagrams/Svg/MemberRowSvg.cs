@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Web;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 using static Dependinator.UI.Diagrams.Svg.SvgText;

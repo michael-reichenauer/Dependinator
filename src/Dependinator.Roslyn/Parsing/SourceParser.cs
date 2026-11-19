@@ -11,8 +11,7 @@ namespace Dependinator.Roslyn.Parsing;
 [Transient]
 class SourceParser : ISourceParser
 {
-    public bool CanParse(string path) =>
-        path == DemoModel.DemoSolutionName || path.EndsWith(".sln", StringComparison.OrdinalIgnoreCase);
+    public bool CanParse(string path) => path == DemoModel.DemoSolutionName || ModelPaths.IsSolution(path);
 
     public async Task<Result<IReadOnlyList<Item>>> ParseAsync(string solutionPath, SolutionParseOptions options)
     {
@@ -55,7 +54,15 @@ class SourceParser : ISourceParser
 
         var solutionName = Names.GetSolutionName(solutionPath);
         var description = SolutionDescriptionReader.TryReadFromReadme(solutionPath);
-        var solutionNode = new Node(solutionName, new() { Type = NodeType.Solution, Description = description });
+        var solutionNode = new Node(
+            solutionName,
+            new()
+            {
+                Type = NodeType.Solution,
+                Description = description,
+                IconName = LanguageIcons.CSharp,
+            }
+        );
 
         var csharpProjects = solution.Projects.Where(p => p.Language == LanguageNames.CSharp).ToList();
 
@@ -208,6 +215,7 @@ class SourceParser : ISourceParser
                     Parent = parentName,
                     IsExecutable = isExecutable,
                     FileSpan = fileSpan,
+                    ProjectFolder = Path.GetDirectoryName(projectPath),
                 }
             ),
             null

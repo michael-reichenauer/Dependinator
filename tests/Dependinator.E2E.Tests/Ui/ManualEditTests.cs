@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Dependinator.E2E.Tests.Shared;
 using Microsoft.Playwright;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Dependinator.E2E.Tests.Ui;
@@ -22,6 +23,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     const string DragTargetIcon = "Scheduler";
     const string DragCancelIcon = "Analytics";
     const string DragCanvasIcon = "Security";
+    const string AlignAnchorIcon = "Network";
+    const string AlignMovedIcon = "Communication";
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedViaMenu_AtClickedPosition()
@@ -38,14 +41,55 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(Page.GetByText("Click on the diagram to place the node.")).ToBeVisibleAsync();
 
         // Click an empty area (bottom-left) to place the node there.
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         await Page.Mouse.ClickAsync(box.X + 150, box.Y + box.Height - 130);
 
         await PickIconAsync(MenuNodeIcon);
 
         await Expect(App.NodeLabel(MenuNodeIcon)).ToBeVisibleAsync();
     }
+
+    [E2EFact(SkipOnWebKit = "headless WebKit sends movementX/Y 0, so a mouse drag does not move a node")]
+    public async Task DraggedNode_ShouldShowAGuideAndSnap_WhenItLinesUpWithASibling()
+    {
+        await App.GotoMainPageAsync();
+        await App.EnableEditModeAsync();
+
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
+        await AddManualNodeAtAsync(AlignAnchorIcon, box.X + 150, box.Y + box.Height - 330);
+        await Expect(App.NodeLabel(AlignAnchorIcon)).ToBeVisibleAsync();
+        await AddManualNodeAtAsync(AlignMovedIcon, box.X + 350, box.Y + box.Height - 130);
+        await Expect(App.NodeLabel(AlignMovedIcon)).ToBeVisibleAsync();
+
+        // Select the new node and drag it until its left edge is 4 px right of the other's.
+        LocatorBoundingBoxResult anchor = await WaitForStableNodeBoxAsync(AlignAnchorIcon);
+        LocatorBoundingBoxResult moved = await WaitForStableNodeBoxAsync(AlignMovedIcon);
+        float pressX = moved.X + moved.Width / 2;
+        float pressY = moved.Y + moved.Height / 3;
+        await Page.Mouse.ClickAsync(pressX, pressY);
+        await Expect(App.NodeToolbarMenu).ToBeVisibleAsync();
+        await Page.Mouse.MoveAsync(pressX, pressY);
+        await Page.Mouse.DownAsync();
+        await Page.Mouse.MoveAsync(pressX + anchor.X - moved.X + 4, pressY - 20, new() { Steps = 10 });
+
+        // While dragging, a guide shows the alignment; on the drop it goes, and the node stays
+        // lined up with the other (by its left edge, not by the grid).
+        ILocator guide = Page.Locator("#svgcanvas g.dep-alignment-guides line");
+        await Expect(guide).ToHaveCountAsync(1);
+        await Page.Mouse.UpAsync();
+        await Expect(guide).ToHaveCountAsync(0);
+
+        LocatorBoundingBoxResult anchorRect = await NodeRectAsync(AlignAnchorIcon);
+        LocatorBoundingBoxResult movedRect = await NodeRectAsync(AlignMovedIcon);
+        Assert.InRange(movedRect.X - anchorRect.X, -1, 1);
+    }
+
+    // The node's box (its hover group's rect), without its label, which is wider or narrower.
+    async Task<LocatorBoundingBoxResult> NodeRectAsync(string label) =>
+        await App.Node(label).Locator("rect").First.BoundingBoxAsync()
+        ?? throw new InvalidOperationException($"{label} is not rendered.");
 
     [E2EFact]
     public async Task ManualNode_ShouldBeAddedByDoubleClick_AndPersistAcrossReload()
@@ -77,8 +121,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
 
         // Two manual nodes on empty canvas (bottom-left, horizontally apart) to link.
         await AddManualNodeAtAsync(LinkSourceIcon, box.X + 150, box.Y + box.Height - 130);
@@ -107,11 +151,11 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.ClickAsync(box.X + 60, box.Y + box.Height - 40);
         await App.SelectLineAsync(line);
 
-        // A line showing only a manual link exposes Delete; deleting removes the line. An
-        // ordinary line like this one has no jumps to its ends (direct and explorer lines do).
+        // A line showing only a manual link exposes Delete; deleting removes the line. Both its
+        // ends are in view, so it has no end tags.
         await Expect(Page.GetByTestId("line-delete")).ToBeVisibleAsync();
-        await Expect(App.LinePanSourceButton).ToHaveCountAsync(0);
-        await Expect(App.LinePanTargetButton).ToHaveCountAsync(0);
+        await Expect(App.LineEndSourceTag).ToHaveCountAsync(0);
+        await Expect(App.LineEndTargetTag).ToHaveCountAsync(0);
         await Page.GetByTestId("line-delete").ClickAsync();
         await Expect(line).ToHaveCountAsync(0);
     }
@@ -122,8 +166,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
 
         // Two manual nodes on empty canvas (bottom-left, horizontally apart) to link.
         await AddManualNodeAtAsync(DragSourceIcon, box.X + 150, box.Y + box.Height - 130);
@@ -159,8 +203,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
 
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
 
         await AddManualNodeAtAsync(DragCancelIcon, box.X + 150, box.Y + box.Height - 130);
         await Expect(App.NodeLabel(DragCancelIcon)).ToBeVisibleAsync();
@@ -195,8 +239,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Expect(App.Line(DragCancelIcon, DragCanvasIcon)).ToHaveCountAsync(1);
     }
 
-    // Hovers the node to reveal its drag-to-link handle, then moves onto the handle's visible
-    // dot and returns the press point. The handle's invisible touch ellipse bridges from the
+    // Hovers the node until its drag-to-link handle is revealed (after a short delay), then moves
+    // onto the handle's visible dot and returns the press point. The handle's invisible touch ellipse bridges from the
     // icon edge to the dot, so the handle stays hover-revealed (and pointer-events enabled)
     // while the cursor travels there.
     async Task<(float X, float Y)> HoverLinkHandleAsync(string nodeLabel)
@@ -205,8 +249,9 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Mouse.MoveAsync(nodeBox.X + nodeBox.Width / 2, nodeBox.Y + nodeBox.Height / 2);
 
         ILocator handleDot = App.Node(nodeLabel).Locator("g.linkhandle circle");
-        LocatorBoundingBoxResult handleBox =
-            await handleDot.BoundingBoxAsync() ?? throw new InvalidOperationException("Link handle is not rendered.");
+        await Expect(handleDot).ToBeVisibleAsync();
+        LocatorBoundingBoxResult handleBox = await handleDot.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Link handle is not rendered.");
 
         float pressX = handleBox.X + handleBox.Width / 2;
         float pressY = handleBox.Y + handleBox.Height / 2;
@@ -246,8 +291,8 @@ public class ManualEditTests(ITestOutputHelper output) : E2ETestBase(output)
     // Double-clicks an empty area of the canvas and picks an icon in the selector dialog.
     async Task AddManualNodeAsync(string iconName)
     {
-        LocatorBoundingBoxResult box =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult box = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
 
         // Bottom-left quadrant, away from the centered demo nodes.
         await AddManualNodeAtAsync(iconName, box.X + 120, box.Y + box.Height - 120);

@@ -122,6 +122,46 @@ public class PassThroughServiceTests
         Assert.False(GetNode(model, $"{Assembly}.Dependinator.Core").IsPassThrough);
     }
 
+    // A TypeScript project whose source is all below "src/app": the folders that only lead
+    // there are passed through, the folders of the source itself are not.
+    [Fact]
+    public void UpdatePassThroughFlags_ShouldMarkTheFoldersThatOnlyLeadToAProjectsSource()
+    {
+        using var model = NewModel();
+        AddNode(model, "shop", NodeType.Solution);
+        AddNode(model, "shop.src", NodeType.Folder);
+        AddNode(model, "shop.src.app", NodeType.Folder);
+        AddNode(model, "shop.src.app.main*ts", NodeType.SourceFile);
+        AddNode(model, "shop.src.app.lib", NodeType.Folder);
+        AddNode(model, "shop.src.app.lib.util", NodeType.Folder);
+        AddNode(model, "shop.src.app.lib.util.text*ts", NodeType.SourceFile);
+
+        PassThroughService.UpdatePassThroughFlags(model);
+
+        Assert.True(GetNode(model, "shop.src").IsPassThrough);
+        Assert.True(GetNode(model, "shop.src.app").IsPassThrough);
+        Assert.False(GetNode(model, "shop.src.app.lib").IsPassThrough);
+        Assert.False(GetNode(model, "shop.src.app.lib.util").IsPassThrough); // A sole folder, but of a shown folder
+        Assert.False(GetNode(model, "shop.src.app.main*ts").IsPassThrough);
+    }
+
+    [Fact]
+    public void UpdatePassThroughFlags_ShouldShowAProjectsFolder_WhenItHasAFileBesideIt()
+    {
+        using var model = NewModel();
+        AddNode(model, "shop", NodeType.Solution);
+        AddNode(model, "shop.src", NodeType.Folder);
+        AddNode(model, "shop.src.main*ts", NodeType.SourceFile);
+
+        PassThroughService.UpdatePassThroughFlags(model);
+        Assert.True(GetNode(model, "shop.src").IsPassThrough);
+
+        AddNode(model, "shop.index*ts", NodeType.SourceFile);
+        PassThroughService.UpdatePassThroughFlags(model);
+
+        Assert.False(GetNode(model, "shop.src").IsPassThrough);
+    }
+
     static IModel NewModel()
     {
         var model = new ModelMgr(new StateMgr()).UseModel();

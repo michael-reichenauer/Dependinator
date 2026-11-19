@@ -55,7 +55,20 @@ static class NoteSvg
         return Math.Min(radius * 1.1, byWidth);
     }
 
-    static string SelectedNoteSvg(Node node, double cx, double cy, double r)
+    static string SelectedNoteSvg(Node node, double cx, double cy, double r) =>
+        HighlightNoteSvg(node, cx, cy, r) + SelectionNoteSvg(node, cx, cy, r);
+
+    // A note's corner brackets after a "go to" (see NodeSvg.HighlightSvg), around the selection ring.
+    static string HighlightNoteSvg(Node node, double cx, double cy, double r)
+    {
+        if (!node.IsHighlighted)
+            return "";
+
+        var half = r + Math.Max(3, r * 0.25) + 6;
+        return NodeSvg.HighlightBracketsSvg(new Rect(cx - half, cy - half, 2 * half, 2 * half));
+    }
+
+    static string SelectionNoteSvg(Node node, double cx, double cy, double r)
     {
         if (!node.IsSelected)
             return "";

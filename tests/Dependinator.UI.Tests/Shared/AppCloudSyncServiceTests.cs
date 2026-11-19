@@ -82,6 +82,80 @@ public class AppCloudSyncServiceTests
     }
 
     [Fact]
+    public async Task RefreshSyncStateAsync_ShouldNotHashTheModelAgain_WhileItsContentIsUnchanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(Stamp(modelPath, saves: 7));
+
+        // Panning and zooming refresh the sync state but leave the content version
+        await context.Sut.RefreshSyncStateAsync();
+        await context.Sut.RefreshSyncStateAsync();
+        await context.Sut.RefreshSyncStateAsync();
+
+        context.ModelService.Verify(x => x.GetCurrentModelDto(), Times.Once);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task RefreshSyncStateAsync_ShouldSeeALocalChange_WhenTheContentStampChanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        var stamp = Stamp(modelPath, saves: 1);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(() => stamp);
+        await context.Sut.RefreshSyncStateAsync();
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+
+        // An edit changes the content and requests a save
+        context.ModelService.Setup(x => x.GetCurrentModelDto()).Returns(CreateModelDto("edited"));
+        await context.Sut.RefreshSyncStateAsync();
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState()); // Same stamp
+        stamp = stamp with { Saves = stamp.Saves + 1 };
+        await context.Sut.RefreshSyncStateAsync();
+
+        Assert.Equal(CloudSyncState.HasLocalChanges, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task SyncUpAsync_ShouldLeaveTheCheckedHashOnThePushedContent()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+        var stamp = Stamp(modelPath, saves: 1);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(() => stamp);
+        await context.Sut.RefreshSyncStateAsync();
+
+        // The content changed since the last check, and the push sends the changed content
+        ModelDto edited = CreateModelDto("edited");
+        context.ModelService.Setup(x => x.GetCurrentModelDto()).Returns(edited);
+        CloudModelMetadata pushed = CreateCloudModelMetadata(modelPath, edited);
+        context.CloudSyncService.Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(pushed);
+        context.CloudSyncService.Setup(x => x.ListAsync()).ReturnsAsync(new CloudModelList([pushed]));
+        context
+            .CloudSyncStateService.Setup(x => x.RecordPushAsync(modelPath, pushed, It.IsAny<string>()))
+            .Callback<string, CloudModelMetadata, string>(
+                (_, metadata, localHash) =>
+                    context
+                        .CloudSyncStateService.Setup(x => x.GetAsync(modelPath))
+                        .ReturnsAsync(new CloudSyncModelState() { Baseline = new(localHash, metadata.ContentHash) })
+            )
+            .Returns(Task.CompletedTask);
+        AssertOk(await context.Sut.SyncUpAsync());
+        await context.Sut.RefreshSyncStateAsync();
+
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    static ModelContentStamp Stamp(string modelPath, long saves) => new(modelPath, saves);
+
+    [Fact]
     public async Task AutoSync_ShouldNotPushOrPull_WhenConflictExists()
     {
         string modelPath = "/models/sample.model";
@@ -234,13 +308,8 @@ public class AppCloudSyncServiceTests
         // The clock is controlled by the test so the throttle window cannot expire behind its
         // back on a slow machine; refreshes still run on real (short) timers.
         DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        SutContext context = CreateSutContext(
-            modelPath,
-            localModel,
-            syncState,
-            [cloudModel],
-            timings,
-            () => currentUtc
+        SutContext context = CreateSutContext(modelPath, localModel, syncState, [cloudModel], timings, () =>
+            currentUtc
         );
 
         context.ApplicationEvents.TriggerUIStateChanged();
@@ -275,13 +344,8 @@ public class AppCloudSyncServiceTests
         // cannot expire until the test moves the clock, while the checks themselves still run on
         // real (short) timers.
         DateTimeOffset currentUtc = new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
-        SutContext context = CreateSutContext(
-            modelPath,
-            syncedModel,
-            syncState,
-            [cloudModel],
-            timings,
-            () => currentUtc
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], timings, () =>
+            currentUtc
         );
 
         int listCallsAfterInitialize = context.Counters.ListCalls;
@@ -293,13 +357,12 @@ public class AppCloudSyncServiceTests
         );
 
         // Past the deadline the loop stops at its next iteration without queuing another check;
-        // one check whose delay was already running may still land, so let it before snapshotting.
+        // one check whose delay was already running may still land. On a loaded CI machine it
+        // landed more than 100 ms later, after a fixed wait had taken its snapshot (4 calls
+        // instead of 3, Nov 2026). So wait for the checks to go quiet instead: a loop that never
+        // stopped would keep checking every 20 ms and never be quiet for ten intervals.
         currentUtc += timings.MaxIdleRefreshDuration + TimeSpan.FromMilliseconds(1);
-        await Task.Delay(100);
-        int callsAfterIdleWindow = context.Counters.ListCalls;
-
-        await Task.Delay(100);
-        Assert.Equal(callsAfterIdleWindow, context.Counters.ListCalls);
+        await WaitUntilQuietAsync(() => context.Counters.ListCalls, quietMilliseconds: 200);
     }
 
     [Fact]
@@ -550,11 +613,18 @@ public class AppCloudSyncServiceTests
 
         modelMgr.SetupGet(x => x.ModelPath).Returns(modelPath);
         modelService.Setup(x => x.GetCurrentModelDto()).Returns(currentModelDto);
+        // As in ModelService, a load moves the stamp
+        long loads = 0;
+        modelService.SetupGet(x => x.ContentStamp).Returns(() => new ModelContentStamp(modelPath, loads));
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<ModelDto>()))
+            .Callback(() => loads++)
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);
-        canvasService.Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>())).Returns(Task.CompletedTask);
+        canvasService
+            .Setup(x => x.LoadAsync(It.IsAny<string>(), It.IsAny<bool?>()))
+            .Callback(() => loads++)
+            .Returns(Task.CompletedTask);
 
         return new SutContext(
             new AppCloudSyncService(
@@ -614,6 +684,28 @@ public class AppCloudSyncServiceTests
             await Task.Delay(10);
 
         Assert.True(predicate());
+    }
+
+    // Waits until the value has not changed for quietMilliseconds, and fails if it never does.
+    static async Task WaitUntilQuietAsync(Func<int> value, int quietMilliseconds, int timeoutMilliseconds = 5000)
+    {
+        var total = System.Diagnostics.Stopwatch.StartNew();
+        var quiet = System.Diagnostics.Stopwatch.StartNew();
+        int last = value();
+        while (quiet.ElapsedMilliseconds < quietMilliseconds)
+        {
+            Assert.True(
+                total.ElapsedMilliseconds < timeoutMilliseconds,
+                $"The value kept changing for {timeoutMilliseconds} ms (now {last})."
+            );
+            await Task.Delay(10);
+            int current = value();
+            if (current != last)
+            {
+                last = current;
+                quiet.Restart();
+            }
+        }
     }
 
     static CloudModelMetadata CreateCloudModelMetadata(string modelPath, ModelDto modelDto)

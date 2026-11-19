@@ -1,15 +1,14 @@
 @typeparam TAnswer where TAnswer : class, IAiAnswer
 @inject IAiService aiService
 @inject IClipboardService clipboardService
-@inject IVsCodeSendService vsCodeSendService
 @inject IDialogService dialogService
 
 @* "Get an AI opinion" in a review dialog (a cycle, a dependency that breaks a rule): the AI
    providers that give the same kind of answer (AiChoice: Claude with the user's API key, a few
    cents; Claude Code, the experimental local route, only where the user turned it on; and "Use
    your AI chat", free, which copies the prompt and then shows the rest of that route as steps:
-   open claude.ai, paste the answer back). Until the user has a default (Settings › AI), they wait
-   behind one row ("Get an AI opinion", naming them) that opens them as cards side by side, each
+   open claude.ai or the page set in Settings › AI, paste the answer back). Until the user has a
+   default (Settings › AI), they wait behind one row ("Get an AI opinion", naming them) that opens them as cards side by side, each
    saying what it does and costs, and the one picked becomes the default. After that the
    default's button shows at once, with the menu beside it (AiProviderMenu) to ask another
    provider once; while it asks, only the answer's place shows progress. A pasted answer is read
@@ -65,14 +64,11 @@
       <div class="dep-ai__step">
         <span class="dep-ai__step-number">2</span>
         <div class="dep-ai__step-body">
-          <div>Paste it into claude.ai, or another AI chat</div>
-          @* claude.ai opens empty, to paste into: a prompt with code is too long, and too
-             private, to pass in the address. *@
+          <div>Paste it into your AI chat</div>
+          @* The page set in Settings › AI (claude.ai's new chat unless the user set another)
+             opens empty, to paste into (AiChatPage). *@
           <div>
-            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary"
-                       EndIcon="@MudBlazor.Icons.Material.Outlined.OpenInNew"
-                       title="Open claude.ai in the browser, to paste the prompt into"
-                       OnClick="OpenClaudeAsync" data-testid="@Id("open-claude")">Open claude.ai</MudButton>
+            <OpenChatButton Variant="Variant.Outlined" TestId="@Id("open-claude")" />
           </div>
         </div>
       </div>
@@ -571,10 +567,6 @@ else if (Selected is { } s && AnswerContent is not null)
     pasteError = null;
     askError = null;
   }
-
-  const string ClaudeUrl = "https://claude.ai/new";
-
-  Task OpenClaudeAsync() => vsCodeSendService.OpenExternalAsync(ClaudeUrl);
 
   // A paste (much text at once) is read right away; typed or edited text waits for "Use answer",
   // so an answer is not taken while it is still being written.

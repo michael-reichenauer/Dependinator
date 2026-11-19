@@ -77,6 +77,23 @@ class Config
     // The VS Code language model the Copilot provider asks (VsCodeModel.Id, Settings › AI); none
     // picks Copilot's first model.
     public string? CopilotModelId { get; set; }
+
+    // The model the Claude provider asks with the API key (ClaudeModel.Id, Settings › AI); none
+    // lets the app pick per task (a thorough model for reviews, a faster one for questions).
+    public string? ClaudeModelId { get; set; }
+
+    // The model Claude Code is started with (--model: an alias such as "sonnet", or a model's
+    // full name, Settings › AI); none leaves it to Claude Code's own setting.
+    public string? ClaudeCodeModel { get; set; }
+
+    // The page a copied prompt is pasted into, opened by "Open claude.ai" (AiChatPage, Settings ›
+    // AI): a Claude Code project, say; none opens claude.ai's new chat.
+    public string? AiChatUrl { get; set; }
+
+    // Whether the AI at that page reads the code itself (a coding agent with its own copy of the
+    // repository), which decides how a copied prompt that changes code is written (PromptTarget);
+    // none: decided by the address (AiChatPage.IsCodingAgent).
+    public bool? AiChatReadsCode { get; set; }
 }
 
 interface IConfigService

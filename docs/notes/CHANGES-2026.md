@@ -36,7 +36,14 @@ project works.
   line labels (one line, or all lines of a container at once), Suggest rules that remembers what was dismissed, with a reason on every rule,
   Fix later for rule violations, new kinds of rule: "only X may use Y", layers, "X is
   independent" and "no cycles inside X", and member cards: types show their members like a class
-  box, with a summary card on the way in, and styled hover cards for nodes and lines.
+  box, with a summary card on the way in, and styled hover cards for nodes and lines, and in
+  VS Code a Models menu of only the workspace's models, with cloud and demo models as visits, and smoother panning and zooming with a pinch that follows the fingers, and a language tile (C#, TS, JS, Bicep) on each source's icon, and alignment guides while dragging nodes.
+  A third language: TypeScript and JavaScript projects, parsed by a Node.js helper. One model
+  for the whole workspace: the sources the user ticks, each with its own parser, in one diagram,
+  each inside the source whose folder holds it, or where the user puts it.
+  Stubs instead of the fan of lines inside a container, with a selected stub's lines drawn end to end.
+  Line labels that are quieter and limited in length, find a free spot on their line by
+  themselves, and can be dragged along it.
 
 Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump per release: 0.9.0,
 0.10.0, 0.80.0, 0.81.0 (Oct 8).
@@ -64,6 +71,19 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   status-bar item spins while parsing.
 - **Bicep (Oct 9).** `.bicep` entry points are listed as workspace models and count as model
   sources.
+- **Workspace models apart from the others (Nov 12).** In VS Code (and the dev host) the Models
+  menu lists only the workspace's solutions and Bicep files, each with its folder when there are
+  several. Cloud, design and demo models are opened from the Models dialog ("Other Models …",
+  which now lists the demos in every host). While such a model is open it is a visit: the menu
+  names it in a "Viewing" row, and the breadcrumb bar stays up with its kind ("cloud model") and
+  a button back to the workspace model used last. The browser app, which has no workspace, is
+  unchanged.
+- **VS Code settings in the app (Nov 16).** The Settings dialog has a VS Code section, only in
+  VS Code, with Follow the active editor, Refresh the diagram when source files change and the
+  refresh delay. It reads and writes VS Code's own settings through the extension
+  (`VsCodeSettingsService`, `vsCodeSettings.ts`), so there is one value: Settings Sync and
+  workspace settings keep working, and a change made in VS Code's Settings shows in the open
+  dialog. The settings stay in VS Code's Settings too, which now point to the dialog.
 
 ## Parsing
 
@@ -115,6 +135,69 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
     blank line below it (a license) is none, and a removed comment clears the description;
   - a cached model's nodes move to their new parents when it is refreshed, and a stray bracket
     in a design node's name ("Latency < 50ms") no longer joins the parts after it.
+- **TypeScript and JavaScript (Nov 12).** A third parser, `Dependinator.TypeScriptParser`, and the
+  first that is not written in C#: a Node.js helper built on the TypeScript compiler prints the
+  model's items, and the C# side only starts it (in VS Code on the editor's own runtime, so
+  nothing needs installing). A project is a `tsconfig.json`, a `jsconfig.json`, or a
+  `package.json` for plain JavaScript, found in the workspace like solutions and Bicep entry
+  points and named after its folder. The diagram shows folders, files (a new node type with its
+  own icon) and the classes, interfaces, enums and types in them; a file's functions and
+  variables are rows on its card, not exported ones private. Lines follow use, resolved by the
+  compiler through imports, path aliases and re-exports, down to the function that calls and
+  the member that is called, and out to the packages under Externals. Test files are left out
+  unless Settings › Include test files is on. Go to code, hover cards (declarations read like
+  TypeScript), the AI prompts and Improve Comments know files and functions. The helper approach
+  is the pattern for further languages; design and follow-ups in `TYPESCRIPT-PARSER.md`.
+- **TypeScript comments (Nov 15).** Declarations and members are described by the plain `//`
+  lines or `/* */` block directly above them too, not only by JSDoc, as C# reads comments
+  (constructors and CommonJS exports included; tool directives and license headers left out),
+  `-> Target: text` lines describe dependency lines, and a removed comment clears the
+  description on a refresh.
+- **.slnx solutions (Nov 15).** The XML solution format is parsed like an `.sln` (the bundled
+  Roslyn reads it; Dependinator's own solution gives the same model in both formats) and found in
+  the workspace, the Models dialog and the VS Code file watcher. Of an `.sln` with an `.slnx` of
+  the same name beside it, which a migration leaves, the workspace lists only the `.sln` (the
+  model with the user's work) until the `.sln` is deleted. An `.slnx` opened for the first time
+  takes over the saved model of its `.sln`: layout, notes, rules, accepted cycles and view, and
+  in a workspace model the `.sln`'s layout and include choice.
+- **One model for the whole workspace (Nov 13).** With two or more sources in the workspace
+  (solutions, Bicep deployments, TypeScript and JavaScript projects), the Models menu lists a
+  model of the whole workspace first, beside the model of each source. The first time it is
+  opened, "What is in this model?" lists the sources with a checkbox each, ticked for all that
+  are not in a test, sample or example folder; "Choose Sources …" (Models menu, Settings)
+  changes the choice later. Each source is parsed by its own parser, the parsers at the same
+  time, and the diagram shows the sources side by side with one Externals, their nodes named as
+  in their own models. A source that cannot be parsed is a problem in the problem indicator and
+  keeps its part of the diagram; a source named like another gets its folder in its name. The
+  choice is saved with the model. In this repository the solution, the VS Code extension and
+  the TypeScript helper make one diagram. A refresh parses only the sources whose kind of
+  file changed (editing a `.ts` file no longer parses the solution again), and VS Code
+  notices a source that is added or removed without a restart (Nov 13, phase 2). A source
+  brings what the user did in its own model: where its nodes are, their display names, colors,
+  icons and hidden nodes, its notes and zones, and its routed and labelled lines (Nov 13,
+  phase 3). In VS Code a workspace with several sources that was never opened before starts
+  on the whole workspace (Nov 13, phase 4). A source is shown inside the source whose folder
+  holds it, in the deepest C# project or other source's root whose folder it is in, instead of
+  beside it: here the extension is in the solution, and the TypeScript helper in the
+  TypeScriptParser project (Nov 15, Michael's pick of three options, which works without any
+  solution file). The user can show a source elsewhere: "Shown in" in the sources dialog, or
+  "Show Inside" in a source's node menu (top level, or any other source or one of its
+  projects; Nov 15). Design and what is left in `WORKSPACE-MODEL.md`.
+- **The language on a source's icon (Nov 15).** Every source's root had the same four-square
+  solution icon, so a TypeScript project in the workspace model looked like another solution.
+  Each parser now gives its root a tile in the language's color with its letters: C# (violet,
+  as before), TS, JS and Bicep, with Go ready for its parser (Michael's pick of four looks). A
+  Bicep deployment's root shows the Bicep tile instead of its target scope's Azure icon; a
+  `metadata icon` in the file still wins, as does an icon the user picks. The tiles are a new
+  Languages group in the icon picker, made by `scripts/language-icons/generate.py`.
+- **No generated code in C# models (Nov 16).** Code a source generator wrote is left out: the
+  `System.Text.RegularExpressions.Generated` types of `[GeneratedRegex]` (103 nodes in
+  Dependinator.UI) and the Functions worker's executor and metadata provider in Api. A type or
+  member is left out when each of its declarations is a generator's output and carries
+  `[GeneratedCode]` or `[CompilerGenerated]`, so the user's own `[GeneratedRegex]` method, a
+  partial class a generator completes, Razor components and checked-in generated code (resx,
+  API clients) all stay. A use of a generated member of the user's type links to the type, and
+  the body the user writes for a generator's partial method now has its links. Michael's question, no setting to bring it back for now.
 
 ## Viewing, navigation and analysis
 
@@ -144,6 +227,24 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   ones) and fading only lines that leave their container.
   Since Nov 4 a selected container lights only the lines leading out of it; every line inside it
   stays dimmed until a child is selected or hovered.
+- **Stubs instead of the fan inside a container (Nov 13).** A reference from outside was drawn
+  to the container's left edge and then from the inside of that edge to each child (and the same
+  on the right for what the children use), a fan of long lines that all met in one point and
+  could not be followed through it. Each child now gets a short arrow with a ring: into its left
+  side for "used from outside", out of its right side for "uses something outside". Selecting a
+  stub draws its lines all the way to the nodes at the other end, as deep as they are open, also
+  across containers: what uses the node from outside, or what it uses outside. (The first
+  version drew them for a selected node too; dropped the same day, since a node is selected all
+  the time and the lines came unasked.) A busy stub draws one line per container for the far
+  ends that are out of view or too small to tell apart (a hub such as Utils: 9 lines, one per
+  assembly, instead of 35); panning there or zooming in splits that line. Clicking one of the
+  lines selects it and keeps the others, to go from line to line; Escape steps back to the stub.
+  The stub keeps the line's hover card ("outside X →
+  child"), selection and rule colour; a labelled or hand-routed line and the dependency path are
+  still drawn in full.
+  Since Nov 14 the node menu no longer has the Direct Lines section (Split Lines One Level
+  Deeper, Merge Lines Back One Level, Merge All Lines Back): a stub shows a child's own lines,
+  so splitting a container's lines by hand was no longer needed, and the split depth is gone.
 - **Hover cards for nodes and lines (Nov 6).** The plain browser tooltips were replaced by a
   styled card in the app's theme: a node's kind and container, description, how many nodes it
   uses and is used by (a member counts as its type), its members and its problems (compile errors,
@@ -152,13 +253,53 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `data-name` stays for the e2e locators): the card is built only when the mouse rests on an item
   (`TooltipService`, `initTooltips` in jsInterop.js). Chosen over a larger card with top
   dependencies and the source file.
+  Nov 10: the card reads like code. "Interface in Namespace" instead of a dot, a member as it is
+  declared (`Task<Rect?> SelectAreaAsync(AreaSelectionPurpose purpose)`, the name in bold, wrapping
+  between parameters; `param name type` in Bicep), code comments flow instead of keeping the source
+  file's line breaks, and an open container larger than 400 px on screen gets no card (`data-open`),
+  since the user is then looking at its children; resting on its name, or on an open type card's
+  header (`data-tip-label`, `data-header-height`), still shows it.
+- **Go to marks the node instead of selecting it (Nov 13).** Search, the dependency explorer,
+  the breadcrumb, Ask and rule links, the problems, hidden nodes and path lists, notes, share links,
+  the tour and VS Code following the editor used to select the node they went to, which dropped
+  the user's own selection and brought handles and a toolbar nobody asked for. They now mark it
+  with amber corner brackets that pulse twice as the view lands (Michael picked them over a halo
+  and a spotlight), light its lines like a selection and lead the breadcrumb, and leave the
+  selection alone. The mark lasts until the next click, tap, key or Back; a wheel zoom keeps it.
+  Showing several nodes at once (a cycle, a rule violation, Ask "show all") marks them all.
+- **Go to flies in one smooth motion (Nov 14).** Going to a node zoomed out, panned and zoomed
+  back in as three separate steps in fixed increments (about 4.5 s per jump, longer when
+  rendering was slow). It now pans and zooms at once along van Wijk and Nuij's smooth zoom path
+  (`ZoomPath`, the one d3 and map apps' fly-to use): out only as far as the jump needs, so both
+  ends are in view at the top, where it slows down for a moment, then down onto the node. Timed
+  by the clock (0.6 to 3.4 s, about 2.4 s across the demo model; Michael asked for 40% slower than the first try) with a soft start and landing;
+  Back/Forward and share links fly the same way.
+- **Smoother panning and zooming (Nov 14).** While the view moves (a drag, the wheel, a pinch, a
+  go to flight), the diagram is moved by a CSS transform on the `<svg>` element, which the GPU
+  does without repainting, and drawn for real once the view rests 150 ms, reaches the edge of
+  what its tile holds or passes a 2x scale (`GestureTransform`). A view step re-renders only
+  the canvas and the minimap; the rest of the UI catches up when a gesture starts and ends
+  (`PanZoomService.IsViewMoving`). In WebKit (the iPad) panning went from 26-62 ms frames to
+  16 ms, and the .NET work per step dropped from about 11 ms to 3.5 ms. A pinch now follows
+  the fingers (the point between them stays put, two fingers pan) instead of zooming 4% per
+  touch move. Then, the same day: once the view rests, the tiles one zoom level in and
+  out are drawn ahead in idle time (`SvgService.PrefetchNext`), so the next zoom finds its tile
+  (in the browser app the worst frame after a single wheel tick went from up to 133 ms to 50 ms in
+  Chromium), and a trackpad pinch (wheel events with Ctrl) zooms by its delta instead of racing
+  at 14% per event (`PointerEvent.WheelZoomFactor`). Later still, a mouse wheel notch glides to
+  its zoom over about 130 ms instead of jumping 14% at once. And where cloud sync is available,
+  panning no longer stops for a moment every 5 s: the sync check hashed the whole model each time
+  (550-700 ms in the browser app for the demo), and now does so only after the model changed
+  (`IModelService.ContentStamp`).
 - **Breadcrumb only for a selected node (Nov 1).** The bar under the app bar shows only while a
   node is selected, to keep the diagram clear; the "you are here" chain under the view center
   still drives Escape and the context menu, but is no longer shown on its own.
+  Since Nov 13 it also shows the chain of a node a go to marked.
 - **Line aggregation (Jul, Sep).** In Jul, lines between cousins were folded into their parents,
   lines and sources could be split, and a line stayed visible while either end was visible. On
   Sep 14 this was reworked: funnel aggregation became the default, with line-split depth and
-  explorer focus as opt-ins. Direct lines are dotted.
+  explorer focus as opt-ins. Direct lines are dotted. The line-split depth went on Nov 14, after
+  the stubs.
 - **Dependencies explorer.**
   - Expand all (Feb).
   - Reworked UI with link counts (Jul 9).
@@ -337,6 +478,44 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   LSP runs the tool loop (`VsCodeToolsAgent`, up to 15 turns) with the same model tools as the
   API key route (`McpAgentTools`), and the extension asks the model one turn at a time; the answer
   is still the `answer` tool's input, the only tool allowed on the last turn (phase 2).
+- **Pick the Claude model (Nov 10).** Settings › AI has a Model picker under Claude and under
+  Claude Code, like Copilot's. Claude's lists the models the API key can ask, live from Anthropic's
+  Models API (`IClaudeService.GetModelsAsync`), so a new model needs no release; "Automatic" keeps
+  Opus 5.5 for reviews and Sonnet 5.5 for questions and the Ask panel, and a picked model answers
+  everything. Claude Code's offers its aliases (fable, opus, sonnet, haiku) or a typed model name,
+  passed as `claude --model`; "Automatic" leaves it to Claude Code's own setting. The Ask panel's
+  cost is priced by the model that answered (`ClaudeModels`), and unknown for one without a price.
+- **Ask about the selected nodes (Nov 10).** The Ask panel follows the selection: chips above the
+  question name the selected nodes, "with everything inside" or alone, and the prompt tells the AI
+  what "it" and "these" mean (`AskContext`); without chips the question is about the whole model.
+  The example questions fit what is asked about, grouped as Understand, Change and Improve
+  (`AskExamples`), with "More examples" and a lightbulb that shows them again later. The node menus
+  have "Ask About Node …", and About Node sends its example questions to the panel instead of
+  asking in the dialog, and has "Copy prompt" for one's own AI chat.
+- **From an answer to the change (Nov 10).** An Ask answer that proposes a change to the code (a
+  split, a move, removing a dependency) names it, and the panel offers "Do it with Claude Code"
+  with the provider menu of the review dialogs' fix button: Claude Code edits and reports the
+  changed files, Copilot gets it in agent mode, or "Copy prompt" for another AI. The prompt
+  (`AskChangePrompt`) holds the change, the question and answer, the files of the nodes and the
+  architecture rules to keep. The node names in Claude Code's report are links like an answer's,
+  looked up after the re-parse (`ClaudeCodeFix.SummaryContent`). `./scripts/ask-eval` checks
+  whether an answer proposes a change.
+- **Ask another AI from the panel (Nov 10).** The Ask panel's provider menu has "Copy prompt": the
+  question with its nodes and the conversation, for an AI outside the panel, told to look things
+  up with Dependinator's MCP server when it has it and to say so when it has not
+  (`AskModelPrompt.BuildForOtherAi`). In VS Code "Ask in Copilot Chat" hands the same prompt to
+  Copilot Chat in agent mode. The answer shows there, not in the panel.
+- **Open prompts where you want (Nov 18).** Settings › AI has "Open prompts in" under Your AI chat:
+  a web address, such as a Claude Code project, that "Open claude.ai" goes to instead of claude.ai's
+  new chat (`AiChatPage`, `Config.AiChatUrl`). Every copied prompt now has that Open button beside
+  its note (`OpenChatButton`): the fix prompts, Improve comments, About Node and the Ask panel's.
+  The page opens empty: no AI chat takes a prompt in its address.
+  Below it, "This AI can read the code" (on by itself for a claude.ai/code link) decides how a copied
+  prompt that changes code is written (`PromptTarget`): for an AI chat the fix, "Do it" and Improve
+  comments prompts carry the code and ask for the edits back to paste in; for a coding agent with
+  its own copy of the repository they say where the paths start, that its copy may lack local
+  changes, and to make the change on a branch and open a pull request. The routes the app runs
+  itself (Claude Code, Copilot) get the prompts as before.
 - **Fix with Copilot (Nov 2).** The cycle and rule reviews offer "Fix with Copilot", and Improve
   comments "Improve with Copilot", in VS Code where Copilot is offered: the prompt goes to Copilot
   Chat in agent mode (`IVsCodeModelService.OpenAgentChatAsync`, the extension runs
@@ -388,7 +567,7 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   and the labels on other lines, for a matching style), with up to three other labels to pick
   from (`LineLabelSuggestion`; the chat route reads "Label:" lines back). Empty fields are filled
   at once, else "Use suggestion" fills them; nothing is saved before Save.
-- **AI labels for many lines at once (Nov 10).** Suggest Line Labels … (Edit menu and the canvas
+- **AI labels for many lines at once (Nov 19).** Suggest Line Labels … (Edit menu and the canvas
   menu for the whole model, a container's menu for the lines inside it; edit mode) asks any AI
   provider for the labels of up to 40 unlabeled lines in one question, so they share a style
   (`LineLabelsPrompt`: lines between siblings, outer levels and most links first, not to
@@ -447,7 +626,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
 - **Node sizes and straighter lines (Oct 14).** The automatic layout sizes each node by its
   code (declaration lines, summed up the tree) and how central it is among its siblings, in four
   steps (60, 100, 140, 180), so the big and coordinating parts stand out and small utilities
-  stay small. Bigger nodes open as containers earlier while zooming in. Nodes are centered in
+  stay small. Bigger nodes also opened as containers earlier while zooming in, until Nov 12:
+  siblings were then icons and open containers side by side over a 3x zoom range, which looked
+  arbitrary, so all children of a node now open at the same zoom and a bigger node is a bigger
+  icon until then (only a node resized by hand far beyond those steps opens by its own size on
+  screen). Nodes are centered in
   their columns and pulled toward their neighbors from both sides, so lines run straighter.
   A thorough layout pass orders nodes for fewer line crossings and routes long lines around
   nodes; it runs when a container is first shown, or for a large container in idle moments
@@ -474,6 +657,54 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - Line labels, with a description under the label.
   - Display aliases, shown in labels and search.
   - A View › Rows filter that leaves out whole kinds of rows.
+- **Line labels, polished (Nov 13).** Labels and their descriptions are smaller than node texts
+  and stop growing earlier when zooming in. The description keeps the user's line breaks and
+  shows at most three rows; a long label is cut to one row; the hover card shows both in full.
+  With soft lines a label rests stronger than its faint line. The label is part of its line:
+  hovering it shows the line's card, a click selects the line, a double-click in edit mode
+  edits it, and an edit-mode drag slides it along the line (saved as a fraction of the line's
+  length, so it follows when nodes move; undo, and "To the middle" in the label dialog).
+- **Line labels placed automatically (Nov 16).** A label the user has not dragged no longer
+  sits at the middle of its line whatever is there: it takes the first spot along the line,
+  from the middle outwards, that is clear of the container's nodes (with the name and
+  description under an icon) and of the other labels, or else the one that overlaps them the
+  least (`LabelPlacement`). Dragged labels stay put and the others make room for them. The
+  place is worked out when the container is drawn, the same in every tile and at every zoom,
+  and is not saved; "Place automatically" in the label dialog replaces "To the middle".
+- **Calmer node and line toolbars (Nov 13).** The toolbars over a selected node, note or line
+  are one white (or dark grey) card with grey icons that turn purple under the pointer, thin
+  dividers between groups of buttons instead of a purple line between every button, and
+  larger 28 px buttons for touch. The node toolbar groups its buttons (lines, size,
+  appearance, arranging) and its menu moved to the end as a "more" button, whose tooltip no
+  longer stays over the open menu. The line toolbar lost "Show source code" (VS Code only).
+- **Bends made on the line (Nov 13).** In edit mode a selected line shows a small hollow handle
+  on each of its segments (a quarter along when the label sits in the middle): dragging it
+  bends the line there. A bend dragged back onto the straight line, or double-clicked, goes
+  away, and "Straighten line" in the toolbar removes them all. The odd + and − buttons, which
+  acted at the spot where the line had been clicked, are gone.
+- **Line bends follow moved nodes (Nov 15).** The automatic layout's bends used to stay where
+  they were when nodes were moved, so lines went around empty spots and through moved nodes.
+  When a move ends, the automatic bends of the container's lines are routed again where the
+  nodes stand now (`FreeLineRouter`, `MovedNodeLines`): the lines of the moved nodes, lines a
+  node now stands in, and lines whose detour is no longer needed; in the move's undo step.
+  Bends the user set stay, except on a line between nodes moved together, which moves along.
+  A backward line's layout bends are now computed from where it is drawn (its source's right
+  edge), not its left edge. "Re-route line" on the line toolbar and "Reset Lines" in the node
+  menu (beside Reset Children Layout) route one line or all lines between a node's children
+  again around the nodes where they stand, hand-set bends included, keeping the nodes in place.
+- **Smart alignment guides (Nov 16).** While a node is dragged, it snaps to a nearby sibling
+  when one of its edges or its centre comes within a few pixels of the same edge or centre of
+  that sibling (or an edge of a node beside or above it), and a thin teal guide joins the
+  aligned nodes; at most one guide per axis, only siblings within reach. An aligned axis keeps
+  the alignment on drop instead of snapping to the 20-unit grid, so nodes of different sizes
+  line up by their centres; the other axis still snaps to the grid. A group or a zone moves
+  with the node under the pointer. A finger gets a wider snap than the mouse.
+- **Line-end tags (Nov 13).** When an end of the selected line is out of view, a small tag at
+  the edge of the view where the line leaves names the node at that end; a click goes there
+  (with go to's amber marks) and keeps the line selected, so the other end's tag leads back.
+  They replace the toolbar's "go to source/target node" buttons, which only explorer lines had.
+  The line toolbar now sits on the line itself, at the clicked spot while it is in view and on
+  the part in view otherwise, instead of on the line's bounding box.
 
 ## Models, cloud sync and sign-in
 
@@ -485,7 +716,9 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   either to production or to local Azurite.
 - **Clerk sign-in (Mar 21).** All hosts sign in with Clerk, and the API validates Clerk JWTs via
   JWKS. VS Code signs in through a local Clerk page and keeps the token in secrets. Tokens last
-  180 days (Jun), and auto login got faster (Jul).
+  180 days (Jun), and auto login got faster (Jul). Since Nov 18 a VS Code sign-in lasts a year
+  (`MaxTokenAgeDays` 365); the browser hosts stay signed in for the Clerk session lifetime, set
+  in the Clerk Dashboard (the 180 days never applied to them).
 - **"Device sync" (Jul).** Login/Logout became Enable/Disable device sync, the texts say device
   sync, and the user storage key is hashed again.
 - **Model handling.**
@@ -506,6 +739,8 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   - `Dependinator` renamed to `Dependinator.UI` (Mar 27).
   - Sources in `src/` (Jun 22) and tests in `tests/` (Jun 27), with solution folders.
   - Scripts in `scripts/` (Jul 24).
+  - `Dependinator.sln` replaced by `Dependinator.slnx` (Nov 15), with `dotnet sln migrate`;
+    the `.sln` was deleted so the two cannot drift.
   - New parser projects: `Dependinator.Roslyn` (Feb), `Dependinator.Reflection` (Jul) and
     `Dependinator.Bicep` (Oct).
 - **Namespace refactors.** Modeling, Diagrams, Tiles and Commands namespaces (Mar). In Jul 10–12
@@ -515,8 +750,11 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   `Navigation`, `Tours`, `Ask`, `NodeHelp`), and `Interaction` was split into input and `Editing`.
 - **Architecture tests (Jun 22).** NetArchTest enforces `Hosts → UI → Core → Shared`.
 - **Result unions (Sep 12).** On the .NET 11 preview SDK, `Result`/`Result<T>` became C# 15 union
-  types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. The GA follow-up is in
-  [NET11-UPGRADE.md](NET11-UPGRADE.md).
+  types and replaced `R`/`R<T>` everywhere, with CS8509 as an error. On Nov 10, the day .NET 11
+  shipped, the build moved to the GA SDK (`LangVersion` 15, no preview). The projects stay on
+  net10.0 until Azure Static Web Apps supports 11: [NET11-UPGRADE.md](NET11-UPGRADE.md). On Nov 18
+  every project but the Api and Shared (and Api.Tests) moved to net11.0, with Blazor 11 and MSBuild
+  18.12; only those two wait for Azure Static Web Apps now, and the union polyfill is gone.
 - **Packages.** MudBlazor 9.5 (May). `./scripts/updatepackages` also handles npm packages (Jun).
 
 ## Testing, CI/CD and releases

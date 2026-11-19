@@ -35,13 +35,14 @@ static class Compiler
 
     public static async Task<Result<CompiledProject>> GetCompilationAsync(Project project)
     {
-        var compilation = await project.GetCompilationAsync();
+        var compilation = await WithUsableLanguageVersion(project).GetCompilationAsync();
         if (compilation is null)
             return new Error($"No compilation (project may not be supported/loaded) for {project.FilePath}.");
 
         // MSBuildWorkspace.GetCompilationAsync runs the source generators it can load, but not
         // the Razor generator, so .razor components would be missing. Run that one manually.
         compilation = RunUnloadableSourceGenerators(project, compilation);
+        GeneratedCode.MarkGeneratorOutput(compilation, project.Documents.Select(d => d.FilePath));
 
         // Compile errors (e.g. missing references) can cause missing nodes/links in the model,
         // so they are reported (as a parse problem, see SourceParser). The parse still proceeds
@@ -55,6 +56,20 @@ static class Compiler
             );
 
         return new CompiledProject(compilation, errorCount);
+    }
+
+    // The parser's own Roslyn can be older than the user's SDK. It then does not know the
+    // project's language version (say "15"), falls back to its default and reports every newer
+    // feature as a "currently in Preview" error (CS8652), which nothing in the source can fix.
+    // An unrecognized (or unset) version shows as Default, so compile those with all the features
+    // this Roslyn has.
+    internal static Project WithUsableLanguageVersion(Project project)
+    {
+        if (
+            project.ParseOptions is not CSharpParseOptions { SpecifiedLanguageVersion: LanguageVersion.Default } options
+        )
+            return project;
+        return project.WithParseOptions(options.WithLanguageVersion(LanguageVersion.Preview));
     }
 
     public static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
@@ -74,7 +89,7 @@ static class Compiler
         return models.GetOrAdd(syntaxTree, tree => compilation.GetSemanticModel(tree));
     }
 
-    static IEnumerable<INamedTypeSymbol> GetAllNamedTypes(INamespaceSymbol ns)
+    internal static IEnumerable<INamedTypeSymbol> GetAllNamedTypes(INamespaceSymbol ns)
     {
         foreach (var member in ns.GetMembers())
         {

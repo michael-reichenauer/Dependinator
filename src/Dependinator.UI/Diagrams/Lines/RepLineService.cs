@@ -1,19 +1,67 @@
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
+using Dependinator.UI.Shared.Types;
 
 namespace Dependinator.UI.Diagrams.Lines;
+
+// What the selection asks of the lines. A selected stub (Stub, see LineStub) has its links drawn
+// end to end: the stub's own links that cross the container's border leave the funnel and run
+// between the stub's child and the nodes at the other end (a node can have a stub on each side,
+// and a second one on a side for inheritance). The stub itself stays, as the selected line the
+// lines belong to. The view's filters limit how deep the far side goes: a line into a row the
+// view leaves out would not be drawn at all, so such a link stays on the row's container.
+//
+// A busy stub (a hub's) would light dozens of lines, most to far ends that cannot be seen: the far
+// side opens no container that lies outside the tile (Area, its canvas area with the margin) or
+// whose children would be tiny on screen (MinFarEndSize), so their lines end at that container,
+// one line per container. Panning the container into view, or zooming in, splits its line.
+//
+// Clicking one of these lines moves the selection from the stub to the line. KeptLine is that
+// line: its links stay between its two ends, or the line would vanish under the click. The stub
+// is still being explored then (Line.IsExplored, set by SelectionService), so Stub stays set
+// too and its other lines stay drawn: the user goes from line to line until something else is
+// selected. The kept line's links go first.
+//
+// A selected node asks for nothing (Michael, Nov 13 2026): nodes are selected all the time, by
+// a search or a go to, and its lines across the diagram came unasked. Its stubs are there to
+// click.
+readonly record struct LineReveal(RowFilter Rows, bool HideMemberLines)
+{
+    public static readonly LineReveal None = new(RowFilter.None, false);
+
+    public Line? KeptLine { get; init; }
+
+    public Line? Stub { get; init; }
+
+    // The canvas area of the tile the lines are drawn for, with its margin (null: no limit).
+    public Rect? Area { get; init; }
+
+    public bool IsEmpty => KeptLine is null && Stub is null;
+
+    public bool LeavesOut(Node node) => Rows.Hides(node.Type) || (HideMemberLines && node.Type.IsMember);
+
+    // Without a selected line the filters make no difference, so toggling them causes no sync.
+    // (Every member compares by value or by identity: a list member would need its own test.)
+    public bool IsSameAs(LineReveal other) => (IsEmpty && other.IsEmpty) || this == other;
+
+    // The same selection and filters, drawn for another tile.
+    public bool IsSameButArea(LineReveal other) => this with { Area = null } == other with { Area = null };
+}
 
 // Resolves which lines are rendered at a given zoom. By default every link is drawn as the
 // aggregated "funnel" built by LineService: child-to-parent segments up to the source-side top
 // sibling under the link's common ancestor, one sibling line between the two top siblings, and
-// parent-to-child segments down to the target. The user can split a container's bundles by
-// giving it a direct-line depth (Node.LineSplitDepth): the representative walk then descends
-// that many levels into the container, on the source side as well as on the target side, as
-// far as the nodes actually show their children at this zoom. The dependency explorer's
-// subject (Model.LineFocus) is drawn the same way: its links descend to the subject on the
-// near side and into the tree rows expanded in the explorer on the far side, and their lines
-// are flagged IsFocused. Links are grouped by their (source rep, target rep) pair and drawn as
-// one line per pair.
+// parent-to-child segments down to the target. The dependency explorer's subject
+// (Model.LineFocus) splits its bundles: its links descend to the subject on the near side and
+// into the tree rows expanded in the explorer on the far side, as far as the nodes actually
+// show their children at this zoom, and their lines are flagged IsFocused. Links are grouped
+// by their (source rep, target rep) pair and drawn as one line per pair.
+//
+// A selected stub's links are drawn end to end as well (LineReveal): a link of the stub is
+// pinned at the stub's child and descends as deep as the nodes are open on the other side, so
+// selecting a stub shows what really uses its node, or what the node really uses, instead of
+// lines that end at a container's edge. These lines are ordinary rep pair lines, lit as the
+// selection's own.
 //
 // Top-sibling pairs coincide with the sibling chain lines built by LineService (same LineId),
 // so those Line objects are reused with their waypoints and descriptions. Deeper pairs cross
@@ -31,34 +79,44 @@ static class RepLineService
         double Zoom,
         int StructureVersion,
         long LayoutGeneration,
-        List<KeyValuePair<Node, bool>> ExpansionStates
+        List<KeyValuePair<Node, bool>> ExpansionStates,
+        LineReveal Reveal,
+        Dictionary<Link, Node>? StubFarEnds
     );
 
     sealed class LinkGroup
     {
         public List<Link> Links { get; } = [];
         public bool IsFocused { get; set; }
+        public bool IsRevealed { get; set; }
     }
 
     // Last synced state per model: tiles are re-created far more often than the reps actually
     // change (panning, post-change re-renders, and especially zoom animations, where the zoom
     // differs every frame but no node crosses an expansion threshold). The reps depend on the
-    // model structure (which includes the split and focus state, see Model.BumpStructureVersion) and on
+    // model structure (which includes the focus state, see Model.BumpStructureVersion) and on
     // the expansion state of exactly the nodes the last resolution visited, so the sync can be
     // skipped when the structure version matches and every one of those nodes still has the
     // same expansion state at the new zoom. Geometry changes (a layout, a resize, a container
     // zoom edit) keep the structure version but bump NodeLayout.Generation: since whether a node
     // opens depends on its size, the expansion states are then re-checked at the same zoom too.
+    // A changed selection (or a filter that limits its reveal) always syncs again. A selected
+    // stub's far ends also depend on the tile's Area, the zoom and the layout (IsWorthOpening):
+    // StubFarEnds holds where each of its revealed links ended, checked again on a new tile.
     static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IModel, SyncState> lastSync = new();
 
-    public static void Sync(IModel model, double zoom)
+    public static void Sync(IModel model, double zoom, LineReveal reveal = default)
     {
         var layoutGeneration = NodeLayout.Generation;
-        if (lastSync.TryGetValue(model, out var state) && state.StructureVersion == model.StructureVersion)
+        if (
+            lastSync.TryGetValue(model, out var state)
+            && state.StructureVersion == model.StructureVersion
+            && state.Reveal.IsSameAs(reveal)
+        )
         {
             if (state.Zoom == zoom && state.LayoutGeneration == layoutGeneration)
                 return;
-            if (AllExpansionStatesUnchanged(state.ExpansionStates, zoom))
+            if (reveal.Stub is null && AllExpansionStatesUnchanged(state.ExpansionStates, zoom))
             {
                 if (state.LayoutGeneration != layoutGeneration)
                     lastSync.AddOrUpdate(model, state with { Zoom = zoom, LayoutGeneration = layoutGeneration });
@@ -66,13 +124,40 @@ static class RepLineService
             }
         }
 
+        // A selected stub's far side also goes by the places and sizes of the containers
+        // (IsWorthOpening), which no expansion state shows: a new tile, zoom or layout walks the
+        // far sides of the stub's own links again (where a full sync takes every link in the
+        // model: 40 to 70 ms against 2 to 5 ms per tile for the demo's Utils stub on the dev
+        // host), and only a changed far end syncs it all.
+        if (
+            state is not null
+            && state.StructureVersion == model.StructureVersion
+            && state.StubFarEnds is { } lastFarEnds
+            && state.Reveal.IsSameButArea(reveal)
+            && AllExpansionStatesUnchanged(state.ExpansionStates, zoom)
+            && IsEveryStubFarEndUnchanged(model, zoom, reveal, lastFarEnds)
+        )
+        {
+            lastSync.AddOrUpdate(
+                model,
+                state with
+                {
+                    Zoom = zoom,
+                    LayoutGeneration = layoutGeneration,
+                    Reveal = reveal,
+                }
+            );
+            return;
+        }
+
         foreach (var line in model.Lines.Values)
         {
             line.IsActiveRep = false;
             line.IsFocused = false;
+            line.IsRevealed = false;
         }
 
-        var (groups, isChildrenShownCache) = GroupLinksByRepPair(model, zoom);
+        var (groups, isChildrenShownCache, stubFarEnds) = GroupLinksByRepPair(model, zoom, reveal);
         foreach (var (pair, group) in groups)
         {
             var id = pair.IsInheritance
@@ -83,6 +168,7 @@ static class RepLineService
             {
                 line.IsActiveRep = true;
                 line.IsFocused = group.IsFocused;
+                line.IsRevealed = group.IsRevealed;
                 if (line.IsCousin)
                     ReconcileLinks(line, group.Links);
             }
@@ -92,9 +178,25 @@ static class RepLineService
             }
         }
 
+        // The selected stub's links now run along their own lines, which would leave the stub
+        // without a link to be drawn for: it stays as the selected line those lines belong to.
+        // Not when its links left it for another reason (the explorer's focus lines).
+        if (reveal.Stub is { } selectedStub && groups.Values.Any(group => group.IsRevealed))
+        {
+            selectedStub.IsActiveRep = true;
+            selectedStub.IsRevealed = true; // Lit with its lines while one of them is selected
+        }
+
         lastSync.AddOrUpdate(
             model,
-            new SyncState(zoom, model.StructureVersion, layoutGeneration, [.. isChildrenShownCache])
+            new SyncState(
+                zoom,
+                model.StructureVersion,
+                layoutGeneration,
+                [.. isChildrenShownCache],
+                reveal,
+                stubFarEnds
+            )
         );
     }
 
@@ -113,16 +215,28 @@ static class RepLineService
 
     readonly record struct RepPair(Node Source, Node Target, bool IsInheritance);
 
-    static (Dictionary<RepPair, LinkGroup> Groups, Dictionary<Node, bool> IsChildrenShownCache) GroupLinksByRepPair(
-        IModel model,
-        double zoom
-    )
+    static (
+        Dictionary<RepPair, LinkGroup> Groups,
+        Dictionary<Node, bool> IsChildrenShownCache,
+        Dictionary<Link, Node>? StubFarEnds
+    ) GroupLinksByRepPair(IModel model, double zoom, LineReveal reveal)
     {
         var isChildrenShownCache = new Dictionary<Node, bool>();
         var groups = new Dictionary<RepPair, LinkGroup>();
         var sourcePath = new List<Node>(32);
         var targetPath = new List<Node>(32);
         var focus = model.LineFocus;
+
+        // A selected stub: its child, the child's container and its direction.
+        var stub = reveal.Stub;
+        var isStubIncoming = stub is not null && LineStub.IsIncoming(stub);
+        var stubChild = stub is null ? null : LineStub.Child(stub);
+        var stubContainer =
+            stub is null ? null
+            : isStubIncoming ? stub.Source
+            : stub.Target;
+        var worthOpeningCache = stub is null ? null : new Dictionary<Node, bool>();
+        var stubFarEnds = stub is null ? null : new Dictionary<Link, Node>();
 
         foreach (var link in model.Links.Values)
         {
@@ -133,10 +247,7 @@ static class RepLineService
             // ancestor is the deepest of these. Using the parent chains (skip index 0) mirrors
             // LineService.GetCommonAncestor, so a link between a node and one of its ancestors
             // still yields a non-empty path on both sides.
-            int maxCommon = Math.Min(sourcePath.Count, targetPath.Count) - 1;
-            int common = 0;
-            while (common < maxCommon && sourcePath[^(common + 1)] == targetPath[^(common + 1)])
-                common++;
+            int common = CountCommonAncestors(sourcePath, targetPath);
 
             // A focus link descends to the subject on the near side (and to a line subject's far
             // end on the far side), and into the explorer's expanded rows on the far side.
@@ -161,13 +272,50 @@ static class RepLineService
                 }
             }
 
+            var isSourceRevealed = false;
+            var isTargetRevealed = false;
+            var isRevealedLink = false;
+            if (!isFocusLink && reveal.KeptLine is { } kept && IsKeptLink(link, kept, sourcePath, targetPath))
+            {
+                // The selected line of an earlier selection: its links stay between its ends.
+                // Not the links of its twin (usage and inheritance between the same two nodes
+                // are two lines): those go back to where they were.
+                sourcePin = kept.Source;
+                targetPin = kept.Target;
+                isRevealedLink = true;
+            }
+            else if (!isFocusLink && stub is not null && stub.Contains(link))
+            {
+                // One of the selected stub's links (a child can have a second stub on the same
+                // side, for inheritance, with links of its own). Those that cross the container's
+                // border are pinned at the child and descend on the far side as deep as the
+                // nodes are open; a link between the child and the container itself stays in
+                // the stub.
+                if (IsCrossingStubLink(link, isStubIncoming, stubContainer!))
+                {
+                    if (isStubIncoming)
+                    {
+                        targetPin = stubChild;
+                        isSourceRevealed = true;
+                    }
+                    else
+                    {
+                        sourcePin = stubChild;
+                        isTargetRevealed = true;
+                    }
+                    isRevealedLink = true;
+                }
+            }
+
             int sourceRepIndex = GetRepresentativeIndex(
                 sourcePath,
                 common,
                 zoom,
                 isChildrenShownCache,
                 sourcePin,
-                sourceExpanded
+                sourceExpanded,
+                isSourceRevealed ? reveal : null,
+                worthOpeningCache
             );
             int targetRepIndex = GetRepresentativeIndex(
                 targetPath,
@@ -175,8 +323,16 @@ static class RepLineService
                 zoom,
                 isChildrenShownCache,
                 targetPin,
-                targetExpanded
+                targetExpanded,
+                isTargetRevealed ? reveal : null,
+                worthOpeningCache
             );
+
+            // Where the stub's revealed links end on the far side, for the memo.
+            if (isSourceRevealed)
+                stubFarEnds![link] = sourcePath[sourceRepIndex];
+            else if (isTargetRevealed)
+                stubFarEnds![link] = targetPath[targetRepIndex];
 
             // The funnel segments below the reps render whether or not the reps differ: a link
             // from a node to its own ancestor (or from a parent to its own child) has equal reps
@@ -188,9 +344,7 @@ static class RepLineService
             if (repSource == repTarget)
                 continue;
 
-            // Same rule as LineService.AddDirectLine: inheritance styling only where the line
-            // touches the real inheritance endpoints.
-            var isInheritance = link.IsInheritance && (repSource == link.Source || repTarget == link.Target);
+            var isInheritance = IsInheritanceBetween(link, repSource, repTarget);
 
             var pair = new RepPair(repSource, repTarget, isInheritance);
             if (!groups.TryGetValue(pair, out var group))
@@ -200,10 +354,73 @@ static class RepLineService
             }
             group.Links.Add(link);
             group.IsFocused |= isFocusLink;
+            group.IsRevealed |= isRevealedLink;
         }
 
-        return (groups, isChildrenShownCache);
+        return (groups, isChildrenShownCache, stubFarEnds);
     }
+
+    static int CountCommonAncestors(List<Node> sourcePath, List<Node> targetPath)
+    {
+        int maxCommon = Math.Min(sourcePath.Count, targetPath.Count) - 1;
+        int common = 0;
+        while (common < maxCommon && sourcePath[^(common + 1)] == targetPath[^(common + 1)])
+            common++;
+        return common;
+    }
+
+    // A link of the stub that crosses its container's border, where the stub's child is the
+    // near end: a link between the child and the container itself stays in the stub.
+    static bool IsCrossingStubLink(Link link, bool isStubIncoming, Node stubContainer) =>
+        isStubIncoming ? link.Source != stubContainer : link.Target != stubContainer;
+
+    // Walks the far sides of the selected stub's revealed links again, as GroupLinksByRepPair
+    // walks them, and compares where they end with the last sync's far ends.
+    static bool IsEveryStubFarEndUnchanged(IModel model, double zoom, LineReveal reveal, Dictionary<Link, Node> farEnds)
+    {
+        var stub = reveal.Stub!;
+        var isIncoming = LineStub.IsIncoming(stub);
+        var container = isIncoming ? stub.Source : stub.Target;
+        var focus = model.LineFocus;
+        var cache = new Dictionary<Node, bool>();
+        var worthOpeningCache = new Dictionary<Node, bool>();
+        var sourcePath = new List<Node>(32);
+        var targetPath = new List<Node>(32);
+        var count = 0;
+        foreach (var link in stub.Links)
+        {
+            if (!IsCrossingStubLink(link, isIncoming, container))
+                continue;
+            FillAncestorsAndSelf(link.Source, sourcePath);
+            FillAncestorsAndSelf(link.Target, targetPath);
+            if (focus is not null && IsFocusLink(focus, link, sourcePath, targetPath))
+                continue; // Drawn for the explorer, not for the stub
+            if (reveal.KeptLine is { } kept && IsKeptLink(link, kept, sourcePath, targetPath))
+                continue; // Stays on the clicked line
+
+            int common = CountCommonAncestors(sourcePath, targetPath);
+            var farPath = isIncoming ? sourcePath : targetPath;
+            var farEnd = farPath[
+                GetRepresentativeIndex(farPath, common, zoom, cache, null, null, reveal, worthOpeningCache)
+            ];
+            if (!farEnds.TryGetValue(link, out var lastFarEnd) || lastFarEnd != farEnd)
+                return false;
+            count++;
+        }
+        return count == farEnds.Count;
+    }
+
+    // A link the kept line holds: its ends lie at or below the line's two ends, and it is of the
+    // line's kind (usage and inheritance between the same nodes are two lines).
+    static bool IsKeptLink(Link link, Line kept, List<Node> sourcePath, List<Node> targetPath) =>
+        IndexOf(sourcePath, kept.Source) != int.MaxValue
+        && IndexOf(targetPath, kept.Target) != int.MaxValue
+        && IsInheritanceBetween(link, kept.Source, kept.Target) == kept.IsInheritance;
+
+    // Same rule as LineService.AddDirectLine: inheritance styling only where the line touches the
+    // real inheritance endpoints.
+    static bool IsInheritanceBetween(Link link, Node repSource, Node repTarget) =>
+        link.IsInheritance && (repSource == link.Source || repTarget == link.Target);
 
     // A focus link is one of the subject line's links or, for a node subject, a link whose
     // near endpoint lies at or below the subject node.
@@ -224,24 +441,25 @@ static class RepLineService
     }
 
     // Walks from the top sibling under the common ancestor (index count-common-1) toward the
-    // endpoint (index 0). The walk descends into a node only while it has depth budget left,
-    // or while the node lies above the focus pin or is a focus-expanded node, and the node
-    // shows its children at this zoom; with no split depth and no focus it stops at once, which
-    // is the aggregated funnel. Pass-through nodes are transparent: they have no chrome of
-    // their own, so they neither stop the walk nor consume a level. The depth and focus are
-    // checked before the expansion state so nodes that cannot affect the outcome never enter
-    // the memo's expansion cache.
+    // endpoint (index 0). The walk descends into a node only while the node lies above the
+    // focus pin or is a focus-expanded node, and the node shows its children at this zoom;
+    // with no focus it stops at once, which is the aggregated funnel. With a reveal (the far
+    // side of a selected stub's link) it descends as far as the nodes show their children.
+    // Pass-through nodes are transparent: they have no chrome of their own, so they never stop
+    // the walk. The focus is checked before the expansion state so nodes that cannot affect the
+    // outcome never enter the memo's expansion cache.
     static int GetRepresentativeIndex(
         List<Node> path,
         int commonAncestors,
         double zoom,
         Dictionary<Node, bool> cache,
         Node? pinNode,
-        HashSet<Node>? expandedNodes
+        HashSet<Node>? expandedNodes,
+        LineReveal? reveal = null,
+        Dictionary<Node, bool>? worthOpeningCache = null
     )
     {
         int index = path.Count - commonAncestors - 1;
-        int budget = GetInheritedDepth(path, index);
         int pinIndex = pinNode is null ? int.MaxValue : IndexOf(path, pinNode); // MaxValue: no pin on this path
         while (index > 0)
         {
@@ -252,35 +470,51 @@ static class RepLineService
                 continue;
             }
 
-            budget = Math.Max(budget, node.LineSplitDepth);
-            var isFocusDescent = index > pinIndex || (expandedNodes is not null && expandedNodes.Contains(node));
-            if ((budget == 0 && !isFocusDescent) || !IsChildrenShown(node, zoom, cache))
+            var isAskedFor = index > pinIndex || (expandedNodes is not null && expandedNodes.Contains(node));
+            if ((!isAskedFor && reveal is null) || !IsChildrenShown(node, zoom, cache))
                 break;
 
-            if (budget > 0)
-                budget--;
+            // The selection's reveal goes as deep as the nodes are open, but not into a row
+            // the view leaves out: the line to it would not be drawn at all.
+            if (!isAskedFor && reveal.GetValueOrDefault().LeavesOut(path[index - 1]))
+                break;
+
+            // Nor into a container out of sight or too small to tell its children apart: one
+            // line to the container instead of one to each child.
+            if (!isAskedFor && !IsWorthOpening(node, zoom, reveal.GetValueOrDefault().Area, worthOpeningCache))
+                break;
+
             index--;
         }
 
         return index;
     }
 
-    // The depth budget the ancestors above the top sibling grant it: an ancestor's split depth
-    // counts from that ancestor, so the levels already spent down to the top sibling are
-    // subtracted (pass-through nodes are not levels). This is what makes a split depth apply to
-    // the links inside the container too, whose top siblings lie below it.
-    static int GetInheritedDepth(List<Node> path, int topIndex)
+    // The size on screen (pixels) below which a container's children count as tiny: a child of
+    // the default size (NodeLayout.DefaultSize) would be smaller than this. (A member card's
+    // rows are smaller, but they show only once their names are readable.)
+    internal const double MinFarEndSize = 20;
+    static readonly double DefaultChildSize = NodeLayout.DefaultSize.Width;
+
+    // A selected stub's far side opens the container: it lies (partly) in the tile's area and a
+    // default-size child of it would be at least MinFarEndSize on screen. A container not laid
+    // out yet (Rect.None) counts as in the area, since its place is not known.
+    static bool IsWorthOpening(Node node, double zoom, Rect? area, Dictionary<Node, bool>? cache)
     {
-        int budget = 0;
-        int levels = 0;
-        for (int i = topIndex + 1; i < path.Count; i++)
+        if (cache is not null && cache.TryGetValue(node, out var isWorth))
+            return isWorth;
+
+        var (pos, scale) = node.GetPosAndZoom();
+        isWorth = DefaultChildSize * scale * node.ContainerZoom / zoom >= MinFarEndSize;
+        if (isWorth && area is { } view && node.Boundary != Rect.None)
         {
-            if (!path[i - 1].IsPassThrough)
-                levels++;
-            budget = Math.Max(budget, path[i].LineSplitDepth - levels);
+            var rect = new Rect(pos.X, pos.Y, node.Boundary.Width * scale, node.Boundary.Height * scale);
+            isWorth = rect.Intersects(view);
         }
 
-        return budget;
+        if (cache is not null)
+            cache[node] = isWorth;
+        return isWorth;
     }
 
     static bool IsChildrenShown(Node node, double zoom, Dictionary<Node, bool> cache)
@@ -341,6 +575,7 @@ static class RepLineService
             RenderAncestor = renderAncestor,
             IsActiveRep = true,
             IsFocused = group.IsFocused,
+            IsRevealed = group.IsRevealed,
         };
 
         renderAncestor.AddDirectLine(line);
@@ -382,8 +617,8 @@ static class RepLineService
     }
 
     // Inactive cousin lines are deliberately NOT pruned: they are invisible (!IsActiveRep),
-    // their count is bounded by the distinct rep pairs of the zoom levels, split depths and
-    // focus states visited, and pruning caused heavy allocation churn when tiles at different zoom levels
+    // their count is bounded by the distinct rep pairs of the zoom levels and focus states
+    // visited, and pruning caused heavy allocation churn when tiles at different zoom levels
     // alternated (each flip re-created and re-destroyed every deep cousin line).
     // Model.RemoveLink removes them once their last link goes away, like any other line.
 }

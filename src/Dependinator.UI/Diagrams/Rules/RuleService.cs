@@ -351,8 +351,7 @@ class RuleService(IModelMgr modelMgr, ICommandService commandService) : IRuleSer
         var nodesByName = new Dictionary<string, Node>(StringComparer.Ordinal);
         foreach (var node in model.Nodes.Values)
             nodesByName.TryAdd(node.Name, node);
-        var cycleOf =
-            cycleIndexes
+        var cycleOf = cycleIndexes
             ?? (rules.Any(r => r.Kind == RuleKind.NoCycles) ? CycleIndexes(model) : new Dictionary<NodeId, int>());
 
         var resolved = new List<(ArchitectureRule Rule, Node? From, Node? To, Node?[] Nodes)>();

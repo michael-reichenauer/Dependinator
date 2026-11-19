@@ -53,10 +53,8 @@ static class LspMcpServer
         }
 
         var jsonRpc = server.Services.GetRequiredService<IJsonRpcService>();
-        var queries = new TimeLimitedModelQueries(
-            jsonRpc.GetRemoteProxy<IModelQueryService>(),
-            TimeLimit,
-            () => IsWebviewConnectedAsync(jsonRpc)
+        var queries = new TimeLimitedModelQueries(jsonRpc.GetRemoteProxy<IModelQueryService>(), TimeLimit, () =>
+            IsWebviewConnectedAsync(jsonRpc)
         );
         var started = await McpHttpServer.StartAsync(queries, token, options?.Value<int?>("port") ?? 0);
         if (started is not McpHttpServer mcp)

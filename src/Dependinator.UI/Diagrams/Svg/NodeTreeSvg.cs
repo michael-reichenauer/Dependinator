@@ -1,4 +1,5 @@
 using Dependinator.UI.Diagrams.Lines;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -25,13 +26,43 @@ static class NodeTreeSvg
         var content = "";
         for (var round = 0; round < MaxRenderRounds; round++)
         {
-            RepLineService.Sync(model, zoom);
+            RepLineService.Sync(model, zoom, rootContext.Flags.Reveal);
+            var flags = rootContext.Flags;
+            LabelPlacement.Place(model.Lines.Values, flags.RevealHidden, flags.Filter, flags.Rows);
             var generation = NodeLayout.Generation;
             content = RenderNodeContent(model.Root, rootContext);
             if (NodeLayout.Generation == generation)
                 break;
         }
         return content;
+    }
+
+    // A selected stub's links are drawn end to end (see RepLineService); not those of an edge
+    // line that is drawn in full (labelled, routed with line points or on the shown path), which
+    // is selected for itself. A selected line that crosses containers is kept as it is: it may be
+    // one of the stub's lines, clicked. A selected node asks for nothing: its stubs are there to
+    // click.
+    internal static LineReveal GetLineReveal(
+        RenderSelection selection,
+        RowFilter rows,
+        LineFilter filter,
+        IReadOnlySet<LineId>? pathLines = null
+    )
+    {
+        // One of a stub's lines, clicked: it stays between its ends, and with the stub still being
+        // explored the stub's other lines stay too.
+        if (selection.Line is { IsCousin: true } line)
+        {
+            var stub =
+                selection.ExploredStub is { } explored
+                && LineStub.IsStub(explored, pathLines?.Contains(explored.Id) == true)
+                    ? explored
+                    : null;
+            return new LineReveal(rows, filter.HideMember) { KeptLine = line, Stub = stub };
+        }
+        if (selection.Line is { } edgeLine && LineStub.IsStub(edgeLine, pathLines?.Contains(edgeLine.Id) == true))
+            return new LineReveal(rows, filter.HideMember) { Stub = edgeLine };
+        return LineReveal.None;
     }
 
     static string RenderNodeContent(Node node, RenderContext context)
@@ -83,11 +114,8 @@ static class NodeTreeSvg
 
         var privateToggleSvg =
             memberCardSvg.Length > 0
-                ? MemberCardSvg.GetPrivateToggleSvg(
-                    node,
-                    childrenCanvasOffset,
-                    childrenZoom,
-                    row => IsRowShown(row, context)
+                ? MemberCardSvg.GetPrivateToggleSvg(node, childrenCanvasOffset, childrenZoom, row =>
+                    IsRowShown(row, context)
                 )
                 : "";
 

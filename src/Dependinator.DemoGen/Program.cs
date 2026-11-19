@@ -14,7 +14,7 @@ using ModelJson = Dependinator.Core.Utils.Json;
 // - bicep: parses the webshop example deployment (examples/bicep) and writes the "Demo.bicep"-
 //   renamed model to demo-bicep.model (embedded into Dependinator.Bicep).
 // Both land in the Wasm wwwroot, where they are served as static assets and copied into the
-// VS Code extension by its build. This project is intentionally not part of Dependinator.sln,
+// VS Code extension by its build. This project is intentionally not part of Dependinator.slnx,
 // so it never appears in the parsed model.
 namespace Dependinator.DemoGen;
 
@@ -51,7 +51,21 @@ internal class Program
             return 1;
         }
 
-        return await WriteModelAsync(items, json => json.Replace("Dependinator", "Demo"), DemoModel.DemoOutputPath);
+        // The root node is named after the solution file ("Dependinator*slnx"), the demo stays
+        // "/Demo.sln" (root "Demo*sln"), so saved demo layouts and share links keep working.
+        var rootName = Path.GetFileName(DemoModel.WorkingSolutionPath).Replace(".", "*");
+        var demoRootName = Path.GetFileName(DemoModel.DemoSolutionName).Replace(".", "*");
+        if (!items.Any(i => i.Node?.Name == rootName))
+        {
+            Console.Error.WriteLine($"The parsed solution has no root node '{rootName}' to rename to '{demoRootName}'");
+            return 1;
+        }
+
+        return await WriteModelAsync(
+            items,
+            json => json.Replace(rootName, demoRootName).Replace("Dependinator", "Demo"),
+            DemoModel.DemoOutputPath
+        );
     }
 
     static async Task<int> GenerateBicepDemoAsync()

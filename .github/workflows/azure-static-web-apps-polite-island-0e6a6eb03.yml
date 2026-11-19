@@ -20,7 +20,7 @@ jobs:
   # would fail on a missing token; their tests still run in the Build workflow.
   build_and_deploy_job:
     if: github.actor != 'dependabot[bot]' && github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Build and Deploy Job
     permissions:
       contents: read
@@ -35,12 +35,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x" # net10.0 runtime; global.json selects the .NET 11 SDK
+          dotnet-version: "10.0.x" # net10.0 runtime of the Api, its tests and CSharpier; global.json selects the .NET 11 SDK
           global-json-file: global.json
       - name: Install WASM workload
-        run: dotnet workload restore Dependinator.sln
+        run: dotnet workload restore Dependinator.slnx
       - name: Restore
-        run: dotnet restore Dependinator.sln
+        run: dotnet restore Dependinator.slnx
       - name: Publish Dependinator WASM
         run: |
           rm -rf src/Dependinator.Wasm/publish
@@ -68,7 +68,7 @@ jobs:
 
   close_pull_request_job:
     if: github.actor != 'dependabot[bot]' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Close Pull Request Job
     permissions: {} # only the Azure deployment token is used here
     steps:

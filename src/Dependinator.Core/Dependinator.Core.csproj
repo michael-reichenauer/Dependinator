@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <AssemblyName>Dependinator.Core</AssemblyName>
         <RootNamespace>Dependinator.Core</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -13,7 +13,7 @@
             >$([System.DateTime]::UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"))</BuildTime>
         <!-- A design-time build (the Roslyn parser's MSBuildWorkspace parsing this solution, or an IDE) must
          not rewrite obj/.../AssemblyInfo.cs with a new time: dotnet watch sees the change and restarts the
-         app, so parsing Dependinator.sln in ./scripts/watch restarted the server on every page load. -->
+         app, so parsing Dependinator.slnx in ./scripts/watch restarted the server on every page load. -->
         <GenerateAssemblyInfo Condition="'$(DesignTimeBuild)' == 'true'">false</GenerateAssemblyInfo>
     </PropertyGroup>
 

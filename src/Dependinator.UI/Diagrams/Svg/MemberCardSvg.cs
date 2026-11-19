@@ -1,5 +1,6 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
@@ -113,6 +114,9 @@ static class MemberCardSvg
         );
     }
 
+    // The smallest scale of the summary card's text (of its sizes for a 180 px card).
+    const double MinSummaryScale = 0.85;
+
     // The summary card: a type (or a resource with auxiliary rows) opened far enough to show more
     // than an icon but not yet its readable rows. A header with the icon, name and kind, the member
     // counts, and as many members as fit, public first, with "+ N more". It is a leaf like an
@@ -127,10 +131,11 @@ static class MemberCardSvg
         Func<Node, bool>? isRowShown = null
     )
     {
-        // Sizes for a 180 px card: it shows from about 200 px (NodeViewPolicy), and its text stops
-        // growing soon after, near the size the rows have when the full card replaces it, so
-        // growing it reveals more rows instead.
-        var u = Math.Min(rect.Width / 180, 1.3);
+        // Sizes for a 180 px card: it shows from 120 px (the smallest type) to 360 px (the largest;
+        // NodeViewPolicy.OpenSize). Its text stops shrinking at about 150 px, so a small card
+        // shows fewer rows that can still be read, and stops growing at about 230 px, near the
+        // size the rows have when the full card replaces it, so growing it reveals more rows.
+        var u = Math.Clamp(rect.Width / 180, MinSummaryScale, 1.3);
         var (x, y, w, h) = (rect.X, rect.Y, rect.Width, rect.Height);
         var (nodeOpacity, textOpacity) = NodeSvg.HiddenAttributes(node);
         var elementId = PointerId.FromNode(node.Id).ElementId;
@@ -336,7 +341,14 @@ static class MemberCardSvg
         var hoverClass = node.IsEditMode ? "hoverableedit" : "hoverable";
         var (w, h) = (nodeCanvasRect.Width, nodeCanvasRect.Height);
         var innerRect = new Rect(0, 0, w, h);
-        var hoverGroup = NodeSvg.BuildHoverGroup(elementId, hoverClass, innerRect, NodeSvg.TitleName(node));
+        var hoverGroup = NodeSvg.BuildHoverGroup(
+            elementId,
+            hoverClass,
+            innerRect,
+            NodeSvg.TitleName(node),
+            isOpen: true,
+            headerHeight: MemberCard.CardHeaderHeight * childrenZoom
+        );
         var frame = CardFrameSvg(node, innerRect, childrenZoom, TextZoom(childrenZoom));
         var textZoom = TextZoom(parentZoom);
         return string.Create(
@@ -365,6 +377,7 @@ static class MemberCardSvg
             NodeType.RecordType => "record",
             NodeType.Resource => "resource",
             NodeType.Module => "module",
+            NodeType.SourceFile => "file",
             _ => node.Type.ToString().ToLowerInvariant(),
         };
 

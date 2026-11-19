@@ -2,6 +2,7 @@ using System.Globalization;
 using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
 using Dependinator.UI.Diagrams.Svg;
+using Dependinator.UI.Diagrams.Tiles;
 using Dependinator.UI.Diagrams.Tours;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Commands;
@@ -18,19 +19,35 @@ using Shared;
 // editing of nodes and lines.
 namespace Dependinator.UI.Diagrams;
 
+// What the canvas shows: the svg content, its viewBox and the CSS transform that moves it to the
+// current view while the view moves (GestureTransform).
+// Guides: the drag's alignment guides (AlignmentGuideService), drawn over the content.
+record CanvasView(string Content, string ViewBox, string Style, string Guides = "");
+
 interface ICanvasService
 {
-    string SvgContent { get; }
     Rect SvgRect { get; }
-    string SvgViewBox { get; }
     string Cursor { get; }
+
+    // The view to render: while the view moves, the shown svg follows it by a transform where it
+    // can (GestureTransform), else the current view is drawn.
+    CanvasView GetView();
+
+    // Draws one tile the resting view is likely to need next (SvgService.PrefetchNext); false
+    // while the view moves or when nothing is left to draw ahead.
+    bool PrefetchNext();
 
     Task InitAsync();
     Task RemoveAsync();
     Task RefreshAsync();
+
+    // Parses the model again after files of the kinds changed (IModelService.RefreshChangedAsync).
+    Task RefreshChangedAsync(IReadOnlyCollection<string> changedKinds);
     void PanZoomToFit();
     Task InitialShowAsync();
-    Task LoadAsync(string modelPath, bool? includeTestProjects = null);
+
+    // isRetry: the load is tried again after it failed, with what the user chose for it.
+    Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false);
     Task LoadFilesAsync(IReadOnlyList<IBrowserFile> browserFiles);
 }
 
@@ -52,30 +69,36 @@ class CanvasService(
     Lazy<IAppCloudSyncService> appCloudSyncServiceLazy,
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory,
-    ICommandService commandService
+    ICommandService commandService,
+    App.IWorkspaceSourcesService workspaceSourcesService,
+    Editing.IAlignmentGuideService alignmentGuides
 ) : ICanvasService
 {
     double levelZoom = 1;
     Pos tileOffset = Pos.None;
     string content = "";
 
-    public string SvgContent => GetSvgContent();
+    // The view the content and viewBox were drawn for, and the canvas area its tile holds.
+    Pos shownOffset = Pos.None;
+    double shownZoom = 0;
+    Rect shownTileArea = Rect.None;
+    volatile bool isShownStale = true;
+    bool isSubscribed;
+
     public string Cursor => interactionService.Cursor;
 
     public Rect SvgRect => screenService.SvgRect;
-    Pos Offset => modelMgr.WithModel(m => m.Offset);
     double Zoom => modelMgr.WithModel(m => m.Zoom);
-
-    public string SvgViewBox =>
-        levelZoom != 0
-            ? string.Create(
-                CultureInfo.InvariantCulture,
-                $"{Offset.X / levelZoom - tileOffset.X:0.##} {Offset.Y / levelZoom - tileOffset.Y:0.##} {SvgRect.Width * Zoom / levelZoom:0.##} {SvgRect.Height * Zoom / levelZoom:0.##}"
-            )
-            : "0 0 0 0";
 
     public async Task InitAsync()
     {
+        // A model change clears the tiles: what is shown must then be drawn again, also while
+        // the view moves. The service lives as long as its scope, so it never unsubscribes.
+        if (!isSubscribed)
+        {
+            isSubscribed = true;
+            applicationEvents.ModelChanged += () => isShownStale = true;
+        }
         await interactionService.InitAsync();
     }
 
@@ -132,13 +155,19 @@ class CanvasService(
         await coachService.StartIfFirstRunAsync(isDemoModel: !isLoaded && DemoModel.IsDemo(startupPath));
     }
 
-    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null)
+    public async Task LoadAsync(string modelPath, bool? includeTestProjects = null, bool isRetry = false)
     {
+        // The workspace's model, opened for the first time: the user chooses what is in it, and
+        // cancelling leaves the open model as it is.
+        var sources = await workspaceSourcesService.AskBeforeFirstOpenAsync(modelPath, isRetry);
+        if (sources.IsCancelled)
+            return;
+
         applicationEvents.TriggerUIStateChanged();
         await Task.Yield();
 
         // Load failures (e.g. a failed parse) are reported to the user by the model service.
-        if (await modelService.LoadAsync(modelPath, includeTestProjects) is not ModelInfo modelInfo)
+        if (await modelService.LoadAsync(modelPath, includeTestProjects, sources.Choices) is not ModelInfo modelInfo)
             return;
 
         viewHistory.Clear(); // Views of the previous model mean nothing here
@@ -198,20 +227,93 @@ class CanvasService(
 
     public async Task RefreshAsync()
     {
+        // A source can have been added or removed since the workspace was listed: only VS Code
+        // tells when that happens, and not of every way it can (a folder that is moved).
+        await recentModelsService.RefreshWorkspaceSourcesAsync();
         await modelService.RefreshAsync();
         applicationEvents.TriggerUIStateChanged();
     }
 
-    string GetSvgContent()
+    public async Task RefreshChangedAsync(IReadOnlyCollection<string> changedKinds)
     {
-        if (SvgRect.Width == 0 || SvgRect.Height == 0 || Zoom == 0)
-            return "";
+        await modelService.RefreshChangedAsync(changedKinds);
+        applicationEvents.TriggerUIStateChanged();
+    }
 
-        var viewRect = new Rect(Offset.X, Offset.Y, SvgRect.Width, SvgRect.Height);
-        var tile = svgService.GetTile(viewRect, Zoom);
+    public CanvasView GetView()
+    {
+        var svgRect = SvgRect;
+        var (offset, zoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+        if (svgRect.Width == 0 || svgRect.Height == 0 || zoom == 0)
+            return new CanvasView("", "0 0 0 0", "");
+
+        // The view rect, as the saved view and the layout refine read it (SvgService.GetTile
+        // records it as well, but is not called while the svg is only moved).
+        var viewRect = new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height);
+        modelMgr.WithModel(m => m.ViewRect = viewRect);
+
+        // While the view moves the shown svg is moved, not drawn again, until the view rests
+        // (PanZoomService.IsViewMoving), unless the model changed since it was drawn.
+        if (
+            panZoomService.IsViewMoving
+            && !isShownStale
+            && GestureTransform.Get(shownOffset, shownZoom, offset, zoom, svgRect, shownTileArea) is { } transform
+        )
+            return new CanvasView(
+                content,
+                ViewBox(shownOffset, shownZoom, svgRect),
+                GestureTransform.Css(transform),
+                alignmentGuides.GetSvg(levelZoom, tileOffset)
+            );
+
+        UpdateContent(viewRect, zoom);
+        return new CanvasView(
+            content,
+            ViewBox(offset, zoom, svgRect),
+            "",
+            alignmentGuides.GetSvg(levelZoom, tileOffset)
+        );
+    }
+
+    public bool PrefetchNext()
+    {
+        if (panZoomService.IsViewMoving)
+            return false; // Its rest draws the view, and asks again after
+        var svgRect = SvgRect;
+        var (offset, zoom) = modelMgr.WithModel(m => (m.Offset, m.Zoom));
+        return svgService.PrefetchNext(new Rect(offset.X, offset.Y, svgRect.Width, svgRect.Height), zoom);
+    }
+
+    string ViewBox(Pos offset, double zoom, Rect svgRect) =>
+        levelZoom != 0
+            ? string.Create(
+                CultureInfo.InvariantCulture,
+                $"{offset.X / levelZoom - tileOffset.X:0.##} {offset.Y / levelZoom - tileOffset.Y:0.##} {svgRect.Width * zoom / levelZoom:0.##} {svgRect.Height * zoom / levelZoom:0.##}"
+            )
+            : "0 0 0 0";
+
+    void UpdateContent(Rect viewRect, double zoom)
+    {
+        isShownStale = false; // Before the tile: a model change while it is drawn marks it again
+        Tile tile;
+        try
+        {
+            tile = svgService.GetTile(viewRect, zoom);
+        }
+        catch
+        {
+            isShownStale = true; // What is shown was not replaced: never move it
+            throw;
+        }
+        shownOffset = new Pos(viewRect.X, viewRect.Y);
+        shownZoom = zoom;
+        shownTileArea =
+            tile.Key == TileKey.Empty
+                ? Rect.None
+                : SvgService.GetCanvasArea(tile.Key.GetTileRect(), tile.Key.GetTileRectWithMargin(), tile.Zoom);
 
         if (content == tile.Svg)
-            return content; // No change
+            return; // No change
 
         content = tile.Svg;
         levelZoom = tile.Zoom;
@@ -219,6 +321,5 @@ class CanvasService(
         tileOffset = new Pos(-tile.Offset.X + tileViewRect.X, -tile.Offset.Y + tileViewRect.Y);
 
         applicationEvents.TriggerUIStateChanged();
-        return content;
     }
 }

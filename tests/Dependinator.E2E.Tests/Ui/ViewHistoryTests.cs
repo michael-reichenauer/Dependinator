@@ -53,8 +53,7 @@ public class ViewHistoryTests(ITestOutputHelper output) : E2ETestBase(output)
 
     async Task<float> NodeWidthAsync(string label)
     {
-        LocatorBoundingBoxResult box =
-            await App.Node(label).BoundingBoxAsync()
+        LocatorBoundingBoxResult box = await App.Node(label).BoundingBoxAsync()
             ?? throw new InvalidOperationException($"Node '{label}' is not rendered.");
         return box.Width;
     }

@@ -27,22 +27,16 @@ interface IAgentTools : IAsyncDisposable
 // time, since the API keeps no state between requests. It ends when Claude answers without calling
 // a tool, or after MaxTurns requests: the last one allows no tool calls (tool_choice "none"), so
 // Claude answers with what it found. The answer is structured output, so the final text is JSON
-// that matches the schema. Claude Sonnet 5.5 at medium effort: a few tool calls a turn, cents an
-// ask. Requests use automatic prompt caching (the cache mark moves to the latest message), so each
-// turn reads the tools and the turns before from the cache at a tenth of the price. A turn a
-// server-side fallback answered on another model has other prices, so then the cost is unknown.
+// that matches the schema. The model is the caller's (Claude Sonnet 5.5 unless the user picked one),
+// at medium effort: a few tool calls a turn, cents an ask. Requests use automatic prompt caching
+// (the cache mark moves to the latest message), so each turn reads the tools and the turns before
+// from the cache at a fraction of the price. Each turn is priced by the model that served it (a
+// server-side fallback may answer on another); the cost is unknown once a model without known
+// prices served a turn (ClaudeModels).
 static class ModelToolsAgent
 {
-    internal const string Model = "claude-sonnet-5-5";
     internal const int MaxTurns = 15;
     const int MaxTokens = 16000;
-
-    // Claude Sonnet 5.5 list prices, US dollars per million tokens; writing the cache costs 1.25
-    // times the input price, reading it a tenth.
-    const decimal InputPrice = 2.00m;
-    const decimal OutputPrice = 10.00m;
-    const decimal CacheWritePrice = 2.50m;
-    const decimal CacheReadPrice = 0.20m;
 
     const string LastTurnNote =
         "You have used all your tool calls. Answer now with what you found, and say what is left open.";
@@ -51,7 +45,8 @@ static class ModelToolsAgent
         AnthropicClient client,
         string prompt,
         Dictionary<string, JsonElement> schema,
-        IAgentTools tools
+        IAgentTools tools,
+        string model = ClaudeModels.Quick
     )
     {
         List<BetaToolUnion> toolDefinitions = [.. tools.Tools.Select(ToolDefinition)];
@@ -63,25 +58,25 @@ static class ModelToolsAgent
         {
             var isLastTurn = turn == MaxTurns;
             var response = await client.Beta.Messages.Create(
-                new MessageCreateParams
-                {
-                    Model = Model,
-                    MaxTokens = MaxTokens,
-                    Betas = [AnthropicBeta.ServerSideFallback2026_07_01],
-                    Fallbacks = new Default(),
-                    CacheControl = new BetaCacheControlEphemeral(),
-                    OutputConfig = new BetaOutputConfig
+                ClaudeModels.WithFallback(
+                    new MessageCreateParams
                     {
-                        Effort = Effort.Medium,
-                        Format = new BetaJsonOutputFormat { Schema = schema },
-                    },
-                    Tools = toolDefinitions,
-                    ToolChoice = isLastTurn ? new BetaToolChoiceNone() : new BetaToolChoiceAuto(),
-                    Messages = messages,
-                }
+                        Model = model,
+                        MaxTokens = MaxTokens,
+                        CacheControl = new BetaCacheControlEphemeral(),
+                        OutputConfig = new BetaOutputConfig
+                        {
+                            Effort = Effort.Medium,
+                            Format = new BetaJsonOutputFormat { Schema = schema },
+                        },
+                        Tools = toolDefinitions,
+                        ToolChoice = isLastTurn ? new BetaToolChoiceNone() : new BetaToolChoiceAuto(),
+                        Messages = messages,
+                    }
+                )
             );
             string servedModel = response.Model;
-            cost = servedModel.StartsWith(Model, StringComparison.Ordinal) ? cost + Cost(response.Usage) : null;
+            cost = ClaudeModels.PriceOf(servedModel) is { } price ? cost + Cost(response.Usage, price) : null;
             Log.Info(
                 "Claude answered with tools",
                 $"turn {turn} on {servedModel}",
@@ -199,11 +194,11 @@ static class ModelToolsAgent
         }
     }
 
-    static decimal Cost(BetaUsage usage) =>
+    static decimal Cost(BetaUsage usage, ClaudeModels.Price price) =>
         (
-            usage.InputTokens * InputPrice
-            + (usage.CacheCreationInputTokens ?? 0) * CacheWritePrice
-            + (usage.CacheReadInputTokens ?? 0) * CacheReadPrice
-            + usage.OutputTokens * OutputPrice
+            usage.InputTokens * price.Input
+            + (usage.CacheCreationInputTokens ?? 0) * price.CacheWrite
+            + (usage.CacheReadInputTokens ?? 0) * price.CacheRead
+            + usage.OutputTokens * price.Output
         ) / 1_000_000m;
 }

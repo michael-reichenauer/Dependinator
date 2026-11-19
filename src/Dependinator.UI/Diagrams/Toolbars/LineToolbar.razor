@@ -1,0 +1,148 @@
+﻿@using Dependinator.UI.Diagrams.Icons
+@using Dependinator.UI.Diagrams.Dependencies
+@using Dependinator.Core
+
+
+@inject IApplicationEvents applicationEvents
+@inject ISelectionService selectionService
+@inject IDialogService dialogService
+@inject IDependenciesService dependenciesService
+@inject ILineEditService lineEditService
+@inject ILineLabelService lineLabelService
+@inject IManualEditService manualEditService
+@inject IViewOptions viewOptions
+@inject IKeyboardService keyboardService
+@implements IDisposable
+
+@if (HasSelectedLine)
+{
+    <MudStack Style="@containerPosition" Spacing="1">
+        <div class="dep-float-toolbar" data-testid="line-toolbar">
+            <MudTooltip Text="Show references">
+                <MudIconButton Icon="@Icon.ReferencesIcon" OnClick="ShowReferences" data-testid="line-references" />
+            </MudTooltip>
+            <MudTooltip Text="Show dependencies">
+                <MudIconButton Icon="@Icon.DependenciesIcon" OnClick="ShowDependencies" data-testid="line-dependencies" />
+            </MudTooltip>
+            <span class="dep-toolbar-sep"></span>
+            @* Labels and bends change the (saved) line, so they are edit-mode actions like dragging them. *@
+            @if (viewOptions.IsEditingEnabled)
+            {
+                <MudTooltip Text="Edit label (or double-click the line)">
+                    <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Label" OnClick="EditLabel"
+                                   data-testid="line-label" />
+                </MudTooltip>
+                @* The line routed again around the nodes where they stand (hand-set bends go too). *@
+                @if (CanRerouteSelectedLine)
+                {
+                    <MudTooltip Text="Re-route line around the nodes">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Route" OnClick="RerouteLine"
+                                       data-testid="line-reroute" />
+                    </MudTooltip>
+                }
+                @* Bends are added and moved on the line itself (its segment handles); a bend
+                   dragged back straight or double-clicked goes away, this removes them all. *@
+                @if (HasSelectedLineBends)
+                {
+                    <MudTooltip Text="Straighten line">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.HorizontalRule" OnClick="StraightenLine"
+                                       data-testid="line-straighten" />
+                    </MudTooltip>
+                }
+                @if (IsSelectedLineManual)
+                {
+                    <MudTooltip Text="Delete link (Del)">
+                        <MudIconButton Icon="@MudBlazor.Icons.Material.Outlined.Delete" Color="Color.Error"
+                                       OnClick="DeleteManualLine" data-testid="line-delete" />
+                    </MudTooltip>
+                }
+            }
+        </div>
+    </MudStack>
+}
+
+
+@code {
+    bool HasSelectedLine => selectionService.SelectedLinePosition != Shared.Types.Pos.None;
+
+    double left => selectionService.SelectedLinePosition.X - 10;
+    // SelectedLinePosition is already up and left of the click (SelectionService's toolbar
+    // offsets); this puts the toolbar (36 px high, from the dep-float-toolbar CSS) a little higher, clear of the line.
+    double top => Math.Max(ToolbarPositioning.ChromeBottom, selectionService.SelectedLinePosition.Y - 38);
+    string containerPosition =>
+        FormattableString.Invariant($"Position: fixed; left:{left:0.##}px; top:{top:0.##}px");
+
+    void ShowReferences() => dependenciesService.ShowReferences();
+    void ShowDependencies() => dependenciesService.ShowDependencies();
+    Task EditLabel() =>
+        selectionService.SelectedId.IsLine
+            ? lineLabelService.EditLabelAsync(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id))
+            : Task.CompletedTask;
+    void StraightenLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        lineEditService.StraightenLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+        selectionService.UpdateSelectedPositionAsync().RunInBackground();
+    }
+
+    bool CanRerouteSelectedLine =>
+        selectionService.SelectedId.IsLine
+        && lineEditService.CanRerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+
+    void RerouteLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        lineEditService.RerouteLine(Modeling.Models.LineId.FromId(selectionService.SelectedId.Id));
+        selectionService.UpdateSelectedPositionAsync().RunInBackground();
+    }
+
+    bool HasSelectedLineBends => TryGetSelectedLine(out var line) && line.SegmentPoints.Count > 0;
+
+    // The line shows only user-drawn link(s), so it can be deleted (parsed links cannot).
+    bool IsSelectedLineManual =>
+        TryGetSelectedLine(out var line) && line.Links.Any() && line.Links.All(l => l.IsManual);
+
+    void DeleteManualLine()
+    {
+        if (!selectionService.SelectedId.IsLine)
+            return;
+        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
+        selectionService.Unselect();
+        manualEditService.DeleteManualLine(lineId);
+    }
+
+    bool TryGetSelectedLine(out Modeling.Models.Line line)
+    {
+        line = null!;
+        if (!selectionService.SelectedId.IsLine)
+            return false;
+        var lineId = Modeling.Models.LineId.FromId(selectionService.SelectedId.Id);
+        var found = dependenciesService.TryGetLine(lineId, out line);
+        return found && line is not null;
+    }
+
+    protected override void OnInitialized()
+    {
+        applicationEvents.UIStateChanged += OnUiStateChanged;
+        keyboardService.KeyDown += OnKeyDown;
+    }
+
+    void OnUiStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        applicationEvents.UIStateChanged -= OnUiStateChanged;
+        keyboardService.KeyDown -= OnKeyDown;
+    }
+
+    // Delete removes the selected user-drawn link (parsed links cannot be deleted).
+    void OnKeyDown(KeyPress key)
+    {
+        if (!key.Is("Delete") || !key.IsPlain || !HasSelectedLine)
+            return;
+        if (viewOptions.IsEditingEnabled && IsSelectedLineManual)
+            _ = InvokeAsync(DeleteManualLine);
+    }
+}

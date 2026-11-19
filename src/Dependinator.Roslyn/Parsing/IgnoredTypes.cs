@@ -11,6 +11,10 @@ static class IgnoredTypes
         if (symbol.TypeKind == TypeKind.Error || symbol.IsAnonymousType)
             return true;
 
+        // Source-generator output is not in the model, so nothing links to it either
+        if (GeneratedCode.IsGenerated(symbol.OriginalDefinition))
+            return true;
+
         typeName ??= symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
         if (IsIgnoredType(typeName))
@@ -34,7 +38,8 @@ static class IgnoredTypes
         return name == "global::Microsoft"
             || name.StartsWith("global::Microsoft.")
             || name == "global::__Blazor"
-            || name.StartsWith("global::__Blazor.");
+            || name.StartsWith("global::__Blazor.")
+            || GeneratedCode.IsGeneratedOnly(ns);
     }
 
     static bool IsIgnoredType(string typeName)

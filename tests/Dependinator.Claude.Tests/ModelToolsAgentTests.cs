@@ -46,7 +46,7 @@ public class ModelToolsAgentTests
         using var api = new FakeAnthropicApi(ToolCallResponse, AnswerResponse);
         var service = Service(api);
 
-        var answer = AssertOk(await service.AskWithModelToolsAsync("What parses?", Schema));
+        var answer = AssertOk(await service.AskWithModelToolsAsync("What parses?", Schema, null));
 
         Assert.Equal("""{ "answer": "The parsers." }""", answer.Json);
         Assert.Equal(1, answer.ToolCalls);
@@ -70,10 +70,10 @@ public class ModelToolsAgentTests
     {
         using var api = new FakeAnthropicApi(ToolCallResponse, AnswerResponse);
 
-        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
 
         // Turn 1: 1000 in, 2000 cache write, 100 out; turn 2: 500 in, 3000 cache read, 200 out.
-        var expected = (1500 * 2.00m + 2000 * 2.50m + 3000 * 0.20m + 300 * 10.00m) / 1_000_000m;
+        var expected = (1500 * 2.00m + 2000 * 2.50m + 3000 * 0.10m + 300 * 10.00m) / 1_000_000m;
         Assert.Equal(decimal.Round(expected, 4), answer.CostUsd);
     }
 
@@ -83,7 +83,7 @@ public class ModelToolsAgentTests
         using var api = new FakeAnthropicApi(ToolCallResponse, AnswerResponse);
         tools.Failure = new HttpRequestException("The connection was closed.");
 
-        AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+        AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
 
         var second = api.RequestBodies[1];
         Assert.Contains("The tool failed: The connection was closed.", second);
@@ -95,7 +95,7 @@ public class ModelToolsAgentTests
     {
         using var api = new FakeAnthropicApi(ToolCallResponse);
 
-        var error = AssertError(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+        var error = AssertError(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
 
         Assert.Equal("Claude did not answer within the limit of tool calls. Please try again.", error.Message);
         var requests = api.RequestBodies;
@@ -121,23 +121,62 @@ public class ModelToolsAgentTests
             lastTurn,
         ]);
 
-        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
 
         Assert.Equal("{ \"answer\": \"Partly.\" }", answer.Json);
         Assert.Equal(ModelToolsAgent.MaxTurns - 1, answer.ToolCalls);
     }
 
     [Fact]
-    public async Task AskWithModelToolsAsync_ShouldLeaveTheCostUnknown_WhenAnotherModelAnsweredATurn()
+    public async Task AskWithModelToolsAsync_ShouldLeaveTheCostUnknown_WhenAModelWithoutKnownPricesAnsweredATurn()
+    {
+        using var api = new FakeAnthropicApi(
+            ToolCallResponse,
+            AnswerResponse.Replace("\"model\": \"claude-sonnet-5-5\"", "\"model\": \"claude-next-9\"")
+        );
+
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
+
+        Assert.Null(answer.CostUsd);
+    }
+
+    [Fact]
+    public async Task AskWithModelToolsAsync_ShouldPriceEachTurnByTheModelThatServedIt()
     {
         using var api = new FakeAnthropicApi(
             ToolCallResponse,
             AnswerResponse.Replace("\"model\": \"claude-sonnet-5-5\"", "\"model\": \"claude-opus-5-5\"")
         );
 
-        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema));
+        var answer = AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
 
-        Assert.Null(answer.CostUsd);
+        // Turn 1 on Sonnet 5.5: 1000 in, 2000 cache write, 100 out; turn 2 on Opus 5.5: 500 in,
+        // 3000 cache read, 200 out.
+        var expected =
+            (1000 * 2.00m + 2000 * 2.50m + 100 * 10.00m + 500 * 4.00m + 3000 * 0.20m + 200 * 20.00m) / 1_000_000m;
+        Assert.Equal(decimal.Round(expected, 4), answer.CostUsd);
+    }
+
+    [Fact]
+    public async Task AskWithModelToolsAsync_ShouldAskThePickedModel_WithoutAFallbackItDoesNotHave()
+    {
+        using var api = new FakeAnthropicApi(AnswerResponse);
+
+        AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, "claude-haiku-5-5"));
+
+        Assert.Contains("\"model\":\"claude-haiku-5-5\"", api.LastRequestBody!);
+        Assert.DoesNotContain("fallbacks", api.LastRequestBody!);
+    }
+
+    [Fact]
+    public async Task AskWithModelToolsAsync_ShouldAskTheFasterModelWithItsFallback_WhenNoneIsPicked()
+    {
+        using var api = new FakeAnthropicApi(AnswerResponse);
+
+        AssertOk(await Service(api).AskWithModelToolsAsync("What parses?", Schema, null));
+
+        Assert.Contains("\"model\":\"claude-sonnet-5-5\"", api.LastRequestBody!);
+        Assert.Contains("\"fallbacks\":\"default\"", api.LastRequestBody!);
     }
 
     [Fact]
@@ -145,7 +184,7 @@ public class ModelToolsAgentTests
     {
         var service = new ClaudeService(keys.Object);
 
-        var error = AssertError(await service.AskWithModelToolsAsync("What parses?", Schema));
+        var error = AssertError(await service.AskWithModelToolsAsync("What parses?", Schema, null));
 
         Assert.Equal("This host serves no model tools for Claude to look things up with.", error.Message);
     }
@@ -164,7 +203,7 @@ public class ModelToolsAgentTests
             },
         };
 
-        var error = AssertError(await service.AskWithModelToolsAsync("What parses?", Schema));
+        var error = AssertError(await service.AskWithModelToolsAsync("What parses?", Schema, null));
 
         Assert.Equal("No Claude API key. Set a new one.", error.Message);
         Assert.False(isConnected);

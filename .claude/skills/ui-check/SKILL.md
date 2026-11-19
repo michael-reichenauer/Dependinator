@@ -84,8 +84,10 @@ Notes:
   without the menu.
 - **README images:** `docs/images/hero.png` and `bicep.png` are 1600x1000 captures
   (`playwright-cli resize 1600 1000`):
-  - hero: wheel-zoom into the solution from the start view until Dependinator.UI opens as a
-    container;
+  - hero: wheel-zoom into the solution until the projects open as containers (all at the same
+    zoom, a default-size one such as Dependinator.Mcp at about 205 px), framed so Roslyn, Mcp,
+    Wasm, UI, Core and Shared show. That needs more room than 1600x1000: shoot a 1760x1100
+    viewport at device scale 2 and scale the image down to 1600x1000;
   - bicep: Models menu › webshop.bicep, search "networking", then zoom into the module to one step
     before vnet opens, so all resources stay icons.
 

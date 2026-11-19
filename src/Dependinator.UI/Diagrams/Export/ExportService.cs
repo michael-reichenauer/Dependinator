@@ -1,5 +1,5 @@
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Interaction;
-using Dependinator.UI.Diagrams.Svg;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 using MudBlazor;
@@ -34,6 +34,7 @@ class ExportService(
     IScreenService screenService,
     ISvgExportService svgExportService,
     ISelectionService selectionService,
+    IHighlightService highlightService,
     IAreaSelectionService areaSelectionService,
     IDialogService dialogService,
     ISnackbar snackbar,
@@ -117,8 +118,9 @@ class ExportService(
             return;
         }
 
-        // The selection highlight would otherwise be baked into the exported image.
+        // The selection and a go to's highlight would otherwise be baked into the exported image.
         selectionService.Unselect();
+        highlightService.Clear();
         var svg = svgExportService.GetSvgDocument(canvasRect, zoom);
 
         try
@@ -150,7 +152,7 @@ class ExportService(
 
     string DefaultFileName()
     {
-        var name = Path.GetFileNameWithoutExtension(modelMgr.ModelPath);
+        var name = ModelPaths.BaseName(modelMgr.ModelPath);
         return string.IsNullOrWhiteSpace(name) ? "diagram" : name;
     }
 }

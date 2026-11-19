@@ -24,20 +24,36 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
+    public async Task NodeMenu_ShouldNotCoverItsItemsWithTheButtonTooltip()
+    {
+        await App.GotoMainPageAsync();
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+
+        // The menu button keeps the pointer (and the focus) after the click that opened the
+        // menu: its "More" tooltip once stayed over the menu's first item.
+        ILocator firstItem = await App.OpenNodeMenuItemAsync("node-menu-about");
+        await App.NodeToolbarMenu.HoverAsync();
+        await Page.WaitForTimeoutAsync(1000); // longer than the tooltip's delay
+        await Expect(firstItem).ToBeVisibleAsync();
+        await Expect(Page.Locator(".mud-tooltip").Filter(new() { HasTextString = "More" })).ToBeHiddenAsync();
+    }
+
+    [E2EFact]
     public async Task NodeToolbar_ShouldSetAndClearIconColor()
     {
         await App.GotoMainPageAsync();
         await App.EnableEditModeAsync();
-        await App.SelectNodeByFullNameAsync("Demo.sln");
+        // Externals: the solution's root shows its language tile, which keeps its own color.
+        await App.SelectNodeByFullNameAsync("Externals");
 
         // Pick Blue from the color swatch dropdown (icon tint while the node shows as an
         // icon); the node's icon <use> switches to the generated "--Blue" color variant def.
         await App.PickIconColorItemAsync("Blue");
-        await Expect(App.NodeIconUse("Solution--Blue")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("Externals--Blue")).ToBeVisibleAsync();
 
-        // Picking Default restores the base violet icon.
+        // Picking Default restores the base icon.
         await App.PickIconColorItemAsync("Default");
-        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("Externals")).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -58,10 +74,10 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.IconDialogItem("Key-Vault").ClickAsync();
         await Expect(App.NodeIconUse("Key-Vault")).ToBeVisibleAsync();
 
-        // The pinned Default row restores the node-type icon.
+        // The pinned Default row restores the parser's icon, the solution's C# tile.
         await App.OpenIconSelectorAsync();
         await App.IconDialogDefault.ClickAsync();
-        await Expect(App.NodeIconUse("Solution")).ToBeVisibleAsync();
+        await Expect(App.NodeIconUse("CSharp")).ToBeVisibleAsync();
     }
 
     [E2EFact]
@@ -94,38 +110,6 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
     }
 
     [E2EFact]
-    public async Task NodeToolbar_ShouldToggleDirectLines()
-    {
-        await App.GotoMainPageAsync();
-
-        // Same navigation as the background-color test: "Main" must render as a container so
-        // its members are visible endpoints for the crossing lines.
-        await App.NavigateToNodeAsync(AppPage.InsideMain);
-        await App.WaitForContainerNodeAsync("Main");
-        await App.SelectContainerNodeAsync("Demo.UI.Main");
-
-        // Aggregated default: no crossing lines anywhere, and nothing to merge back yet (the
-        // line items live in the node menu, which stays open for the next step).
-        await Expect(App.CousinLines).ToHaveCountAsync(0);
-        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
-
-        // One level deeper: Main's members get their own lines to the sibling containers they
-        // use (e.g. BuildRenderTree -> Diagrams). A menu click can still be swallowed by the
-        // re-rendering toolbar, so repeat until a crossing line shows up.
-        await App.RepeatUntilVisibleAsync(
-            () => App.ClickNodeMenuItemAsync("node-menu-lines-deeper"),
-            App.CousinLines.First
-        );
-
-        // One level up again restores the bundle; the item disables itself at depth zero.
-        await App.ClickNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.CousinLines).ToHaveCountAsync(0);
-        await App.OpenNodeMenuItemAsync("node-menu-lines-shallower");
-        await Expect(App.NodeLinesShallowerDisabled).ToBeVisibleAsync();
-    }
-
-    [E2EFact]
     public async Task DependenciesPanel_ShouldDrawFocusLines_AndSplitOnExpand()
     {
         await App.GotoMainPageAsync();
@@ -151,12 +135,19 @@ public class NodeToolbarTests(ITestOutputHelper output) : E2ETestBase(output)
         await App.ExplorerExpandButtons.First.ClickAsync();
         await Expect(App.LineTitle("Demo.UI.Main→Externals")).ToHaveCountAsync(1);
 
-        // Closing the explorer keeps its lines (they are what the user opened it for); hiding
-        // the lines with the header toggle first removes them.
+        // The header toggle hides the lines and shows them again.
         await App.ExplorerShowLinesButton.ClickAsync();
         await Expect(App.FocusLines).ToHaveCountAsync(0);
+        await App.ExplorerShowLinesButton.ClickAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+
+        // Closing the explorer keeps its lines (they are what the user opened it for); View ›
+        // Hide All Direct Lines removes them.
         await App.CloseExplorerAsync();
         await Expect(App.DependenciesTree).Not.ToBeVisibleAsync();
+        await Expect(App.FocusLines).Not.ToHaveCountAsync(0);
+        await (await App.OpenSubMenuItemAsync("menu-view", "menu-hide-direct-lines")).ClickAsync();
+        await Expect(App.FocusLines).ToHaveCountAsync(0);
     }
 
     [E2EFact]

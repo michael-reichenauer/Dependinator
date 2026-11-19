@@ -35,6 +35,26 @@ public class WorkspaceFolderServiceTests
         Assert.Equal(["/repo/a", "/repo/b"], lastPaths.Order());
     }
 
+    // The first folder is the one a workspace model is of, so the order is the editor's.
+    [Fact]
+    public void Folders_ShouldStayInTheOrderTheEditorHasThem()
+    {
+        WorkspaceFolderService sut = CreateSut();
+        sut.Initialize(
+            new InitializeParams
+            {
+                WorkspaceFolders = new Container<WorkspaceFolder>(Folder("/repo/z"), Folder("/repo/a")),
+            }
+        );
+
+        sut.AddFolders([Folder("/repo/m"), Folder("/Repo/Z")]);
+        Assert.Equal(["/repo/z", "/repo/a", "/repo/m"], lastPaths);
+
+        sut.RemoveFolders([Folder("/REPO/a")]);
+        sut.AddFolders([Folder("/repo/b")]);
+        Assert.Equal(["/repo/z", "/repo/m", "/repo/b"], lastPaths);
+    }
+
     [Fact]
     public void Initialize_ShouldFallBackToRootUri_WhenNoWorkspaceFolders()
     {

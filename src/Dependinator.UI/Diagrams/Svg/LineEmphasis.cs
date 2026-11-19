@@ -8,20 +8,44 @@ using Dependinator.UI.Shared.Types;
 // Decisions only, no SVG: NodeLinesSvg and LineSvg draw what these say.
 namespace Dependinator.UI.Diagrams.Svg;
 
-readonly record struct RenderSelection(Node? Node, Line? Line, IReadOnlyList<Node>? OtherNodes = null)
+// ExploredStub: the stub whose lines stay drawn while one of them is the selected Line.
+// Highlighted: the node a "go to" marked (Node.IsHighlighted), whose lines are lit like a
+// selected node's, beside whatever is selected. Only one: several marked nodes (a cycle, a rule
+// violation, an answer's nodes) only get their brackets, since their panel lights the lines
+// that matter (a picked cycle lights its own lines, not every line of its members).
+readonly record struct RenderSelection(
+    Node? Node,
+    Line? Line,
+    IReadOnlyList<Node>? OtherNodes = null,
+    Line? ExploredStub = null,
+    IReadOnlyList<Node>? Highlighted = null
+)
 {
-    public bool IsEmpty => Node is null && Line is null;
+    public bool IsEmpty => Node is null && Line is null && Highlighted is null;
 }
 
 static class LineEmphasis
 {
-    // The selected node(s) or line, for selection dimming; empty when nothing is selected.
+    // The selected node(s) or line and the highlighted nodes, for selection dimming; empty when
+    // nothing is selected or highlighted.
     internal static RenderSelection FindSelection(IModel model)
     {
+        var highlighted = model.Nodes.Values.Where(n => n.IsHighlighted).Take(2).ToList();
+        IReadOnlyList<Node>? highlightedOrNull = highlighted.Count == 1 ? highlighted : null;
         var nodes = model.Nodes.Values.Where(n => n.IsSelected).ToList();
         var node = nodes.FirstOrDefault();
-        var line = node is null ? model.Lines.Values.FirstOrDefault(l => l.IsSelected) : null;
-        return new RenderSelection(node, line, nodes.Count > 1 ? nodes.Skip(1).ToList() : null);
+        if (node is not null)
+            return new RenderSelection(
+                node,
+                null,
+                nodes.Count > 1 ? nodes.Skip(1).ToList() : null,
+                Highlighted: highlightedOrNull
+            );
+
+        var line = model.Lines.Values.FirstOrDefault(l => l.IsSelected);
+        // Only one of a stub's lines (a cousin line) can be selected while the stub is explored.
+        var exploredStub = line is { IsCousin: true } ? model.Lines.Values.FirstOrDefault(l => l.IsExplored) : null;
+        return new RenderSelection(null, line, null, exploredStub, highlightedOrNull);
     }
 
     // What dims the lines: the selection, or with nothing selected the nodes of the cycle picked
@@ -40,16 +64,21 @@ static class LineEmphasis
     }
 
     // A line is dimmed while something else is selected: for a selected node, every line that
-    // is not the node's own (see IsNodeLine); for a selected line, every other line. Explorer
-    // focus lines are what the user asked to see and are never dimmed.
+    // is not the node's own (see IsNodeLine); for a selected line, every other line but the ones
+    // drawn for it (a selected stub's lines, Line.IsRevealed). Explorer focus lines are what the
+    // user asked to see and are never dimmed.
     internal static bool IsLineDimmed(Line line, RenderSelection selection)
     {
         if (line.IsFocused)
             return false;
-        if (selection.Line is { } selectedLine)
-            return line != selectedLine;
-        if (selection.Node is not { } node)
+        // A highlighted node's lines stay bright beside any selection, the rest dim even when
+        // only the highlight is there.
+        if (selection.Highlighted is { } highlighted && highlighted.Any(h => IsNodeLine(line, h)))
             return false;
+        if (selection.Line is { } selectedLine)
+            return line != selectedLine && !line.IsRevealed;
+        if (selection.Node is not { } node)
+            return selection.Highlighted is not null;
         if (IsNodeLine(line, node))
             return false;
         // With several nodes selected, a line of any of them stays bright.
@@ -132,6 +161,9 @@ static class LineEmphasis
             return true;
         if (filter.HideExternal && (line.Source.IsExternal() || line.Target.IsExternal()))
             return true;
-        return line.Links.Count < filter.MinLinkCount;
+
+        // A selected stub's lines are drawn end to end, one per node at the far end: a line of
+        // several links becomes several thin lines, which the link count must not drop.
+        return !line.IsRevealed && line.Links.Count < filter.MinLinkCount;
     }
 }

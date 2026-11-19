@@ -1,4 +1,6 @@
 using System.Text;
+using Dependinator.Core.Shared;
+using Dependinator.UI.Diagrams.Ai;
 using Dependinator.UI.Modeling;
 using Dependinator.UI.Modeling.Models;
 using static Dependinator.UI.Diagrams.Ai.PromptParts;
@@ -7,7 +9,8 @@ using NodeType = Dependinator.Core.Parsing.NodeType;
 namespace Dependinator.UI.Diagrams.NodeHelp;
 
 // The text that asks an AI that can change the code (Claude Code) to add or improve the comments of
-// some namespaces and types (or Bicep modules and resources), and the descriptions of projects (their
+// some namespaces and types (or Bicep modules and resources, or TypeScript and JavaScript files and
+// types), and the descriptions of projects (their
 // [assembly: AssemblyDescription(...)] attribute), which Dependinator shows as their descriptions. Each one is listed with where it is declared, its comment now, and the parts
 // outside it that it uses and that use it, which a good comment puts it among. It says where a
 // comment must go for the parser to read it: right above the declaration, and for a namespace in
@@ -37,24 +40,38 @@ static class CommentsPrompt
         && node.FileSpan is not null
         && (
             node.Type.IsType
-            || node.Type is NodeType.Assembly or NodeType.Namespace or NodeType.Module or NodeType.Resource
+            || node.Type
+                is NodeType.Assembly
+                    or NodeType.Namespace
+                    or NodeType.Module
+                    or NodeType.Resource
+                    or NodeType.SourceFile
         );
 
     // A C# project, whose description is an attribute (or its project file's property), not a comment.
     public static bool IsProject(Node node) => node.Type is NodeType.Assembly;
 
-    public static string Build(IModel model, IReadOnlyList<Node> targets)
+    // Copied for another target (PromptTarget): an agent with its own copy of the repository also
+    // gets where the paths start and to open a pull request; an AI chat, which cannot read the code,
+    // writes each comment from what the prompt lists and gives them back to paste in.
+    public static string Build(
+        IModel model,
+        IReadOnlyList<Node> targets,
+        PromptTarget promptTarget = PromptTarget.LocalAgent
+    )
     {
         if (targets.Count == 0)
             return "";
 
         var isBicep = targets.Any(IsBicep);
         var isProject = targets.Any(IsProject);
-        var isCSharp = targets.Any(t => !IsBicep(t) && !IsProject(t));
+        var isScript = targets.Any(IsScript);
+        var isCSharp = targets.Any(t => !IsBicep(t) && !IsProject(t) && !IsScript(t));
         var parts = Join([
             .. isProject ? ["projects"] : Array.Empty<string>(),
             .. isCSharp ? ["namespaces", "types"] : Array.Empty<string>(),
             .. isBicep ? ["modules", "resources"] : Array.Empty<string>(),
+            .. isScript ? ["files", "types"] : Array.Empty<string>(),
         ]);
 
         var text = new StringBuilder();
@@ -68,7 +85,10 @@ static class CommentsPrompt
 
         text.AppendLine()
             .Append(
-                isCSharp || !isBicep ? GoodComment : GoodComment.Replace("namespace or type", "module or resource")
+                isCSharp ? GoodComment
+                : isBicep ? GoodComment.Replace("namespace or type", "module or resource")
+                : isScript ? GoodComment.Replace("namespace", "file")
+                : GoodComment
             );
         if (isProject)
             text.Append(GoodProjectDescription);
@@ -79,6 +99,8 @@ static class CommentsPrompt
             text.Append(CSharpPlaces);
         if (isBicep)
             text.Append(BicepPlaces);
+        if (isScript)
+            text.Append(ScriptPlaces);
         text.AppendLine().Append(Rules);
 
         text.AppendLine().AppendLine($"## The {(targets.Count == 1 ? "one" : targets.Count)} to comment").AppendLine();
@@ -87,8 +109,21 @@ static class CommentsPrompt
         if (targets.Count > MaxTargets)
             text.AppendLine($"(… and {targets.Count - MaxTargets} more, left for another run.)").AppendLine();
 
-        text.Append(Done);
-        return text.ToString();
+        if (promptTarget is PromptTarget.CodingAgent)
+        {
+            AppendCodingAgentSection(text, model);
+            text.AppendLine();
+        }
+        text.Append(promptTarget is PromptTarget.Chat ? ChatDone : Done);
+        // An AI chat has only the prompt: what assumes reading the code is said for it instead.
+        return promptTarget is PromptTarget.Chat
+            ? text.ToString()
+                .Replace("True to the code: read the code before you write.", "True to what this prompt says of it.")
+                .Replace(
+                    "If you cannot tell what something is for, write what you can tell from the code, and say in your summary which ones need a closer look.",
+                    "If you cannot tell what something is for, say so instead of guessing."
+                )
+            : text.ToString();
     }
 
     const string GoodComment = """
@@ -122,6 +157,12 @@ static class CommentsPrompt
 
         """;
 
+    const string ScriptPlaces = """
+        - A TypeScript or JavaScript file's comment goes at the very top of the file (below a `#!` line), as `//` lines or a `/* */` block, with an empty line below it. A comment directly above the first declaration is read as that declaration's, not the file's.
+        - A class's, interface's, enum's or type's comment goes right above its declaration, with no blank line between them, in the style the file or the codebase already uses: a JSDoc comment (`/** ... */`) or `//` lines.
+
+        """;
+
     const string Rules = """
         ## Rules
 
@@ -136,6 +177,15 @@ static class CommentsPrompt
         ## When you are done
 
         Summarize what you did: how many comments you added and rewrote, which you left as they were and why, and which need a closer look. List every file you changed.
+
+        """;
+
+    const string ChatDone = """
+        ## Your task
+
+        You see only this prompt, not the code. Write each comment from what is listed for it: its name, where it is, its comment now, and the parts it uses and that use it. Where that is not enough to tell what it is for, say so instead of guessing.
+
+        Reply with one code block per comment, under the name of what it is for and its file and line, written as it goes in the code (`//` lines, a `///` summary, a Bicep `@description`, or the project's attribute), so that I can paste it in. Leave out the ones that are already good, and say which they are.
 
         """;
 
@@ -166,6 +216,9 @@ static class CommentsPrompt
     }
 
     static bool IsBicep(Node node) => node.Type is NodeType.Module or NodeType.Resource;
+
+    // A TypeScript or JavaScript file, or a type declared in one
+    static bool IsScript(Node node) => node.FileSpan is { } span && ModelPaths.IsScriptFile(span.Path);
 
     // "a", "a and b", "a, b and c".
     static string Join(IReadOnlyList<string> words) =>

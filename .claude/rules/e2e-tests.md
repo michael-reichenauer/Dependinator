@@ -50,7 +50,7 @@ page objects). Each rule below comes from a real CI or local failure.
 - Verify every gesture through the `AppPage` helpers; ask what UI change proves an action
   landed, and wait for it.
 - Never act on state you have not seen. Blazor Server applies state on the server, so an Escape or
-  drag sent right after a click races mode arming or post-navigation selection: use
+  drag sent right after a click races mode arming or a navigation's landing: use
   `App.CancelModeAsync()`, `App.DeselectAsync()`, and `Expect(App.ModeBanner).ToBeVisibleAsync()`
   before dragging an armed area.
 - The app ignores canvas shortcuts while a dialog or menu popover is open, including the fade-out
@@ -66,6 +66,32 @@ page objects). Each rule below comes from a real CI or local failure.
   Click a checkbox-style item with `ToggleSubMenuItemAsync`: it lets the clicked menu close before
   reading the state back. Reopening right after the click found the fading popover's item, then
   polled it after it vanished under a closed menu (ThemeTests and LineDimTests, Oct 23 2026).
+- Blazor Server drops a click or key press whose element re-renders before the server handles
+  it, and Playwright reports it as done. After a step that re-renders its surroundings (a panel
+  loading its AI providers, a radio that adds a field, a dialog closing), use
+  `App.ClickUntilVisibleAsync`, `App.ClickUntilGoneAsync` or `App.PressUntilVisibleAsync`, and
+  wait for the re-render first when there is something to see (Ask, Tour and PNG export flakes,
+  Nov 2026).
+- A retry must not press Escape with no menu or dialog open: the canvas takes it and clears the
+  selection, and every further attempt waits for a node toolbar that is gone
+  (`ResetPopoversAsync` checks `KeyboardOwners`). A navigation no longer selects its node (since
+  Nov 13 it marks it with corner brackets, `App.NodeHighlight`): `App.NavigateToNodeAsync` waits
+  for the brackets and then selects the node with a click, and
+  `NavigateToNodeWithoutSelectingAsync` only waits. When a navigation still selected, a test's own
+  selection was replaced a moment later. Together these were a third of the CI flakes of Oct
+  28-Nov 11 2026 (HiddenNodesTests).
+- Read a canvas element's place with `App.WaitForStableBoxAsync(locator, what)`, never
+  `(await x.BoundingBoxAsync())!`: a read during a re-render (its tile being replaced) returns
+  null, and the `!` turned it into a NullReferenceException (TooltipTests on Firefox in two
+  releases, LineLabelTests on Chromium, Nov 11-16 2026).
+- `App.SelectLineAsync` waits for the line toolbar, which proves nothing when a line is selected
+  already: going from line to line, wait for the clicked line's selection overlay
+  (`polyline[stroke-dasharray='3,50']` beside its hit target, found by the line's `data-name`;
+  `LineStubTests.SelectShownLineAsync`). An Escape sent while the click was still measured
+  stepped back to the stub first, then the click selected the line again (Nov 13 2026).
+- CI writes the failed tests and their messages to the run's summary page
+  (`scripts/test-summary`), e2e ones with "passed on the re-run (flaky)". Job logs download in a
+  cloud session with `gh api repos/<owner>/<repo>/actions/jobs/<id>/logs`.
 - Before a reload that must find an edit, `App.WaitForSavedAsync()` (the app's
   `data-save-pending` mark), never a sleep: a model write took 2 s on a loaded one-core runner.
   Pan, zoom and resize save only the small view record (`<model path>.view`), not the model.
@@ -89,7 +115,19 @@ page objects). Each rule below comes from a real CI or local failure.
   `OnInitialized()` above the class, a known unfixed wart).
 - Edit mode is off by default: tests that edit call `App.EnableEditModeAsync()`. Nested Bicep
   nodes are addressed by long name (`App.Node("rgPlatform.networking")`); the test host reopens
-  the C# demo on reload, so Bicep persistence tests reopen it from the Models menu.
+  the C# demo on reload, so Bicep persistence tests reopen it (`App.OpenOtherModelAsync`).
+- The test host has a workspace, like VS Code: its Models menu lists only the workspace's models
+  (the demo `Demo.sln` standing in for the working solution, then the repository's solution and
+  Bicep files). A demo, design or cloud model is opened with `App.OpenOtherModelAsync(name)`
+  (the Models dialog), and while it is open the breadcrumb bar is up without a selection (the
+  back button and the model with its kind), so `Expect(breadcrumb).ToBeHiddenAsync()` only
+  holds on a workspace model.
+- The Models menu's first section is the model of the whole workspace (`menu-workspace-model`
+  under the header "Whole workspace", with `menu-choose-sources` below it while it is open;
+  the other models are `menu-model-item` under "Single sources"; `WholeWorkspaceModelTests`).
+  Opening it for the first time shows the sources dialog and then parses for real: a test
+  ticks only the small sources (`main.bicep`, the `shop` sample), never the solution, which
+  takes most of a minute.
 
 ## Browsers
 
@@ -102,7 +140,11 @@ trusting a chromium-only run for a release.
 - WebKit keeps a stale `:hover` after a re-render: click hover-revealed buttons with
   `AppPage.ClickRowHoverButtonAsync(row, testId)`.
 - WebKit misreports the box of a standalone canvas `<text>` (offset by its own x/y): click through
-  the `g.hoverable` group box (`App.Node(label)`), never a text box.
+  the `g.hoverable` group box (`App.Node(label)`), never a text box; a line label through its
+  `rect.line-label-hit` (the slide test pressed the empty canvas there, Nov 13).
+- The canvas draws a line in every tile it crosses, so a selected line's handles can be in the
+  page several times: count them by id and press one that `elementFromPoint` reaches
+  (`LineBendTests.HandlesAsync`).
 
 ## State shared between parallel tests
 
@@ -125,8 +167,16 @@ open menu overlay swallows them).
   ModelPaths) with no direct Core dependency; Main has lines to Externals/MudBlazor.
 - At the InsideMain view: `Demo.UI.Main→Demo.UI.Shared (7)` (2.4 px while Main is selected) and
   `Demo.UI.Main→Demo.UI.Diagrams (1)` (stays 1 px).
+- `Demo.Core.CloudSync` has a stub on each side (used from Demo.Lsp, Demo.Web and Demo.UI; uses
+  types of `Shared`), and its line back to `Utils` runs under its incoming stub. `Demo.Core.Parsing`
+  has only the incoming one.
+- Framed by a go to, `Demo.Core.Utils`'s incoming stub draws 9 lines, one per other assembly
+  (`Demo.UI (dll)→Demo.Core.Utils (553)`): they are all out of view (one line per far container).
 - Cycles are picked by name, never `.First`: the `Result ↔ Result<T>` pair is the accept case in
   test mode, a "TaskExtensions" cycle the break case.
 
 After `./scripts/gen-demo csharp` run the full e2e suite (a regeneration once broke nine tests);
-regenerating the Bicep demo is safe.
+regenerating the Bicep demo is safe. A change that only adds a property to a few items can be
+patched into the existing gzipped JSON instead (the language icon on the root, Nov 15 2026): a
+regeneration then picked up that day's code changes, and the shifted lines broke
+`LineToolbarTests` and `LineStubTests`.

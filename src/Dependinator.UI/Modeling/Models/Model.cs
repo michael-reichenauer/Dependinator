@@ -1,4 +1,5 @@
 using Dependinator.Core.Parsing;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
 
@@ -18,14 +19,17 @@ interface IModel : IDisposable
     // Whether test projects are included when this model's solution is parsed.
     bool IncludeTestProjects { get; set; }
 
+    // For a workspace model: the user's choice of the sources it is made of (empty until chosen).
+    IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; }
+
     // Monotonic counter of structural changes (nodes/links added or removed, or view state that
     // changes how links resolve to lines, see BumpStructureVersion); lets consumers detect that
     // cached, structure-derived state (e.g. representative lines) is still valid. Line changes
     // do not count: lines are derived state themselves.
     int StructureVersion { get; }
 
-    // Invalidates structure-derived state without a node/link change, e.g. after a node's
-    // direct-line depth changed (RepLineService resolves lines from it).
+    // Invalidates structure-derived state without a node/link change, e.g. after the explorer's
+    // line focus changed (RepLineService resolves lines from it).
     void BumpStructureVersion();
 
     // A counter of the user's dim, hide and show changes (SetNodeVisibilityCommand), so the
@@ -95,7 +99,23 @@ interface IModel : IDisposable
 }
 
 // A line label waiting for its line; the endpoint names say whether it can still come back.
-record PendingLineLabel(string? Label, string? Description, string? SourceName, string? TargetName);
+record PendingLineLabel(
+    string? Label,
+    string? Description,
+    string? SourceName,
+    string? TargetName,
+    double? Position = null
+)
+{
+    public static PendingLineLabel From(Line line, string? sourceName, string? targetName) =>
+        new(line.Label, line.LabelDescription, sourceName, targetName, line.IsLabelMoved ? line.LabelPosition : null);
+
+    public void ApplyTo(Line line)
+    {
+        line.SetLabel(Label, Description);
+        line.SetLabelPosition(Position);
+    }
+}
 
 class Model : IModel
 {
@@ -116,6 +136,7 @@ class Model : IModel
     public double Zoom { get; set; } = 0;
     public Pos Offset { get; set; } = Pos.None;
     public bool IncludeTestProjects { get; set; }
+    public IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; } = [];
 
     public Node Root { get; private set; } = null!;
 
@@ -236,6 +257,17 @@ class Model : IModel
             Offset = Offset,
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
+            WorkspaceSources =
+            [
+                .. WorkspaceSources.Select(s => new WorkspaceSourceDto
+                {
+                    Path = s.Path,
+                    IsIncluded = s.IsIncluded,
+                    RootName = s.RootName,
+                    IsInModel = s.IsInModel,
+                    ShownIn = s.ShownIn,
+                }),
+            ],
             LayoutVersion = NodeLayout.CurrentLayoutVersion,
             Rules = [.. rules.Where(r => r.Kind == RuleKind.MustNotUse).Select(ToDto)],
             KindRules = [.. rules.Where(r => r.Kind != RuleKind.MustNotUse).Select(ToDto)],
@@ -270,9 +302,10 @@ class Model : IModel
                     Message = p.Message,
                     ErrorCount = p.ErrorCount,
                     NodeName = p.NodeName,
+                    Source = p.Source,
                 }),
             ],
-            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(n.ToDto(), Path))],
+            Nodes = [.. nodes.Values.Select(n => FileSpanPaths.ToRelative(ToSaved(n.ToDto()), Path))],
             Links = [.. links.Values.Select(l => l.ToDto())],
             Lines =
             [
@@ -288,6 +321,7 @@ class Model : IModel
                         Description = l.Description,
                         Label = l.Label,
                         LabelDescription = l.LabelDescription,
+                        LabelPosition = l.HasLabel && l.IsLabelMoved ? l.LabelPosition : null,
                         Source = l.HasLabel ? l.Source.Name : null,
                         Target = l.HasLabel ? l.Target.Name : null,
                     }),
@@ -301,6 +335,7 @@ class Model : IModel
                         SegmentPoints = [],
                         Label = p.Value.Label,
                         LabelDescription = p.Value.Description,
+                        LabelPosition = p.Value.Position,
                         Source = p.Value.SourceName,
                         Target = p.Value.TargetName,
                     }),
@@ -321,6 +356,16 @@ class Model : IModel
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
+        WorkspaceSources =
+        [
+            .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(
+                s.Path,
+                s.IsIncluded,
+                s.RootName,
+                s.IsInModel,
+                s.ShownIn
+            )),
+        ];
         rules.Clear();
         rules.AddRange(
             modelDto
@@ -364,7 +409,7 @@ class Model : IModel
         );
         AcceptedCyclesVersion++;
         SetParseProblems([
-            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName)),
+            .. modelDto.ParseProblems.Select(p => new ParseProblem(p.Message, p.ErrorCount, p.NodeName, p.Source)),
         ]);
         // Nodes and links will be set by model service in separate worker thread
     }
@@ -398,6 +443,16 @@ class Model : IModel
             : $"{a.From}\n{a.To}";
         return new AllowedViolation(a.From, a.To, a.Source, a.Target, a.Reason ?? "", a.IsToFix, kind, layersKey);
     }
+
+    // A project's folder is saved only in a workspace model, the one that nests sources by it
+    // (SourceNesting): elsewhere it would be a path of this machine that nothing reads
+    NodeDto ToSaved(NodeDto dto) =>
+        dto.Properties.ProjectFolder is null || ModelPaths.IsWorkspace(Path)
+            ? dto
+            : dto with
+            {
+                Properties = dto.Properties with { ProjectFolder = null },
+            };
 
     static RuleDto ToDto(ArchitectureRule r) =>
         new()
@@ -444,7 +499,7 @@ class Model : IModel
             return;
         lines[line.Id] = line;
         if (pendingLineLabels.Remove(line.Id, out var pending))
-            line.SetLabel(pending.Label, pending.Description);
+            pending.ApplyTo(line);
     }
 
     public void Clear()
@@ -462,6 +517,7 @@ class Model : IModel
         // Must reset: Clear runs before a model is loaded, and on the uncached path the parse
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
+        WorkspaceSources = [];
         rules.Clear();
         dismissedRules.Clear();
         allowedViolations.Clear();
@@ -505,12 +561,7 @@ class Model : IModel
         // The label waits for the line to come back (its node moved, a link changed kind, a
         // delete was undone); it is dropped at save time once one of its nodes is gone.
         if (line.HasLabel)
-            pendingLineLabels[line.Id] = new PendingLineLabel(
-                line.Label,
-                line.LabelDescription,
-                line.Source.Name,
-                line.Target.Name
-            );
+            pendingLineLabels[line.Id] = PendingLineLabel.From(line, line.Source.Name, line.Target.Name);
         lines.Remove(line.Id);
         line.RenderAncestor?.RemoveDirectLine(line);
         line.Target.Remove(line);

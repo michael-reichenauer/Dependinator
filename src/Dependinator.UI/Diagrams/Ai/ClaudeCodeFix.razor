@@ -34,7 +34,16 @@ else if (report is not null)
     <div class="dep-ai__suggestion-verdict">
       @(report.ChangedFiles.Count == 0 ? "Claude Code changed nothing" : $"Claude Code changed {Files(report.ChangedFiles.Count)}")
     </div>
-    <div class="dep-ai__markdown">@((MarkupString)SimpleMarkdown.ToHtml(report.Summary))</div>
+    <div class="dep-ai__markdown" data-testid="@Id("fix-summary")">
+      @if (SummaryContent is not null)
+      {
+        @SummaryContent(report.Summary)
+      }
+      else
+      {
+        @((MarkupString)SimpleMarkdown.ToHtml(report.Summary))
+      }
+    </div>
     @if (report.ChangedFiles.Count > 0)
     {
       <ul class="dep-ai__fix-files" data-testid="@Id("fix-files")">
@@ -78,6 +87,10 @@ else if (report is not null)
 
   // The prompt that asks Claude Code to make the suggested change.
   [Parameter] public Func<string>? GetFixPrompt { get; set; }
+
+  // Shows Claude Code's summary (markdown) in the host's own way: the Ask panel makes the node
+  // names in it links. Without it the summary is plain markdown.
+  [Parameter] public RenderFragment<string>? SummaryContent { get; set; }
 
   // Tells the dialog when a run starts or ends, or the model changes after a fix, so it can update
   // its buttons.

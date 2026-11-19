@@ -25,8 +25,7 @@ namespace Dependinator.Core.Utils;
 // than to the struct. The optional non-boxing members of that pattern (HasValue, TryGetValue) are
 // deliberately absent: they are for unions that keep value types unboxed in fields of their own,
 // and these store their contents as one object, so the compiler matches on Value, as it does for
-// its own union declarations. The attribute is polyfilled while the target framework is net10.0,
-// see UnionPolyfill.cs.
+// its own union declarations. [Union] and IUnion come from the .NET 11 base class library.
 
 // The failure case of Result and Result<T>: a message, where it was created, and optionally the
 // one thing it wraps, which is either another Error or an exception.

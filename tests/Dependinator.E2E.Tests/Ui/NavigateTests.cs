@@ -40,7 +40,10 @@ public class NavigateTests(ITestOutputHelper output) : E2ETestBase(output)
         await search.Results.First.ClickAsync();
 
         await Expect(App.NodeLabel("ILineService")).ToBeVisibleAsync();
-        await Expect(Page.Locator("#svgcanvas polyline[marker-end*='arrow-inheritance']").First).ToBeVisibleAsync();
+        // Any visible one: the page also holds tiles drawn ahead for the next zoom levels and
+        // lines hidden until lit (member lines inside a card), so the first in the page may be hidden.
+        await Expect(Page.Locator("#svgcanvas polyline[marker-end*='arrow-inheritance']:visible").First)
+            .ToBeVisibleAsync();
     }
 
     [E2EFact]

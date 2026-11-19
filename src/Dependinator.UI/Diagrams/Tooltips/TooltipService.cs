@@ -1,8 +1,11 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
+using Dependinator.Core.Shared;
 using Dependinator.UI.Diagrams.Cycles;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Lines;
 using Dependinator.UI.Diagrams.Rules;
 using Dependinator.UI.Modeling.Models;
 
@@ -20,7 +23,7 @@ interface ITooltipService
 }
 
 [Scoped]
-class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleService ruleService) : ITooltipService
+partial class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleService ruleService) : ITooltipService
 {
     const int MaxDescriptionLength = 400;
     const int ShownLinks = 3;
@@ -57,15 +60,19 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
                 $"<svg class=\"dep-tt-icon\" width=\"22\" height=\"22\"><use href=\"#{Icon.GetIconName(node)}\" width=\"22\" height=\"22\"/></svg>"
             );
         html.Append($"<div><div class=\"dep-tt-name\">{node.HtmlDisplayName}</div>");
-        html.Append($"<div class=\"dep-tt-kind\">{HttpUtility.HtmlEncode(KindLine(node))}</div></div></div>");
+        html.Append($"<div class=\"dep-tt-kind\">{KindLineHtml(node)}</div></div></div>");
 
         // A zone's label is its alias over a generated name the user never chose.
         if (node.HtmlAlias is not null && !node.IsZone && !node.IsNote)
             html.Append($"<div class=\"dep-tt-kind dep-tt-real\">{node.HtmlLongName}</div>");
         if (!string.IsNullOrEmpty(node.Signature))
-            html.Append($"<div class=\"dep-tt-code\">{HttpUtility.HtmlEncode(node.Signature)}</div>");
+            html.Append($"<div class=\"dep-tt-code\">{DeclarationHtml(node)}</div>");
         if (!string.IsNullOrWhiteSpace(node.Description))
-            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(node.Description))}</div>");
+        {
+            var isUserText = node.IsNote || node.IsZone || node.IsManual;
+            var description = isUserText ? node.Description : Flow(node.Description);
+            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(description))}</div>");
+        }
 
         List<string> chips = [];
         if (!node.IsNote && !node.IsZone)
@@ -112,19 +119,32 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         var html = new StringBuilder();
         var count = line.Links.Count;
         var isManual = count > 0 && line.Links.All(l => l.IsManual);
+        // A line between a container's edge and one of its children (drawn as a stub at the
+        // child) stands for the links that cross the container's border, so the container's end
+        // reads "outside X"; the links listed below name the real ends.
+        var crossesBorder = LineStub.CrossesBorder(line);
+        var sourceName =
+            crossesBorder && LineStub.IsIncoming(line)
+                ? $"<span class=\"dep-tt-outside\">outside</span> {line.Source.HtmlDisplayName}"
+                : line.Source.HtmlDisplayName;
+        var targetName =
+            crossesBorder && LineStub.IsOutgoing(line)
+                ? $"<span class=\"dep-tt-outside\">outside</span> {line.Target.HtmlDisplayName}"
+                : line.Target.HtmlDisplayName;
         html.Append(
-            $"<div class=\"dep-tt-name\">{line.Source.HtmlDisplayName}<span class=\"dep-tt-arrow\">→</span>{line.Target.HtmlDisplayName}</div>"
+            $"<div class=\"dep-tt-name\">{sourceName}<span class=\"dep-tt-arrow\">→</span><wbr>{targetName}</div>"
         );
         var parent = line.Source.Parent == line.Target.Parent && !line.Source.Parent.IsRoot ? line.Source.Parent : null;
         var kind =
-            (parent is null ? "" : $"{parent.LongName} · ")
-            + (isManual || count == 0 ? "drawn by hand" : $"{count} {Plural(count, "link")}");
-        html.Append($"<div class=\"dep-tt-kind\">{HttpUtility.HtmlEncode(kind)}</div>");
+            (isManual || count == 0 ? "drawn by hand" : $"{count} {Plural(count, "link")}")
+            + (parent is null ? "" : $" in {Breakable(parent.LongName)}");
+        html.Append($"<div class=\"dep-tt-kind\">{kind}</div>");
 
         if (line.HtmlLabel is not null)
             html.Append($"<div class=\"dep-tt-desc\"><b>{line.HtmlLabel}</b></div>");
-        if (!string.IsNullOrWhiteSpace(line.LabelDescription))
-            html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.LabelDescription))}</div>");
+        if (line.HtmlLabelDescription is not null)
+            // Up to 20 rows, unlike the parsed texts: the canvas draws only its first three.
+            html.Append($"<div class=\"dep-tt-desc dep-tt-full\">{line.HtmlLabelDescription}</div>");
         if (!string.IsNullOrWhiteSpace(line.Description))
             html.Append($"<div class=\"dep-tt-desc\">{HttpUtility.HtmlEncode(Shorten(line.Description))}</div>");
 
@@ -140,7 +160,7 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
             html.Append("<div class=\"dep-tt-sec\">");
             foreach (var (source, target) in links.Take(ShownLinks))
                 html.Append(
-                    $"<div class=\"dep-tt-link\"><code>{HttpUtility.HtmlEncode(source)}</code><span>→ {HttpUtility.HtmlEncode(target)}</span></div>"
+                    $"<div class=\"dep-tt-link\"><code>{HttpUtility.HtmlEncode(source)}</code><span>→&nbsp;{HttpUtility.HtmlEncode(target)}</span></div>"
                 );
             if (links.Count > ShownLinks)
                 html.Append($"<div class=\"dep-tt-more\">+ {links.Count - ShownLinks} more</div>");
@@ -157,12 +177,120 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         return html.ToString();
     }
 
-    // "Class · Demo.UI.Modeling": the node's kind, and the container it is in (none at the top).
-    static string KindLine(Node node)
+    // "Class in Demo.UI.Modeling": the node's kind, and the container it is in (none at the top).
+    static string KindLineHtml(Node node)
     {
-        var kind = Kind(node);
-        return node.Parent.IsRoot ? kind : $"{kind} · {node.Parent.LongName}";
+        var kind = HttpUtility.HtmlEncode(Kind(node));
+        return node.Parent.IsRoot ? kind : $"{kind} in {Breakable(node.Parent.LongName)}";
     }
+
+    // A member as it is declared in code, its name in bold: "Task<Rect?> SelectAreaAsync(Purpose
+    // purpose)", "int Count", "param location string" in Bicep. The parsers give the signature
+    // the way a member row shows it after the name, UML style: "(Purpose purpose): Task<Rect?>",
+    // ": int" (MemberParser.Signature). One that is not of that form is shown as it is.
+    internal static string DeclarationHtml(Node node)
+    {
+        var signature = node.Signature ?? "";
+        var name = $"<b>{node.HtmlShortName}</b>";
+
+        // An enum's member is declared by its name alone
+        if (node.Parent.Type == Parsing.NodeType.EnumType)
+            return name;
+
+        // TypeScript and JavaScript declare a member the way its row shows it, the type last:
+        // "start(port?: number): Promise<void>", "limit: number"
+        if (node.FileSpan is { } span && ModelPaths.IsScriptFile(span.Path))
+            return signature.StartsWith('(') ? $"{name}{ParametersAndTypeHtml(signature)}" : $"{name}{Code(signature)}";
+
+        if (signature.StartsWith(": "))
+        {
+            var type = Code(signature[2..]);
+            return node.Type switch
+            {
+                Parsing.NodeType.ParameterMember => $"param&nbsp;{name}&nbsp;{type}",
+                Parsing.NodeType.OutputMember => $"output&nbsp;{name}&nbsp;{type}",
+                Parsing.NodeType.EventMember => $"event&nbsp;{type}&nbsp;{name}",
+                _ => $"{type}&nbsp;{name}",
+            };
+        }
+
+        if (signature.StartsWith('(') || signature.StartsWith('['))
+        {
+            var end = ClosingBracketIndex(signature);
+            var rest = signature[(end + 1)..];
+            if (end > 0 && rest.StartsWith(": "))
+            {
+                // An indexer is declared "int this[int index]"
+                var declared = signature[0] == '[' ? "this" : name;
+                return $"{Code(rest[2..])}&nbsp;{declared}{ParametersHtml(signature[..(end + 1)])}";
+            }
+            if (end > 0 && rest == "" && signature[0] == '(')
+            {
+                var parameters = ParametersHtml(signature);
+                // A constructor or finalizer ("~Type") has no return type
+                return node.Type == Parsing.NodeType.ConstructorMember || node.ShortName.StartsWith('~')
+                    ? $"{name}{parameters}"
+                    : $"void&nbsp;{name}{parameters}";
+            }
+        }
+
+        return HttpUtility.HtmlEncode(signature);
+    }
+
+    // "(port?: number): Promise<void>": the parameters, wrapping between them, then the rest.
+    static string ParametersAndTypeHtml(string signature)
+    {
+        var end = ClosingBracketIndex(signature);
+        return end > 0
+            ? $"{ParametersHtml(signature[..(end + 1)])}{Code(signature[(end + 1)..])}"
+            : HttpUtility.HtmlEncode(signature);
+    }
+
+    // A long declaration wraps like formatted code: after the opening bracket and between the
+    // parameters, never between a type and its name or inside a generic or tuple type.
+    static string ParametersHtml(string parameters)
+    {
+        if (parameters.Length <= 2)
+            return HttpUtility.HtmlEncode(parameters);
+
+        var html = new StringBuilder($"{parameters[0]}<wbr>");
+        var depth = 0;
+        var start = 1;
+        for (var i = 1; i < parameters.Length; i++)
+        {
+            var c = parameters[i];
+            if (c is '(' or '[' or '<')
+                depth++;
+            else if (c is ')' or ']' or '>')
+                depth--;
+            else if (c == ',' && depth == 0 && i + 1 < parameters.Length && parameters[i + 1] == ' ')
+            {
+                html.Append(Code(parameters[start..(i + 1)])).Append(' ');
+                start = i + 2;
+            }
+        }
+        return html.Append(Code(parameters[start..])).ToString();
+    }
+
+    static string Code(string text) => HttpUtility.HtmlEncode(text).Replace(" ", "&nbsp;");
+
+    // Where the bracket that opens the text closes: tuple, array and generic types nest inside
+    // a parameter list. -1 when it never closes.
+    static int ClosingBracketIndex(string text)
+    {
+        var depth = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] is '(' or '[')
+                depth++;
+            else if (text[i] is ')' or ']' && --depth == 0)
+                return i;
+        }
+        return -1;
+    }
+
+    // A dotted name that wraps after a dot, not in the middle of a word.
+    static string Breakable(string name) => HttpUtility.HtmlEncode(name).Replace(".", ".<wbr>");
 
     static string Kind(Node node)
     {
@@ -172,10 +300,13 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
             return "Zone";
         return node.Type switch
         {
-            // The Bicep parser makes the entry .bicep file the solution node ("main*bicep")
+            // The Bicep parser makes the entry .bicep file the solution node ("main*bicep"), and
+            // the TypeScript parser the project, which points at its tsconfig.json or package.json
             Parsing.NodeType.Solution => node.Name.EndsWith("*bicep", StringComparison.OrdinalIgnoreCase)
                 ? "Bicep deployment"
-                : "Solution",
+            : node.FileSpan is { } span && ModelPaths.IsTypeScript(span.Path)
+                ? Capitalized(ModelPaths.KindName(span.Path))
+            : "Solution",
             Parsing.NodeType.SolutionFolder => "Solution folder",
             Parsing.NodeType.Assembly or Parsing.NodeType.Dll => "Project",
             Parsing.NodeType.Exe => "Executable project",
@@ -198,9 +329,14 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
             Parsing.NodeType.VariableMember => "Variable",
             Parsing.NodeType.OutputMember => "Output",
             Parsing.NodeType.ResourceMember => "Resource setting",
+            Parsing.NodeType.Folder => "Folder",
+            Parsing.NodeType.SourceFile => "File",
+            Parsing.NodeType.FunctionMember => "Function",
             _ => node.IsManual ? "Node" : "Group",
         };
     }
+
+    static string Capitalized(string text) => text.Length == 0 ? text : char.ToUpperInvariant(text[0]) + text[1..];
 
     // How many other nodes the node (or anything inside it) uses and is used by, outside itself.
     // A member counts as its type, so calls into five methods of one class count as one use, and a
@@ -298,6 +434,27 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
 
     static string Plural(int count, string word) => count == 1 ? word : word + "s";
 
+    // A code comment's line breaks are those of the source file, so its lines flow together
+    // here; a blank line still starts a new paragraph and a list item its own line. (What the
+    // user wrote keeps its lines.)
+    internal static string Flow(string text)
+    {
+        var paragraphs = ParagraphBreaks()
+            .Split(text.Replace("\r", "").Trim())
+            .Select(paragraph =>
+            {
+                var flowed = new StringBuilder();
+                foreach (var line in paragraph.Split('\n', StringSplitOptions.TrimEntries))
+                {
+                    if (flowed.Length > 0)
+                        flowed.Append(ListItem().IsMatch(line) ? '\n' : ' ');
+                    flowed.Append(line);
+                }
+                return flowed.ToString();
+            });
+        return string.Join("\n\n", paragraphs);
+    }
+
     static string Shorten(string text)
     {
         text = text.Trim();
@@ -306,4 +463,10 @@ class TooltipService(IModelMgr modelMgr, ICycleService cycleService, IRuleServic
         var wordEnd = text.LastIndexOf(' ', MaxDescriptionLength);
         return text[..(wordEnd > 0 ? wordEnd : MaxDescriptionLength)] + "…";
     }
+
+    [GeneratedRegex(@"\n\s*\n")]
+    private static partial Regex ParagraphBreaks();
+
+    [GeneratedRegex(@"^([-*•]|\d+[.)])\s")]
+    private static partial Regex ListItem();
 }

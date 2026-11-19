@@ -61,8 +61,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
 
         try
         {
-            IEnumerable<SecurityKey> signingKeys =
-                testSigningKeys
+            IEnumerable<SecurityKey> signingKeys = testSigningKeys
                 ?? (IEnumerable<SecurityKey>)(await GetSigningKeysAsync(cancellationToken)).GetSigningKeys();
             TokenValidationParameters validationParameters = new()
             {
@@ -75,7 +74,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
                 // 7 days. Standard 'exp' validation is therefore disabled and replaced by a
                 // custom max-age check on the 'iat' (issued-at) claim, so signed-in clients
                 // (mainly the VS Code extension, which stores a single long-lived token)
-                // stay valid for up to CloudSyncOptions.MaxTokenAgeDays (default 180 days).
+                // stay valid for up to CloudSyncOptions.MaxTokenAgeDays (default 365 days).
                 // Signature and issuer validation are unaffected, so tokens are still
                 // provably issued by the configured auth provider.
                 //
@@ -104,8 +103,7 @@ public sealed class CloudSyncBearerTokenValidator : ICloudSyncUserProvider
                 return null;
             }
 
-            string? email =
-                FindClaimValue(principal, "email")
+            string? email = FindClaimValue(principal, "email")
                 ?? FindClaimValue(principal, "preferred_username")
                 ?? FindClaimValue(principal, ClaimTypes.Email);
 

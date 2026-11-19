@@ -2,30 +2,27 @@
 @using Dependinator.Core.Shared
 @using Dependinator.UI.Modeling
 @using Dependinator.UI.Modeling.Commands
-@using Dependinator.UI.Shared.CloudSync
 
 @inject ICanvasService canvasService
-@inject IAppCloudSyncService appCloudSyncService
-@inject ISnackbar snackbar
 @inject Dependinator.UI.Modeling.Models.IModelMgr modelMgr
 @inject ICommandService commandService
 @inject IApplicationEvents applicationEvents
-@inject IModelListService modelListService
-@inject IConfigService configService
 @inject IModelService modelService
 @inject IDialogService dialogService
 @inject IJSInterop jsInterop
 @inject IVsCodeSendService vsCodeSendService
 @inject IIssueReportService issueReportService
-@inject Dependinator.UI.Diagrams.Editing.INoteService noteService
-@inject Dependinator.UI.Diagrams.Editing.IZoneService zoneService
-@inject Dependinator.UI.Diagrams.Editing.ILineLabelsService lineLabelsService
+@inject Dependinator.UI.Diagrams.Annotations.INoteService noteService
+@inject Dependinator.UI.Diagrams.Annotations.IZoneService zoneService
+@inject Dependinator.UI.Diagrams.Annotations.ILineLabelsService lineLabelsService
 @inject Dependinator.UI.Diagrams.Editing.IManualEditService manualEditService
 @inject Dependinator.UI.Diagrams.Export.IExportService exportService
-@inject Dependinator.UI.Diagrams.Lines.ILineSplitService lineSplitService
+@inject Dependinator.UI.Diagrams.Dependencies.IDependenciesService dependenciesService
 @inject Dependinator.UI.Diagrams.IViewOptions viewOptions
+@inject Dependinator.UI.Diagrams.IPanelService panelService
+@inject Dependinator.UI.Diagrams.IViewSettingsService viewSettings
 @inject Dependinator.UI.Diagrams.Navigation.IPathFinderService pathFinderService
-@inject Dependinator.UI.Diagrams.IHiddenNodeService hiddenNodeService
+@inject Dependinator.UI.Diagrams.HiddenNodes.IHiddenNodeService hiddenNodeService
 @inject Dependinator.UI.Diagrams.Tours.ICoachService coachService
 @inject IShareLinkService shareLinkService
 @inject IThemeService themeService
@@ -37,8 +34,10 @@
 
 <MudButtonGroup Color="Color.Tertiary" Size="Size.Small" Variant="Variant.Text" Class="dep-toolbar-card"
                 Style="@CssPosition">
-    <MudTooltip Text="Menu">
-        <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true"
+    @* Not shown on focus: the button gets the focus back when its menu (or a dialog opened from
+       it) closes, and the tooltip then stayed up over the breadcrumb bar's first button. *@
+    <MudTooltip Text="Menu" ShowOnFocus="false">
+        <MudMenu Icon="@Icons.Material.Outlined.Menu" IconColor="Color.Tertiary" Dense="true" AriaLabel="Menu"
                  AnchorOrigin="Origin.BottomCenter" PopoverClass="@MenuClass" data-testid="appbar-menu">
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Search" OnClick="OpenSearchAsync"
                          data-testid="menu-search">
@@ -128,7 +127,7 @@
             </MudMenu>
 
             <MudMenu Label="View" PopoverClass="@MenuClass" data-testid="menu-view">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="ToggleRevealHiddenNodes"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RevealHiddenNodesIcon" OnClick="viewSettings.ToggleRevealHiddenNodes"
                              data-checked="@(viewOptions.RevealHiddenNodes ? "true" : "false")"
                              title="Draws hidden nodes faintly, to find them again (not saved)."
                              data-testid="menu-reveal-hidden-nodes">
@@ -148,27 +147,27 @@
                     Show Notes Sidebar
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="ToggleMinimapAsync"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@MinimapIcon" OnClick="viewSettings.ToggleMinimapAsync"
                              title="A small overview in the corner; click or drag in it to move the view."
                              data-checked="@(viewOptions.IsMinimapShown ? "true" : "false")"
                              data-testid="menu-minimap">
                     Show Minimap
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="ToggleLegend"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@LegendIcon" OnClick="viewSettings.ToggleLegend"
                              data-checked="@(viewOptions.IsLegendShown ? "true" : "false")"
                              data-testid="menu-legend">
                     Show Legend
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="ToggleCycles"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@CyclesIcon" OnClick="panelService.ToggleCycles"
                              title="Lists circular dependencies and draws their lines in red."
                              data-checked="@(viewOptions.IsCyclesShown ? "true" : "false")"
                              data-testid="menu-cycles">
                     Show Cycles
                 </MudMenuItem>
 
-                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="ToggleRules"
+                <MudMenuItem IconColor="Color.Secondary" Icon="@RulesIcon" OnClick="panelService.ToggleRules"
                              title="Declare which parts must not depend on which (or layers), and see the dependencies that break those rules."
                              data-checked="@(viewOptions.IsRulesShown ? "true" : "false")"
                              data-testid="menu-rules">
@@ -192,7 +191,7 @@
                 </MudMenuItem>
 
                 <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.UnfoldLess"
-                             OnClick="lineSplitService.ClearAll" data-testid="menu-hide-direct-lines">
+                             OnClick="() => dependenciesService.SetShowLines(false)" data-testid="menu-hide-direct-lines">
                     Hide All Direct Lines
                 </MudMenuItem>
 
@@ -200,25 +199,25 @@
                          Dense="true" PopoverClass="@MenuClass" data-testid="menu-lines">
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideExternal)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideExternal = !LineFilter.HideExternal })"
                                  title="Lines to or from external packages and framework assemblies."
                                  data-checked="@(LineFilter.HideExternal ? "true" : "false")" data-testid="menu-lines-external">
                         Lines to Externals
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideInheritance)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideInheritance = !LineFilter.HideInheritance })"
                                  title="Base class and interface implementation lines (hollow arrow heads)."
                                  data-checked="@(LineFilter.HideInheritance ? "true" : "false")" data-testid="menu-lines-inheritance">
                         Inheritance Lines
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideMember)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideMember = !LineFilter.HideMember })"
                                  title="Lines that start or end at a method, property, field or event."
                                  data-checked="@(LineFilter.HideMember ? "true" : "false")" data-testid="menu-lines-member">
                         Member Lines
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(LineFilter.HideConfiguration)"
-                                 OnClick="() => SetLineFilterAsync(LineFilter with { HideConfiguration = !LineFilter.HideConfiguration })"
+                                 OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { HideConfiguration = !LineFilter.HideConfiguration })"
                                  title="Lines that only carry values into parameters and variables (Bicep); the Dependencies explorer still lists them."
                                  data-checked="@(LineFilter.HideConfiguration ? "true" : "false")" data-testid="menu-lines-configuration">
                         Configuration Lines
@@ -229,7 +228,7 @@
                     @foreach (var (count, label) in MinLinkChoices)
                     {
                         <MudMenuItem IconColor="Color.Secondary" Icon="@RadioIcon(LineFilter.MinLinkCount == count)"
-                                     OnClick="() => SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
+                                     OnClick="() => viewSettings.SetLineFilterAsync(LineFilter with { MinLinkCount = count })"
                                      data-checked="@(LineFilter.MinLinkCount == count ? "true" : "false")"
                                      data-testid="@($"menu-lines-min-{count}")">
                             @label
@@ -241,25 +240,25 @@
                          Dense="true" PopoverClass="@MenuClass" data-testid="menu-rows">
                     <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Leave out</MudText>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideParameters)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideParameters = !RowFilter.HideParameters })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideParameters = !RowFilter.HideParameters })"
                                  title="Parameter rows (Bicep) and their lines; the Dependencies explorer and search still list them."
                                  data-checked="@(RowFilter.HideParameters ? "true" : "false")" data-testid="menu-rows-parameters">
                         Parameter Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideVariables)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideVariables = !RowFilter.HideVariables })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideVariables = !RowFilter.HideVariables })"
                                  title="Variable rows (Bicep) and their lines."
                                  data-checked="@(RowFilter.HideVariables ? "true" : "false")" data-testid="menu-rows-variables">
                         Variable Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideOutputs)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideOutputs = !RowFilter.HideOutputs })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideOutputs = !RowFilter.HideOutputs })"
                                  title="Output rows (Bicep) and their lines."
                                  data-checked="@(RowFilter.HideOutputs ? "true" : "false")" data-testid="menu-rows-outputs">
                         Output Rows
                     </MudMenuItem>
                     <MudMenuItem IconColor="Color.Secondary" Icon="@CheckIcon(RowFilter.HideSettings)"
-                                 OnClick="() => SetRowFilterAsync(RowFilter with { HideSettings = !RowFilter.HideSettings })"
+                                 OnClick="() => viewSettings.SetRowFilterAsync(RowFilter with { HideSettings = !RowFilter.HideSettings })"
                                  title="Rows for role assignments, diagnostic settings, locks and other resources that configure the resource above them (Bicep)."
                                  data-checked="@(RowFilter.HideSettings ? "true" : "false")" data-testid="menu-rows-settings">
                         Setting Rows
@@ -268,55 +267,10 @@
 
             </MudMenu>
 
-            <MudMenu Label="Models" PopoverClass="@MenuClass" data-testid="menu-models">
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.ViewList" OnClick="ManageModelsAsync"
-                             data-testid="menu-manage-models">
-                    Manage Models …
-                </MudMenuItem>
-
-                <MudDivider />
-
-                <MudText Typo="Typo.caption" Class="px-4 py-1 mud-text-secondary">Models</MudText>
-                @{
-                    IReadOnlyList<ModelItem> modelItems = modelListService.GetModelItems();
-                }
-                @foreach (ModelItem item in modelItems)
-                {
-                    bool isCurrent = IsCurrentModel(item);
-                    <MudMenuItem IconColor="@GetMenuItemIconColor(isCurrent)" Icon="@GetModelItemIcon(item)"
-                                 Style="@GetCurrentItemStyle(isCurrent)" title="@GetModelItemTitle(item)"
-                                 OnClick="() => LoadModelItemAsync(item)" data-testid="menu-model-item">
-                        @item.DisplayName
-                    </MudMenuItem>
-                }
-                @if (modelItems.Count == 0)
-                {
-                    <MudMenuItem Disabled="true">No models</MudMenuItem>
-                }
-
-                <MudDivider />
-
-                <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.AddBox" OnClick="NewModelAsync"
-                             data-testid="menu-new-model">
-                    New Model …
-                </MudMenuItem>
-
-                @if (CanParseCurrentModel)
-                {
-                    <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Autorenew"
-                                 OnClick="canvasService.RefreshAsync" data-testid="menu-parse">
-                        Parse
-                    </MudMenuItem>
-                }
-
-                <MudMenuItem IconColor="Color.Error" Icon="@Icons.Material.Outlined.DeveloperBoardOff"
-                             OnClick="OnDeleteModelAsync" data-testid="menu-delete-model">
-                    Delete Current Model
-                </MudMenuItem>
-            </MudMenu>
+            <ModelsMenu />
 
             <MudMenuItem IconColor="Color.Secondary" Icon="@Icons.Material.Outlined.Settings" OnClick="ShowSettingsAsync"
-                         title="Theme, layout density, badges, mouse zoom, this model's test projects and the AI."
+                         title="@SettingsTitle"
                          data-testid="menu-settings">
                 Settings …
             </MudMenuItem>
@@ -450,7 +404,7 @@
         </MudTooltip>
     }
 
-    <ProblemIndicator OnShowCycles="ShowCycles" OnShowRules="ShowRules" />
+    <ProblemIndicator OnShowCycles="panelService.ShowCycles" OnShowRules="panelService.ShowRules" />
     <HiddenNodesIndicator OnToggle="ToggleHiddenNodes" />
 
     @* Help is the last button, where it is easy to find; the indicators come and go before it. *@
@@ -461,35 +415,6 @@
     </MudHidden>
 
 </MudButtonGroup>
-
-<MudMessageBox @ref="deleteLocalModelBox" Title="Delete Current Model" CancelText="Cancel">
-    <MessageContent>
-        <MudText>Do you want to delete the current model?</MudText>
-        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
-    </MessageContent>
-    <YesButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
-            Delete
-        </MudButton>
-    </YesButton>
-</MudMessageBox>
-
-<MudMessageBox @ref="deleteLocalOrRemoteModelBox" Title="Delete Current Model" CancelText="Cancel">
-    <MessageContent>
-        <MudText>Do you want to delete only the local model, or both the local and the remote (cloud) model?</MudText>
-        <MudText Typo="Typo.body2">Note: Layout of all nodes and sub-nodes will be deleted.</MudText>
-    </MessageContent>
-    <NoButton>
-        <MudButton Variant="Variant.Outlined" Color="Color.Error">
-            Local Only
-        </MudButton>
-    </NoButton>
-    <YesButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.DeveloperBoardOff">
-            Local and Remote
-        </MudButton>
-    </YesButton>
-</MudMessageBox>
 
 <MudMessageBox @ref="aboutBox" Title="About Dependinator" YesText="Close">
     <MessageContent>
@@ -504,16 +429,12 @@
 </MudMessageBox>
 
 @code {
-    MudMessageBox deleteLocalModelBox { get; set; } = null!;
-    MudMessageBox deleteLocalOrRemoteModelBox { get; set; } = null!;
     MudMessageBox aboutBox { get; set; } = null!;
     bool isSearchOpen;
 
-    string? CurrentRecentModelPath =>
-    modelListService.RecentModelPaths.Count > 0 ? modelListService.RecentModelPaths[0] : null;
-    string? CurrentCloudModelPath => appCloudSyncService.CurrentNormalizedModelPath;
-    global::Shared.CloudAuthState AuthState => appCloudSyncService.AuthState;
-    string CssPosition => $"position:fixed;left:{15}px; top:{6}px;";
+    // The z-index keeps it above the canvas while a pan or zoom moves the canvas by a CSS
+    // transform (GestureTransform), which paints it above fixed elements without one.
+    string CssPosition => $"position:fixed;left:{15}px; top:{6}px; z-index:1100;";
     string MenuClass => themeService.IsDark ? "dep-dark-menu" : "dep-light-menu";
 
     protected override void OnInitialized()
@@ -521,10 +442,7 @@
         base.OnInitialized();
 
         applicationEvents.UIStateChanged += OnUiStateChanged;
-        applicationEvents.ErrorReported += OnErrorReported;
-        applicationEvents.InfoReported += OnInfoReported;
         applicationEvents.SearchRequested += OnSearchRequested;
-        appCloudSyncService.Changed += OnUiStateChanged;
         themeService.Changed += OnUiStateChanged;
         keyboardService.KeyDown += OnKeyDown;
     }
@@ -547,58 +465,8 @@
             _ = InvokeAsync(viewHistory.GoForwardAsync);
     }
 
-    // Errors can be reported from background work (e.g. a refresh parse), so marshal to the
-    // renderer. RequireInteraction keeps the message up until dismissed, since a failed parse
-    // otherwise just looks like an empty diagram. A report can carry an action (retry, include
-    // test projects), shown as the snackbar's button.
-    void OnErrorReported(ErrorReport report)
-    {
-        _ = InvokeAsync(() =>
-            snackbar.Add(
-                report.Message,
-                Severity.Error,
-                config =>
-                {
-                    config.RequireInteraction = true;
-                    if (report.Action is { } action)
-                    {
-                        config.Action = action.Label;
-                        config.ActionColor = Color.Inherit;
-                        config.OnClick = _ => RunErrorActionAsync(action);
-                    }
-                }
-            )
-        );
-    }
-
-    async Task RunErrorActionAsync(ErrorAction action)
-    {
-        switch (action.Kind)
-        {
-            case ErrorActionKind.RetryLoad when action.Path is { } path:
-                await canvasService.LoadAsync(path);
-                break;
-            case ErrorActionKind.RetryRefresh:
-                await canvasService.RefreshAsync();
-                break;
-            case ErrorActionKind.IncludeTestProjects when action.Path is { } path:
-                // An open model gets the flag and a refresh. After a failed first parse there is
-                // no model to refresh (the path was never set), so it is loaded again with the flag.
-                if (modelMgr.ModelPath == path)
-                    await modelService.SetIncludeTestProjectsAsync(true);
-                else
-                    await canvasService.LoadAsync(path, includeTestProjects: true);
-                break;
-        }
-    }
 
     void OnSearchRequested() => _ = InvokeAsync(OpenSearchAsync);
-
-    // E.g. what a background refresh changed: worth a note, not an interruption.
-    void OnInfoReported(string message)
-    {
-        _ = InvokeAsync(() => snackbar.Add(message, Severity.Info));
-    }
 
     async Task OpenSearchAsync()
     {
@@ -624,58 +492,9 @@
     public void Dispose()
     {
         applicationEvents.UIStateChanged -= OnUiStateChanged;
-        applicationEvents.ErrorReported -= OnErrorReported;
-        applicationEvents.InfoReported -= OnInfoReported;
         applicationEvents.SearchRequested -= OnSearchRequested;
-        appCloudSyncService.Changed -= OnUiStateChanged;
         themeService.Changed -= OnUiStateChanged;
         keyboardService.KeyDown -= OnKeyDown;
-    }
-
-    async Task LoadCloudModelAsync(global::Shared.CloudModelMetadata cloudModel)
-    {
-        if (await appCloudSyncService.LoadCloudModelAsync(cloudModel) is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        snackbar.Add(
-        $"Loaded cloud model for {Path.GetFileNameWithoutExtension(cloudModel.NormalizedPath)}.",
-        Severity.Success
-        );
-    }
-
-    bool HasRemoteCopyOfCurrentModel =>
-    AuthState.IsAuthenticated
-    && CurrentCloudModelPath is string currentModelPath
-    && appCloudSyncService.CloudModels.Any(cloudModel =>
-    string.Equals(cloudModel.NormalizedPath, currentModelPath, StringComparison.OrdinalIgnoreCase)
-    );
-
-    async Task OnDeleteModelAsync()
-    {
-        if (!HasRemoteCopyOfCurrentModel)
-        {
-            if (await deleteLocalModelBox.ShowAsync() != true)
-                return;
-
-            await canvasService.RemoveAsync();
-            return;
-        }
-
-        // Yes = delete local and remote, No = delete local only, null = cancel.
-        bool? choice = await deleteLocalOrRemoteModelBox.ShowAsync();
-        if (choice is null)
-            return;
-
-        if (choice is true && await appCloudSyncService.DeleteCurrentCloudModelAsync() is Error error)
-        {
-            snackbar.Add(error.Message, Severity.Error);
-            return;
-        }
-
-        await canvasService.RemoveAsync();
     }
 
     // The armed modes show their instructions in the ModeBanner until the click/drag lands.
@@ -687,37 +506,7 @@
 
     void BeginExportArea() => exportService.ExportAreaAsync().RunInBackground();
 
-    bool CanParseCurrentModel =>
-    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsParseable(modelMgr.ModelPath);
-
-    async Task ManageModelsAsync()
-    {
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await dialogService.ShowAsync<ModelsDialog>((string?)null, options);
-        var result = await dialog.Result;
-        if (result is { Canceled: false, Data: "new" })
-            await NewModelAsync();
-    }
-
-    async Task NewModelAsync()
-    {
-        List<string> existingPaths = modelListService.GetModelItems().Select(item => item.Path).ToList();
-        var parameters = new DialogParameters<NewModelDialog> { { d => d.ExistingPaths, existingPaths } };
-        var dialog = await dialogService.ShowAsync<NewModelDialog>("New Model", parameters);
-        var result = await dialog.Result;
-        if (result is null || result.Canceled)
-            return;
-
-        string name = (string)result.Data!;
-
-        // A new empty model is only useful with editing enabled; opening an existing
-        // design model later leaves the toggle as the user last set it.
-        await SetEditModeAsync(true);
-        await canvasService.LoadAsync(name);
-        snackbar.Add("Empty model created. Use Edit > Add Node or double-click the canvas to add nodes.",
-        Severity.Info);
-        applicationEvents.TriggerUIStateChanged();
-    }
+    bool CanParseCurrentModel => ModelsMenu.CanParse(modelMgr.ModelPath);
 
     async Task ReloadPageAsync() => await jsInterop.Call("reloadPage");
 
@@ -743,80 +532,12 @@
     string LegendIcon => CheckIcon(viewOptions.IsLegendShown);
     string MinimapIcon => CheckIcon(viewOptions.IsMinimapShown);
 
-    async Task ToggleMinimapAsync()
-    {
-        var newValue = !viewOptions.IsMinimapShown;
-        viewOptions.SetMinimapShown(newValue);
-        await configService.SetAsync(config => config.ShowMinimap = newValue);
-        applicationEvents.TriggerUIStateChanged();
-    }
     string CyclesIcon => CheckIcon(viewOptions.IsCyclesShown);
     string RulesIcon => CheckIcon(viewOptions.IsRulesShown);
     string AskIcon => CheckIcon(viewOptions.IsAskShown);
     string HiddenNodesListIcon => CheckIcon(viewOptions.IsHiddenNodesShown);
 
     void ToggleHiddenNodes() => hiddenNodeService.TogglePanel();
-
-    // The analysis panels (cycles, rules, path) share the top-right corner and all recolor
-    // lines, so opening one closes the others.
-    void ToggleRules()
-    {
-        if (!viewOptions.IsRulesShown)
-        {
-            viewOptions.SetCyclesShown(false);
-            viewOptions.SetHiddenNodesShown(false);
-            viewOptions.SetAskShown(false);
-            viewOptions.SetTourShown(false);
-            pathFinderService.Close();
-        }
-        viewOptions.SetRulesShown(!viewOptions.IsRulesShown);
-        modelService.ClearCache(); // Violating lines are drawn differently, baked into the tiles
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    void ToggleCycles()
-    {
-        if (!viewOptions.IsCyclesShown)
-        {
-            pathFinderService.Close(); // The analysis panels sit top-right and all recolor lines
-            viewOptions.SetRulesShown(false);
-            viewOptions.SetHiddenNodesShown(false);
-            viewOptions.SetAskShown(false);
-            viewOptions.SetTourShown(false);
-        }
-        viewOptions.SetCyclesShown(!viewOptions.IsCyclesShown);
-        modelService.ClearCache(); // Cyclic lines are drawn differently, baked into the tiles
-        applicationEvents.TriggerUIStateChanged();
-    }
-
-    // From the problem indicator: opens the panel (unfolded), or leaves it open.
-    void ShowCycles()
-    {
-        if (!viewOptions.IsCyclesShown)
-            ToggleCycles();
-        else if (viewOptions.IsCyclesMinimized)
-        {
-            viewOptions.SetCyclesMinimized(false);
-            applicationEvents.TriggerUIStateChanged();
-        }
-    }
-
-    void ShowRules()
-    {
-        if (!viewOptions.IsRulesShown)
-            ToggleRules();
-        else if (viewOptions.IsRuleSuggestionsShown)
-        {
-            viewOptions.SetRuleSuggestionsShown(false);
-            applicationEvents.TriggerUIStateChanged();
-        }
-    }
-
-    void ToggleLegend()
-    {
-        viewOptions.SetLegendShown(!viewOptions.IsLegendShown);
-        applicationEvents.TriggerUIStateChanged();
-    }
 
     static readonly (int Count, string Label)[] MinLinkChoices =
     [
@@ -831,106 +552,19 @@
     // The submenu label says when a filter is active, since the diagram then hides lines.
     string LinesMenuLabel => LineFilter.IsAny ? "Lines (filtered)" : "Lines";
 
-    async Task SetLineFilterAsync(LineFilter filter)
-    {
-        viewOptions.SetLineFilter(filter);
-        await configService.SetAsync(config =>
-        {
-            config.HideExternalLines = filter.HideExternal;
-            config.HideInheritanceLines = filter.HideInheritance;
-            config.HideMemberLines = filter.HideMember;
-            config.HideConfigurationLines = filter.HideConfiguration;
-            config.MinLinkCount = filter.MinLinkCount;
-        });
-        modelService.ClearCache(); // Which lines a tile holds depends on the filter
-        applicationEvents.TriggerUIStateChanged();
-    }
-
     RowFilter RowFilter => viewOptions.RowFilter;
     string RowsMenuLabel => RowFilter.IsAny ? "Rows (filtered)" : "Rows";
 
-    async Task SetRowFilterAsync(RowFilter filter)
-    {
-        viewOptions.SetRowFilter(filter);
-        await configService.SetAsync(config =>
-        {
-            config.HideParameterRows = filter.HideParameters;
-            config.HideVariableRows = filter.HideVariables;
-            config.HideOutputRows = filter.HideOutputs;
-            config.HideSettingRows = filter.HideSettings;
-        });
-        modelService.ClearCache(); // Which rows and lines a tile holds depends on the filter
-        applicationEvents.TriggerUIStateChanged();
-    }
     string EditModeIcon => CheckIcon(viewOptions.IsEditingEnabled);
     string NotesSidebarIcon => CheckIcon(noteService.IsShowSidebar);
 
-    Task ToggleEditMode() => SetEditModeAsync(!viewOptions.IsEditingEnabled);
-
-    async Task SetEditModeAsync(bool isEnabled)
-    {
-        viewOptions.SetIsEditingEnabled(isEnabled);
-        await configService.SetAsync(config => config.IsEditingEnabled = isEnabled);
-        // Edit-only markup (e.g. link handles) is baked into cached tiles, so the cache must be
-        // cleared for the toggle to take effect immediately.
-        modelService.ClearCache();
-        applicationEvents.TriggerUIStateChanged();
-    }
+    Task ToggleEditMode() => viewSettings.SetEditingAsync(!viewOptions.IsEditingEnabled);
 
     Task ShowSettingsAsync() => SettingsDialog.ShowAsync(dialogService);
 
-    void ToggleRevealHiddenNodes()
-    {
-        viewOptions.SetRevealHiddenNodes(!viewOptions.RevealHiddenNodes);
-        modelService.ClearCache();
-        applicationEvents.TriggerUIStateChanged();
-    }
+    static string SettingsTitle =>
+        Build.IsVsCodeExtWasm
+            ? "Theme, layout density, badges, mouse zoom, this model's test projects, the AI, following the editor and refreshing."
+            : "Theme, layout density, badges, mouse zoom, this model's test projects and the AI.";
 
-    static MudBlazor.Color GetMenuItemIconColor(bool isCurrent) => isCurrent ? Color.Secondary : Color.Default;
-
-    static string? GetCurrentItemStyle(bool isCurrent) => isCurrent ? "color: var(--mud-palette-primary);" : null;
-
-    static string GetModelItemIcon(ModelItem item) =>
-    item switch
-    {
-        { IsLocal: true, IsCloud: true } => Icons.Material.Outlined.CloudDone,
-        { IsCloud: true } => Icons.Material.Outlined.CloudDownload,
-        _ when ModelPaths.IsDesignModel(item.Path) => Icons.Material.Outlined.DesignServices,
-        _ => Icons.Material.Outlined.Schema,
-    };
-
-    static string GetModelItemTitle(ModelItem item)
-    {
-        string source = item switch
-        {
-            { IsDemo: true } => "Demo",
-            { IsLocal: true, IsCloud: true } => "Local + cloud",
-            { IsCloud: true } => "Cloud",
-            _ when ModelPaths.IsDesignModel(item.Path) => "Design",
-            _ => "Local",
-        };
-        return $"{item.Path} ({source})";
-    }
-
-    async Task LoadModelItemAsync(ModelItem item)
-    {
-        if (item.IsLocal)
-        {
-            await canvasService.LoadAsync(item.Path);
-            return;
-        }
-
-        await LoadCloudModelAsync(item.CloudModel!);
-    }
-
-    bool IsCurrentModel(ModelItem item) =>
-    string.Equals(item.Path, CurrentRecentModelPath, StringComparison.Ordinal)
-    || (
-    item.IsCloud
-    && string.Equals(
-    item.CloudModel!.NormalizedPath,
-    CurrentCloudModelPath,
-    StringComparison.OrdinalIgnoreCase
-    )
-    );
 }

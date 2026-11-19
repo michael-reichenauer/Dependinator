@@ -7,6 +7,9 @@ namespace Dependinator.UI.Diagrams.Interaction;
 // jumps are instead recorded by the view history (IViewHistoryService).
 interface IPanZoomService
 {
+    // True from a pan or zoom step until the view has rested for a moment (or a flight landed).
+    bool IsViewMoving { get; }
+
     void PanZoomToFit(Rect bounds, double maxZoom = 1, bool isSilent = false);
     void PanZoom(Rect viewRect, double zoom);
     Task<bool> PanZoomToAsync(Pos pos, double zoom);
@@ -32,49 +35,163 @@ interface IPanZoomService
 
 [Scoped]
 class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicationEvents applicationEvents)
-    : IPanZoomService
+    : IPanZoomService,
+        IDisposable
 {
+    // A pan or zoom step repaints only what follows the view (the canvas and the minimap, on
+    // ViewChanged). The rest of the UI (app bar, panels, breadcrumb, toolbars) re-renders on the
+    // first step of a gesture and once the view has rested this long: re-rendering it on every
+    // step was two thirds of a step's cost in the browser app (about 7 of 11 ms).
+    const int ViewSettleMilliseconds = 150;
+    readonly Debouncer viewSettleDebouncer = new();
+    int isViewMoving; // 1 while moving; Interlocked, since the settle runs on a timer thread
+
+    public bool IsViewMoving => Volatile.Read(ref isViewMoving) == 1;
+
     const double MaxZoom = 10;
     const double Margin = 10;
 
     // Kept below TileKey.ZoomFactor so a wheel tick usually stays within the current tile's
-    // zoom band (a cheap viewBox update) instead of forcing a full tile re-render every tick.
+    // zoom band (moved by a transform, see GestureTransform) instead of forcing a full tile
+    // re-render every tick.
     const double WheelZoomSpeed = 1.14;
-    const double PinchZoomSpeed = 1.04;
-    const double GoToZoomSpeed = 1.02;
-    const int GoToMoveStepCount = 50;
+    const double FlightFocusShare = 0.6;
+    const double FlightBaseSeconds = 0.56;
+    const double FlightSecondsPerLength = 0.28;
+    const double FlightMaxSeconds = 3.4;
+    const double FlightDwell = 1.5;
+    const double MinFlightLength = 0.01;
+    static readonly TimeSpan FrameTime = TimeSpan.FromMilliseconds(15);
+    static readonly TimeSpan MinFrameWait = TimeSpan.FromMilliseconds(1);
     long goToRequestId = 0;
+
+    // A mouse wheel notch glides to its zoom instead of jumping 14% at once: each frame covers
+    // the share 1 - e^(-dt / WheelGlideTimeMs) of the zoom still left (in log zoom), around the
+    // pointer, so a notch is done in about 130 ms, fast at first and easing in. A notch during a
+    // glide adds to its target, so a fast spin keeps its speed. A trackpad pinch (ctrl) follows
+    // the fingers already, and zooms at once. The glide's fields are not locked: Zoom and the
+    // glide's frames run on the same thread, the browser app's only one or, in the Blazor Server
+    // host, the circuit's (the frames' awaits resume on its context, as a flight's do).
+    const double WheelGlideTimeMs = 35;
+    const double WheelGlideDoneLog = 0.005; // The zoom left (ln, 0.5%) at which a glide lands
+    long wheelGlideId = NoGlide; // The running glide's request id
+    const long NoGlide = -1;
+    double wheelGlideTarget;
+    double wheelGlideX;
+    double wheelGlideY;
 
     public void Zoom(PointerEvent e)
     {
+        if (e.PinchScale > 0)
+        {
+            Pinch(e);
+            return;
+        }
+
+        var isGliding = wheelGlideId != NoGlide && IsCurrentGoToRequest(wheelGlideId);
+        if (e.DeltaY == 0 || e.CtrlKey)
+        {
+            // Any wheel event ends a flight or a glide, a sideways scroll too. A trackpad pinch
+            // zooms from the view as it is, not from where a glide was heading.
+            Interlocked.Increment(ref goToRequestId);
+            if (e.DeltaY != 0)
+                ZoomAt(e.OffsetX, e.OffsetY, NextWheelZoom(e, modelMgr.WithModel(m => m.Zoom)), isSaveNeeded: true);
+            return;
+        }
+
+        wheelGlideTarget = NextWheelZoom(e, isGliding ? wheelGlideTarget : modelMgr.WithModel(m => m.Zoom));
+        (wheelGlideX, wheelGlideY) = (e.OffsetX, e.OffsetY);
+        if (isGliding)
+            return; // The running glide heads for the new target
+
+        wheelGlideId = Interlocked.Increment(ref goToRequestId);
+        _ = GlideAsync(wheelGlideId);
+    }
+
+    double NextWheelZoom(PointerEvent e, double fromZoom)
+    {
+        var factor = e.WheelZoomFactor(WheelZoomSpeed);
+        return Math.Min(MaxZoom, e.DeltaY > 0 ? fromZoom * factor : fromZoom / factor);
+    }
+
+    // Any other pan or zoom (or a go to) bumps goToRequestId, which ends the glide where it is.
+    async Task GlideAsync(long glideId)
+    {
+        try
+        {
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            var last = -FrameTime; // The first frame moves a frame's share at once
+            while (IsCurrentGoToRequest(glideId))
+            {
+                await using var _ = new MinDelay(FrameTime, MinFrameWait);
+                var now = clock.Elapsed;
+                var dt = (now - last).TotalMilliseconds;
+                last = now;
+
+                var zoom = modelMgr.WithModel(m => m.Zoom);
+                var left = zoom > 0 ? Math.Log(wheelGlideTarget / zoom) : 0;
+                var isLanding = !double.IsFinite(left) || Math.Abs(left) < WheelGlideDoneLog;
+                var newZoom = isLanding
+                    ? wheelGlideTarget
+                    : zoom * Math.Exp(left * (1 - Math.Exp(-dt / WheelGlideTimeMs)));
+                // Saved on every frame (the save is debounced), so an interrupted glide keeps its view.
+                ZoomAt(wheelGlideX, wheelGlideY, newZoom, isSaveNeeded: true);
+                if (isLanding)
+                {
+                    // Ended before the frame's wait: a notch during it starts a new glide.
+                    wheelGlideId = NoGlide;
+                    break;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Wheel zoom glide failed");
+        }
+        finally
+        {
+            if (wheelGlideId == glideId)
+                wheelGlideId = NoGlide;
+        }
+    }
+
+    // Zooms to newZoom keeping the canvas point under the screen point (mx, my) in place.
+    void ZoomAt(double mx, double my, double newZoom, bool isSaveNeeded)
+    {
+        if (newZoom <= 0 || !double.IsFinite(newZoom))
+            return;
+        Pos newOffset;
+        using (var model = modelMgr.UseModel())
+        {
+            var canvasX = model.Offset.X + mx * model.Zoom;
+            var canvasY = model.Offset.Y + my * model.Zoom;
+            newOffset = new Pos(canvasX - mx * newZoom, canvasY - my * newZoom);
+        }
+
+        SetView(newOffset, newZoom, isSaveNeeded);
+    }
+
+    // A two-finger pinch moves the view with the fingers: the canvas point that was under their
+    // midpoint stays under it, and the content grows as much as the distance between them did.
+    // (It used to zoom by a fixed 4% per move event, in the direction of the change, so the zoom
+    // depended on how often the browser sent moves, and a 1 px jitter back zoomed 4% back.)
+    void Pinch(PointerEvent e)
+    {
+        if (!double.IsFinite(e.PinchScale))
+            return;
         Interlocked.Increment(ref goToRequestId);
         Pos newOffset;
         double newZoom;
         using (var model = modelMgr.UseModel())
         {
-            if (e.DeltaY == 0)
-                return;
-            var (mx, my) = (e.OffsetX, e.OffsetY);
-
-            var speed = e.PointerType == "touch" ? PinchZoomSpeed : WheelZoomSpeed;
-            var factor = Math.Pow(speed, e.ZoomSteps);
-            newZoom = (e.DeltaY > 0) ? model.Zoom * factor : model.Zoom * (1 / factor);
-            if (newZoom > MaxZoom)
-                newZoom = MaxZoom;
-
-            double svgX = mx * model.Zoom + model.Offset.X;
-            double svgY = my * model.Zoom + model.Offset.Y;
-
-            var svgRect = screenService.SvgRect;
-            var w = svgRect.Width * newZoom;
-            var h = svgRect.Height * newZoom;
-
-            var x = svgX - mx / svgRect.Width * w;
-            var y = svgY - my / svgRect.Height * h;
-
-            newOffset = new Pos(x, y);
+            newZoom = Math.Min(MaxZoom, model.Zoom / e.PinchScale);
+            var canvasX = model.Offset.X + e.PinchFromX * model.Zoom;
+            var canvasY = model.Offset.Y + e.PinchFromY * model.Zoom;
+            newOffset = new Pos(canvasX - e.OffsetX * newZoom, canvasY - e.OffsetY * newZoom);
         }
 
+        if (!double.IsFinite(newOffset.X) || !double.IsFinite(newOffset.Y) || newZoom <= 0)
+            return;
         SetView(newOffset, newZoom);
     }
 
@@ -92,9 +209,9 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         SetView(newOffset, null);
     }
 
-    // Applies a new view and tells the UI: repaint, refresh toolbars (ViewChanged) and save the
-    // view record (not the model, see ModelService). Animation steps skip the save; the final
-    // step saves once.
+    // Applies a new view and tells the UI: repaint (ViewChanged), refresh the rest of the UI on
+    // the first step and once the view rests (UIStateChanged), and save the view record (not the
+    // model, see ModelService). Animation steps skip the save; the final step saves once.
     void SetView(Pos? offset, double? zoom, bool isSaveNeeded = true)
     {
         using (var model = modelMgr.UseModel())
@@ -105,10 +222,28 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
                 model.Zoom = newZoom;
         }
 
+        var isFirstStep = Interlocked.Exchange(ref isViewMoving, 1) == 0;
         applicationEvents.TriggerViewChanged();
-        applicationEvents.TriggerUIStateChanged();
+        if (isFirstStep)
+            applicationEvents.TriggerUIStateChanged();
+        viewSettleDebouncer.Debounce(ViewSettleMilliseconds, OnViewSettled);
         if (isSaveNeeded)
             applicationEvents.TriggerViewSaveNeeded();
+    }
+
+    // Once per gesture: a flight that landed has settled already when its debounce fires.
+    void OnViewSettled()
+    {
+        if (Interlocked.CompareExchange(ref isViewMoving, 0, 1) == 1)
+            applicationEvents.TriggerUIStateChanged();
+    }
+
+    // Ends a running flight at its next frame (IsCurrentGoToRequest); a late step's debounce is
+    // ignored by the disposed debouncer.
+    public void Dispose()
+    {
+        Interlocked.Increment(ref goToRequestId);
+        viewSettleDebouncer.Dispose();
     }
 
     public void ZoomBy(double factor)
@@ -116,20 +251,10 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         if (factor <= 0)
             return;
         Interlocked.Increment(ref goToRequestId);
-        Pos newOffset;
-        double newZoom;
-        using (var model = modelMgr.UseModel())
-        {
-            // model.Zoom is canvas units per pixel, so zooming in divides it.
-            newZoom = Math.Min(MaxZoom, model.Zoom / factor);
-            var svgRect = screenService.SvgRect;
-            var (cx, cy) = (svgRect.Width / 2, svgRect.Height / 2);
-            var centerX = cx * model.Zoom + model.Offset.X;
-            var centerY = cy * model.Zoom + model.Offset.Y;
-            newOffset = new Pos(centerX - cx * newZoom, centerY - cy * newZoom);
-        }
-
-        SetView(newOffset, newZoom);
+        var svgRect = screenService.SvgRect;
+        // model.Zoom is canvas units per pixel, so zooming in divides it.
+        var newZoom = Math.Min(MaxZoom, modelMgr.WithModel(m => m.Zoom) / factor);
+        ZoomAt(svgRect.Width / 2, svgRect.Height / 2, newZoom, isSaveNeeded: true);
     }
 
     public void FollowPoint(Pos from, Pos to, double scale)
@@ -162,14 +287,15 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         SetView(newOffset, null);
     }
 
-    // Animates the view to center targetPos at targetZoom in three phases: zoom out until the
-    // target view fits within the current view, pan to the target in fixed steps, then zoom
-    // back in. Any newer pan/zoom action bumps goToRequestId, which cancels this animation at
-    // the next step (IsCurrentGoToRequest).
+    // Animates the view to center targetPos at targetZoom in one flight (ZoomPath): it pans
+    // and zooms at once, zooming out on the way as far as the jump needs, so the user sees
+    // where the target lies relative to where they were. The animation is timed by the clock,
+    // not by frames, so a slow render drops frames instead of slowing the flight down. Any
+    // newer pan/zoom action bumps goToRequestId, which cancels this animation at the next frame
+    // (IsCurrentGoToRequest).
     public async Task<bool> PanZoomToAsync(Pos targetPos, double targetZoom)
     {
         var requestId = Interlocked.Increment(ref goToRequestId);
-        // A non-finite target never "fits", so the zoom-out loop below would never end.
         if (
             targetZoom <= 0
             || !double.IsFinite(targetZoom)
@@ -189,50 +315,27 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         var (startPos, startZoom) = GetPosAndZoom(animationRect);
         Log.Info($"StartPos:  {startPos},  StartZoom:  {startZoom}");
         Log.Info($"TargetPos: {targetPos}, TargetZoom: {targetZoom}");
+        // A broken start view (a zero zoom) has no path: go straight to the target.
+        var isFlight =
+            startZoom > 0 && double.IsFinite(startZoom) && double.IsFinite(startPos.X) && double.IsFinite(startPos.Y);
 
-        var targetViewRect = ToViewRect(targetPos, targetZoom, animationRect);
+        // The path's width is the focus area's (FlightFocusShare of the screen's shorter side):
+        // at the top of a long flight the start and the target lie about that far apart.
+        var focus = Math.Min(animationRect.Width, animationRect.Height) * FlightFocusShare;
+        var path = isFlight
+            ? new ZoomPath(startPos, startZoom * focus, targetPos, targetZoom * focus, FlightDwell)
+            : null;
+        var duration = path is not null ? FlightDuration(path.Length) : TimeSpan.Zero;
+        Log.Info($"Flight length {path?.Length:0.##}, duration {duration.TotalMilliseconds:0} ms");
 
-        var currentPos = startPos;
-        var currentZoom = startZoom;
-        var currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
-
-        // Zoom out until the target viewRect fits within the current viewRect
-        while (!RectWithin(targetViewRect, currentViewRect))
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (clock.Elapsed < duration)
         {
             if (!IsCurrentGoToRequest(requestId))
                 return false;
 
-            currentZoom *= GoToZoomSpeed;
-            currentViewRect = ToViewRect(currentPos, currentZoom, animationRect);
-
-            await GoToAsync(currentPos, currentZoom, animationRect);
-        }
-
-        var xd = (targetPos.X - currentPos.X) / currentZoom / GoToMoveStepCount;
-        var yd = (targetPos.Y - currentPos.Y) / currentZoom / GoToMoveStepCount;
-        for (var i = 0; i < GoToMoveStepCount; i++)
-        {
-            if (!IsCurrentGoToRequest(requestId))
-                return false;
-
-            var x = currentPos.X + xd * currentZoom;
-            var y = currentPos.Y + yd * currentZoom;
-            currentPos = new Pos(x, y);
-            await GoToAsync(currentPos, currentZoom, animationRect);
-        }
-
-        if (!IsCurrentGoToRequest(requestId))
-            return false;
-        await GoToAsync(targetPos, currentZoom, animationRect);
-
-        // Zoom until pos
-        while (currentZoom > targetZoom)
-        {
-            if (!IsCurrentGoToRequest(requestId))
-                return false;
-
-            currentZoom *= 1 / GoToZoomSpeed;
-            await GoToAsync(targetPos, currentZoom, animationRect);
+            var (center, width) = path!.AtTime(clock.Elapsed / duration);
+            await ShowFrameAsync(center, width / focus, animationRect);
         }
 
         if (!IsCurrentGoToRequest(requestId))
@@ -245,32 +348,37 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
         var finalRect = screenService.SvgRect;
         if (!IsValidSvgRect(finalRect))
             return false;
-        await GoToAsync(targetPos, targetZoom, finalRect);
+        SetView(ToOffset(targetPos, targetZoom, finalRect), targetZoom, isSaveNeeded: false);
 
-        var (endPos, endZoom) = GetPosAndZoom(animationRect);
+        // The flight has landed: everything shows the final view now, not after the settle delay
+        // (a go to measures the node's place on screen next).
+        OnViewSettled();
+
+        var (endPos, endZoom) = GetPosAndZoom(finalRect);
         Log.Info($"EndPos:  {endPos},  EndZoom:  {endZoom}");
         applicationEvents.TriggerViewSaveNeeded();
         return true;
     }
 
+    // The flight's duration grows with its length, but slowly: a short hop takes about 0.6
+    // seconds, a jump across the whole model about 2.4. No flight when the view is already
+    // there (or the length is broken).
+    static TimeSpan FlightDuration(double length) =>
+        double.IsFinite(length) && length >= MinFlightLength
+            ? TimeSpan.FromSeconds(Math.Min(FlightBaseSeconds + FlightSecondsPerLength * length, FlightMaxSeconds))
+            : TimeSpan.Zero;
+
     static bool IsValidSvgRect(Rect svgRect) => svgRect.Width > 0 && svgRect.Height > 0;
 
     bool IsCurrentGoToRequest(long requestId) => requestId == Volatile.Read(ref goToRequestId);
 
-    bool RectWithin(Rect r1, Rect r2)
+    // Shows one frame of a flight and waits for the next. It always gives the browser a turn
+    // (at least 1 ms), even after a frame slower than FrameTime: in the single-threaded browser
+    // app a flight that never waited would paint nothing and take no wheel or pan to cancel it.
+    async Task ShowFrameAsync(Pos pos, double zoom, Rect svgRect)
     {
-        return r1.X >= r2.X
-            && r1.X + r1.Width <= r2.X + r2.Width
-            && r1.Y >= r2.Y
-            && r1.Y + r1.Height <= r2.Y + r2.Height;
-    }
-
-    async Task GoToAsync(Pos pos, double zoom, Rect svgRect)
-    {
-        await using var _ = new MinDelay(TimeSpan.FromMilliseconds(8));
-
-        var offset = ToOffset(pos, zoom, svgRect);
-        SetView(offset, zoom, isSaveNeeded: false);
+        await using var _ = new MinDelay(FrameTime, MinFrameWait);
+        SetView(ToOffset(pos, zoom, svgRect), zoom, isSaveNeeded: false);
     }
 
     public void PanTo(Pos canvasCenter)
@@ -308,15 +416,6 @@ class PanZoomService(IScreenService screenService, IModelMgr modelMgr, IApplicat
     // the "offset" (the canvas point at the viewport's top-left corner), while the animation
     // targets a "pos" (the canvas point at the viewport's center). The helpers below convert
     // between them; the viewport spans svgRect.Size * zoom canvas units.
-
-    // The canvas rectangle currently visible for a center pos at the given zoom.
-    static Rect ToViewRect(Pos pos, double zoom, Rect svgRect)
-    {
-        var offset = ToOffset(pos, zoom, svgRect);
-        var width = svgRect.Width * zoom;
-        var height = svgRect.Height * zoom;
-        return new Rect(offset.X, offset.Y, width, height);
-    }
 
     // Top-left offset → center pos.
     static Pos ToPos(Pos offset, double zoom, Rect svgRect)

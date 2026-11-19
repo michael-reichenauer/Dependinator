@@ -275,6 +275,12 @@ for browser in "${BROWSERS[@]}"; do
             echo "  $test: not re-run"
         fi
     done <<<"$failed"
+
+    # In CI, the same on the run's summary page with each test's error message.
+    if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+        ./scripts/test-summary "e2e on $browser" "$RESULTS_DIR/$trx" --rerun "$RESULTS_DIR/$rerun_trx" \
+            >>"$GITHUB_STEP_SUMMARY" || true
+    fi
 done
 
 if [[ "$E2E_TRACE" == "1" || ( "$E2E_TRACE" == "failed" && -d ./tests/Dependinator.E2E.Tests/traces ) ]]; then

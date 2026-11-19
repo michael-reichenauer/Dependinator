@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net11.0</TargetFramework>
         <AssemblyName>Dependinator.Architecture.Tests</AssemblyName>
         <RootNamespace>Dependinator.Architecture.Tests</RootNamespace>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -33,6 +33,7 @@
         <ProjectReference Include="..\..\src\Dependinator.UI\Dependinator.UI.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Roslyn\Dependinator.Roslyn.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Bicep\Dependinator.Bicep.csproj" />
+        <ProjectReference Include="..\..\src\Dependinator.TypeScriptParser\Dependinator.TypeScriptParser.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Reflection\Dependinator.Reflection.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Claude\Dependinator.Claude.csproj" />
         <ProjectReference Include="..\..\src\Dependinator.Mcp\Dependinator.Mcp.csproj" />

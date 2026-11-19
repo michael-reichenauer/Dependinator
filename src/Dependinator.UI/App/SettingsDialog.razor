@@ -1,6 +1,7 @@
 @using Dependinator.Core
 @using Dependinator.Core.Shared
 @using Dependinator.UI.Modeling
+@using Dependinator.UI.Shared.VsCode
 @using MudBlazor
 @inject IConfigService configService
 @inject IThemeService themeService
@@ -11,6 +12,9 @@
 @inject IApplicationEvents applicationEvents
 @inject IAiService aiService
 @inject ISnackbar snackbar
+@inject IWorkspaceSourcesService workspaceSourcesService
+@inject IVsCodeSettingsService vsCodeSettingsService
+@implements IDisposable
 
 @* Menu › Settings …: the preferences set once and then left alone, in one column of sections.
    The toggles flipped many times a session (Edit Mode, the panels, the Lines and Rows filters)
@@ -88,10 +92,21 @@
           <MudText Typo="Typo.overline" Class="dep-settings__heading">This model</MudText>
           <MudCheckBox T="bool" Value="includeTestProjects" ValueChanged="SetIncludeTestProjectsAsync" Dense="true"
                        Disabled="isParsing"
-                       Color="Color.Primary" Label="Include test projects"
-                       title="Re-parses the solution. Test projects are excluded by default."
+                       Color="Color.Primary" Label="@($"Include {Tests}")"
+                       title="@IncludeTestsTitle"
                        data-checked="@Checked(includeTestProjects)" data-testid="settings-include-test-projects" />
-          <div class="dep-settings__hint">Saved with this model; changing it parses the solution again.</div>
+          <div class="dep-settings__hint">Saved with this model; changing it parses the @ParsedThing again.</div>
+          @if (workspaceSourcesService.CanChoose)
+          {
+            <div class="dep-settings__row">
+              <MudButton Variant="Variant.Outlined" Size="Size.Small" Disabled="isParsing"
+                         StartIcon="@MudBlazor.Icons.Material.Outlined.Checklist"
+                         OnClick="() => workspaceSourcesService.ChooseAsync()" data-testid="settings-choose-sources">
+                Choose Sources …
+              </MudButton>
+              <span class="dep-settings__hint">Which of the workspace's solutions, Bicep files and script projects this model shows.</span>
+            </div>
+          }
         </div>
       }
 
@@ -105,9 +120,38 @@
 
       @if (Build.IsVsCodeExtWasm)
       {
-        <div class="dep-settings__hint" data-testid="settings-vscode-hint">
-          More settings, such as following the active editor and refreshing on file changes, are in VS Code's
-          Settings under Extensions › Dependinator.
+        <div class="dep-settings__section" data-testid="settings-vscode">
+          <MudText Typo="Typo.overline" Class="dep-settings__heading">VS Code</MudText>
+          @if (vsCodeSettingsService.Settings is { } vsCode)
+          {
+            <MudCheckBox T="bool" Value="vsCode.FollowActiveEditor" ValueChanged="SetFollowActiveEditorAsync" Dense="true"
+                         Color="Color.Primary" Label="Follow the active editor"
+                         title="Show the node for the file you switch to in the editor, so the diagram follows your work."
+                         data-checked="@Checked(vsCode.FollowActiveEditor)" data-testid="settings-follow-active-editor" />
+            <MudCheckBox T="bool" Value="vsCode.AutoRefreshEnabled" ValueChanged="SetAutoRefreshEnabledAsync" Dense="true"
+                         Color="Color.Primary" Label="Refresh the diagram when source files change"
+                         title="Parses again a few seconds after the last change. When off, a dot on the Re-parse button shows that the source has changed."
+                         data-checked="@Checked(vsCode.AutoRefreshEnabled)" data-testid="settings-auto-refresh" />
+            <div class="dep-settings__row">
+              <span class="dep-settings__label">Refresh delay</span>
+              <MudNumericField T="double" Value="vsCode.AutoRefreshDelaySeconds" ValueChanged="SetAutoRefreshDelayAsync"
+                               Min="VsCodeSettingsService.MinDelaySeconds" Step="1" Variant="Variant.Outlined"
+                               Margin="Margin.Dense" Adornment="Adornment.End" AdornmentText="seconds"
+                               Class="dep-settings__number" data-testid="settings-auto-refresh-delay" />
+            </div>
+            <div class="dep-settings__hint">
+              How long after the last change to a source file the diagram is refreshed (or marked as out of date).
+              These are saved in VS Code's own settings (Extensions › Dependinator), so Settings Sync and
+              workspace settings apply to them.
+            </div>
+          }
+          else
+          {
+            <div class="dep-settings__hint" data-testid="settings-vscode-hint">
+              @(isLoadingVsCodeSettings ? "Reading the settings from VS Code …"
+                : "Following the active editor and refreshing on file changes are in VS Code's Settings under Extensions › Dependinator.")
+            </div>
+          }
         </div>
       }
     </div>
@@ -149,11 +193,52 @@
     await dialog.Result;
   }
 
-  protected override void OnInitialized() => includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
+  bool isLoadingVsCodeSettings;
 
-  // Test projects only exist in C# solutions, and only the hosts that parse can re-parse.
+  protected override async Task OnInitializedAsync()
+  {
+    includeTestProjects = modelMgr.WithModel(m => m.IncludeTestProjects);
+    if (!Build.IsVsCodeExtWasm)
+      return;
+
+    // A change made in VS Code's own Settings while the dialog is open shows here too.
+    vsCodeSettingsService.Changed += OnVsCodeSettingsChanged;
+    isLoadingVsCodeSettings = true;
+    try
+    {
+      await vsCodeSettingsService.LoadAsync();
+    }
+    finally
+    {
+      isLoadingVsCodeSettings = false;
+    }
+  }
+
+  void OnVsCodeSettingsChanged() => InvokeAsync(StateHasChanged);
+
+  public void Dispose() => vsCodeSettingsService.Changed -= OnVsCodeSettingsChanged;
+
+  Task SetFollowActiveEditorAsync(bool isOn) => vsCodeSettingsService.SetFollowActiveEditorAsync(isOn);
+
+  Task SetAutoRefreshEnabledAsync(bool isOn) => vsCodeSettingsService.SetAutoRefreshEnabledAsync(isOn);
+
+  Task SetAutoRefreshDelayAsync(double seconds) => vsCodeSettingsService.SetAutoRefreshDelaySecondsAsync(seconds);
+
+  // Test projects only exist in C# solutions, and test files in TypeScript and JavaScript
+  // projects (a workspace model can have both); only the hosts that parse can re-parse.
   bool CanIncludeTestProjects =>
-    (Build.IsVsCodeExtWasm || Build.IsWeb) && ModelPaths.IsSolution(modelMgr.ModelPath);
+    (Build.IsVsCodeExtWasm || Build.IsWeb) && (ModelPaths.IsSolution(modelMgr.ModelPath) || IsScriptProject || IsWorkspace);
+
+  bool IsScriptProject => ModelPaths.IsTypeScript(modelMgr.ModelPath);
+  bool IsWorkspace => ModelPaths.IsWorkspace(modelMgr.ModelPath);
+
+  string Tests => IsWorkspace ? "tests" : IsScriptProject ? "test files" : "test projects";
+  string ParsedThing => IsWorkspace ? "workspace" : IsScriptProject ? "project" : "solution";
+
+  string IncludeTestsTitle =>
+    IsWorkspace ? "Re-parses the workspace. Test projects and test files (*.test.*, *.spec.*, test folders) are excluded by default."
+    : IsScriptProject ? "Re-parses the project. Test files (*.test.*, *.spec.*, test folders) are excluded by default."
+    : "Re-parses the solution. Test projects are excluded by default.";
 
   static string Checked(bool isOn) => isOn ? "true" : "false";
 
@@ -208,7 +293,7 @@
     isParsing = true;
     includeTestProjects = isOn;
     // The refresh path only shows discreet progress, so say what is happening.
-    snackbar.Add(isOn ? "Parsing with test projects ..." : "Parsing without test projects ...", Severity.Info);
+    snackbar.Add(isOn ? $"Parsing with {Tests} ..." : $"Parsing without {Tests} ...", Severity.Info);
 
     // A failed re-parse is reported centrally (ErrorReported), so the result is ignored here.
     try

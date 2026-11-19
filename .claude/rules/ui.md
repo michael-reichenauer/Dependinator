@@ -27,11 +27,96 @@ paths:
 
 ## Lines
 
-Lines are the aggregated funnel by default. Descent is opt-in through `Node.LineSplitDepth` (node
-toolbar +/−, both directions, pass-through nodes don't count as a level) and `Model.LineFocus`
-(the explorer splits lines into its expanded rows, `Line.IsFocused`), both read by
-`RepLineService.Sync`.
-- Every change to split depth or focus calls `model.BumpStructureVersion()` (the Sync memo keys on
+Lines are the aggregated funnel by default. Descent is opt-in through `Model.LineFocus` (the
+explorer splits lines into its expanded rows, `Line.IsFocused`) and a selected stub
+(`LineReveal`, below), both read by `RepLineService.Sync`. A per-node split depth
+(`Node.LineSplitDepth`, the node menu's "Split Lines One Level Deeper" and "Merge Lines Back")
+was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don't bring it back.
+- **Stubs (Nov 13 2026, Michael's idea).** The lines between a container's edge and its children
+  (`LineStub.IsEdgeLine`) are drawn as a short arrow with a ring at the child, not as the long
+  fan to the middle of the container's edge. A stub is the same line drawn short (`LineSvg`
+  swaps the points): same element id, hover card, selection and rule colour. Drawn in full
+  still: an edge line on the dependency path being shown, one with a label, one the user routed
+  with line points (adding a point to a stub brings the full line back), and one whose links all
+  end at the container itself (a method using its own type: `LineStub.CrossesBorder`, nothing
+  continues outside). Stubs are level (upright
+  at an inheritance end) because stubs in the old line's direction looked like a hedgehog;
+  `LineStub.GetDirection` turns one aside when a sibling line leaves the same anchor that way.
+  The length is in the container's units (so the two stubs between neighbours stay apart at the
+  layout's 60-unit gap) within pixel limits.
+- **A selected stub's lines (Nov 13, Michael).** Selecting a stub draws that stub's lines end
+  to end: what uses the node from outside its container, or what it uses outside, not the lines
+  of the node's other stub. `RepLineService.Sync` takes a `LineReveal` (from
+  `NodeTreeSvg.GetLineReveal`): `Stub` for a selected `LineStub.IsStub` line (an edge line drawn
+  in full for its label, its line points or the shown path is selected for itself and gets no
+  lines). The stub's own links (`stub.Contains(link)`) that cross the border are pinned at the
+  child and descend on the far side as deep as the nodes are open, as cousin lines flagged
+  `Line.IsRevealed`; the stub itself stays active as the selected line when the reveal took its
+  links (`Sync` sets `IsActiveRep`; not when the explorer's focus took them), and
+  `LineEmphasis.IsLineDimmed` keeps the `IsRevealed` lines undimmed beside a selected line. The
+  reveal is part of the Sync memo, the lines it creates are inactive again after the selection
+  (never pruned, never saved), and an export has no selection. It leaves out what View › Rows
+  and "hide member lines" hide.
+- **A selected node draws no such lines (Michael, Nov 13).** The first version (PR #220) drew a
+  selected node's lines end to end too. Michael dropped it after trying it: a node is selected
+  all the time (a search, a go to, moving it), so the lines came unasked and often (a hub such
+  as Demo.Core.Utils lit 45), while clicking a stub does the job and feels natural. A selected
+  node still lights its own lines and its stubs (`LineEmphasis.IsNodeLine`). Don't re-propose
+  the node's lines, or lines on hover (dropped by him the same day: selecting is enough).
+- Traps the reviews of the stub lines found:
+  - Clicking one of a stub's lines moves the selection to that line, which would end the stub's
+    reveal: `LineReveal.KeptLine` keeps a selected cousin line between its ends, or it vanishes
+    under the click.
+  - The click must also survive the repaint: `SelectionService` measures a clicked line
+    (`GetBoundingRectangle`) before it clears the old selection and raises no event in
+    between. Deselecting first worked in the dev host and failed in the browser app (Wasm
+    repaints before the interop call returns, so the line was gone and the click only
+    deselected; Michael found it on the PR's test site). The chromium e2e run on the dev host
+    cannot see this kind of bug: check selection changes in a published `Dependinator.Wasm`
+    too (see the Layout section for how to serve one).
+  - One line of 7 links becomes 7 lines of one link, which a minimum link count would drop: the
+    revealed lines (`Line.IsRevealed`) skip that filter.
+  - No reveal while cycles are shown: the cycle lines are the sibling lines (`CycleService`
+    ids), and a split line would lose its cycle colour.
+  - `SvgService.CreateModelTile` syncs the lines before it reads the view flags: a Sync can
+    create lines, and the rule and path line id sets must already hold them.
+  - Usage and inheritance between the same two nodes are two lines (`RepPair.IsInheritance`,
+    `LineService.AddDirectLine`), so a node can have two stubs on one side, and a clicked line
+    can have a twin. Picking links by direction or by the ends alone drew both: go by the
+    stub's own links, and by `IsInheritanceBetween` for the kept line.
+  - Beside a selected line only its own lines and its explored stub's may be `IsRevealed` (that
+    is what keeps the dim rule to one test): a reveal that flags more lights them.
+  - Stubs are drawn after a container's other lines (`NodeLinesSvg.DrawnNodeLines` yields them
+    last): a line back to a node on the left starts at its node's right side and runs level
+    under the node and the stub into it, and took the stub's click (Demo.Core.CloudSync → Utils
+    in the demo). Known and left: a stub therefore also lies over the handles of a selected
+    hand-routed line whose point is right at it, and a selected stub's own lines end at its
+    anchor and lie over it (a second click on the selected stub can select one of its lines).
+- **Exploring a stub's lines (Nov 13, Michael).** Clicking one of a selected stub's lines keeps
+  the stub's other lines, so the user goes from line to line and pans and zooms around:
+  `SelectionService` marks the stub `Line.IsExplored` when the clicked line is one of its lines
+  (a cousin line with only the stub's links; not `IsRevealed`, which holds only the newest
+  tile's lines) and keeps it while the next clicked line is one of its lines too;
+  `LineEmphasis.FindSelection` hands it on as `RenderSelection.ExploredStub`, and
+  `GetLineReveal` asks for `KeptLine` and `Stub` together (the kept line's links go first, so a
+  clicked line to a whole container stays whole while the others split). The stub is
+  `IsRevealed` too, lit with its lines. Escape first selects the stub again
+  (`TrySelectExploredStub`), then clears; any other selection ends the exploring.
+- **One line per far container (Nov 13, Michael).** A selected stub's far side opens no container
+  that lies outside the tile (`LineReveal.Area`, the tile's canvas area with its margin, set in
+  `SvgService.CreateModelTile`) or whose default-size child would be below
+  `RepLineService.MinFarEndSize` (20 px) on screen (`IsWorthOpening`): its lines end at that
+  container, one line for all of them. So the lines depend on the tile, not just the zoom: the Area
+  is part of the reveal. With a stub selected, a new tile, zoom or layout re-walks only the stub's
+  own links (`IsEveryStubFarEndUnchanged` against the memo's `StubFarEnds`) and syncs everything
+  only when one of their far ends changed: a full sync each time took 40 to 70 ms per tile on the
+  dev host for the demo's Utils stub (the browser app is about 10x slower), against 2 to 5 ms. The Area is
+  where the tile draws nodes (`RenderContext.IsInTile`), so a container the tile draws has its lines
+  split unless its children are tiny, and one up to about a screen outside the view may be split
+  too, depending on the tile. The lines' `IsActiveRep` hold the newest tile's state, also while an
+  older cached tile is shown (as for tiles at another zoom).
+  Still open: a wider touch area for a stub if it is fiddly on the iPad.
+- Every change to the focus calls `model.BumpStructureVersion()` (the Sync memo keys on
   it) and raises both `TriggerModelChanged` and `TriggerUIStateChanged`.
 - Keep the perf defenses:
   - endpoint-visibility culling in `NodeLinesSvg` (`IsEitherEndpointRendered`);
@@ -49,14 +134,121 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   single-precision nested `<svg>` offsets (`SvgServiceDeepZoomTests`).
 - Perf regressions first show up as flaky menu timeouts in unrelated e2e tests.
 
+## Go to marks, it does not select (Nov 13 2026, Michael)
+
+- `NavigationService.ShowNodeAsync`/`ShowNodesAsync` (every go to: search, explorer, breadcrumb,
+  links, lists, tour, VS Code following the editor) leave the selection alone and mark the nodes
+  with `IHighlightService`: `Node.IsHighlighted`, amber corner brackets drawn with the selection
+  overlay (`NodeSvg.HighlightSvg`, baked into the tiles, so set and clear raise `ModelChanged`),
+  a CSS pulse while `IsPulsing` (the canvas's `dep-highlight-pulsing` class), a single marked
+  node's lines lit (`RenderSelection.Highlighted`, beside any selection; several marked nodes,
+  such as a picked cycle, only get brackets, or every line of the members would light), and the
+  breadcrumb chain (it goes before the selection's; the ids outlive a model load, so it checks
+  the node's flag). Selecting on a go to dropped the user's selection and showed handles and a
+  toolbar unasked; don't bring it back.
+- Cleared on the release of any canvas press (`InteractionService.OnMouseUp`), never on the
+  press: an inner member line can be hit only while lit (`LineSvg`), so a repaint between press
+  and release (always in Wasm) took a click on the marked node's inner line. Also cleared by any
+  key, view history Back/Forward, the next go to and an export. A wheel zoom keeps it. A single
+  go to's node that is selected gets no brackets; a group marks every member, selected or not.
+  Michael picked the brackets over a glowing halo and a spotlight.
+- The motion (Nov 14 2026, Michael): `PanZoomService.PanZoomToAsync` flies along `ZoomPath`
+  (van Wijk and Nuij, d3's interpolateZoom) instead of the old zoom out, pan, zoom in steps. The
+  path's width is the zoom times `FlightFocusShare` of the screen's shorter side, so the top of
+  a long flight shows both ends; `FlightDwell` slows the top, a sine ease softens both ends, and
+  the duration is clock-timed from the path length (`FlightBaseSeconds`, `FlightSecondsPerLength`,
+  `FlightMaxSeconds`). Michael said to keep the first values and tune them later. Each frame
+  awaits at least 1 ms (`ShowFrameAsync`): the Wasm app paints and takes the cancelling wheel
+  only then. `ZoomPath` uses `-asinh(b)` for the paper's `ln(sqrt(b²+1)-b)`, which cancels to
+  `log(0)` on a big zoom with a small pan.
+
+## Floating toolbars (Nov 13 2026, Michael)
+
+- The node, note and line toolbars are a plain `div.dep-float-toolbar` (not a `MudButtonGroup`,
+  whose purple divider between every button Michael found rough): grey icons, purple on hover,
+  28 px buttons. Groups are split by `span.dep-toolbar-sep`; a divider with no button before or
+  after it (a run of dividers included) is hidden by CSS (`:has`), so a conditional group needs
+  no `@if` around its divider. The 36 px height is assumed by `NodeToolbar.ToolbarOffset` and
+  `LineToolbar`'s top: change them with the CSS.
+- A `MudTooltip` around a `MudMenu` stays over the open menu (the button keeps the pointer and
+  the focus): give it `Disabled` while the menu is open (`OpenChanged`) and `ShowOnFocus="false"`,
+  and reset the flag when the toolbar is gone (a menu removed while open never reports its close).
+- The node menu is the last button ("more", ⋮), References and Dependencies come first.
+- Line bends are edited on the line (Nov 13, Michael's pick over the old +/− buttons): edit-mode
+  segment handles (`PointerId.FromLineMidPoint`, sub-id `lm{segment}_{percent}`; the percent is
+  50, or 25/75 when the label's box covers the middle, since the label layer would take the
+  press) become a bend on a drag past the 4 px threshold (`LineEditService.InsertSegmentPoint`,
+  one undo step with the drag); a bend released within 6 screen px of straight, or
+  double-clicked, is removed; "Straighten line" clears all.
+- Line-end tags (`LineEndTags.razor`, Nov 13) replace the go to source/target buttons:
+  `SelectionService` places a non-stub line's toolbar and tags from the model geometry
+  (`LineOnScreen`: the line in client pixels, clipped to the canvas below `ChromeBottom`), not
+  the line's measured box; stubs keep the measured box. A tag goes with `ShowNodeAsync` and
+  re-places the selection after. An explorer line to a far end inside another container is not
+  drawn once there (its source is not shown at that zoom), so its toolbar goes; known, accepted.
+
 ## Rendering performance
 
 - Keep `WheelZoomSpeed` below `TileKey.ZoomFactor` (1.3), or every wheel tick rebuilds all tiles.
+- **The view moves by a CSS transform (Nov 14 2026).** Measured: a `viewBox` change repaints the
+  whole svg every frame (WebKit: 33-62 ms panning, 73-151 ms zooming at 700-1200 elements), a
+  transform on the `<svg>` element 16 ms; a transform on an inner `<g>` is as slow as the viewBox.
+  So while `PanZoomService.IsViewMoving` (a step until 150 ms of rest, or a flight's landing)
+  `CanvasService.GetView` keeps the drawn svg and moves it (`GestureTransform`), and draws the
+  view for real on rest, past the tile's area, past a 2x scale or after a `ModelChanged`. View
+  steps raise only `ViewChanged` (canvas, minimap); `UIStateChanged` goes out on the first step
+  and on rest: re-rendering the whole UI per step was 7 of the step's 11 ms in Wasm. Traps:
+  - A transformed element paints above `position: fixed` elements without a z-index that come
+    before it in the page: every fixed overlay needs one (`.dep-float-toolbar` 5, the app bar 1100).
+  - The moved svg's own rect and its events' `offsetX/Y` move with it: JS measures the
+    `#canvasframe` div instead (`getBoundingRectangle("svgcanvas")` and `mouseEventData`), and
+    the e2e `App.Canvas` locator is that frame.
+  - Headless Playwright WebKit sends `movementX` 0, so a mouse drag does not pan there: measure
+    WebKit panning with the arrow keys. Headless Chromium keeps 60 fps either way and hides the
+    repaint cost; compare in WebKit.
+- A pinch zooms by the fingers' distance and keeps the point between them under them
+  (`PointerEvent.PinchScale`, `PinchFromX/Y`); its moves are batched per frame like the mouse.
+- A trackpad pinch is wheel events with ctrlKey, many per gesture: `PointerEvent.WheelZoomFactor`
+  zooms it by its deltaY (about 100 per e-fold in Chromium), capped at the notches so Ctrl + a
+  mouse wheel is unchanged. A plain two-finger trackpad scroll still zooms a notch per event
+  (left as it is: some browsers give a mouse notch a small pixel delta too, which would slow
+  those wheels down).
+- **A wheel notch glides (Nov 14 2026).** `PanZoomService.Zoom` eases a mouse wheel notch to
+  its zoom over about 130 ms (`GlideAsync`: each frame covers `1 - e^(-dt/35 ms)` of the log
+  zoom left, around the pointer, landing within 0.5%); a notch during a glide adds to its
+  target, and a notch after the landing starts a new glide (the landing frame clears
+  `wheelGlideId` before its wait, or a notch in that wait was lost). It is a flight-like loop on
+  `goToRequestId`, so any other pan, zoom, go to or wheel event ends it (a sideways scroll too).
+  A trackpad pinch (ctrl) zooms at once, from the view as it is. The edit-mode zoom of a selected
+  node's content still steps. Unit tests that wheel-zoom must wait for the landing.
+- **Tiles drawn ahead (Nov 14 2026).** 300 ms after the canvas last rendered, `Canvas` asks
+  `ICanvasService.PrefetchNext` (on the renderer, `InvokeAsync`: the Blazor Server host would
+  otherwise sync the lines on a timer thread while components read them) for the tiles one zoom
+  level in, then out, around the view's center, one per timer slot (a tile cannot be stopped
+  once it is being drawn, 6 to 116 ms in the browser app). `SvgService.PrefetchNext` takes the
+  levels from the view's key (`TileKey.AtLevel`), since `From(zoom / 1.3)` rounds a level off
+  at a level's own zoom; it draws only ahead of a cached view, holds the state lock across
+  drawing and caching, never touches `model.ViewRect`/`Zoom`, caches with
+  `TileCache.AddPrefetched` (not the last used tile) and syncs the lines back to the view's
+  tile. Drawing a tile syncs the lines to its zoom and area, so `GetTile` also syncs them on a
+  cache hit of another tile than the one they follow (`syncedKey`).
+- The cloud sync checks the sync state every 5 s while the UI is active (`AppCloudSyncService`,
+  `ActiveRefreshInterval`) and compares the model's content hash, signed in or not: hashing the
+  demo took 550-700 ms in the browser app, a stop every 5 s while panning (Michael, Nov 14).
+  The hash is kept while `IModelService.ContentStamp` is unchanged: save requests and model
+  loads (bumped after the change) and the path. Like the local save it leaves out a lazy layout
+  (the next save shows it). The layout generation and `StructureVersion` stay out of it: they
+  also move for zooming into new containers and for the explorer's line focus, and each move
+  hashed again (found by measuring and in review). A push caches the hash
+  of what it pushed, or the check compared an older hash with the new baseline and pushed again
+  and again (found in review).
+- Pausing every few seconds while panning is not the view save: it writes only the small view
+  record (`TriggerViewSave`, at most every 10 s).
 - `CreateModelTile` logs `Tile ((x,y,z)): N chars in Mms` to the app log (`~/Dependinator.log`):
   use it for before/after comparisons. Deferred until measured: a selection overlay layer,
   WebKit-gating `refreshSvgPaintServers`, a pan/zoom save debounce, description-wrap caching.
 - WebKit loses `<use>` gradient fills when Blazor replaces the diagram subtree; `refreshSvgPaintServers`
-  (jsInterop.js, WebKit only) re-appends `<defs>` when `SvgContent` changed by reference. No e2e
+  (jsInterop.js, WebKit only) re-appends `<defs>` when the canvas content changed by reference. No e2e
   test can see it (only pixels differ). To reproduce, run playwright-cli with `--browser webkit`,
   double-click the canvas and pick an icon.
 
@@ -67,6 +259,43 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   `NodeViewPolicy.MaxFramedNodeSize`, because tiles render up to 1.3x the view zoom.
 - `NodeViewPolicy.EffectiveZoom` treats `Rect.None` as size 100 (many tests build nodes without a
   boundary).
+- Siblings open as containers at the same zoom (`NodeViewPolicy.OpenSize`: a node stops being an
+  icon at `MinContainerZoom`, whatever its size, so the layout's sizes open at 120 to 360 px on
+  screen). Only a node resized by hand outside 50 to 200 units opens by its own size on screen
+  (at 100 or 400 px), so a resize can still open a node at an unchanged zoom. The node's own
+  chrome still follows its size on screen (zoomed past, and the background fade, which starts a
+  doubling of the zoom after the node opened). "Show node" frames a node so that every ancestor
+  is open (`OpenAncestorsFactor`): a node that is large in its parent is framed closer than as
+  an icon, since being visible goes first.
+- Moved nodes re-route the automatic bends (Nov 15 2026, Michael's pick): `NodeEditService`
+  records where a move started (`MoveSelectedNode(s)`), and `EndMove` (after the snap, from
+  `InteractionService.OnMouseUp`) asks `MovedNodeLines` for new points and adds a
+  `LinePointsCommand` to the move's undo step (`ICommandService.DoInStepOf`). The whole move is
+  one undo step (every edit after the first joins it): quick edits merge only within 500 ms, so a
+  pause used to split a drag, and the lines would have joined only its last part.
+  A press after a drag whose release was missed (outside the window) ends that move
+  (`InteractionService.OnMouseDown`), and `BeginMove` at a drag's start forgets any leftover.
+  Lines between member rows keep the card's own drawing. Only lines near
+  a moved node's old or new box are looked at, user bends (`IsSegmentsUserSet`) are never
+  routed, and `FreeLineRouter` (layout columns are gone after a move) keeps its obstacles in a
+  grid and caps the pieces per line: a random 150-node grid took ~50 ms per move on the dev
+  host. Backward lines are drawn from the source's right edge through the source itself; the
+  router excludes a line's own ends, like the layered layout. "Re-route line" (line toolbar)
+  and "Reset Lines" (node menu, one level: the lines between the node's children, so a line
+  between the root's children can only be re-routed one by one) share `LineRoutes` with the
+  move; they use `LinePointsCommand(..., isLayoutSet: true)`, which hands hand-set lines back
+  to the layout (`IsSegmentsUserSet` false) as one undo step.
+- Smart guides (Nov 16 2026, Michael said yes to guides over a coarser grid): a dragged node
+  snaps to a nearby sibling's edge or centre (`AlignmentSnap`, in `Diagrams/Editing/AlignmentGuides.cs`)
+  and `AlignmentGuideService` holds the guides in canvas coordinates; `CanvasService.GetView`
+  draws them over the tile (`CanvasView.Guides`, non-scaling stroke). `NodeEditService` keeps
+  each moved node's raw position (`rawBoundaries`: the drag without the snaps, so a snapped node
+  lets go again) and the last alignment, and the drop's grid snap leaves an aligned axis alone.
+  A group or zone aligns its lead (the node under the pointer, `MoveSelectedNodes(..., leadId)`)
+  and shifts with it in screen pixels. Guides are cleared in `BeginMove`/`EndMove` (which repaint).
+  Boxes are aligned, not the icon artwork, which has its own padding inside the box. Not done
+  yet: guides for resizing, equal-spacing hints, Align/Distribute commands, a key to drag
+  without snapping.
 - `NodeLayout.Generation` is bumped by layouts, fits and geometry commands.
   `RepLineService.Sync` skips the same-zoom sync only at an unchanged generation, and
   `NodeTreeSvg.RenderRootContent` re-renders at most 3 rounds after a lazy layout.
@@ -142,12 +371,78 @@ toolbar +/−, both directions, pass-through nodes don't count as a level) and `
   - `LineDto` carries the Source and Target names with a label, because line ids are hashes.
   - Labels render in their own layer after the child nodes.
   - `StructureService.RenameNode` re-parks labels under the new line ids.
+  - Drawn smaller than node texts (`LineSvg.LabelFontSize`, `LabelMaxTextZoom`), the label cut
+    to one row and the description wrapped to three (`SvgText.GetUserTextLines` keeps the user's
+    line breaks); the hover card shows them in full (Michael, Nov 13).
+  - `Line.LabelPosition` is a fraction of the line's length (not a point), so the label stays
+    on its line when nodes move or the line is rerouted; saved only when moved
+    (`LineDto.LabelPosition`, also in `PendingLineLabel`). An unmoved label is placed by
+    `LabelPlacement` (Nov 16, point 6 of Michael's label polish): it runs right after every line
+    sync (`SvgService.SyncLines`, also when a prefetch or a cached tile syncs the lines back,
+    and each round of `NodeTreeSvg.RenderRootContent`), so the places follow the shown tile,
+    which a label drag starts from; running it per container while drawing left the places of
+    the last tile drawn, which may be one drawn ahead at another zoom. It sets the runtime
+    `Line.AutoLabelPosition` (never saved), which `LabelPosition` returns while the user has not
+    dragged it (`SetLabelPosition(null)` gives it back). It covers the drawn labelled lines as
+    `NodeLinesSvg` picks them without the tile checks (active reps and the user's direct lines,
+    not hidden, filtered or pass-through), grouped by `LinePathGeometry.TryGetOwnerNode`, in
+    children-local units at text zoom 1, so a label keeps its place across tiles. Obstacles are
+    each child's box and, except for member rows, the estimated name and description strip
+    below it, as two areas (description rows wrapped at `DescriptionMinWidth` as an icon draws
+    them). The label's transparent hit rect
+    (`LineSvg.LabelHitSvg`) has the element id `PointerId.LineLabelElementId`, which `Parse`
+    reads back as the line with `IsLineLabel` (equal to the line's id, so selecting, menus
+    and hover cards treat it as the line); only the edit-mode drag (`InteractionService`,
+    `LineEditService.MoveLabel`, `LineLabelPositionCommand`) looks at `IsLineLabel`. Its group
+    carries the line's element id (for the hover card) but no `data-name`, so the e2e
+    `App.Line` locator still matches one element. Labels lie above the nodes, a selected line's
+    bend-point handles with the line below them: a handle under a label gets a transparent copy
+    of its hit circle above the rect (`LineSvg.LabelHandleClass`, same id). Letting presses
+    through the whole rect instead broke the double-click on a bent line's label: the first
+    click selects the line, so the second missed it (seen only in the published Wasm app).
 - Alias edits bump `StructureVersion`, because panels cache their rows by it. Tooltips stay
   `"{LongName} ({Alias})"`, because `App.Node(label)` in the e2e tests matches the long-name prefix.
 - `HideNodesCommand` needs its own `MergeKey`: same-type commands within 500 ms merge, which turned
   hide+show into a no-op undo. The line rule lives in `LineVisibility.Update`.
 - View › Rows is a view option (`RowFilter`), not a model edit: rows are skipped in
   `NodeTreeSvg.IsRendered` and in the minimap, and `IsLineFilteredOut` drops lines to a hidden row.
+
+## Workspace models (Nov 2026)
+
+- A host with a workspace (`IModelListService.HasWorkspace`: VS Code, the dev host and so the e2e
+  test host) keeps its solutions and Bicep files apart from every other model. The Models menu
+  (`App/ModelMenuItems.razor`) lists only `GetWorkspaceModels()`, the Models dialog ("Other
+  Models …") opens the rest, and an open model that is none of the workspace's is a visit
+  (`GetVisitedModel`): a "Viewing" row in the menu, and the breadcrumb bar stays up with the
+  model's kind and a button back to `HomePath`. The browser app has no workspace and keeps the
+  one flat list. Decided with Michael (Nov 12): keep the submenu, don't replace it by the dialog.
+- `HomePath` is what this window opened last, kept in memory: the recent paths in the config are
+  shared by every window (and by parallel e2e tests), so they only decide after a restart.
+- In test mode the embedded demo stands in for the working solution as the first workspace
+  model (`workspacePaths`), but `LocalPaths` is unchanged: `ModelService.RefreshAsync` only
+  re-parses a local path, and the demo must stay out of that.
+- The menu's sections (decided with Michael, Nov 13): "Whole workspace" with the workspace
+  model and "Choose Sources …" right below it (only while that model is open), then "Single
+  sources" with the model of each source. Without a workspace model (fewer than two sources)
+  there is the one list "This workspace". A submenu for the single models was the alternative.
+- A component with no parameters inside the app bar's menu (`ModelMenuItems`) is not re-rendered
+  with its parent: it subscribes to `UIStateChanged` and the cloud sync's `Changed` itself.
+- The model of the whole workspace (`WorkspaceModelPath`, `docs/notes/WORKSPACE-MODEL.md`) is
+  first in `GetWorkspaceModels()` but last in `LocalPaths`. VS Code starts on the model of the
+  workspace used last (`WorkspaceStartupPath`: the first recent path of this workspace, since
+  the recent paths are shared by all workspaces), else on the whole workspace (decided with
+  Michael, Nov 13, phase 4), so VS Code does not seed the recent paths with the first source.
+  `WorkspaceModelPath` is its identity (non-null with a workspace folder, compare with `ModelListService.IsSamePath`, never `==`); it is
+  listed only with two or more sources, but while there is a source `IsWorkspacePath` and
+  `IsLocalPath` hold for it either way, so a model that is open keeps refreshing when a source
+  is removed. With no source left it is a visit. A model path is not re-spelled on the way in: saved models and the cloud pull go
+  by the exact path (tried, and it made a pulled copy unreadable).
+- A menu item that opens a model must not await the load (`ModelMenuItems.OpenAsync` runs it
+  in the background): MudBlazor keeps the menu open until the click handler returns, so the
+  menu stayed up behind the sources dialog and through the whole parse.
+- In a cloud session the dev host lists `Dependinator.slnx` twice among the workspace's sources
+  (the `/workspaces/Dependinator` symlink and the real path): an artifact of the session, not
+  a bug in the list.
 
 ## iPad home-screen web app (Nov 2026)
 

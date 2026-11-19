@@ -1,0 +1,148 @@
+@using Dependinator.Core.Shared
+@using Dependinator.UI.Modeling
+
+@* What a workspace model is made of: the sources found in the workspace (solutions, Bicep
+   deployments, TypeScript and JavaScript projects), each with a checkbox. Shown when the model
+   is opened for the first time, with a proposal ticked, and later from the Models menu and the
+   Settings dialog ("Choose Sources …"). A source in the model has a "Shown in" list: Automatic
+   (inside the source whose folder holds it, SourceNesting), the top, or a node of another source.
+   OK returns the choice; the caller parses. *@
+<MudDialog>
+  <TitleContent>
+    <MudText Typo="Typo.h6">What is in this model?</MudText>
+  </TitleContent>
+  <DialogContent>
+    <div class="dep-sources" data-testid="sources-dialog">
+      <div class="dep-settings__hint">
+        The model of the whole <b>@WorkspaceName</b> workspace shows the sources you tick in one diagram.
+        @(IsFirstTime ? "Sources in test, sample and example folders are left out to start with." : "")
+        @(Places.Count > 0 ? "Each is shown inside the source its folder is in, unless you choose another place." : "")
+      </div>
+      @foreach (var group in choices.GroupBy(c => WorkspaceSources.GroupName(c.Path)))
+      {
+        <div class="dep-models__section">
+          <div class="dep-models__caption">@group.Key</div>
+          @foreach (var choice in group)
+          {
+            var path = choice.Path;
+            <div class="dep-sources__row" title="@path" data-testid="sources-item">
+              <MudCheckBox T="bool" Value="@IsTicked(path)" ValueChanged="@(value => SetTicked(path, value))"
+                           Dense="true" Color="Color.Primary" data-checked="@(IsTicked(path) ? "true" : "false")"
+                           data-testid="sources-check" />
+              <span class="dep-sources__name" @onclick="() => SetTicked(path, !IsTicked(path))">
+                <span class="dep-models__name">@ModelPaths.DisplayName(path)</span>
+                @if (choice.IsNew && !IsFirstTime)
+                {
+                  <span class="dep-models__chip">new</span>
+                }
+                <span class="dep-sources__folder"><bdi>@Folder(choice)</bdi></span>
+              </span>
+              @if (IsTicked(path) && Places.TryGetValue(path, out var places))
+              {
+                <div class="dep-sources__place @(shownIn[path] is null ? "" : "dep-sources__place--chosen")"
+                     data-testid="sources-place" data-value="@SourcePlaceItems.ValueOf(shownIn[path])">
+                  <MudSelect T="string" Value="@SourcePlaceItems.ValueOf(shownIn[path])"
+                             ValueChanged="@(value => shownIn[path] = SourcePlaceItems.ShownInOf(value))"
+                             Dense="true" Margin="Margin.Dense" Variant="Variant.Text" title="Where the source is shown"
+                             RelativeWidth="DropdownWidth.Adaptive" PopoverClass="dep-sources__place-list"
+                             data-testid="sources-place-select">
+                    @foreach (var item in SourcePlaceItems.Of(places with { ShownIn = shownIn[path] }))
+                    {
+                      <MudSelectItem T="string" Value="@item.Value"
+                                     Class="@(item.IsIndented ? "dep-sources__place-item--project" : "")">@item.Label</MudSelectItem>
+                    }
+                  </MudSelect>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (choices.Count == 0)
+      {
+        <div class="dep-models__empty">No solution, Bicep file or script project was found in the workspace.</div>
+      }
+    </div>
+  </DialogContent>
+  <DialogActions>
+    <span class="dep-settings__hint dep-sources__count" data-testid="sources-count">@ticked.Count of @choices.Count</span>
+    <MudSpacer />
+    <MudButton OnClick="Cancel" data-testid="sources-cancel">Cancel</MudButton>
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Ok" Disabled="@(ticked.Count == 0)"
+               data-testid="sources-ok">OK</MudButton>
+  </DialogActions>
+</MudDialog>
+
+@code {
+  [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+  [Parameter] public IReadOnlyList<SourceChoice> Choices { get; set; } = [];
+  [Parameter] public string WorkspaceName { get; set; } = "";
+
+  // Where each source in the model can be shown, by path (none before the first parse)
+  [Parameter] public IReadOnlyDictionary<string, SourcePlaces> Places { get; set; } =
+    new Dictionary<string, SourcePlaces>();
+
+  // The model has no saved choice yet: what is ticked is the proposal.
+  [Parameter] public bool IsFirstTime { get; set; }
+
+  IReadOnlyList<SourceChoice> choices = [];
+  readonly HashSet<string> ticked = [];
+  readonly Dictionary<string, string?> shownIn = [];
+
+  // The user's choice of sources, or null when the dialog was cancelled.
+  public static async Task<IReadOnlyList<SourceChoice>?> ShowAsync(
+    IDialogService dialogService,
+    string workspaceName,
+    IReadOnlyList<SourceChoice> choices,
+    bool isFirstTime,
+    IReadOnlyDictionary<string, SourcePlaces>? places = null
+  )
+  {
+    var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+    var parameters = new DialogParameters<WorkspaceSourcesDialog>
+    {
+      { d => d.Choices, choices },
+      { d => d.WorkspaceName, workspaceName },
+      { d => d.IsFirstTime, isFirstTime },
+      { d => d.Places, places ?? new Dictionary<string, SourcePlaces>() },
+    };
+    var dialog = await dialogService.ShowAsync<WorkspaceSourcesDialog>((string?)null, parameters, options);
+    var result = await dialog.Result;
+    return result is { Canceled: false, Data: IReadOnlyList<SourceChoice> chosen } ? chosen : null;
+  }
+
+  protected override void OnInitialized()
+  {
+    choices = Choices;
+    foreach (var choice in choices.Where(c => c.IsIncluded))
+      ticked.Add(choice.Path);
+    foreach (var choice in choices)
+      shownIn[choice.Path] = choice.ShownIn;
+  }
+
+  bool IsTicked(string path) => ticked.Contains(path);
+
+  void SetTicked(string path, bool isTicked)
+  {
+    if (isTicked)
+      ticked.Add(path);
+    else
+      ticked.Remove(path);
+  }
+
+  // Where the source is, below the workspace folder: the folder of a solution or a Bicep file,
+  // and for a script project, which is named by its folder, the folder that one is in.
+  static string Folder(SourceChoice choice)
+  {
+    var folder = WorkspaceSources.FolderOf(choice.Key);
+    return ModelPaths.IsTypeScript(choice.Path) ? WorkspaceSources.FolderOf(folder) : folder;
+  }
+
+  void Ok() =>
+    MudDialog.Close(DialogResult.Ok<IReadOnlyList<SourceChoice>>(
+      [.. choices.Select(c => c with { IsIncluded = IsTicked(c.Path), IsNew = false, ShownIn = shownIn[c.Path] })]
+    ));
+
+  void Cancel() => MudDialog.Cancel();
+}

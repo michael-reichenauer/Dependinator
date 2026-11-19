@@ -16,8 +16,11 @@ interface INavigationService
     Task ShowNodeAsync(string fileLocation);
 
     // Frames several nodes together (e.g. the members of a cycle), each at most as large as
-    // "show node" frames one, so they show as icons inside their open container. Nothing is
-    // selected.
+    // "show node" frames one, so they show as icons inside their open container, and highlights
+    // them all.
+    //
+    // Neither selects: going to a node only shows it, with amber corner brackets (IHighlightService) until the
+    // user's next action, and leaves the user's selection as it was.
     Task ShowNodesAsync(IReadOnlyList<NodeId> nodeIds);
     Task ShowEditor(NodeId nodeId);
 }
@@ -27,7 +30,7 @@ class NavigationService(
     IApplicationEvents applicationEvents,
     IModelMgr modelMgr,
     IPanZoomService panZoomService,
-    ISelectionService selectionService,
+    IHighlightService highlightService,
     IScreenService screenService,
     IVsCodeSendService vsCodeSendService,
     IViewHistoryService viewHistory,
@@ -59,8 +62,7 @@ class NavigationService(
             Log.Info("ShowNodeAsync for", nodeId);
             if (isRevealHidden)
                 RevealIfHidden([nodeId]);
-            selectionService.Unselect();
-            applicationEvents.TriggerUIStateChanged();
+            highlightService.Clear(); // An earlier go to's highlight does not travel with the view
             await Task.Yield();
             if (!IsLatestShowNodeRequest(requestId))
                 return;
@@ -79,8 +81,7 @@ class NavigationService(
             if (!IsLatestShowNodeRequest(requestId))
                 return;
 
-            await selectionService.Select(nodeId);
-            applicationEvents.TriggerUIStateChanged();
+            highlightService.Highlight([nodeId]);
             await LogShowNodeCenteringAsync(nodeId, pos, zoom, requestId);
         }
         finally
@@ -120,8 +121,7 @@ class NavigationService(
 
             Log.Info("ShowNodesAsync for", nodeIds.Count, "nodes");
             RevealIfHidden(nodeIds);
-            selectionService.Unselect();
-            applicationEvents.TriggerUIStateChanged();
+            highlightService.Clear();
             await Task.Yield();
             if (!IsLatestShowNodeRequest(requestId))
                 return;
@@ -133,7 +133,11 @@ class NavigationService(
                 return;
 
             viewHistory.RecordJump();
-            await panZoomService.PanZoomToAsync(pos, zoom);
+            if (!await panZoomService.PanZoomToAsync(pos, zoom))
+                return;
+            if (!IsLatestShowNodeRequest(requestId))
+                return;
+            highlightService.Highlight(nodeIds);
         }
         finally
         {

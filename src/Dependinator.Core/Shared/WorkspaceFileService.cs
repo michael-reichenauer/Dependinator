@@ -5,9 +5,15 @@ namespace Dependinator.Core.Shared;
 [Rpc]
 interface IWorkspaceFileService
 {
-    // The workspace's parseable model files: every .sln, then every .bicep entry point.
+    // The workspace's parseable model files: every solution (.sln or .slnx), then every .bicep
+    // entry point, then every TypeScript or JavaScript project (its tsconfig.json, jsconfig.json
+    // or package.json).
     Task<IReadOnlyList<string>> GetModelFilePathsAsync();
     void SetWorkspaceFolders(IReadOnlyList<string> paths);
+
+    // The folders the model files are searched in: the first one is the folder the workspace
+    // model is named after.
+    Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync();
 
     // The text of a source file a model node points at; only files inside the workspace folders
     // are read, since in VS Code the request comes from the webview.
@@ -31,17 +37,51 @@ class WorkspaceFileService : IWorkspaceFileService
     public async Task<IReadOnlyList<string>> GetModelFilePathsAsync()
     {
         await Task.CompletedTask;
+        Log.Info("Enumerate model files in", rootPaths);
         // Solutions first, then Bicep entry points (the .bicep files no other file uses as a
         // module). Each group is ordered shallowest first, then by path, so the workspace's top
         // level solution comes first regardless of enumeration order; callers treat the first
-        // path as the workspace model (e.g. the model the VS Code extension starts on).
-        var solutionPaths = OrderShallowestFirst(EnumerateFiles(rootPaths, "*.sln"));
+        // path as the workspace model (e.g. the model the VS Code extension starts on). The
+        // TypeScript and JavaScript projects come last (see ScriptProjects).
+        var solutionPaths = OrderShallowestFirst(SolutionFiles(EnumerateFiles(rootPaths, "*.sln*")));
         var bicepPaths = BicepEntryPoints.Find(
             OrderShallowestFirst(EnumerateFiles(rootPaths, "*.bicep")),
             File.ReadAllText
         );
-        Log.Info("Model file paths", solutionPaths, bicepPaths);
-        return [.. solutionPaths, .. bicepPaths];
+        var scriptPaths = ScriptProjects.Find(
+            OrderShallowestFirst([
+                .. EnumerateFiles(rootPaths, "tsconfig.json"),
+                .. EnumerateFiles(rootPaths, "jsconfig.json"),
+            ]),
+            OrderShallowestFirst(EnumerateFiles(rootPaths, "package.json")),
+            File.ReadAllText,
+            folder =>
+                ScriptProjects.HasSourceFiles(folder, (f, isSkippedFolder) =>
+                    EnumerateFiles([f], isSkippedFolder: isSkippedFolder)
+                )
+        );
+        Log.Info("Model file paths", solutionPaths, bicepPaths, scriptPaths);
+        return [.. solutionPaths, .. bicepPaths, .. scriptPaths];
+    }
+
+    // The solutions among the paths: .sln and .slnx files, but of an .slnx with an .sln of the same
+    // name in its folder only the .sln. Migrating a solution (dotnet sln migrate, Visual Studio's
+    // Save As .slnx) leaves the old .sln beside the new one, both with the same projects, and a
+    // workspace model with both would hold every project twice. The .sln wins since its model
+    // is the one the user has worked in (its layout, and its key among the workspace model's
+    // sources); the .slnx takes over once the .sln is deleted.
+    internal static IEnumerable<string> SolutionFiles(IEnumerable<string> paths)
+    {
+        var solutions = paths.Where(ModelPaths.IsSolution).ToList();
+        var comparer =
+            OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+        var classicNames = solutions
+            .Where(path => !ModelPaths.IsSlnx(path))
+            .Select(path => path[..^".sln".Length])
+            .ToHashSet(comparer);
+        return solutions.Where(path => !ModelPaths.IsSlnx(path) || !classicNames.Contains(path[..^".slnx".Length]));
     }
 
     static List<string> OrderShallowestFirst(IEnumerable<string> paths) =>
@@ -55,6 +95,8 @@ class WorkspaceFileService : IWorkspaceFileService
         Log.Info("Set workspace folders ", paths);
         rootPaths = paths;
     }
+
+    public Task<IReadOnlyList<string>> GetWorkspaceFoldersAsync() => Task.FromResult(rootPaths);
 
     public async Task<Result<string>> ReadSourceFileAsync(string path)
     {
@@ -77,10 +119,12 @@ class WorkspaceFileService : IWorkspaceFileService
         return fullPath.StartsWith(folder, comparison);
     }
 
-    static IEnumerable<string> EnumerateFiles(IReadOnlyList<string> roots, string searchPattern = "*")
+    static IEnumerable<string> EnumerateFiles(
+        IReadOnlyList<string> roots,
+        string searchPattern = "*",
+        Func<string, bool>? isSkippedFolder = null
+    )
     {
-        Log.Info("Enumerate:");
-        roots.ForEach(r => Log.Info("Enum", r));
         var pending = new Stack<string>();
         roots.ForEach(pending.Push);
 
@@ -136,7 +180,11 @@ class WorkspaceFileService : IWorkspaceFileService
                 var name = Path.GetFileName(subDir);
 
                 // Skip some common build/tooling dirs
-                if (name.StartsWith('.') || IgnoredDirectoryNames.Contains(name))
+                if (
+                    name.StartsWith('.')
+                    || IgnoredDirectoryNames.Contains(name)
+                    || isSkippedFolder?.Invoke(name) == true
+                )
                     continue;
 
                 // Skip symlink/junction directories (avoid following symlinks)

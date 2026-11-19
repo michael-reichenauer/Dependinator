@@ -1,6 +1,7 @@
 using System.Globalization;
 using Dependinator.UI.Diagrams.Icons;
 using Dependinator.UI.Diagrams.Interaction;
+using Dependinator.UI.Diagrams.Problems;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared.Types;
 using static Dependinator.UI.Diagrams.Svg.SvgText;
@@ -77,7 +78,7 @@ static class NodeSvg
         var selectedOverlay = SelectedNodeSvg(node, nodeCanvasRect, isEditing);
 
         var innerGeometry = new Rect(0, 0, nodeCanvasRect.Width, nodeCanvasRect.Height);
-        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node));
+        var hoverGroup = BuildHoverGroup(elementId, hoverClass, innerGeometry, TitleName(node), isOpen: true);
         var textZoom = TextZoom(parentZoom);
         var descriptionFontSize = DescriptionFontSize * textZoom;
         var descriptionY = header.TextPos.Y + header.FontSize + DescriptionLineGap * textZoom;
@@ -105,7 +106,7 @@ static class NodeSvg
               {childrenContent}
             </svg>
             <use href="#{iconId}" x="{header.IconPos.X:0.##}" y="{header.IconPos.Y:0.##}" width="{header.IconSize:0.##}" height="{header.IconSize:0.##}" {textOpacity}/>
-            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
+            <text x="{header.TextPos.X:0.##}" y="{header.TextPos.Y:0.##}" class="nodeName" data-tip-label="{elementId}" dominant-baseline="hanging" font-size="{header.FontSize:0.##}px" {textOpacity}>{node.HtmlDisplayName}</text>
             {descriptionSvg}
             {selectedOverlay}
             {ManualMarkerSvg(
@@ -268,17 +269,30 @@ static class NodeSvg
         Rect geometry,
         string htmlName,
         string extraContent = "",
-        bool isLinePreview = false
+        bool isLinePreview = false,
+        bool isOpen = false,
+        double headerHeight = 0
     )
     {
         // data-line-preview marks the nodes whose lines the hover preview lights (linePreview in
         // jsInterop.js): icons and member rows. Not open containers, which the pointer is
         // always over when zoomed in, so they would keep the preview on.
         var previewAttribute = isLinePreview ? " data-line-preview=\"1\"" : "";
+        // data-open marks an open container (or open type card): once it is large on screen the
+        // user looks at what is inside it, and it gets no hover card (initTooltips).
+        // data-header-height is an open type card's header strip, which keeps the hover card.
+        var openAttribute =
+            !isOpen ? ""
+            : headerHeight > 0
+                ? string.Create(
+                    CultureInfo.InvariantCulture,
+                    $" data-open=\"1\" data-header-height=\"{headerHeight:0.##}\""
+                )
+            : " data-open=\"1\"";
         return string.Create(
                 CultureInfo.InvariantCulture,
                 $"""
-                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}>
+                <g class="{cssClass}" id="{elementId}" data-name="{htmlName}"{previewAttribute}{openAttribute}>
                   <rect id="{elementId}" x="{geometry.X:0.##}" y="{geometry.Y:0.##}" width="{geometry.Width:0.##}" height="{geometry.Height:0.##}" stroke-width="1" rx="2" fill="black" fill-opacity="0" stroke="none"/>
                   {extraContent}
                 </g>
@@ -315,7 +329,46 @@ static class NodeSvg
         );
     }
 
-    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing)
+    // The amber corner brackets of a node a "go to" took the view to (HighlightService), like a
+    // viewfinder's: outside the selection's dashed frame, so the two never overlap. Drawn with
+    // the selection overlay, which every node kind (icon, container, member card, zone) already
+    // draws at its own geometry. The canvas pulses them (dep-highlight, Canvas.razor).
+    internal static string HighlightSvg(Node node, Rect geometry)
+    {
+        if (!node.IsHighlighted)
+            return "";
+
+        const double Gap = 9; // From the node edge to the brackets
+        var bounds = new Rect(geometry.X - Gap, geometry.Y - Gap, geometry.Width + 2 * Gap, geometry.Height + 2 * Gap);
+        return HighlightBracketsSvg(bounds);
+    }
+
+    // Four L-shaped corners with rounded bends around bounds (also a note's, NoteSvg).
+    internal static string HighlightBracketsSvg(Rect bounds)
+    {
+        const double StrokeWidth = 3.5;
+        const double Bend = 5; // Radius of a corner's bend
+        var (x1, y1, x2, y2) = (bounds.X, bounds.Y, bounds.X + bounds.Width, bounds.Y + bounds.Height);
+        // A quarter of the shorter side, within limits, so a bracket reads as a corner on a
+        // small member row and does not run along the whole edge of a large container.
+        var arm = Math.Clamp(Math.Min(bounds.Width, bounds.Height) * 0.25, 8, 40);
+        var path = string.Create(
+            CultureInfo.InvariantCulture,
+            $"M{x1:0.##} {y1 + arm:0.##}V{y1 + Bend:0.##}Q{x1:0.##} {y1:0.##} {x1 + Bend:0.##} {y1:0.##}H{x1 + arm:0.##}"
+                + $"M{x2 - arm:0.##} {y1:0.##}H{x2 - Bend:0.##}Q{x2:0.##} {y1:0.##} {x2:0.##} {y1 + Bend:0.##}V{y1 + arm:0.##}"
+                + $"M{x2:0.##} {y2 - arm:0.##}V{y2 - Bend:0.##}Q{x2:0.##} {y2:0.##} {x2 - Bend:0.##} {y2:0.##}H{x2 - arm:0.##}"
+                + $"M{x1 + arm:0.##} {y2:0.##}H{x1 + Bend:0.##}Q{x1:0.##} {y2:0.##} {x1:0.##} {y2 - Bend:0.##}V{y2 - arm:0.##}"
+        );
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"""<path class="dep-highlight" data-testid="node-highlight" d="{path}" fill="none" stroke="{DColors.Highlight}" stroke-width="{StrokeWidth}" stroke-linecap="round" pointer-events="none"/>"""
+        );
+    }
+
+    internal static string SelectedNodeSvg(Node node, Rect geometry, bool isEditing) =>
+        HighlightSvg(node, geometry) + SelectionSvg(node, geometry, isEditing);
+
+    static string SelectionSvg(Node node, Rect geometry, bool isEditing)
     {
         if (!node.IsSelected)
             return "";

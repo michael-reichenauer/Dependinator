@@ -51,6 +51,7 @@ static class MemberCard
         (NodeType.MethodMember, "Methods"),
         (NodeType.ParameterMember, "Parameters"),
         (NodeType.VariableMember, "Variables"),
+        (NodeType.FunctionMember, "Functions"),
         (NodeType.ResourceMember, "Resources"),
         (NodeType.OutputMember, "Outputs"),
     ];

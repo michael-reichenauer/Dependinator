@@ -164,7 +164,7 @@ class LayoutRefineService(
 
     // The container's children show and its box intersects the view.
     static bool IsVisible(IModel model, Node node) =>
-        IsChildrenShown(model, node) && ViewRect(model) is { } view && Intersects(CanvasRect(node), view);
+        IsChildrenShown(model, node) && ViewRect(model) is { } view && CanvasRect(node).Intersects(view);
 
     // The view shows only a part of the container: the user is zoomed into it.
     static bool IsViewInside(IModel model, Node node)
@@ -172,7 +172,7 @@ class LayoutRefineService(
         if (!IsChildrenShown(model, node) || ViewRect(model) is not { } view)
             return false;
         var rect = CanvasRect(node);
-        return Intersects(rect, view) && (rect.Width > view.Width || rect.Height > view.Height);
+        return rect.Intersects(view) && (rect.Width > view.Width || rect.Height > view.Height);
     }
 
     // The root always shows its children; it is a fixed frame, so its content counts as its box.
@@ -197,9 +197,6 @@ class LayoutRefineService(
         return new Rect(pos.X, pos.Y, node.Boundary.Width * zoom, node.Boundary.Height * zoom);
     }
 
-    static bool Intersects(Rect a, Rect b) =>
-        a.X < b.X + b.Width && b.X < a.X + a.Width && a.Y < b.Y + b.Height && b.Y < a.Y + a.Height;
-
     static double CanvasArea(Node node)
     {
         var rect = CanvasRect(node);
@@ -209,11 +206,10 @@ class LayoutRefineService(
     // Captures the container (under the model lock): its children keep their current sizes.
     internal static RefineJob? Begin(IModel model, Node container)
     {
-        var snapshot = LayoutSnapshot.Capture(
-            container,
-            NodeLayout.MetricsFor(container),
-            child => new Size(child.Boundary.Width, child.Boundary.Height)
-        );
+        var snapshot = LayoutSnapshot.Capture(container, NodeLayout.MetricsFor(container), child => new Size(
+            child.Boundary.Width,
+            child.Boundary.Height
+        ));
         if (snapshot is null || LayeredEngine.Prepare(snapshot.Graph) is not { } plan)
         {
             container.IsChildrenLayoutRefinePending = false;

@@ -30,10 +30,10 @@ public class TooltipTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.Keyboard.PressAsync("Shift");
         await Expect(Card).ToBeHiddenAsync();
 
-        LocatorBoundingBoxResult box = (await App.Node(AppPage.InsideMain).BoundingBoxAsync())!;
+        LocatorBoundingBoxResult box = await App.WaitForStableBoxAsync(App.Node(AppPage.InsideMain), "The node");
         await Page.Mouse.MoveAsync(box.X + box.Width / 2 - 2, box.Y + box.Height / 2);
         await Page.Mouse.MoveAsync(box.X + box.Width / 2, box.Y + box.Height / 2);
         await Expect(Card).ToBeVisibleAsync();
-        await Expect(Card).ToContainTextAsync("Method · Demo.UI.Main");
+        await Expect(Card).ToContainTextAsync("Method in Demo.UI.Main");
     }
 }

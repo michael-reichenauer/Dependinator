@@ -47,21 +47,61 @@ body {
     color: rgba(255, 255, 255, 0.32);
 }
 
-/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar. */
-.dep-breadcrumb {
+/* The breadcrumb (Breadcrumb.razor): the open model and the container chain, under the app bar.
+   While a model outside the workspace is open, a button back to the workspace leads the row. */
+.dep-breadcrumb-row {
     position: fixed;
     top: 45px;
     left: 15px;
     z-index: 1200;
     display: flex;
+    align-items: stretch;
+    gap: 6px;
+    max-width: calc(100vw - 30px);
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb {
+    display: flex;
     align-items: center;
     gap: 1px;
     padding: 1px 6px;
-    max-width: calc(100vw - 30px);
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
-    font-size: 0.8rem;
-    color: var(--mud-palette-text-primary);
+}
+
+.dep-breadcrumb-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex: none;
+    border: 0;
+    padding: 1px 9px 1px 6px;
+    font: inherit;
+    color: var(--mud-palette-primary);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dep-breadcrumb-back:hover {
+    background: var(--mud-palette-surface);
+}
+
+.dep-breadcrumb-back .dep-breadcrumb__icon {
+    color: inherit;
+}
+
+/* The kind of a model that is not the workspace's own ("cloud model"), beside its name. */
+.dep-breadcrumb__kind {
+    margin-left: 2px;
+    padding: 0 6px;
+    border-radius: 8px;
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-secondary);
+    font-weight: 400;
+    font-size: 0.72rem;
 }
 
 .dep-breadcrumb__item {
@@ -97,6 +137,37 @@ body {
 .dep-breadcrumb__sep {
     color: var(--mud-palette-text-secondary);
     padding: 0 1px;
+}
+
+/* A model in the Models menu (ModelMenuItems.razor): its name, then its folder or kind at the
+   right edge, cut from the left when it is long (the end of a path says the most). */
+.dep-model-item {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    width: 100%;
+}
+
+.dep-model-item > :first-child {
+    flex: 1;
+}
+
+/* Right to left only to put the ellipsis at the start; the text is in a <bdi>, or a folder that
+   begins with a dot (".azure/infra") would show the dot at its end. */
+.dep-model-item__sub {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: rtl;
+    font-size: 0.8rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.dep-model-item__synced {
+    align-self: center;
+    font-size: 1rem !important;
+    color: var(--mud-palette-text-secondary);
 }
 
 /* The legend card (Legend.razor), bottom-left over the diagram. */
@@ -486,6 +557,11 @@ body {
     min-width: 110px;
 }
 
+.dep-settings__number {
+    flex: 0 0 140px;
+    margin: 0;
+}
+
 .dep-settings__hint {
     font-size: 0.75rem;
     color: var(--mud-palette-text-secondary);
@@ -514,10 +590,12 @@ body {
     min-width: 0;
 }
 
-/* The Copilot provider's model (VS Code only), under its row, in line with its name. */
+/* A provider's model (Claude's, Claude Code's, Copilot's in VS Code), under its row, in line with
+   its name; one width, whatever the picked model's name. */
 .dep-ai-settings__model {
     margin: 0 0 6px 66px;
-    max-width: 320px;
+    width: 320px;
+    max-width: calc(100% - 66px);
 }
 
 /* "Ask Claude": its sparkle in Claude's coral, and a small spinner while asking. */
@@ -859,6 +937,74 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* The sources of a workspace model (WorkspaceSourcesDialog.razor): a checkbox row per source. */
+.dep-sources {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.dep-sources__row {
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    min-width: 0;
+}
+
+/* The name and folder beside the checkbox: a click on them ticks it too. */
+.dep-sources__name {
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    cursor: pointer;
+    min-width: 0;
+}
+
+.dep-sources__row:hover {
+    background: var(--mud-palette-action-default-hover);
+}
+
+.dep-sources__folder {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+/* "Shown in" of a source in the model (WorkspaceSourcesDialog): a place the user chose is amber */
+.dep-sources__place {
+    flex: 0 0 auto;
+    width: 230px;
+    max-width: 45%;
+    margin-left: 8px;
+}
+
+.dep-sources__place .mud-input {
+    font-size: 0.8rem;
+}
+
+.dep-sources__place-list {
+    max-width: min(420px, 90vw);
+}
+
+/* A project of a source, below the source in the list */
+.dep-sources__place-item--project {
+    padding-left: 32px !important;
+}
+
+.dep-sources__place--chosen .mud-input {
+    color: var(--mud-palette-warning-darken);
+}
+
+.dep-sources__count {
+    padding-left: 16px;
 }
 
 /* The mode banner (ModeBanner.razor): centered under the app bar while a mode is armed. */
@@ -1315,17 +1461,144 @@ button.dep-rules__node:hover {
     --mud-palette-secondary: #5e35b1; /* DeepPurple Darken1 — menu item icons */
 }
 
-/* Compact floating toolbars (node/note/line): MudBlazor's smallest button-group
-   preset yields ~35px buttons (its override-styles rule sets padding 6px 8px and
-   a 5-class rule sets the icon to 1.422rem); shrink both to get ~20px buttons.
-   The doubled .dep-mini-toolbar outweighs those rules regardless of stylesheet
-   load order. */
-.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root {
-    padding: 2px;
+/* The floating toolbars over a selected node, note or line (NodeToolbar.razor, LineToolbar.razor):
+   one card with grey icons that turn purple under the pointer, and thin dividers between the
+   button groups only (Michael, Nov 13 2026; the earlier MudButtonGroup put a purple divider
+   between every button). Buttons are 28 px, also for touch on the iPad. */
+.dep-float-toolbar {
+    /* Above the canvas also while a pan or zoom moves it by a CSS transform, which paints the
+       canvas in the positioned layer, after the toolbars (GestureTransform). */
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    padding: 3px;
+    background: #ffffff;
+    border: 1px solid rgba(24, 20, 48, 0.1);
+    border-radius: 9px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 16px rgba(30, 20, 60, 0.12);
 }
-.mud-button-group-root.dep-mini-toolbar.dep-mini-toolbar .mud-button-root .mud-icon-root {
-    font-size: 1rem;
+
+:root[data-theme="dark"] .dep-float-toolbar {
+    background: #25272c;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.45);
 }
+
+.dep-float-toolbar .mud-icon-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 6px;
+}
+
+.dep-float-toolbar .mud-icon-button .mud-icon-root {
+    font-size: 18px;
+}
+
+/* Grey at rest; error (delete), warning (done arranging) and disabled buttons keep their color. */
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled) {
+    color: #4a4d57;
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled) {
+    color: #c9ccd4;
+}
+
+.dep-float-toolbar .mud-icon-button:not(.mud-disabled):hover,
+.dep-float-toolbar .mud-icon-button:not(.mud-disabled):focus-visible {
+    background: rgba(94, 53, 177, 0.1);
+}
+
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled):hover,
+.dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled):focus-visible {
+    color: #5e35b1;
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-disabled):hover,
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-disabled):focus-visible {
+    background: rgba(179, 157, 219, 0.18);
+}
+
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled):hover,
+:root[data-theme="dark"] .dep-float-toolbar .mud-icon-button:not(.mud-error-text):not(.mud-warning-text):not(.mud-disabled):focus-visible {
+    color: #d1c4e9;
+}
+
+/* A divider between two groups of buttons. Groups come and go with the selection and the edit
+   mode, so a divider with no button before or after it, or right after another, is not drawn. */
+.dep-toolbar-sep {
+    flex: none;
+    width: 1px;
+    height: 18px;
+    margin: 0 4px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+:root[data-theme="dark"] .dep-toolbar-sep {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.dep-toolbar-sep:not(:not(.dep-toolbar-sep) ~ .dep-toolbar-sep),
+.dep-toolbar-sep:not(:has(~ :not(.dep-toolbar-sep))),
+.dep-toolbar-sep + .dep-toolbar-sep {
+    display: none;
+}
+
+/* A selected line's end tag (LineEndTags.razor): at the edge of the view where the line leaves
+   toward an end that is out of view, naming that end's node; a click goes there. Drawn like the
+   floating toolbars, moved into the view by its own size on the side the line leaves by. */
+.dep-line-end-tag {
+    position: fixed;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 220px;
+    padding: 3px 9px;
+    font: 500 12px/18px var(--mud-typography-default-family, sans-serif);
+    color: #4a4d57;
+    background: #ffffff;
+    border: 1px solid rgba(24, 20, 48, 0.12);
+    border-radius: 13px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(30, 20, 60, 0.12);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.dep-line-end-tag:hover,
+.dep-line-end-tag:focus-visible {
+    color: #5e35b1;
+    border-color: rgba(94, 53, 177, 0.4);
+    outline: none;
+}
+
+:root[data-theme="dark"] .dep-line-end-tag {
+    color: #c9ccd4;
+    background: #25272c;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme="dark"] .dep-line-end-tag:hover,
+:root[data-theme="dark"] .dep-line-end-tag:focus-visible {
+    color: #d1c4e9;
+    border-color: rgba(179, 157, 219, 0.5);
+}
+
+.dep-line-end-tag .mud-icon-root {
+    font-size: 15px;
+}
+
+.dep-line-end-tag-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dep-line-end-tag-left { transform: translate(0, -50%); }
+.dep-line-end-tag-right { transform: translate(-100%, -50%); }
+.dep-line-end-tag-top { transform: translate(-50%, 0); }
+.dep-line-end-tag-bottom { transform: translate(-50%, -100%); }
 
 /* Cloud sync indicator: while the app is determining the cloud auth state on
    startup (waiting for Clerk.js to load and the first /auth/me call), the cloud
@@ -1523,6 +1796,93 @@ button.dep-rules__node:hover {
     border-color: var(--mud-palette-primary);
 }
 
+.dep-ask__examples-title {
+    margin-top: 4px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.dep-ask__examples-more {
+    margin-top: 2px;
+}
+
+.dep-ask__about {
+    margin-bottom: 4px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.75rem;
+}
+
+.dep-about__ask {
+    margin-top: 14px;
+}
+
+.dep-about__ask-title {
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+/* The change an answer proposes, with the button that has an AI make it. */
+.dep-ask__change {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--mud-palette-lines-default);
+}
+
+/* What the question is about: a chip per selected node, and "with everything inside". */
+.dep-ask__context {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 6px;
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.dep-ask__chip {
+    display: inline-flex;
+    align-items: center;
+    max-width: 150px;
+    padding: 1px 4px 1px 9px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-ask__chip--more {
+    padding-right: 9px;
+}
+
+.dep-ask__chip-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dep-ask__chip-remove {
+    padding: 0 4px;
+    border: none;
+    background: none;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--mud-palette-text-secondary);
+    cursor: pointer;
+}
+
+.dep-ask__chip-remove:hover {
+    color: var(--mud-palette-text-primary);
+}
+
+.dep-ask__below {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
 .dep-ask__question {
     font-weight: 600;
     white-space: pre-line;
@@ -1587,6 +1947,10 @@ button.dep-rules__node:hover {
     align-items: center;
     color: var(--mud-palette-text-secondary);
     font-size: 0.75rem;
+}
+
+.dep-ask__other-note {
+    margin-top: 4px;
 }
 
 .dep-ask__steps {
@@ -1699,6 +2063,12 @@ button.dep-rules__node:hover {
     margin: 0 4px;
 }
 
+/* "outside" before a container's name, for a line that crosses the container's border. */
+.dep-tt-outside {
+    color: var(--dep-tt-muted);
+    font-weight: 400;
+}
+
 .dep-tt-kind,
 .dep-tt-more {
     color: var(--dep-tt-muted);
@@ -1718,6 +2088,11 @@ button.dep-rules__node:hover {
     overflow: hidden;
 }
 
+/* A line label's description, which the canvas cuts to three rows, is shown up to 20. */
+.dep-tt-desc.dep-tt-full {
+    -webkit-line-clamp: 20;
+}
+
 .dep-tt-code,
 .dep-tooltip code {
     font-family: "JetBrains Mono", Consolas, monospace;
@@ -1728,7 +2103,15 @@ button.dep-rules__node:hover {
 
 .dep-tt-code {
     margin-top: 6px;
-    padding: 2px 5px;
+    /* A declaration that wraps continues indented, like formatted code. */
+    padding: 2px 5px 2px 21px;
+    text-indent: -16px;
+    color: var(--dep-tt-muted);
+}
+
+.dep-tt-code b {
+    color: var(--dep-tt-fg);
+    font-weight: 600;
 }
 
 .dep-tooltip code {
@@ -1741,16 +2124,18 @@ button.dep-rules__node:hover {
     border-top: 1px solid var(--dep-tt-line);
 }
 
+/* A link's two ends side by side, the target below when both do not fit (long member names). */
 .dep-tt-link {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 12px;
+    column-gap: 12px;
     font-size: 12px;
 }
 
 .dep-tt-link span {
     color: var(--dep-tt-muted);
-    white-space: nowrap;
+    margin-left: auto;
 }
 
 .dep-tt-row {

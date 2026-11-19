@@ -13,6 +13,10 @@ record ModelItem(
     bool IsDemo = false
 );
 
+// A model of the workspace as the Models menu lists it, with the folder that tells files of one
+// name apart (see WorkspaceModels.RelativeFolders).
+record WorkspaceModel(ModelItem Item, string Folder);
+
 interface IModelListService
 {
     Task InitAsync();
@@ -21,11 +25,39 @@ interface IModelListService
     IReadOnlyList<string> LocalPaths { get; }
     IReadOnlyList<string> CloudPaths { get; }
 
-    // The built-in demo models offered where nothing else can be opened (see DemoModel.ListedPaths).
+    // The built-in demo models.
     IReadOnlyList<string> DemoPaths { get; }
     string? LastUsedPath { get; }
     string? StartupPath { get; }
     bool IsLocalPath(string path);
+
+    // Whether this host shows the solutions and Bicep files of a folder (VS Code, the dev host).
+    // There the workspace's models are what the user switches between, and a cloud, design or
+    // demo model is a visit; the browser app has no workspace, only such models.
+    bool HasWorkspace { get; }
+    bool IsWorkspacePath(string path);
+    IReadOnlyList<WorkspaceModel> GetWorkspaceModels();
+
+    // The path of the model of the whole workspace: the sources found in the workspace folder
+    // that the user chose, in one diagram. Null without a workspace folder. It is listed among
+    // the workspace's models with two or more sources; with one it would be the same as that
+    // source's own model. Listed or not, it is a workspace path and a local path (it is
+    // parsed here) while there is a source: a model that is open stays what it is when a source
+    // is removed.
+    string? WorkspaceModelPath { get; }
+
+    // The sources found in the workspace (solutions, Bicep deployments, script projects), which
+    // its workspace model can be made of, and the folder their keys are relative to.
+    IReadOnlyList<string> WorkspaceSourcePaths { get; }
+    string WorkspaceFolder { get; }
+
+    // Lists the workspace's sources again: a project can have been added since the start.
+    Task RefreshWorkspaceSourcesAsync();
+
+    // The model that is open when it is none of the workspace's (null in a host without a
+    // workspace), and the workspace model to go back to from it: the one used last.
+    ModelItem? GetVisitedModel(string currentPath);
+    string? HomePath { get; }
 
     IReadOnlyList<ModelItem> GetModelItems();
 
@@ -45,33 +77,130 @@ class ModelListService(
     IReadOnlyList<string> recentPaths = [];
     IReadOnlyList<string> localPaths = [];
     IReadOnlyList<string> cloudPaths = [];
+    IReadOnlyList<string> workspacePaths = [];
+    IReadOnlyList<string> workspaceSourcePaths = [];
+    string workspaceFolder = "";
+    HashSet<string> workspaceKeys = new(StringComparer.OrdinalIgnoreCase);
+    string? lastWorkspacePath;
 
     public IReadOnlyList<string> RecentModelPaths => recentPaths;
     public IReadOnlyList<string> LocalPaths => localPaths;
     public IReadOnlyList<string> CloudPaths => cloudPaths;
-    public IReadOnlyList<string> DemoPaths => DemoModel.ListedPaths;
+    public IReadOnlyList<string> DemoPaths => DemoModel.DemoNames;
     public string? LastUsedPath => recentPaths.Any() ? recentPaths[0] : null;
 
     // The model to show when the app starts. Browser hosts resume the most recently used
-    // model, but the VS Code extension is opened for a specific workspace, so it starts on
-    // that workspace's solution instead of a model last used in some other workspace. The
-    // last used model is still kept when it is one of this workspace's solutions, since a
-    // workspace can contain several.
-    public string? StartupPath
+    // model, but the VS Code extension is opened for a specific workspace (WorkspaceStartupPath).
+    public string? StartupPath => Build.IsVsCodeExtWasm ? WorkspaceStartupPath : MigratedSlnx(LastUsedPath);
+
+    // An .sln of the workspace that was migrated to an .slnx of the same name and deleted (as
+    // this repository's own solution was) starts on the .slnx, which takes over the .sln's saved
+    // model on its first open (SlnxMigration), not on the gone .sln, which no longer parses.
+    // VS Code needs no such step: it starts on a model the workspace still has.
+    internal string? MigratedSlnx(string? path) =>
+        path is not null
+        && ModelPaths.IsSolution(path)
+        && !ModelPaths.IsSlnx(path)
+        && !IsWorkspacePath(path)
+        && IsWorkspacePath(path + "x")
+            ? path + "x"
+            : path;
+
+    // A workspace starts on the model of it that was used last, not on one last used in some
+    // other workspace (the recent paths are shared by all of them). A workspace that has none
+    // starts on the model of the whole workspace, which first asks what it is made of (decided
+    // with Michael, Nov 13 2026), or with a single source on that source.
+    internal string? WorkspaceStartupPath =>
+        recentPaths.FirstOrDefault(IsLocalPath)
+        ?? ListedWorkspaceModelPath
+        ?? localPaths.FirstOrDefault()
+        ?? LastUsedPath;
+
+    public bool IsLocalPath(string path) => LocalPaths.Contains(path) || IsUsableWorkspaceModel(path);
+
+    public bool HasWorkspace => Build.IsVsCodeExtWasm || Build.IsWeb;
+
+    public bool IsWorkspacePath(string path) =>
+        !string.IsNullOrWhiteSpace(path)
+        && (workspaceKeys.Contains(global::Shared.CloudModelPath.Normalize(path)) || IsUsableWorkspaceModel(path));
+
+    // The workspace model, listed or not, while there is a source to parse it from: without
+    // one it is like a model of another folder, a visit that shows what was saved.
+    bool IsUsableWorkspaceModel(string path) => workspaceSourcePaths.Count > 0 && IsSamePath(path, WorkspaceModelPath);
+
+    public string? WorkspaceModelPath =>
+        HasWorkspace && workspaceFolder != "" ? ModelPaths.WorkspacePath(workspaceFolder) : null;
+
+    // The workspace model when it is one of the models to switch between.
+    string? ListedWorkspaceModelPath => workspaceSourcePaths.Count >= 2 ? WorkspaceModelPath : null;
+
+    public IReadOnlyList<string> WorkspaceSourcePaths => workspaceSourcePaths;
+    public string WorkspaceFolder => workspaceFolder;
+
+    public IReadOnlyList<WorkspaceModel> GetWorkspaceModels()
     {
-        get
-        {
-            if (!Build.IsVsCodeExtWasm)
-                return LastUsedPath;
+        var items = GetModelItems();
+        var folders = WorkspaceModels.RelativeFolders(workspacePaths);
 
-            if (LastUsedPath is not null && IsLocalPath(LastUsedPath))
-                return LastUsedPath;
+        // The workspace's own spelling of the path, not that of an equal recent path:
+        // parsing and the startup model compare paths exactly.
+        WorkspaceModel ToModel(string path, string folder) =>
+            new(
+                (items.FirstOrDefault(i => IsSamePath(i.Path, path)) ?? ToLocalItem(path)) with
+                {
+                    Path = path,
+                    DisplayName = ModelPaths.DisplayName(path),
+                },
+                folder
+            );
 
-            return localPaths.FirstOrDefault() ?? LastUsedPath;
-        }
+        // The model of the whole workspace comes first, before the models of its single sources.
+        return
+        [
+            .. ListedWorkspaceModelPath is { } workspaceModelPath
+                ? new[] { ToModel(workspaceModelPath, WorkspaceModels.WholeWorkspace) }
+                : [],
+            .. workspacePaths.Select((path, index) => ToModel(path, folders[index])),
+        ];
     }
 
-    public bool IsLocalPath(string path) => LocalPaths.Contains(path);
+    public ModelItem? GetVisitedModel(string currentPath)
+    {
+        if (!HasWorkspace || string.IsNullOrWhiteSpace(currentPath) || IsWorkspacePath(currentPath))
+            return null;
+
+        // A model opened by a share link is in none of the lists.
+        return GetModelItems().FirstOrDefault(i => IsSamePath(i.Path, currentPath)) ?? ToLocalItem(currentPath);
+    }
+
+    // The recent paths are shared by every window of the app, so what this one opened last wins.
+    // (What was opened last can have stopped being a workspace model: its last source is gone.)
+    public string? HomePath =>
+        (lastWorkspacePath is { } last && IsWorkspacePath(last) ? last : null)
+        ?? recentPaths.FirstOrDefault(IsWorkspacePath)
+        ?? (Build.IsVsCodeExtWasm ? ListedWorkspaceModelPath : null) // Where VS Code starts too
+        ?? workspacePaths.FirstOrDefault();
+
+    // Whether two model paths are of one model: paths are compared as the cloud names them, so
+    // the case of a drive letter or the kind of slash makes no difference.
+    public static bool IsSamePath(string? path1, string? path2) =>
+        !string.IsNullOrWhiteSpace(path1)
+        && !string.IsNullOrWhiteSpace(path2)
+        && string.Equals(
+            global::Shared.CloudModelPath.Normalize(path1),
+            global::Shared.CloudModelPath.Normalize(path2),
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    static ModelItem ToLocalItem(string path) =>
+        new(
+            path,
+            ModelPaths.DisplayName(path),
+            IsLocal: true,
+            IsCloud: false,
+            CloudModel: null,
+            IsDemo: DemoModel.IsDemo(path)
+        );
 
     public IReadOnlyList<ModelItem> GetModelItems()
     {
@@ -84,14 +213,7 @@ class ModelListService(
             if (itemsByNormalizedPath.ContainsKey(normalizedPath))
                 return;
 
-            itemsByNormalizedPath[normalizedPath] = new ModelItem(
-                path,
-                Path.GetFileName(path),
-                IsLocal: true,
-                IsCloud: false,
-                CloudModel: null,
-                IsDemo: DemoModel.IsDemo(path)
-            );
+            itemsByNormalizedPath[normalizedPath] = ToLocalItem(path);
             orderedNormalizedPaths.Add(normalizedPath);
         }
 
@@ -114,7 +236,7 @@ class ModelListService(
 
             itemsByNormalizedPath[normalizedPath] = new ModelItem(
                 cloudModel.NormalizedPath,
-                Path.GetFileName(cloudModel.NormalizedPath),
+                ModelPaths.DisplayName(cloudModel.NormalizedPath),
                 IsLocal: false,
                 IsCloud: true,
                 CloudModel: cloudModel
@@ -129,16 +251,11 @@ class ModelListService(
     {
         recentPaths = (await configService.GetAsync()).RecentPaths;
         cloudPaths = GetCloudPaths();
-        // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
-        // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
-        localPaths =
-            Build.IsVsCodeExtWasm ? await workspaceFileService.GetModelFilePathsAsync()
-            : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. await workspaceFileService.GetModelFilePathsAsync()]
-            : [];
-        localPaths = localPaths.Distinct().ToList();
+        await RefreshWorkspaceSourcesAsync();
 
-        // Seed recent paths with the first available model (cloud for standalone Wasm)
-        if (!recentPaths.Any())
+        // Seed recent paths with the first available model (cloud for standalone Wasm). Not in
+        // VS Code: a workspace there starts on the whole workspace (WorkspaceStartupPath).
+        if (!recentPaths.Any() && !Build.IsVsCodeExtWasm)
         {
             var defaultPaths = Build.IsStandaloneWasm ? cloudPaths : localPaths;
             if (defaultPaths.Any())
@@ -148,8 +265,62 @@ class ModelListService(
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
     }
 
+    public async Task RefreshWorkspaceSourcesAsync()
+    {
+        // (No answer is not "no sources": what was found before stands. That holds for a call
+        // that fails too, since this runs before a parse, which must not fail for the list. A
+        // failed call changes neither the paths nor the folder.)
+        if (!HasWorkspace)
+        {
+            workspaceSourcePaths = [];
+            workspaceFolder = "";
+        }
+        else
+        {
+            try
+            {
+                var paths = await workspaceFileService.GetModelFilePathsAsync();
+                var folders = await workspaceFileService.GetWorkspaceFoldersAsync();
+                workspaceSourcePaths = paths ?? workspaceSourcePaths;
+                workspaceFolder = folders is not null ? folders.FirstOrDefault() ?? "" : workspaceFolder;
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Failed to list the workspace's sources");
+            }
+        }
+
+        // Standalone Wasm has no local models. The Blazor Server host keeps the working solution
+        // first and adds whatever else its workspace folder holds (e.g. sample Bicep deployments).
+        IReadOnlyList<string> sourceModelPaths =
+            Build.IsVsCodeExtWasm ? workspaceSourcePaths
+            : Build.IsWeb ? [DemoModel.WorkingSolutionPath, .. workspaceSourcePaths]
+            : [];
+        sourceModelPaths = sourceModelPaths.Distinct().ToList();
+
+        // The workspace model is a local model too (it is parsed here), but it comes last: the
+        // first local path is the working solution in the dev host (VS Code starts a new
+        // workspace on the whole workspace: WorkspaceStartupPath).
+        localPaths = ListedWorkspaceModelPath is { } workspaceModelPath
+            ? [.. sourceModelPaths, workspaceModelPath]
+            : sourceModelPaths;
+
+        // The test host opens the embedded demo instead of parsing the working solution, so there
+        // the demo stands in for it as the workspace's first model.
+        workspacePaths =
+            !HasWorkspace ? []
+            : Build.IsTestMode ? [DemoModel.Path, .. sourceModelPaths]
+            : sourceModelPaths;
+        workspaceKeys = workspacePaths
+            .Select(global::Shared.CloudModelPath.Normalize)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task AddModelAsync(string path)
     {
+        if (IsWorkspacePath(path))
+            lastWorkspacePath = path;
+
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Prepend(path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());
@@ -157,6 +328,10 @@ class ModelListService(
 
     public async Task RemoveModelAsync(string path)
     {
+        // Not the model to go back to any more (HomePath)
+        if (IsSamePath(lastWorkspacePath, path))
+            lastWorkspacePath = null;
+
         recentPaths = (await configService.GetAsync()).RecentPaths;
         recentPaths = recentPaths.Where(rp => rp != path).Distinct().Take(RecentCount).ToList();
         await configService.SetAsync(c => c.RecentPaths = recentPaths.ToList());

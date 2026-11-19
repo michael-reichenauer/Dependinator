@@ -4,10 +4,12 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <AppBar />
+<AppNotifications />
 <Breadcrumb />
 <ModeBanner />
 <NodeToolbar />
 <LineToolbar />
+<LineEndTags />
 <ManualNodeNameEntry />
 <ContextMenu />
 <DependenciesTree />
@@ -25,11 +27,19 @@
 <AppProgress />
 
 
+@{
+    var view = TakeView();
+}
 <div @ref="dropZoneElement" class="drop-zone">
     <InputFile id="inputfile" hidden="true" OnChange="LoadFiles" multiple @ref="inputFile" />
 
-    <svg id="svgcanvas" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="@Width" height="@Height" viewBox="@ViewBox" style="background-color:@DColors.CanvasBackground">
+    @* The frame clips the svg while a gesture moves it by a transform (GestureTransform), and its
+       canvas color fills what the moved svg leaves uncovered. It is where the canvas is on the
+       page: pointer offsets and the canvas rect are measured on it, not on the moved svg. *@
+    <div id="@CanvasFrameId" class="canvas-frame"
+         style="width:@(Width)px;height:@(Height)px;background-color:@DColors.CanvasBackground">
+    <svg id="svgcanvas" class="@SvgClass" @ref=@Ref xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="@Width" height="@Height" viewBox="@view.ViewBox" style="background-color:@DColors.CanvasBackground;@view.Style">
 
         <style>
                     svg {
@@ -71,34 +81,75 @@
                         opacity: 1;
                     }
 
-                    .selectpoint:hover * {
+                    /* A go to's corner brackets (NodeSvg.HighlightSvg) pulse twice as the view
+                       lands, then stay until the user's next action (HighlightService). */
+                    .dep-highlight-pulsing .dep-highlight {
+                        animation: dep-highlight-pulse 0.75s ease-in-out 2;
+                    }
+
+                    @@media (prefers-reduced-motion: reduce) {
+                        .dep-highlight-pulsing .dep-highlight {
+                            animation: none;
+                        }
+                    }
+
+                    @@keyframes dep-highlight-pulse {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0.15; }
+                    }
+
+                    .selectpoint:hover *,
+                    .line-label-handle:hover {
                         fill: #51b8fc;
                         stroke-width: 1px;
                         fill-opacity: 0.3;
                     }
 
-                    /* Drag-to-link handle: hidden until its node is hovered; pointer-events off
-                       while hidden so it never steals presses or elementFromPoint hit tests. */
+                    /* Drag-to-link handle: hidden until the pointer has rested on its node for
+                       a moment, then a quiet grey outline that turns blue under the pointer, so
+                       it does not flash while the pointer just passes over nodes. Hidden means
+                       visibility: hidden and no pointer events, so it never steals presses or
+                       elementFromPoint hit tests (pointer-events "visible" follows visibility;
+                       "all" would not). */
                     .linkhandle {
                         opacity: 0;
+                        visibility: hidden;
                         pointer-events: none;
                     }
 
                     .hoverable:hover .linkhandle {
                         opacity: 1;
-                        pointer-events: all;
+                        visibility: visible;
+                        pointer-events: visible;
                         cursor: crosshair;
+                        transition: opacity 0.15s ease 0.5s, visibility 0s linear 0.5s;
                     }
 
-                    /* Cancel the generic hover stroke on the handle dot and touch ellipse (the
-                       plus glyph path keeps its own white stroke). */
-                    .hoverable:hover .linkhandle circle,
+                    /* Replace the generic hover stroke on the handle dot with the quiet look,
+                       and cancel it on the touch ellipse. */
+                    .hoverable:hover .linkhandle circle {
+                        fill: @DColors.CanvasBackground;
+                        stroke: @DColors.CardMutedText;
+                        stroke-width: 1px;
+                    }
+
                     .hoverable:hover .linkhandle ellipse {
                         stroke: none;
                         stroke-width: 0;
                     }
 
                     .hoverable:hover .linkhandle path {
+                        stroke: @DColors.CardMutedText;
+                        stroke-width: 1.2px;
+                    }
+
+                    .hoverable:hover .linkhandle:hover circle {
+                        fill: @DColors.Selected;
+                        stroke: none;
+                        stroke-width: 0;
+                    }
+
+                    .hoverable:hover .linkhandle:hover path {
                         stroke: white;
                         stroke-width: 0.8px;
                     }
@@ -308,8 +359,10 @@
             </marker>
             @((MarkupString)IconDefs)
         </defs>
-        @((MarkupString)Content)
+        @((MarkupString)view.Content)
+        @((MarkupString)view.Guides)
     </svg>
+    </div>
 
     @if (manualEditService.IsLinkDragActive)
     {

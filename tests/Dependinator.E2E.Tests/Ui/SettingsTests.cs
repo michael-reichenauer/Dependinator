@@ -90,6 +90,121 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
         await CloseCycleReviewAsync();
     }
 
+    // Settings › AI: each of Claude's routes has a model picker (the API key's models, in test
+    // mode a fixed list; Claude Code's aliases or a typed name), and the picks are kept.
+    [E2EFact]
+    public async Task AiSettings_ShouldKeepTheModelsPickedForClaudeAndClaudeCode()
+    {
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.OpenSettingsAsync();
+        ILocator claudeModel = Page.GetByTestId("ai-settings-claude-model-row");
+        ILocator codeModel = Page.GetByTestId("ai-settings-claude-code-model-row");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "");
+        await Expect(claudeModel).ToContainTextAsync("Automatic");
+        // Claude Code's model shows only once the route is on.
+        await Expect(codeModel).ToHaveCountAsync(0);
+
+        await PickModelAsync(claudeModel, "Claude Sonnet 5.5");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "claude-sonnet-5-5");
+        await App.CloseSettingsAsync();
+
+        await App.SetAiSettingsAsync(useClaudeCode: true);
+        await App.OpenSettingsAsync();
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "claude-sonnet-5-5");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "");
+        await PickModelAsync(codeModel, "Opus (latest)");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "opus");
+
+        // Another model is typed by name.
+        ILocator name = Page.GetByTestId("ai-settings-claude-code-model-name");
+        await Expect(name).ToHaveCountAsync(0);
+        await PickModelAsync(codeModel, "Another model");
+        await App.FillReliablyAsync(name, "claude-opus-5-5");
+        await name.PressAsync("Tab");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "claude-opus-5-5");
+        await App.CloseSettingsAsync();
+
+        await App.OpenSettingsAsync();
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "claude-opus-5-5");
+        await Expect(name).ToHaveValueAsync("claude-opus-5-5");
+
+        // Back to the defaults, for the tests that share the app's settings.
+        await PickModelAsync(codeModel, "Automatic");
+        await Expect(codeModel).ToHaveAttributeAsync("data-value", "");
+        await PickModelAsync(claudeModel, "Automatic");
+        await Expect(claudeModel).ToHaveAttributeAsync("data-value", "");
+        await Page.GetByTestId("ai-settings-use-claude-code").ClickAsync();
+        await Expect(codeModel).ToHaveCountAsync(0);
+        await App.CloseSettingsAsync();
+    }
+
+    // Settings › AI: the page "Open claude.ai" goes to after a prompt is copied is claude.ai's new
+    // chat unless another web address is set (a Claude Code project, say); one that is no web
+    // address is not saved.
+    [E2EFact]
+    public async Task AiSettings_ShouldOpenCopiedPromptsInThePageSet()
+    {
+        const string ProjectUrl = "https://claude.ai/code/project/chan_0123456789abcdef";
+        await Page.AddInitScriptAsync(
+            "Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {"
+                + " writeText: text => { window.__copiedText = text; return Promise.resolve(); } } });"
+                + " window.open = url => { window.__openedUrl = url; return null; };"
+        );
+        await App.GotoMainPageAsync();
+        await App.WaitForModelRenderedAsync();
+        await App.OpenSettingsAsync();
+        ILocator row = Page.GetByTestId("ai-settings-chat-url-row");
+        ILocator url = Page.GetByTestId("ai-settings-chat-url");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+
+        await App.FillReliablyAsync(url, "not a page");
+        await url.PressAsync("Tab");
+        await Expect(row).ToContainTextAsync("A web address");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+
+        // A web chat sees only the prompt; a Claude Code project reads the code itself, which decides
+        // how a copied fix prompt is written, and the user can say otherwise.
+        ILocator readsCode = Page.GetByTestId("ai-settings-chat-reads-code");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await App.FillReliablyAsync(url, ProjectUrl);
+        await url.PressAsync("Tab");
+        await Expect(row).ToHaveAttributeAsync("data-value", ProjectUrl);
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await readsCode.ClickAsync();
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "true");
+        await App.CloseSettingsAsync();
+
+        // Copying a prompt offers to open that page.
+        await App.SelectNodeByFullNameAsync("Demo.sln");
+        await App.ClickNodeMenuItemAsync("node-menu-about");
+        await Page.GetByTestId("about-node-copy-prompt").ClickAsync();
+        ILocator open = Page.GetByTestId("about-node-open-chat");
+        await Expect(open).ToHaveTextAsync("Open claude.ai");
+        await open.ClickAsync();
+        IJSHandle openedUrl = await Page.WaitForFunctionAsync("() => window.__openedUrl");
+        Assert.Equal(ProjectUrl, await openedUrl.JsonValueAsync<string>());
+        await Page.Keyboard.PressAsync("Escape");
+        await Expect(open).ToHaveCountAsync(0);
+
+        // Back to claude.ai, for the tests that share the app's settings.
+        await App.OpenSettingsAsync();
+        await url.FillAsync("");
+        await url.PressAsync("Tab");
+        await Expect(row).ToHaveAttributeAsync("data-value", "");
+        await Expect(readsCode).ToHaveAttributeAsync("data-checked", "false");
+        await App.CloseSettingsAsync();
+    }
+
+    // Opens a model select and clicks the item with the text.
+    async Task PickModelAsync(ILocator modelRow, string itemText)
+    {
+        await modelRow.Locator(".mud-select").First.ClickAsync();
+        await Page.Locator(".mud-popover-open .mud-list-item").Filter(new() { HasTextString = itemText }).ClickAsync();
+    }
+
     // Opens the review dialog of a cycle, its AI section open: without a default the providers wait
     // behind a row that opens them, with one the default's button shows at once.
     async Task OpenCycleReviewAsync(bool isChoosing)
@@ -151,8 +266,8 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
     // repeated until the node size actually changes.
     async Task ExpectWheelDownToZoomAsync(bool zoomIn)
     {
-        LocatorBoundingBoxResult canvas =
-            await App.Canvas.BoundingBoxAsync() ?? throw new InvalidOperationException("Canvas is not rendered.");
+        LocatorBoundingBoxResult canvas = await App.Canvas.BoundingBoxAsync()
+            ?? throw new InvalidOperationException("Canvas is not rendered.");
         // The demo nodes sit at the canvas center; a quarter in from the top-left is empty
         // canvas, so no node toolbar pops up under the pointer and takes the wheel event.
         await Page.Mouse.MoveAsync(canvas.X + canvas.Width / 4, canvas.Y + canvas.Height / 4);
@@ -200,8 +315,7 @@ public class SettingsTests(ITestOutputHelper output) : E2ETestBase(output)
 
     async Task<float> RootNodeWidthAsync()
     {
-        LocatorBoundingBoxResult box =
-            await App.Node("Demo.sln").First.BoundingBoxAsync()
+        LocatorBoundingBoxResult box = await App.Node("Demo.sln").First.BoundingBoxAsync()
             ?? throw new InvalidOperationException("Root node is not rendered.");
         return box.Width;
     }

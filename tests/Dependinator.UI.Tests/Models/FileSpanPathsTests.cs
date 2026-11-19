@@ -92,6 +92,26 @@ public class FileSpanPathsTests
         Assert.Equal(new FileSpan("/home/user/repos/App/src/Class1.cs", 10, 20), absolute.Properties.FileSpan);
     }
 
+    // A project's folder is saved relative too, the model's own folder as "."
+    [Theory]
+    [InlineData("/workspaces/App/src/Lib", "src/Lib", "/home/user/App/src/Lib")]
+    [InlineData("/workspaces/App", ".", "/home/user/App")]
+    [InlineData("/elsewhere/Lib", "/elsewhere/Lib", "/elsewhere/Lib")]
+    public void RoundTrip_ShouldRestoreTheProjectFolder_ForDifferentBasePath(
+        string folder,
+        string saved,
+        string restored
+    )
+    {
+        var dto = Dto(null) with { Properties = new() { ProjectFolder = folder } };
+
+        var relative = FileSpanPaths.ToRelative(dto, "/workspaces/App/.workspace");
+        var absolute = FileSpanPaths.ToAbsolute(relative, "/home/user/App/.workspace");
+
+        Assert.Equal(saved, relative.Properties.ProjectFolder);
+        Assert.Equal(restored, absolute.Properties.ProjectFolder);
+    }
+
     [Fact]
     public void ConvertedDtos_ShouldNotChange_WhenFileSpanIsNull()
     {

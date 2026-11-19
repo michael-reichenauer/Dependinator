@@ -1,0 +1,3 @@
+export function area(side: number): number {
+    return side * side;
+}

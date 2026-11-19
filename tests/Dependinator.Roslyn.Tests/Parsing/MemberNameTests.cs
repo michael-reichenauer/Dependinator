@@ -204,9 +204,8 @@ public class MemberNameTests(RoslynFixture fixture)
             items.Nodes().Where(n => n.Name != typeName).Select(n => n.Name).Order(StringComparer.Ordinal)
         );
         // The target type's namespace would make parent nodes for it inside the type
-        Assert.All(
-            items.Nodes().Where(n => n.Name != typeName),
-            n => Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
+        Assert.All(items.Nodes().Where(n => n.Name != typeName), n =>
+            Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
         );
     }
 
@@ -225,9 +224,8 @@ public class MemberNameTests(RoslynFixture fixture)
             ],
             items.Nodes().Where(n => n.Name != typeName).Select(n => n.Name).Order(StringComparer.Ordinal)
         );
-        Assert.All(
-            items.Nodes().Where(n => n.Name != typeName),
-            n => Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
+        Assert.All(items.Nodes().Where(n => n.Name != typeName), n =>
+            Assert.Equal(typeName, NodeName.ParseParentName(n.Name))
         );
     }
 
