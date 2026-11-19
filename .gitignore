@@ -374,3 +374,5 @@ healthchecksdb
 
 # Cloud icon package cache (./import-icons)
 /.cache/
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
