@@ -15,6 +15,14 @@ This extension hosts the Dependinator Blazor WASM UI inside a VS Code webview.
 3. Press F5 in VS Code to launch the extension host.
 4. Run the `Dependinator: Open` command.
 
+The debug window runs on your normal VS Code profile, so it shares your user settings and the
+stored secrets (the device sync sign-in, the Claude API key) with the installed extension. The
+Dependinator settings are its own: `debug.code-workspace`, the workspace it opens, sets them, and
+a workspace setting wins over a user setting. Device sync there uses the Dev site
+(`dependinator.cloudSync.baseUrl`), the installed extension Production. Changing one of these
+settings in the debug window edits `debug.code-workspace`: revert the file rather than commit a
+personal choice.
+
 ## Notes
 
 - In vscode.dev, the UI can load, but the .NET language server will be disabled.
