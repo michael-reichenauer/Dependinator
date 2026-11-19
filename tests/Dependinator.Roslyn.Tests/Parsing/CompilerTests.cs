@@ -32,8 +32,8 @@ public class CompilerTests
         }
     }
 
-    // The projects of this solution use a newer C# than the parser's Roslyn knows by number
-    // (LangVersion 15, unions). Its features must not be counted as compile errors: they
+    // The projects of this solution use a newer C# than the parser's Roslyn may know by number
+    // (C# 15, the net11.0 default, unions). Its features must not be counted as compile errors: they
     // stayed in the problem indicator whatever the user fixed.
     [Fact]
     public async Task GetCompilationAsync_ShouldReportNoErrors_ForANewerLanguageVersion()

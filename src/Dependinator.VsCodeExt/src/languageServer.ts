@@ -70,7 +70,7 @@ export async function startLanguageServer(
             "Dependinator.Lsp",
             "bin",
             "Debug",
-            "net10.0",
+            "net11.0",
             "Dependinator.Lsp.dll"
         ),
         vscode.Uri.joinPath(
@@ -79,7 +79,7 @@ export async function startLanguageServer(
             "Dependinator.Lsp",
             "bin",
             "Release",
-            "net10.0",
+            "net11.0",
             "Dependinator.Lsp.dll"
         )
     ].filter((candidate): candidate is vscode.Uri => !!candidate);

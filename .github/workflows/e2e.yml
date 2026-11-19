@@ -80,7 +80,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x" # net10.0 runtime; global.json selects the .NET 11 SDK
+          dotnet-version: "10.0.x" # net10.0 runtime of the Api, its tests and CSharpier; global.json selects the .NET 11 SDK
           global-json-file: global.json
 
       # The cloud-sync API (Api) is a .NET 8 isolated Functions worker, so its runtime is
@@ -117,7 +117,7 @@ jobs:
           mkdir -p ~/apt-debs
           sudo cp ~/apt-debs/*.deb /var/cache/apt/archives/ 2>/dev/null || true
           echo "Restored $(ls ~/apt-debs | grep -c '\.deb$') cached .debs"
-          install() { pwsh tests/Dependinator.E2E.Tests/bin/Debug/net10.0/playwright.ps1 install --with-deps ${{ matrix.browser }}; }
+          install() { pwsh tests/Dependinator.E2E.Tests/bin/Debug/net11.0/playwright.ps1 install --with-deps ${{ matrix.browser }}; }
           # On a cache miss (a new runner image or Playwright version) the mirror can still crawl:
           # a normal install takes about a minute, so after 6 the rest comes from the main Ubuntu
           # archive instead. The .debs fetched so far stay in apt's archive.

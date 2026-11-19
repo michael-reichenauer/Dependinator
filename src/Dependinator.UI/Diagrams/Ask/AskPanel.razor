@@ -138,7 +138,7 @@
                   @* Always there (it shows nothing until a run): a run or its report must not go
                      away when Claude Code is turned off meanwhile. *@
                   <ClaudeCodeFix @ref="entry.FixPanel" TestId="ask" GetFixPrompt="() => ChangePrompt(entry, answer)"
-                                 OnStateChanged="OnChangeStateChanged" ConfirmTitle="Change the code with Claude Code?"
+                                 OnStateChanged="() => { }" ConfirmTitle="Change the code with Claude Code?"
                                  ConfirmYesText="Change anyway">
                     <SummaryContent Context="summary">@ReportSummary(entry, summary)</SummaryContent>
                   </ClaudeCodeFix>
@@ -444,13 +444,6 @@
   string ChangePrompt(Entry entry, ModelAnswer answer) =>
     askModelService.GetChangePrompt(answer, entry.Context, entry.AboutNames);
 
-  // A run started or ended, or the model changed after one: nothing to draw while the panel is hidden.
-  void OnChangeStateChanged()
-  {
-    if (viewOptions.IsAskShown)
-      StateHasChanged();
-  }
-
   // There is no answer to paste back: the AI changes the code (or an AI chat gives the edits to
   // apply), and a re-parse shows the result.
   async Task CopyChangePromptAsync(Entry entry, ModelAnswer answer)
@@ -491,7 +484,12 @@
   }
 
   // Settings › AI changed (from the chip's menu or the app menu): a new default is followed at once.
-  void OnChoiceChanged() => InvokeAsync(OnSettingsChangedAsync);
+  void OnChoiceChanged() =>
+    InvokeAsync(async () =>
+    {
+      await OnSettingsChangedAsync();
+      StateHasChanged();
+    });
 
   async Task OnSettingsChangedAsync()
   {
@@ -499,7 +497,6 @@
     await RefreshRoutesAsync();
     if (choice.Default != oldDefault)
       (route, isRoutePicked) = (choice.DefaultFor(AiCapability.ModelTools), false);
-    StateHasChanged();
   }
 
   // The panel renders only while it is shown, or as it closes: the UI state changes on every click.
