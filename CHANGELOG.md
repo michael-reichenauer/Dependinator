@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.94.464480] - 2026-11-19
+
 ### New
 
 - **Suggest Line Labels …** asks an AI for the labels of up to 40 lines without one in a single question, so they share a style: in the Edit menu and the canvas menu for the whole model, and in a container's menu for the lines inside it (edit mode). The answer is a list to tick, and the ticked labels are added as one undo step, with their descriptions too when asked for; it works with any AI provider, or an AI chat with the answer pasted back, for C# models as well as Bicep
