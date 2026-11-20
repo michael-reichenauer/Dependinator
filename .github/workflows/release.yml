@@ -537,7 +537,7 @@ jobs:
           PRE_RELEASE: ${{ inputs.kind == 'preview' && '--pre-release' || '' }}
         run: |
           for f in _out/dependinator-*-vsix/*.vsix; do
-            npx --yes @vscode/vsce@3 publish $PRE_RELEASE --skip-duplicate --packagePath "$f" -p "$VSCE_PAT"
+            npx --yes @vscode/vsce@4 publish $PRE_RELEASE --skip-duplicate --packagePath "$f" -p "$VSCE_PAT"
           done
 
       # 'target' is where the new tag is created: main's merge for a release, dev's tip for a preview.
