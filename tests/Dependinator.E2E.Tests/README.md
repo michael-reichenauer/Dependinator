@@ -226,7 +226,10 @@ here. Instead:
 `.devcontainer/post-create.sh` (and `scripts/cloud-setup` in cloud sessions)
 read the `Microsoft.Playwright.Xunit` version from Directory.Packages.props and
 install the matching browser builds into `~/.cache/ms-playwright`. After bumping
-the NuGet package, run the script once (or rebuild the devcontainer).
+the NuGet package, run the script once (or rebuild the devcontainer). In a Claude
+Code cloud session `./scripts/e2e` does this itself for the browsers it runs on
+(`./scripts/cloud-setup --playwright`), since the session's cached snapshot can be
+older than the bump.
 
 Signed-in cloud-sync flows are not covered yet — they need a Clerk test-user
 strategy first.
