@@ -103,10 +103,8 @@ async function acquireTokenViaLocalCallbackAsync(configuration: CloudSyncConfig)
 
             // Serve the self-contained Clerk sign-in page
             if (url.pathname === "/") {
-                const address = server.address();
-                const port = typeof address === "object" && address ? address.port : 0;
                 res.writeHead(200, { "Content-Type": "text/html" });
-                res.end(buildSignInPageHtml(port, state, configuration));
+                res.end(buildSignInPageHtml(state, configuration));
                 return;
             }
 
@@ -155,9 +153,15 @@ async function acquireTokenViaLocalCallbackAsync(configuration: CloudSyncConfig)
                 return;
             }
 
+            // With a remote extension host (a dev container, a codespace) VS Code forwards the
+            // port and opens the forwarded address, which is not this one: another local port
+            // when this one is taken, or https://<codespace>-<port>.app.github.dev for a
+            // codespace opened in the browser. So the page must not assume its own address.
             const port = address.port;
             logger.log(`Opening browser for Clerk sign-in (callback on port ${port}).`);
-            await vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:${port}/`));
+            const isOpened = await vscode.env.openExternal(vscode.Uri.parse(`http://127.0.0.1:${port}/`));
+            if (!isOpened)
+                logger.warn("The browser for Clerk sign-in was not opened.");
         });
 
         setTimeout(() => {
@@ -178,8 +182,10 @@ async function acquireTokenViaLocalCallbackAsync(configuration: CloudSyncConfig)
 }
 
 // Self-contained sign-in page: loads Clerk JS, mounts the sign-in component, and redirects
-// to the loopback callback with the acquired JWT ('dependinator' template).
-function buildSignInPageHtml(port: number, state: string, configuration: CloudSyncConfig): string {
+// to the callback with the acquired JWT ('dependinator' template). The callback is the path
+// "/callback" on the address the page itself was opened on, since that is the address which
+// reaches this server from the user's browser (see the port forwarding note above).
+function buildSignInPageHtml(state: string, configuration: CloudSyncConfig): string {
     const clerkCdnBase = configuration.clerkAccountsUrl.replace(".accounts.", ".clerk.accounts.");
     const clerkJsUrl = `${clerkCdnBase}/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
 
@@ -200,14 +206,13 @@ function buildSignInPageHtml(port: number, state: string, configuration: CloudSy
         <p>Loading sign-in...</p>
     </div>
     <script>
-        var PORT = ${port};
         var STATE = ${JSON.stringify(state)};
 
         var redirected = false;
         function redirectToCallback(token) {
             if (redirected) return;
             redirected = true;
-            window.location.href = "http://127.0.0.1:" + PORT + "/callback"
+            window.location.href = "/callback"
                 + "?token=" + encodeURIComponent(token)
                 + "&state=" + encodeURIComponent(STATE);
         }

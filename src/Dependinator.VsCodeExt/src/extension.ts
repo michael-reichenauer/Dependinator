@@ -23,6 +23,9 @@ const refreshCommandId = "dependinator.refresh";
 const installInDevContainerCommandId = "dependinator.installInDevContainer";
 const extensionId = "michaelreichenauer.dependinator";
 
+// True in the browser bundle (dist/web), false in the Node bundle (dist/node); set by esbuild.js.
+declare const IS_WEB_EXTENSION_HOST: boolean;
+
 // Track the LSP client and the last active webview to route notifications.
 let languageClient: LanguageClient | undefined;
 let languageClientPromise: Promise<LanguageClient | undefined> | undefined;
@@ -382,8 +385,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
     context.subscriptions.push(installCommand);
 
-    // Web extensions can't start a .NET process, so skip the server there.
-    const isWeb = vscode.env.uiKind === vscode.UIKind.Web;
+    // The web extension host (vscode.dev, the browser bundle) can't start a .NET process, so
+    // skip the server there. Not `vscode.env.uiKind`: that is Web for a codespace opened in the
+    // browser too, where this extension runs in Node on the codespace and the server starts fine.
+    const isWeb = IS_WEB_EXTENSION_HOST;
 
     // The MCP server runs in the LSP; its module runs claude, so it is node-only like cloud sync auth.
     if (!isWeb) {

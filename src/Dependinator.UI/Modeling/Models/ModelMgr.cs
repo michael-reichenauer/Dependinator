@@ -9,11 +9,19 @@ interface IModelMgr
 }
 
 [Scoped]
-class ModelMgr(IStateMgr stateMgr) : IModelMgr
+class ModelMgr(IStateMgr stateMgr) : IModelMgr, IDisposable
 {
     private readonly IStateMgr stateMgr = stateMgr;
 
     readonly IModel model = new Model(stateMgr.Exit);
+
+    // Lets go of the model's nodes, links and lines when the scope ends. The Blazor Server host
+    // keeps a closed tab's whole circuit alive while a framework timer is pending (each JS stream
+    // the cached model is read through leaves a JSInteropDefaultCallTimeout delay, 5 minutes in
+    // the web host), so without this every closed tab held its model for minutes: parallel e2e
+    // tests grew the host by gigabytes. A scope ends only once its browser is gone, so no save
+    // can write the emptied model: its JS call fails as disconnected.
+    public void Dispose() => WithModel(m => m.Clear());
 
     public string ModelPath => WithModel(m => m.Path);
 

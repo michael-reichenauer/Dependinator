@@ -106,7 +106,24 @@ public class E2ETestBase : PageTest
             await Context.Tracing.StopAsync(new() { Path = path });
         }
 
+        await LeavePageAsync();
         await base.DisposeAsync();
+    }
+
+    // Leaves the app the way a closed tab does, so Blazor's disconnect beacon (sent on pagehide)
+    // ends the test's circuit at once. Closing the context sends none: the host then kept each
+    // test's circuit, with its whole model, for the 3-minute disconnected-circuit retention, and
+    // a run grew the host by gigabytes until a small machine stopped it mid-run.
+    private async Task LeavePageAsync()
+    {
+        try
+        {
+            await Page.GotoAsync("about:blank", new() { Timeout = 5_000 });
+        }
+        catch (PlaywrightException)
+        {
+            // A crashed or closed page has no circuit left to end
+        }
     }
 
     // The page loads Clerk (clerk-js@latest) and Google Fonts from the internet, and the app

@@ -74,7 +74,9 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   shutting down..." mid-run and nearly every test fails with "Target crashed" or
   `ERR_CONNECTION_REFUSED`. `devcontainer.json` asks for 4 cores/16 GB (`hostRequirements`); an
   existing codespace needs "Change machine type". `/dev/shm` (64 MB) was not the cause:
-  Playwright's Chromium does not use it.
+  Playwright's Chromium does not use it. 4 cores/16 GB alone was not enough either (Nov 19, VS
+  Code with C# Dev Kit takes ~7 GB) until the host's memory growth was fixed (the e2e rules,
+  "Memory of closed circuits"): a run now peaks at ~3 GB for the app.
 - `./scripts/watch` can die on hot reload (Roslyn `EmitHelpers.EmitDifference` exception) and
   leave Azurite/func holding ports 10000/7071. Check :5000 after edits.
 

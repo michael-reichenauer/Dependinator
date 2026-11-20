@@ -26,6 +26,7 @@ personal choice.
 ## Notes
 
 - In vscode.dev, the UI can load, but the .NET language server will be disabled.
+- A GitHub codespace opened in the browser is not vscode.dev: the extension runs in Node on the codespace and starts the language server as it does in the desktop app. Which of the two it is comes from the bundle (`IS_WEB_EXTENSION_HOST`, set in `esbuild.js`), never from `vscode.env.uiKind`, which is `Web` in both.
 - Use `Dependinator: Install in Dev Container` to jump to the Extensions view and install the extension in a dev container.
 - WASM assets are published in Release without AOT.
 - `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.

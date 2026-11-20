@@ -9,8 +9,13 @@
 //
 // languageServer.ts, cloudSyncAuth.ts and mcpServer.ts use Node-only APIs (node:http,
 // node:crypto, node:child_process, vscode-languageclient/node). They are only reached behind the
-// `isWeb` guard via dynamic import(), so for the web bundle they are marked
+// `isWebExtensionHost` guard via dynamic import(), so for the web bundle they are marked
 // external (never executed there); for the node bundle they bundle normally.
+//
+// The guard is the build constant IS_WEB_EXTENSION_HOST, set per bundle below: the web bundle
+// is the only one a browser extension host loads. It is not `vscode.env.uiKind`, which is also
+// Web for a codespace opened in the browser, where the extension runs in Node on the codespace
+// and must start the language server.
 
 const esbuild = require("esbuild");
 const fs = require("node:fs");
@@ -37,6 +42,7 @@ const nodeConfig = {
     target: "node18",
     outfile: "dist/node/extension.js",
     external: ["vscode"],
+    define: { IS_WEB_EXTENSION_HOST: "false" },
 };
 
 const webConfig = {
@@ -48,6 +54,7 @@ const webConfig = {
     // vscode is provided by the host; the Node-only modules below are only
     // dynamically imported on the desktop host and never executed on web.
     external: ["vscode", "node:http", "node:crypto", "node:child_process", "node:os", "node:path", "vscode-languageclient/node"],
+    define: { IS_WEB_EXTENSION_HOST: "true" },
 };
 
 async function main() {

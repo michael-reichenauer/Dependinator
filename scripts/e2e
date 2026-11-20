@@ -49,6 +49,16 @@ case "$E2E_TRACE" in
     *) echo "E2E_TRACE must be 0, 1 or failed (was '$E2E_TRACE')."; exit 1 ;;
 esac
 
+# In a Claude Code cloud session the browsers come from the environment's cached snapshot, which
+# can be older than the Playwright version in Directory.Packages.props, and the session-start
+# hook that would catch up does not run in every kind of session. Without the matching build
+# every test fails at once with "Executable doesn't exist", so install what this run needs
+# first; with the browsers in place this takes no time.
+if [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]]; then
+    ./scripts/cloud-setup --playwright -b "${BROWSERS[*]}" \
+        || echo "Warning: could not install the Playwright browsers (${BROWSERS[*]}); the tests may not start." >&2
+fi
+
 APP_PID=""
 STACK_AZURITE_PID=""
 STACK_FUNC_PID=""

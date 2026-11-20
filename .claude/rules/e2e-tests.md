@@ -20,8 +20,8 @@ page objects). Each rule below comes from a real CI or local failure.
 - A different test failing each run with no code change: suspect parallelism or machine load
   (`maxParallelThreads` is 2 because the default gave ~50% failing runs). Re-measure the baseline
   in the same session before bisecting app commits; before raising the cap, run the suite a
-  dozen times and count failures. Not the cause: the app's memory growth (~1 GB RSS per suite
-  run, mostly large tile-SVG strings).
+  dozen times and count failures. Not the cause of flakes: the app's memory (about 3 GB RSS at
+  the peak of a run since Nov 19; see "Memory of closed circuits" below).
 - To provoke load flakes, run the suite pinned to one core (`taskset -c 0 ./scripts/e2e -t`), with
   the same tracing setting as the runs you compare: tracing (`-t`) doubles the one-core
   suite time (about 22 min against 11) and is itself load. That is why CI runs `-r` (untraced, then
@@ -36,7 +36,8 @@ page objects). Each rule below comes from a real CI or local failure.
   default base URL `http://127.0.0.1:5000`, since `localhost` can resolve to ::1, where nothing
   listens); investigate if it fails alone.
 - A very slow but green firefox/webkit run is a Blazor circuit reconnecting (unfixed; the 5 min
-  `JSInteropDefaultCallTimeout` in the Web `Program.cs` is a suspect).
+  `JSInteropDefaultCallTimeout` in the Web `Program.cs` is a suspect, set in Feb 2026 to make
+  loading large cached models more reliable).
 - Fixed flakes whose return means the fix fell short. Read the trace; don't just re-run:
   - menu-open timeouts despite the `AppPage` retries;
   - truncated note text (the Blazor echo window exceeds `FillReliablyAsync`'s 250 ms);
@@ -44,6 +45,25 @@ page objects). Each rule below comes from a real CI or local failure.
   - Settings submenu checks;
   - WebKit line clicks that select nothing (`SelectLineAsync` timing out on the line toolbar):
     the hover rule restyles a hit target again (see the Lines rules in `ui.md`).
+
+## Memory of closed circuits (Nov 19 2026)
+
+The host once grew ~1.4 GB a minute to over 7 GB, and a 16 GB codespace (VS Code takes ~7 GB)
+stopped it mid-run: everything after failed with `ERR_CONNECTION_REFUSED`. Two causes, both fixed:
+- Closing a Playwright context fires no `pagehide`, so Blazor got no disconnect beacon and kept
+  each test's circuit, with its full model, for the 3-minute disconnected-circuit retention:
+  `E2ETestBase.LeavePageAsync` goes to `about:blank` before the context closes.
+- A disposed circuit stays alive while any timer on its renderer is pending. Each
+  `IJSStreamReference` (every IndexedDB read, `Database.GetDatabaseValueAsync`) leaves
+  ASP.NET Core's `RemoteJSDataStream.ThrowOnTimeout`, an uncancellable
+  `Task.Delay(JSInteropDefaultCallTimeout)`, 5 minutes in the web host. `ModelMgr.Dispose` clears
+  the model, so what stays is a small shell. Passing a token to JS calls does not help (it is a
+  framework delay) and drops `JSRuntime`'s default timeout.
+
+To look again: `dotnet-gcdump` (counts per type after a full GC), `dotnet-dump` with `gcroot`
+and `dumpheap -live`. .NET 11 runtime-async continuations hide paths from `gcroot` (it often
+says "0 roots" for live objects) and from `dumpasync`; a `RuntimeAsyncTaskContinuation`'s raw
+fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
 
 ## Driving the app
 
