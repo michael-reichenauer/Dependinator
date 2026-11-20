@@ -73,6 +73,11 @@ fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
   drag sent right after a click races mode arming or a navigation's landing: use
   `App.CancelModeAsync()`, `App.DeselectAsync()`, and `Expect(App.ModeBanner).ToBeVisibleAsync()`
   before dragging an armed area.
+- A go to enables Back (`RecordJump`) before its flight has moved the view (it measures the
+  canvas first), and Back or Forward pressed from the very view it returns to records nothing
+  for the other direction. A test that goes back right after a jump must first see the view
+  leave the start view (`ViewHistoryTests.WaitForNodeWidthToLeaveAsync`): WebKit under load
+  lost that race twice in a row in a release run (Nov 20 2026).
 - The app ignores canvas shortcuts while a dialog or menu popover is open, including the fade-out
   after a menu click. `AppPage.OpenSearchViaHotkeyAsync` waits for `KeyboardOwners` to be empty
   and retries; any shortcut sent after a menu or dialog needs the same wait.

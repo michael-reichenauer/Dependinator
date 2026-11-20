@@ -33,6 +33,7 @@ public class ViewHistoryTests(ITestOutputHelper output) : E2ETestBase(output)
 
         await Expect(back).ToBeEnabledAsync();
         await Expect(undo).ToBeDisabledAsync(); // A jump is not an edit
+        await WaitForNodeWidthToLeaveAsync("Demo.sln", startWidth);
 
         // Back animates to the recorded view; Forward becomes available.
         await back.ClickAsync();
@@ -44,6 +45,7 @@ public class ViewHistoryTests(ITestOutputHelper output) : E2ETestBase(output)
         await forward.ClickAsync();
         await Expect(back).ToBeEnabledAsync();
         await Expect(forward).ToBeDisabledAsync();
+        await WaitForNodeWidthToLeaveAsync("Demo.sln", startWidth);
 
         await Page.Keyboard.PressAsync("Alt+ArrowLeft");
         await Expect(back).ToBeDisabledAsync();
@@ -56,6 +58,27 @@ public class ViewHistoryTests(ITestOutputHelper output) : E2ETestBase(output)
         LocatorBoundingBoxResult box = await App.Node(label).BoundingBoxAsync()
             ?? throw new InvalidOperationException($"Node '{label}' is not rendered.");
         return box.Width;
+    }
+
+    // A jump records the view and enables Back before its flight has moved the view (it first
+    // measures the canvas), and going back from the very view Back returns to leaves nothing for
+    // Forward. So wait until the view has left the start view before going back: WebKit under
+    // load took long enough for the click to win that race.
+    async Task WaitForNodeWidthToLeaveAsync(string label, float startWidth, float timeoutSeconds = 15)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < TimeSpan.FromSeconds(timeoutSeconds))
+        {
+            if (
+                await App.Node(label).CountAsync() > 0
+                && await App.Node(label).BoundingBoxAsync() is { } box
+                && Math.Abs(box.Width - startWidth) >= 2
+            )
+                return;
+            await Task.Delay(100);
+        }
+
+        throw new InvalidOperationException($"Node '{label}' width stayed at {startWidth}: the view did not move.");
     }
 
     // The animation settles a moment after the buttons flip, so poll the size.
