@@ -11,6 +11,8 @@
 #
 #   ./scripts/cloud-setup              install what is missing (safe to re-run)
 #   ./scripts/cloud-setup -b chromium  only these Playwright browsers (default: all three)
+#   ./scripts/cloud-setup --playwright only the Playwright browsers step; ./scripts/e2e runs it
+#                                      in a cloud session for the browsers it is about to use
 #   ./scripts/cloud-setup --hook       the SessionStart hook in .claude/settings.json: does
 #                                      nothing outside a cloud session (CLAUDE_CODE_REMOTE),
 #                                      logs to /tmp/cloud-setup.log and prints one summary
@@ -21,8 +23,10 @@
 # playwright.download.prss.microsoft.com and crl3.digicert.com (CLAUDE.md, "Cloud sessions").
 #
 # A full install takes ~4.5 min, a re-run ~12 s. The cloud environment's "Setup script" field
-# (claude.ai, environment settings) runs this before each new session, so the toolchain lands in
-# the environment's cached snapshot and the hook only re-checks it:
+# (claude.ai, environment settings) runs this when a container is built, so the toolchain lands
+# in the environment's cached snapshot and the hook only re-checks it. The snapshot is kept for
+# days and can be older than the repository; a session that starts above the repository
+# (a project thread) does not run the hook, which is why ./scripts/e2e runs --playwright itself:
 #
 #   #!/bin/bash
 #   setup=$(find / -maxdepth 6 \( -path /proc -o -path /sys \) -prune -o -path '*/Dependinator/scripts/cloud-setup' -print -quit 2>/dev/null)
@@ -32,20 +36,23 @@ SCRIPT="$(realpath "$0")"
 cd "$(dirname "$SCRIPT")/.."
 
 usage() {
-    echo "Usage: ./scripts/cloud-setup [--hook] [-b \"chromium firefox webkit\"]" >&2
+    echo "Usage: ./scripts/cloud-setup [--hook | --playwright] [-b \"chromium firefox webkit\"]" >&2
     exit 1
 }
 
 HOOK=0
+PLAYWRIGHT_ONLY=0
 BROWSERS="chromium firefox webkit"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --hook) HOOK=1 ;;
+        --playwright) PLAYWRIGHT_ONLY=1 ;;
         -b) [[ $# -ge 2 ]] || usage; BROWSERS="$2"; shift ;;
         *) usage ;;
     esac
     shift
 done
+[[ "$HOOK" == "1" && "$PLAYWRIGHT_ONLY" == "1" ]] && usage
 
 if [[ "$HOOK" == "1" ]]; then
     [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]] || exit 0
@@ -83,6 +90,61 @@ step() {
     echo "=== $*"
 }
 
+PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
+
+PLAYWRIGHT_BROWSERS_DIR="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+
+# Whether a marker says the browser is installed for the pinned Playwright version: its own
+# marker (.cloud-setup-<version>-<browser>), or one written for a set of browsers by an earlier
+# version of this script (.cloud-setup-<version>-chromium-firefox-webkit). A marker lists the
+# folders of the browser's builds and counts only while they are all there, so a build that was
+# deleted is installed again.
+playwright_browser_is_installed() {
+    local browser="$1" marker folder
+    for marker in "$PLAYWRIGHT_BROWSERS_DIR/.cloud-setup-$PLAYWRIGHT_VERSION-"*; do
+        [[ -f "$marker" ]] || continue
+        [[ "${marker##*/.cloud-setup-"$PLAYWRIGHT_VERSION"}-" == *"-$browser-"* ]] || continue
+        while read -r folder; do
+            [[ -z "$folder" || -d "$folder" ]] || continue 2
+        done <"$marker"
+        return 0
+    done
+    return 1
+}
+
+# Installs the browsers of $BROWSERS that the pinned Playwright version does not have yet, with
+# their OS packages. install-deps runs apt-get update + install every time, so the markers skip
+# a browser once it succeeded (a re-run then needs no Ubuntu mirror, and with all browsers in
+# place the step takes no time).
+install_playwright_browsers() {
+    if [[ -z "$PLAYWRIGHT_VERSION" ]]; then
+        echo "Could not read the Microsoft.Playwright.Xunit version from Directory.Packages.props." >&2
+        return 1
+    fi
+    local browser missing=()
+    for browser in $BROWSERS; do
+        playwright_browser_is_installed "$browser" || missing+=("$browser")
+    done
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        echo "Playwright $PLAYWRIGHT_VERSION browsers ($BROWSERS): installed earlier"
+        return 0
+    fi
+    echo "Installing the Playwright $PLAYWRIGHT_VERSION browsers (${missing[*]}) ..."
+    as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps "${missing[@]}"
+    # One browser at a time, so a failed download does not undo the ones before it.
+    for browser in "${missing[@]}"; do
+        npx -y "playwright@$PLAYWRIGHT_VERSION" install "$browser"
+        npx -y "playwright@$PLAYWRIGHT_VERSION" install --dry-run "$browser" |
+            sed -n 's/^ *Install location: *//p' \
+                >"$PLAYWRIGHT_BROWSERS_DIR/.cloud-setup-$PLAYWRIGHT_VERSION-$browser"
+    done
+}
+
+if [[ "$PLAYWRIGHT_ONLY" == "1" ]]; then
+    install_playwright_browsers
+    exit
+fi
+
 # Downloads that later run as root go to a private directory, not to fixed /tmp paths.
 DOWNLOADS="$(mktemp -d)"
 trap 'rm -rf "$DOWNLOADS"' EXIT
@@ -102,7 +164,6 @@ else
 fi
 
 SDK_VERSION="$(jq -r '.sdk.version // empty' global.json)"
-PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
 if [[ -z "$SDK_VERSION" || -z "$PLAYWRIGHT_VERSION" ]]; then
     echo "Could not read the SDK version from global.json ('$SDK_VERSION') or the" >&2
     echo "Microsoft.Playwright.Xunit version from Directory.Packages.props ('$PLAYWRIGHT_VERSION')." >&2
@@ -144,18 +205,7 @@ fi
 func --version
 
 step "Playwright $PLAYWRIGHT_VERSION browsers ($BROWSERS)"
-# install-deps runs apt-get update + install every time, so a marker skips the whole step once
-# it succeeded for this version and browser set (a re-run then needs no Ubuntu mirror).
-marker="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}/.cloud-setup-$PLAYWRIGHT_VERSION-${BROWSERS// /-}"
-if [[ -f "$marker" ]]; then
-    echo "installed earlier ($marker)"
-else
-    # shellcheck disable=SC2086 # BROWSERS is a word list
-    as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps $BROWSERS
-    # shellcheck disable=SC2086
-    npx -y "playwright@$PLAYWRIGHT_VERSION" install $BROWSERS
-    touch "$marker"
-fi
+install_playwright_browsers
 
 step "playwright-cli (ui-check skill)"
 command -v playwright-cli >/dev/null 2>&1 || npm_install_global @playwright/cli@latest
