@@ -50,10 +50,9 @@
         <PackageVersion Include="Microsoft.Build.Framework" Version="18.12.2" />
         <PackageVersion Include="Microsoft.NET.StringTools" Version="18.12.2" />
         <!-- Security pins: patched versions of vulnerable transitive packages, referenced directly where they
-             enter (MessagePack via StreamJsonRpc in Dependinator.Core; System.Security.Cryptography.Pkcs/Xml via
-             Azure.Bicep.Core > Microsoft.Windows.Compatibility in Dependinator.Bicep). Drop a pin, with its
+             enter (System.Security.Cryptography.Pkcs/Xml via Azure.Bicep.Core > Microsoft.Windows.Compatibility
+             in Dependinator.Bicep). Drop a pin, with its
              PackageReference, once the parent package itself requires a patched version. -->
-        <PackageVersion Include="MessagePack" Version="2.5.307" />
         <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="11.0.0" />
         <PackageVersion Include="System.Security.Cryptography.Xml" Version="11.0.0" />
     </ItemGroup>
