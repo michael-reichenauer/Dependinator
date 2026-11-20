@@ -22,10 +22,10 @@
 # need builds.dotnet.microsoft.com, ci.dot.net, aka.ms, cdn.playwright.dev,
 # playwright.download.prss.microsoft.com and crl3.digicert.com (CLAUDE.md, "Cloud sessions").
 #
-# A full install takes ~4.5 min, a re-run a few seconds. The cloud environment's "Setup script"
-# field (claude.ai, environment settings) runs this when a container is built, so the toolchain
-# lands in the environment's cached snapshot and the hook only re-checks it. The snapshot is kept
-# for days and can be older than the repository; a session that starts above the repository
+# A full install takes ~4.5 min, a re-run ~12 s. The cloud environment's "Setup script" field
+# (claude.ai, environment settings) runs this when a container is built, so the toolchain lands
+# in the environment's cached snapshot and the hook only re-checks it. The snapshot is kept for
+# days and can be older than the repository; a session that starts above the repository
 # (a project thread) does not run the hook, which is why ./scripts/e2e runs --playwright itself:
 #
 #   #!/bin/bash
@@ -52,6 +52,7 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
+[[ "$HOOK" == "1" && "$PLAYWRIGHT_ONLY" == "1" ]] && usage
 
 if [[ "$HOOK" == "1" ]]; then
     [[ "${CLAUDE_CODE_REMOTE:-}" == "true" ]] || exit 0
@@ -91,18 +92,38 @@ step() {
 
 PLAYWRIGHT_VERSION="$(sed -n 's/.*"Microsoft.Playwright.Xunit" Version="\([^"]*\)".*/\1/p' Directory.Packages.props)"
 
+PLAYWRIGHT_BROWSERS_DIR="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+
+# Whether a marker says the browser is installed for the pinned Playwright version: its own
+# marker (.cloud-setup-<version>-<browser>), or one written for a set of browsers by an earlier
+# version of this script (.cloud-setup-<version>-chromium-firefox-webkit). A marker lists the
+# folders of the browser's builds and counts only while they are all there, so a build that was
+# deleted is installed again.
+playwright_browser_is_installed() {
+    local browser="$1" marker folder
+    for marker in "$PLAYWRIGHT_BROWSERS_DIR/.cloud-setup-$PLAYWRIGHT_VERSION-"*; do
+        [[ -f "$marker" ]] || continue
+        [[ "${marker##*/.cloud-setup-"$PLAYWRIGHT_VERSION"}-" == *"-$browser-"* ]] || continue
+        while read -r folder; do
+            [[ -z "$folder" || -d "$folder" ]] || continue 2
+        done <"$marker"
+        return 0
+    done
+    return 1
+}
+
 # Installs the browsers of $BROWSERS that the pinned Playwright version does not have yet, with
-# their OS packages. install-deps runs apt-get update + install every time, so a marker per
-# version and browser skips a browser once it succeeded (a re-run then needs no Ubuntu mirror,
-# and with all markers in place the step takes no time).
+# their OS packages. install-deps runs apt-get update + install every time, so the markers skip
+# a browser once it succeeded (a re-run then needs no Ubuntu mirror, and with all browsers in
+# place the step takes no time).
 install_playwright_browsers() {
     if [[ -z "$PLAYWRIGHT_VERSION" ]]; then
         echo "Could not read the Microsoft.Playwright.Xunit version from Directory.Packages.props." >&2
         return 1
     fi
-    local dir="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}" browser missing=()
+    local browser missing=()
     for browser in $BROWSERS; do
-        [[ -f "$dir/.cloud-setup-$PLAYWRIGHT_VERSION-$browser" ]] || missing+=("$browser")
+        playwright_browser_is_installed "$browser" || missing+=("$browser")
     done
     if [[ ${#missing[@]} -eq 0 ]]; then
         echo "Playwright $PLAYWRIGHT_VERSION browsers ($BROWSERS): installed earlier"
@@ -110,9 +131,12 @@ install_playwright_browsers() {
     fi
     echo "Installing the Playwright $PLAYWRIGHT_VERSION browsers (${missing[*]}) ..."
     as_root npx -y "playwright@$PLAYWRIGHT_VERSION" install-deps "${missing[@]}"
-    npx -y "playwright@$PLAYWRIGHT_VERSION" install "${missing[@]}"
+    # One browser at a time, so a failed download does not undo the ones before it.
     for browser in "${missing[@]}"; do
-        touch "$dir/.cloud-setup-$PLAYWRIGHT_VERSION-$browser"
+        npx -y "playwright@$PLAYWRIGHT_VERSION" install "$browser"
+        npx -y "playwright@$PLAYWRIGHT_VERSION" install --dry-run "$browser" |
+            sed -n 's/^ *Install location: *//p' \
+                >"$PLAYWRIGHT_BROWSERS_DIR/.cloud-setup-$PLAYWRIGHT_VERSION-$browser"
     done
 }
 
