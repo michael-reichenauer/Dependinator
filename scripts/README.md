@@ -42,7 +42,7 @@ from anywhere (they `cd` to the repo root themselves), e.g. `./scripts/watch`.
 | `record-demo` | Re-record the VS Code extension demo gif (`src/Dependinator.VsCodeExt/resources/demo.gif`); scenario in `record-demo.mjs`. Needs `ffmpeg` + global `@playwright/cli`. |
 | `import-icons` | Re-import curated Azure/AWS/Google icons into `src/Dependinator.UI/Diagrams/Icons/Library/`; curated lists in `cloud-icons/*.manifest`. |
 | `updatepackages` | List outdated/vulnerable NuGet + npm packages; `-u` upgrades non-major, `-m` also major. |
-| `installdevtools` | One-time devcontainer setup (timezone, apt tools, wasm-tools workload, claude, gmd). |
+| `installdevtools` | One-time devcontainer setup (timezone, apt tools, wasm-tools workload, claude). |
 
 ## Helper files (not run directly)
 

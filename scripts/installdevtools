@@ -1,6 +1,7 @@
 #!/bin/bash
 # One-time devcontainer setup: timezone, apt packages (python, mc, lnav, xsel),
-# the dotnet wasm-tools workload, dotnet tools PATH, claude, and gmd.
+# the dotnet wasm-tools workload, dotnet tools PATH, and claude.
+# gmd comes with the devcontainer itself (a feature in .devcontainer/devcontainer.json).
 echo ""
 echo "Update timezone to Europe/Stockholm"
 sudo rm -rf /etc/localtime
@@ -44,9 +45,4 @@ echo "Install claude"
 curl -fsSL https://claude.ai/install.sh | bash
 
 echo ""
-echo "Installing gmd ..."
-curl curl -sL https://raw.githubusercontent.com/michael-reichenauer/gmd/main/install.sh | bash
-
-echo ""
-echo "Please restart container to enable gmd"
 echo "Done"
