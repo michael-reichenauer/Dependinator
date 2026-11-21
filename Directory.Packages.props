@@ -8,7 +8,7 @@
         <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
         <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.3.0" />
         <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" />
-        <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.1" />
+        <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.2" />
         <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.14.0" />
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="11.0.0" />
@@ -39,7 +39,7 @@
              Dependabot (.github/dependabot.yml): bump it deliberately and build. -->
         <PackageVersion Include="Azure.Bicep.Core" Version="0.49.2" />
         <!-- Anthropic's official C# SDK, for asking Claude with the user's own API key (src/Dependinator.Claude). -->
-        <PackageVersion Include="Anthropic" Version="13.11.0" />
+        <PackageVersion Include="Anthropic" Version="13.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="5.12.0" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.12.0" />
