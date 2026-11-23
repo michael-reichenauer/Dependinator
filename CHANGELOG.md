@@ -16,6 +16,9 @@ with the next official release.
 ### Fixed
 
 - The editor toolbar button that opens Dependinator is visible in VS Code in a browser (a GitHub codespace), where it was there but empty
+- **Sync Conflict** shows only when the model was edited on both devices, where it showed at nearly every open of a synced model: without edits here the newer cloud copy is taken, whatever a refresh or the automatic layout changed
+- A model taken from the cloud keeps this device's zoom and position, and never lands on another model that was opened meanwhile
+- A model deleted on this device only (**Local Only** in the delete dialog) takes the cloud copy when it is opened again
 
 ## [v0.95.465607] - 2026-11-20
 
