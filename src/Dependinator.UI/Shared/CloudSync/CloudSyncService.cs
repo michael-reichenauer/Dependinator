@@ -18,7 +18,7 @@ interface ICloudSyncService
     Task<Result<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto);
 
     // Returns a NotFoundError when no remote model exists for the path.
-    Task<Result<ModelDto>> PullAsync(string modelPath);
+    Task<Result<PulledModel>> PullAsync(string modelPath);
 
     // Deletes the remote model for the path; a missing remote copy counts as already deleted.
     Task<Result> DeleteAsync(string modelPath);
@@ -46,7 +46,7 @@ class NoCloudSyncService : ICloudSyncService
     public Task<Result<CloudModelMetadata>> PushAsync(string modelPath, ModelDto modelDto) =>
         NotAvailableAsync<CloudModelMetadata>();
 
-    public Task<Result<ModelDto>> PullAsync(string modelPath) => NotAvailableAsync<ModelDto>();
+    public Task<Result<PulledModel>> PullAsync(string modelPath) => NotAvailableAsync<PulledModel>();
 
     public Task<Result> DeleteAsync(string modelPath) => Task.FromResult<Result>(new Error(NotAvailableError));
 

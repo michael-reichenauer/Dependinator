@@ -431,7 +431,7 @@ public class AppCloudSyncServiceTests
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("stale-remote-list"));
         SutContext context = CreateSutContext(modelPath, localLoadedModel, syncState: null, cloudModels: [cloudModel]);
 
-        context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(remotePulledModel);
+        context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(Pulled(remotePulledModel));
 
         Result<SyncDownOutcome> syncDownResult = await context.Sut.SyncDownAsync();
 
@@ -441,13 +441,41 @@ public class AppCloudSyncServiceTests
         Assert.False(context.Sut.HasRemoteChangesSinceLastSync);
     }
 
+    // The cloud's hash of a model is the pushing app's, which another app version makes
+    // differently: a baseline made here from the pulled model made the cloud copy look changed
+    // right after the pull, and it was pulled again and again.
+    [Fact]
+    public async Task SyncDownAsync_ShouldStaySynced_WhenTheCloudHashIsNotTheOneMadeHere()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("model");
+        string cloudHash = "hash-of-another-app-version";
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model) with { ContentHash = cloudHash };
+        SutContext context = CreateSutContext(modelPath, model, syncState: null, cloudModels: [cloudModel]);
+        CloudSyncModelState? recorded = null;
+        context.CloudSyncStateService.Setup(x => x.GetAsync(modelPath)).ReturnsAsync(() => recorded);
+        context
+            .CloudSyncStateService.Setup(x => x.RecordPullAsync(modelPath, It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string, string>(
+                (_, local, remote) => recorded = new() { Baseline = new CloudSyncBaseline(local, remote) }
+            )
+            .Returns(Task.CompletedTask);
+        context.CloudSyncService.Setup(x => x.PullAsync(modelPath)).ReturnsAsync(new PulledModel(model, cloudHash));
+
+        AssertOk(await context.Sut.SyncDownAsync());
+        AssertOk(await context.Sut.RefreshSyncStateAsync());
+
+        Assert.Equal(cloudHash, recorded?.Baseline?.RemoteContentHash);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
     [Fact]
     public async Task SyncDownAsync_ShouldUploadLocalModel_WhenNoRemoteModelExists()
     {
         string modelPath = "/models/sample.model";
         ModelDto localModel = CreateModelDto("local");
         SutContext context = CreateSutContext(modelPath, localModel, syncState: null, cloudModels: []);
-        Result<ModelDto> noRemoteModel = new NotFoundError("No remote model");
+        Result<PulledModel> noRemoteModel = new NotFoundError("No remote model");
         context
             .CloudSyncService.Setup(x => x.PullAsync(modelPath))
             .Callback(() => context.Counters.PullCalls++)
@@ -471,7 +499,7 @@ public class AppCloudSyncServiceTests
         CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
         CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
         SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
-        Result<ModelDto> noRemoteModel = new NotFoundError("No remote model");
+        Result<PulledModel> noRemoteModel = new NotFoundError("No remote model");
         context
             .CloudSyncService.Setup(x => x.PullAsync(It.IsAny<string>()))
             .Callback(() => context.Counters.PullCalls++)
@@ -558,6 +586,105 @@ public class AppCloudSyncServiceTests
         Assert.Single(context.Sut.CloudModels);
     }
 
+    // The parse that follows opening a saved model asks for this first (ICloudCopyCheck)
+    [Fact]
+    public async Task PullNewerAsync_ShouldPull_WhenOnlyTheCloudCopyChanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+
+        Assert.True(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(1, context.Counters.PullCalls);
+        Assert.Equal(0, context.Counters.PushCalls);
+    }
+
+    [Fact]
+    public async Task PullNewerAsync_ShouldNotPull_WhenTheCloudCopyIsUnchanged()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel]);
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(1, context.Counters.ListCalls);
+        Assert.Equal(0, context.Counters.PullCalls);
+    }
+
+    // Both sides changed is the user's to resolve: nothing is pulled over the local changes
+    [Fact]
+    public async Task PullNewerAsync_ShouldNotPull_WhenTheModelChangedHereToo()
+    {
+        string modelPath = "/models/sample.model";
+        CloudSyncModelState syncState = CreateSyncStateFromModel(CreateModelDto("synced"));
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState, [cloudModel]);
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(0, context.Counters.PullCalls);
+        Assert.Equal(CloudSyncState.HasConflicts, context.Sut.GetCloudSyncState());
+    }
+
+    // A model that was never synced here has no newer cloud copy to wait for: no network call
+    // holds its parse back.
+    [Fact]
+    public async Task PullNewerAsync_ShouldNotAskTheCloud_WhenTheModelWasNeverSynced()
+    {
+        string modelPath = "/models/sample.model";
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("local"), syncState: null, [cloudModel]);
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(0, context.Counters.ListCalls);
+        context.CloudSyncService.Verify(x => x.GetAuthStateAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task PullNewerAsync_ShouldGiveUp_WhenTheCloudIsSlow()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        AppCloudSyncTimings timings = CreateFastTimings() with { StartCheckTimeout = TimeSpan.FromMilliseconds(20) };
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [], timings);
+        TaskCompletionSource<Result<CloudModelList>> list = new();
+        context.CloudSyncService.Setup(x => x.ListAsync()).Returns(list.Task);
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath).WaitAsync(TimeSpan.FromSeconds(5)));
+
+        Assert.Equal(0, context.Counters.PullCalls);
+    }
+
+    // Opening a model also starts the usual check (a UI state change). When that one is done,
+    // the model is checked: the parse does not ask the cloud a second time.
+    [Fact]
+    public async Task PullNewerAsync_ShouldNotCheckAgain_WhenTheModelWasJustChecked()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.ListCalls > 0);
+        await WaitUntilQuietAsync(() => context.Counters.ListCalls, quietMilliseconds: 100);
+        int listCalls = context.Counters.ListCalls;
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(listCalls, context.Counters.ListCalls);
+    }
+
+    static PulledModel Pulled(ModelDto model) => new(model, CloudModelSerializer.GetContentHash(model));
+
     static AppCloudSyncService CreateSut(
         string modelPath,
         ModelDto currentModelDto,
@@ -601,7 +728,7 @@ public class AppCloudSyncServiceTests
         cloudSyncService
             .Setup(x => x.PullAsync(It.IsAny<string>()))
             .Callback(() => counters.PullCalls++)
-            .ReturnsAsync(currentModelDto);
+            .ReturnsAsync(Pulled(currentModelDto));
 
         cloudSyncStateService.Setup(x => x.GetAsync(modelPath)).ReturnsAsync(syncState);
         cloudSyncStateService

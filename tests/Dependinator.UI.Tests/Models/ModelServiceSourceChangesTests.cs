@@ -35,7 +35,8 @@ public class ModelServiceSourceChangesTests
             Mock.Of<IApplicationEvents>(),
             Mock.Of<IProgressService>(),
             Mock.Of<IVsCodeSendService>(),
-            Mock.Of<ISaveStatusService>()
+            Mock.Of<ISaveStatusService>(),
+            Mock.Of<ICloudCopyCheck>()
         );
 
     void ParseReturns(Result<IReadOnlyList<Item>> result) =>

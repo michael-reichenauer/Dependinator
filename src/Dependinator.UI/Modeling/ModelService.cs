@@ -108,6 +108,7 @@ class ModelService : IModelService, IDisposable
     readonly IProgressService progressService;
     readonly IVsCodeSendService vsCodeSendService;
     readonly ISaveStatusService saveStatusService;
+    readonly ICloudCopyCheck cloudCopyCheck;
 
     readonly SemaphoreSlim refreshGate = new(1, 1);
 
@@ -146,11 +147,13 @@ class ModelService : IModelService, IDisposable
         IApplicationEvents applicationEvents,
         IProgressService progressService,
         IVsCodeSendService vsCodeSendService,
-        ISaveStatusService saveStatusService
+        ISaveStatusService saveStatusService,
+        ICloudCopyCheck cloudCopyCheck
     )
     {
         this.vsCodeSendService = vsCodeSendService;
         this.saveStatusService = saveStatusService;
+        this.cloudCopyCheck = cloudCopyCheck;
         this.modelMgr = modelMgr;
         this.modelListService = modelListService;
         this.parserService = parserService;
@@ -285,8 +288,21 @@ class ModelService : IModelService, IDisposable
 
         if (IsWorkspaceModel(path))
             unparsedSourceChoices = [];
-        RefreshAsync().RunInBackground();
+        RefreshAfterCloudCheckAsync(path).RunInBackground();
         return modelInfo;
+    }
+
+    // The parse that follows opening a saved model waits for the cloud sync's check of it: a
+    // newer cloud copy is pulled first, and parsed then. Parsed first, the model had changed
+    // here too when the check came, and both sides changed is a sync conflict for the user to
+    // resolve, at nearly every start with a second device.
+    async Task<Result> RefreshAfterCloudCheckAsync(string path)
+    {
+        if (await cloudCopyCheck.PullNewerAsync(path))
+            return Result.Ok; // The pull replaced the model and parses it (ReplaceCurrentModelAsync)
+
+        // Another model opened meanwhile has its own parse
+        return modelMgr.ModelPath == path ? await RefreshAsync() : Result.Ok;
     }
 
     public void CheckLineVisibility()
@@ -454,7 +470,7 @@ class ModelService : IModelService, IDisposable
 
     internal static void RequireChildrenLayout(IModel model)
     {
-        foreach (var node in model.Nodes.Values)
+        foreach (var node in model.Nodes.Values.Where(n => !NodeLayout.IsFilledByPassThrough(n)))
         {
             if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
                 node.IsChildrenLayoutRequired = true;
@@ -1157,7 +1173,7 @@ class ModelService : IModelService, IDisposable
     {
         if (layoutVersion >= NodeLayout.CurrentLayoutVersion)
             return;
-        foreach (var node in nodes)
+        foreach (var node in nodes.Where(n => !NodeLayout.IsFilledByPassThrough(n)))
         {
             if (node.Children.Count > 0 && !node.IsChildrenLayoutCustomized)
                 node.IsChildrenLayoutRequired = true;

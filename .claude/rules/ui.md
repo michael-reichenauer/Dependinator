@@ -444,6 +444,38 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
   (the `/workspaces/Dependinator` symlink and the real path): an artifact of the session, not
   a bug in the list.
 
+## Cloud sync: what counts as a change (Nov 23 2026)
+
+Michael got "Sync Conflict" at nearly every open. A conflict is "the model changed here and in
+the cloud since the last sync" (`AppCloudSyncService.CompareToBaseline`, content hashes against
+the saved baseline), and the design assumes only the user changes a model. Measured on the demo
+model, the hash also moved for things nobody did. Part 1 of the fix (this section) removes three
+of them; part 2 (only a user edit can conflict) is not built yet.
+- **Loading a saved model must give the saved model.** A pass-through node has no stored
+  boundary, so `Node.AddChild` flagged the node it fills for a layout on every load, until that
+  node was opened on screen. `PassThroughService.UpdatePassThroughFlags` clears the flag, and
+  nothing flags a node that `NodeLayout.IsFilledByPassThrough`
+  (`ModelServiceSavedModelTests`). Anything a load derives and the DTO saves needs the same
+  care: load, hash, compare.
+- **The baseline of a pull is the cloud's hash** (`PulledModel.ContentHash`, the pushing app's),
+  not a hash made here from the pulled model: another app version writes the DTO differently,
+  so the cloud copy looked changed right after the pull.
+- **The parse after opening a saved model waits for the sync check** (`ICloudCopyCheck`,
+  `ModelService.RefreshAfterCloudCheckAsync`): a newer cloud copy is pulled first and parsed
+  then. Only for a model with a baseline, and at most `StartCheckTimeout` (5 s). Parsed first,
+  the model had changed here too when the check came back from the network.
+- Still view-dependent, for part 2: a container laid out the first time it is shown (lazy
+  layout) changes the saved model, which lines are saved depends on what was shown, and `Lines`
+  are saved in creation order (a parsed and a loaded model differ once). Stripping the automatic
+  layout from the hash was looked at and dropped: a pan or zoom inside a container
+  (`NodeEditCommand`) is the user's but does not set `IsChildrenLayoutCustomized`, so it cannot
+  be told from a lazy layout without an "edited by the user" mark.
+- Changing how the hash is made changes it for every saved baseline: each device then sees a
+  local change, and with a second device a conflict. It needs a baseline migration.
+- No baseline with differing copies is a conflict by design (`CompareWithoutBaseline`): a new
+  codespace, cleared site data, or two hosts on one path (the dev host and VS Code in one
+  devcontainer have separate storage and the same cloud key).
+
 ## iPad home-screen web app (Nov 2026)
 
 - iPadOS 26 draws a foggy "scroll edge" blur over the top ~100px of a home-screen web app (the

@@ -65,6 +65,20 @@ static class CloudModelSerializer
         }
     }
 
+    // Reads a pulled document with the cloud's own hash of it (PulledModel), or the hash made here
+    // for a document stored without one.
+    public static Result<PulledModel> ReadPulledModel(CloudModelDocument document)
+    {
+        Result<ModelDto> modelResult = ReadModel(document);
+        if (modelResult is not ModelDto modelDto)
+            return modelResult.Error;
+
+        string contentHash = string.IsNullOrWhiteSpace(document.ContentHash)
+            ? GetContentHash(modelDto)
+            : document.ContentHash;
+        return new PulledModel(modelDto, contentHash);
+    }
+
     // Compresses JSON bytes with GZip (smallest size mode).
     static byte[] Compress(byte[] jsonBytes)
     {
