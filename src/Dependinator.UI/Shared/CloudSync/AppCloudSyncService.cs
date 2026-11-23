@@ -19,6 +19,13 @@ sealed record AppCloudSyncTimings(
         IdleRefreshInterval: TimeSpan.FromSeconds(10),
         MaxIdleRefreshDuration: TimeSpan.FromMinutes(5)
     );
+
+    // How long the parse that follows opening a saved model waits for the first sync check of it
+    // (ICloudCopyCheck). The saved model is on screen meanwhile, so the wait covers an API that
+    // starts cold (the first call of the day can take 10 s). Offline, VS Code's check fails at
+    // once; a browser host waits as long for its sign-in script (jsInterop.js waitForClerk), so
+    // the dev host then parses 15 s late (the browser app has no parser).
+    public TimeSpan StartCheckTimeout { get; init; } = TimeSpan.FromSeconds(15);
 }
 
 // UI-facing service contract for cloud sync operations and derived sync state.
@@ -76,7 +83,7 @@ interface IAppCloudSyncService
 // Aggregates cloud sync concerns for the app: transport selection, auth state, model lists, and
 // local/remote drift detection used by the user-facing sync indicator.
 [Scoped]
-class AppCloudSyncService : IAppCloudSyncService, IDisposable
+class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
 {
     readonly Lazy<ICanvasService> canvasServiceLazy;
     readonly ICloudSyncService cloudSyncService;
@@ -92,6 +99,19 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     readonly Func<TimeSpan, CancellationToken, Task> delayAsync;
 
     readonly SemaphoreSlim syncOperationLock = new(1, 1);
+
+    // One sync check (the state refresh and the automatic sync it leads to) at a time: the
+    // periodic one and the one a model's start-up parse waits for (PullNewerAsync).
+    readonly SemaphoreSlim checkLock = new(1, 1);
+
+    // The model's content stamp when the last finished check started, and the last pull that
+    // replaced the open model: what a start-up check goes by to not check twice. Pulls are made
+    // one at a time (syncOperationLock).
+    ModelContentStamp? lastCheckedStamp;
+    volatile ModelPull lastPull = new("", 0);
+
+    sealed record ModelPull(string ModelPath, long Count);
+
     readonly Debouncer uiStateRefreshDebouncer = new();
     readonly object idleRefreshLock = new();
     readonly object backgroundErrorLock = new();
@@ -286,7 +306,7 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         if (string.IsNullOrWhiteSpace(modelPath))
             return new Error("Model is not loaded.");
 
-        Result<ModelDto> pullResult = await cloudSyncService.PullAsync(modelPath);
+        Result<PulledModel> pullResult = await cloudSyncService.PullAsync(modelPath);
         if (pullResult is NotFoundError)
         {
             // No remote copy exists (deleted, other account, or other backend). Re-create it from
@@ -298,14 +318,17 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
             return new SyncDownOutcome(UploadedLocalModel.Instance);
         }
 
-        if (pullResult is not ModelDto modelDto)
+        if (pullResult is not PulledModel pulled)
             return pullResult.Error;
 
-        var replaceResult = await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelDto);
+        // Not the open model any more when the user opened another one while the copy was on
+        // its way (ReplaceCurrentModelAsync then returns an error and replaces nothing)
+        var replaceResult = await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelPath, pulled.Model);
         if (replaceResult is not ModelInfo modelInfo)
             return replaceResult.Error;
 
-        await RecordPullBaselineAsync(modelInfo.Path, modelDto);
+        await RecordPullBaselineAsync(modelInfo.Path, pulled.ContentHash);
+        lastPull = new ModelPull(modelInfo.Path, lastPull.Count + 1);
 
         Log.Info("SyncDownCoreAsync");
         if (notifyChanged)
@@ -317,18 +340,18 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     async Task<Result<CloudModelMetadata>> LoadCloudModelCoreAsync(CloudModelMetadata cloudModel, bool notifyChanged)
     {
         string normalizedPath = cloudModel.NormalizedPath;
-        Result<ModelDto> pullResult = await cloudSyncService.PullAsync(normalizedPath);
+        Result<PulledModel> pullResult = await cloudSyncService.PullAsync(normalizedPath);
         if (pullResult is NotFoundError)
             return new Error($"Cloud model for '{normalizedPath}' no longer exists.");
 
-        if (pullResult is not ModelDto modelDto)
+        if (pullResult is not PulledModel pulled)
             return pullResult.Error;
 
-        if (await modelServiceLazy.Value.WriteModelAsync(normalizedPath, modelDto) is Error writeError)
+        if (await modelServiceLazy.Value.WriteModelAsync(normalizedPath, pulled.Model) is Error writeError)
             return writeError;
 
         await canvasServiceLazy.Value.LoadAsync(normalizedPath);
-        await RecordPullBaselineAsync(normalizedPath, modelDto);
+        await RecordPullBaselineAsync(normalizedPath, pulled.ContentHash);
 
         if (notifyChanged)
             NotifyChanged();
@@ -336,10 +359,11 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         return cloudModel;
     }
 
-    // Records a successful pull as the new sync baseline and updates the cached snapshot.
-    async Task RecordPullBaselineAsync(string modelPath, ModelDto pulledModelDto)
+    // Records a successful pull as the new sync baseline and updates the cached snapshot. The
+    // remote side of the baseline is the cloud's own hash of the pulled model (PulledModel), which
+    // the next checks compare the cloud's list with.
+    async Task RecordPullBaselineAsync(string modelPath, string pulledContentHash)
     {
-        string pulledContentHash = CloudModelSerializer.GetContentHash(pulledModelDto);
         string localContentHash = GetCurrentModelContentHashOrDefault() ?? pulledContentHash;
         await cloudSyncStateService.RecordPullAsync(modelPath, localContentHash, pulledContentHash);
         ApplySuccessfulSync(
@@ -349,25 +373,135 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         );
     }
 
+    // Loading the saved model changed it (ICloudCopyCheck): the baseline's local side, when it
+    // is of the saved model, becomes the loaded model's, so the load is no local change. A
+    // version before Nov 23 2026 saved layout flags that a load now clears, and without this
+    // every synced model had "changed" at its first open after the update: pushed from the
+    // first device, a conflict on the second.
+    public async Task AcceptLoadChangeAsync(string modelPath, ModelDto savedModel)
+    {
+        try
+        {
+            if (isDisposed || !cloudSyncService.IsAvailable)
+                return;
+
+            CloudSyncBaseline? baseline = (await cloudSyncStateService.GetAsync(modelPath))?.Baseline;
+            if (baseline is null || baseline.LocalContentHash != CloudModelSerializer.GetContentHash(savedModel))
+                return;
+            if (modelMgr.ModelPath != modelPath || GetCurrentModelContentHashOrDefault() is not { } loadedHash)
+                return;
+
+            Log.Info("The saved model was changed by loading it, still synced", modelPath);
+            await cloudSyncStateService.RecordLocalAsync(modelPath, loadedHash);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to keep the sync baseline of a model changed by loading it");
+        }
+    }
+
+    // Before the parse that follows opening a saved model: checks the model against its cloud
+    // copy and pulls a newer one, so the parse is of the pulled model. Parsed first, the model
+    // had changed here as well as in the cloud when the check came (it waits for the network),
+    // and the user got a conflict to resolve instead of the newer copy.
+    public async Task<bool> PullNewerAsync(string modelPath)
+    {
+        ModelPull pullBefore = lastPull;
+        try
+        {
+            if (isDisposed || !cloudSyncService.IsAvailable)
+                return false;
+
+            // Only a model that was synced here can have a newer cloud copy to wait for; a
+            // model that never was is parsed at once, signed in or not.
+            if ((await cloudSyncStateService.GetAsync(modelPath))?.Baseline is null)
+                return false;
+
+            Task check = CheckBeforeParseAsync(modelPath, pullBefore);
+            Task timeout = delayAsync(syncTimings.StartCheckTimeout, CancellationToken.None);
+            if (await Task.WhenAny(check, timeout) != check)
+                Log.Info("The sync check took too long, parsing without it", modelPath);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to check the cloud copy before parsing");
+        }
+
+        return IsPulledSince(pullBefore, modelPath);
+    }
+
+    // A pull of another model (one the user just left) is not a pull of this one
+    bool IsPulledSince(ModelPull before, string modelPath) =>
+        lastPull is var pull && pull.Count != before.Count && pull.ModelPath == modelPath;
+
+    async Task CheckBeforeParseAsync(string modelPath, ModelPull pullBefore)
+    {
+        await checkLock.WaitAsync();
+        try
+        {
+            // The check that opening the model started (a UI state change) may just have
+            // finished: it pulled, or it was of the model as it is now and found nothing to
+            // pull (a pull it found and left for later, in the pause between automatic syncs,
+            // is made now).
+            bool isPulled = IsPulledSince(pullBefore, modelPath);
+            bool isChecked = lastCheckedStamp == modelServiceLazy.Value.ContentStamp && !hasRemoteChangesSinceLastSync;
+            if (isPulled || isChecked || isDisposed || modelMgr.ModelPath != modelPath)
+                return;
+
+            // Not held back by the pause between automatic syncs: this is the one check of a
+            // model that was just opened
+            await CheckAsync(isAutoSyncThrottled: false);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to check the cloud copy before parsing");
+        }
+        finally
+        {
+            checkLock.Release();
+        }
+    }
+
+    // A sync check: the state refresh and the automatic sync it leads to, and its error told to
+    // the user. Called with checkLock held.
+    async Task CheckAsync(bool isAutoSyncThrottled)
+    {
+        ModelContentStamp stamp = modelServiceLazy.Value.ContentStamp;
+        Result result = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true, isAutoSyncThrottled);
+        lastCheckedStamp = result is Error ? null : stamp;
+        if (result is Error error)
+        {
+            NotifyBackgroundSyncError(error.Message);
+            return;
+        }
+
+        // A successful check clears the dedup set so an error that recurs after recovery is
+        // reported again (and the set cannot grow unbounded).
+        lock (backgroundErrorLock)
+        {
+            reportedBackgroundErrors.Clear();
+        }
+    }
+
     // Rebuilds sync snapshot and optionally performs automatic sync work before notifying listeners.
-    async Task<Result> RefreshSnapshotAndNotifyAsync(bool allowAutoSync)
+    async Task<Result> RefreshSnapshotAndNotifyAsync(bool allowAutoSync, bool isAutoSyncThrottled = true)
     {
         if (await RefreshSyncStateAsync() is Error refreshError)
             return refreshError;
 
-        if (allowAutoSync && await TryAutoSyncIfNeededAsync() is Error autoSyncError)
+        if (allowAutoSync && await TryAutoSyncIfNeededAsync(isAutoSyncThrottled) is Error autoSyncError)
             return autoSyncError;
 
         NotifyChanged();
         return Result.Ok;
     }
 
-    async Task<Result> TryAutoSyncIfNeededAsync()
+    async Task<Result> TryAutoSyncIfNeededAsync(bool isThrottled)
     {
         if (!ShouldEvaluateAutoSync())
             return Result.Ok;
 
-        if (!IsAutoSyncAttemptDue())
+        if (isThrottled && !IsAutoSyncAttemptDue())
             return Result.Ok;
 
         AutoSyncAction autoSyncAction = DetermineAutoSyncAction();
@@ -386,9 +520,18 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
     // A pull replaces the model the user is looking at, so the UI is told when it happened.
     async Task<Result> RunAutoPullAsync()
     {
+        string modelPath = modelMgr.ModelPath;
         Result<SyncDownOutcome> result = await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: false));
         if (result is SyncDownOutcome outcome && outcome is ModelInfo && !isDisposed)
             BackgroundSyncInfo?.Invoke("Updated this model from its newer cloud copy.");
+
+        // A pull dropped because the user opened another model is nothing to tell them about:
+        // the next check is of that model.
+        if (result is Error && modelMgr.ModelPath != modelPath)
+        {
+            Log.Info("Another model was opened while pulling, pull dropped", modelPath);
+            return Result.Ok;
+        }
         return result;
     }
 
@@ -583,25 +726,14 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         isUiStateRefreshInProgress = true;
         isUiStateRefreshQueued = false;
 
+        await checkLock.WaitAsync();
         try
         {
-            Result refreshResult = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true);
-            if (refreshResult is Error error)
-            {
-                NotifyBackgroundSyncError(error.Message);
-            }
-            else
-            {
-                // A successful refresh clears the dedup set so an error that recurs after
-                // recovery is reported again (and the set cannot grow unbounded).
-                lock (backgroundErrorLock)
-                {
-                    reportedBackgroundErrors.Clear();
-                }
-            }
+            await CheckAsync(isAutoSyncThrottled: true);
         }
         finally
         {
+            checkLock.Release();
             isUiStateRefreshInProgress = false;
             if (isUiStateRefreshQueued)
                 ScheduleUiStateRefresh();
@@ -852,6 +984,8 @@ class AppCloudSyncService : IAppCloudSyncService, IDisposable
         CancelIdleRefreshLoop();
         uiStateRefreshDebouncer.Dispose();
         syncOperationLock.Dispose();
+        // checkLock is left to the garbage collector: a check that waits for it may still be
+        // on its way after the dispose.
     }
 
     static Task TaskDelayAsync(TimeSpan delay, CancellationToken cancellationToken) =>

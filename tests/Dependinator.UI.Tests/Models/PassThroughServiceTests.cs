@@ -162,6 +162,23 @@ public class PassThroughServiceTests
         Assert.False(GetNode(model, "shop.src").IsPassThrough);
     }
 
+    // Adding a node without a boundary flags its parent for a layout, and a pass-through node
+    // never has one: the node it fills has nothing to lay out and must not stay flagged.
+    [Fact]
+    public void UpdatePassThroughFlags_ShouldClearTheLayoutFlag_OfANodeFilledByAPassThroughNode()
+    {
+        using var model = NewModel();
+        AddNode(model, Assembly, NodeType.Assembly);
+        AddNode(model, $"{Assembly}.Dependinator.Core.Foo", NodeType.Type);
+        Assert.True(GetNode(model, Assembly).IsChildrenLayoutRequired);
+
+        PassThroughService.UpdatePassThroughFlags(model);
+
+        Assert.False(GetNode(model, Assembly).IsChildrenLayoutRequired);
+        Assert.False(GetNode(model, $"{Assembly}.Dependinator").IsChildrenLayoutRequired);
+        Assert.True(GetNode(model, $"{Assembly}.Dependinator.Core").IsChildrenLayoutRequired); // Foo has no place yet
+    }
+
     static IModel NewModel()
     {
         var model = new ModelMgr(new StateMgr()).UseModel();

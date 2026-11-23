@@ -96,10 +96,11 @@ public class VsCodeRpcCloudSyncServiceTests
         rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync((Result<CloudModelDocument>)document);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        Result<ModelDto> result = await sut.PullAsync("/models/sample.model");
+        Result<PulledModel> result = await sut.PullAsync("/models/sample.model");
 
         var pulledModel = AssertOk(result);
-        Assert.Equal(modelDto.Name, pulledModel.Name);
+        Assert.Equal(modelDto.Name, pulledModel.Model.Name);
+        Assert.Equal(document.ContentHash, pulledModel.ContentHash);
         rpc.Verify(r => r.PullAsync(expectedKey), Times.Once);
     }
 
@@ -112,7 +113,7 @@ public class VsCodeRpcCloudSyncServiceTests
         rpc.Setup(r => r.PullAsync(expectedKey)).ReturnsAsync(noRemoteModel);
         VsCodeRpcCloudSyncService sut = new(new FakeJsInterop(), rpc.Object, TimeSpan.FromSeconds(1));
 
-        Result<ModelDto> result = await sut.PullAsync("/models/sample.model");
+        Result<PulledModel> result = await sut.PullAsync("/models/sample.model");
 
         Assert.True(result is NotFoundError);
     }

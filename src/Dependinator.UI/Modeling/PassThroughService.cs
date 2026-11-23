@@ -38,6 +38,16 @@ static class PassThroughService
         // pass-through boundary; re-fit it to their own (small) stored boundary.
         foreach (var node in previous.Where(n => !n.IsPassThrough))
             NodeLayout.FitContainerTransform(node);
+
+        // A pass-through node has no stored boundary, so adding it flagged its parent for a
+        // layout (Node.AddChild), on every load of a saved model too. There is nothing to lay
+        // out there, and the flag stayed until the parent was opened on screen: the saved model
+        // (and so the cloud sync's content hash) changed with what the user had looked at.
+        foreach (var node in model.Nodes.Values.Where(n => n.IsPassThrough))
+        {
+            if (NodeLayout.IsFilledByPassThrough(node.Parent))
+                node.Parent.IsChildrenLayoutRequired = false;
+        }
     }
 
     // Solution assemblies are parsed with NodeType.Assembly; external assemblies under the
