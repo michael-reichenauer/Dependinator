@@ -29,3 +29,9 @@ npx -y "playwright@${PLAYWRIGHT_VERSION}" install chromium firefox webkit
 (cd /workspaces/Dependinator && playwright-cli install --skills) || true
 
 echo "Playwright setup done."
+
+# The VS Code extension's packages: without them the editor shows its imports as errors, and
+# Dependinator's own model of the workspace reports them as not installed and leaves out what
+# the extension uses of them. (The TypeScript parser's helper gets its packages from the build.)
+echo "Installing the VS Code extension's npm packages..."
+npm ci --no-audit --no-fund --prefix "$(dirname "$0")/../src/Dependinator.VsCodeExt"
