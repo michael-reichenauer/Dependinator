@@ -84,10 +84,11 @@ and runtimes" page again before starting.
       `<TargetFramework>net10.0</TargetFramework>` → `net11.0`.
 - [ ] `src/Api/Api.csproj`: move to the `Azure.Functions.Sdk` project SDK that .NET 11 function apps
       require; `Microsoft.Azure.Functions.Worker*` to versions that support net11.0.
-- [ ] **`src/Dependinator.Wasm/staticwebapp.config.json`: fix `platform.apiRuntime`.** It still says
-      `dotnet-isolated:8.0` although the Api has targeted net10.0 for a while (found Nov 18, 2026, left
-      as it is then since cloud sync works). Set it to the 11.0 value (`dotnet-isolated:11.0`), and check
-      on the PR's test site that cloud sync still works.
+- [ ] `src/Dependinator.Wasm/staticwebapp.config.json`: set `platform.apiRuntime` to the 11.0 value
+      (`dotnet-isolated:11.0`), and check on the PR's test site that cloud sync still works. It must
+      name the Api's target framework: it said `dotnet-isolated:8.0` long after the Api had moved to
+      net10.0 (found Nov 18, 2026), a runtime Static Web Apps retired on Nov 10, 2026, and was set to
+      `dotnet-isolated:10.0` on Nov 23, 2026.
 - [ ] Workflows: remove the `dotnet-version: "10.0.x"` line in `.github/workflows/unit-tests.yml`,
       `e2e.yml`, `release.yml` and `azure-static-web-apps-polite-island-0e6a6eb03.yml` (the
       11 SDK carries the 11 runtime), unless CSharpier still needs it (below).
