@@ -39,6 +39,30 @@ public class CloudSyncStateServiceTests
         Assert.Equal(new CloudSyncBaseline("pull-hash", "pull-hash"), state.Baseline);
     }
 
+    [Fact]
+    public async Task RecordLocalAsync_ShouldMoveTheLocalHash_AndKeepTheRemoteOne()
+    {
+        InMemoryConfigService configService = new();
+        CloudSyncStateService sut = new(configService);
+        await sut.RecordPullAsync("/models/sample.model", "local-hash", "remote-hash");
+
+        await sut.RecordLocalAsync("/models/sample.model", "loaded-hash");
+
+        CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
+        Assert.Equal(new CloudSyncBaseline("loaded-hash", "remote-hash"), state?.Baseline);
+    }
+
+    [Fact]
+    public async Task RecordLocalAsync_ShouldMakeNoBaseline_ForAModelWithoutOne()
+    {
+        InMemoryConfigService configService = new();
+        CloudSyncStateService sut = new(configService);
+
+        await sut.RecordLocalAsync("/models/sample.model", "loaded-hash");
+
+        Assert.Null(await sut.GetAsync("/models/sample.model"));
+    }
+
     sealed class InMemoryConfigService : IConfigService
     {
         public Config Config { get; } = new();

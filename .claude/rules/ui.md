@@ -457,13 +457,29 @@ of them; part 2 (only a user edit can conflict) is not built yet.
   nothing flags a node that `NodeLayout.IsFilledByPassThrough`
   (`ModelServiceSavedModelTests`). Anything a load derives and the DTO saves needs the same
   care: load, hash, compare.
+- **A fix that changes what a load gives changes the hash of every saved model**, so each
+  synced model looked changed at its first open after the update: pushed from the first device,
+  a conflict on the second (found in review). `SetNodeAndLinkDtos` reports a load that changed
+  the saved model and `ICloudCopyCheck.AcceptLoadChangeAsync` moves the baseline's local hash
+  from the saved model's to the loaded one's (only when the saved model is the synced one), and
+  the model is saved. A new load-time correction must be reported there too.
 - **The baseline of a pull is the cloud's hash** (`PulledModel.ContentHash`, the pushing app's),
   not a hash made here from the pulled model: another app version writes the DTO differently,
   so the cloud copy looked changed right after the pull.
 - **The parse after opening a saved model waits for the sync check** (`ICloudCopyCheck`,
   `ModelService.RefreshAfterCloudCheckAsync`): a newer cloud copy is pulled first and parsed
-  then. Only for a model with a baseline, and at most `StartCheckTimeout` (5 s). Parsed first,
-  the model had changed here too when the check came back from the network.
+  then. Only for a model with a baseline, and at most `StartCheckTimeout` (15 s, for an API
+  that starts cold; a later answer meets a parsed model, the old conflict). Parsed first, the
+  model had changed here too when the check came back from the network.
+- **A pull is of the model it was asked for** (found in review): the copy arrives seconds
+  later, and the user may have opened another model. `ReplaceCurrentModelAsync(modelPath, …)`
+  refuses then (it once wrote the copy over the other model's saved file), the automatic pull
+  drops it without an error, and `PullNewerAsync` counts only a pull of its own model
+  (`ModelPull`). A pulled copy keeps this device's view (zoom, offset): it comes with the
+  pushing device's, which moved the diagram under the user.
+- `ConfigService.SetAsync` is one update at a time (a static lock: the service is transient).
+  It reads, changes and writes the whole config, so of two at once one was lost, a sync
+  baseline among them.
 - Still view-dependent, for part 2: a container laid out the first time it is shown (lazy
   layout) changes the saved model, which lines are saved depends on what was shown, and `Lines`
   are saved in creation order (a parsed and a loaded model differ once). Stripping the automatic

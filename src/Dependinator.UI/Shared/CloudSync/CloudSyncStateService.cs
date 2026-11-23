@@ -20,6 +20,10 @@ interface ICloudSyncStateService
     // Stores sync metadata after a successful pull operation.
     Task RecordPullAsync(string modelPath, string localContentHash, string remoteContentHash);
 
+    // Replaces the local side of a model's baseline and keeps its remote side: the model is
+    // another one here with nothing to sync (a load that changed the saved model).
+    Task RecordLocalAsync(string modelPath, string localContentHash);
+
     // Removes the persisted sync state for a model, e.g. after its remote copy is deleted.
     Task ClearAsync(string modelPath);
 }
@@ -56,6 +60,19 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
             state.Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash);
+        });
+    }
+
+    // Moves the local side of the baseline, if the model has one.
+    public Task RecordLocalAsync(string modelPath, string localContentHash)
+    {
+        return configService.SetAsync(config =>
+        {
+            if (
+                config.CloudSyncStates.TryGetValue(GetKey(modelPath), out CloudSyncModelState? state)
+                && state.Baseline is { } baseline
+            )
+                state.Baseline = baseline with { LocalContentHash = localContentHash };
         });
     }
 

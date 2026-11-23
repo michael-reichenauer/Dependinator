@@ -105,6 +105,10 @@ interface IConfigService
 [Transient]
 class ConfigService : IConfigService
 {
+    // Shared by all instances (the service is transient, and in the server host every circuit
+    // writes the same config file)
+    static readonly SemaphoreSlim setLock = new(1, 1);
+
     readonly IFileService fileService;
     readonly IHostStoragePaths hostStoragePaths;
 
@@ -124,11 +128,22 @@ class ConfigService : IConfigService
 
     public async Task SetAsync(Action<Config> updateAction)
     {
-        // Default config values when none is stored yet
-        Config config = await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath) is Config stored
-            ? stored
-            : new Config();
-        updateAction(config);
-        await fileService.WriteAsync(hostStoragePaths.ConfigPath, config);
+        // One update at a time: each reads the whole config, changes it and writes it back, so
+        // of two at once the first one's change was lost (a recent path, or the cloud sync's
+        // baseline of a model, which then looked changed on both sides).
+        await setLock.WaitAsync();
+        try
+        {
+            // Default config values when none is stored yet
+            Config config = await fileService.ReadAsync<Config>(hostStoragePaths.ConfigPath) is Config stored
+                ? stored
+                : new Config();
+            updateAction(config);
+            await fileService.WriteAsync(hostStoragePaths.ConfigPath, config);
+        }
+        finally
+        {
+            setLock.Release();
+        }
     }
 }

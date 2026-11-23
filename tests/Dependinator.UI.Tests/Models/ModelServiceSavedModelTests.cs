@@ -4,6 +4,7 @@ using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Modeling.Models;
 using Dependinator.UI.Shared;
 using Dependinator.UI.Shared.CloudSync;
+using Dependinator.UI.Shared.Types;
 using Dependinator.UI.Shared.VsCode;
 using Item = Dependinator.Core.Parsing.Item;
 using ParsedNode = Dependinator.Core.Parsing.Node;
@@ -128,6 +129,72 @@ public class ModelServiceSavedModelTests
 
         VerifyParses(Times.Once());
         cloudCopyCheck.Verify(c => c.PullNewerAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    // A version before Nov 23 2026 saved the layout flag each load set on a node filled by a
+    // pass-through node. A load now clears it, so the loaded model is not the saved one: the
+    // cloud sync hears of it (the model is still what was last synced) and the model is saved.
+    [Fact]
+    public async Task LoadAsync_ShouldTellTheCloudSync_WhenTheLoadChangedTheSavedModel()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        saved.Nodes.Single(n => n.Name == Assembly).IsChildrenLayoutRequired = true;
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        IModelMgr modelMgr = new ModelMgr(new StateMgr());
+        using var modelService = CreateModelService(modelMgr);
+        ModelContentStamp before = modelService.ContentStamp;
+
+        AssertOk(await modelService.LoadAsync(Path));
+
+        cloudCopyCheck.Verify(c => c.AcceptLoadChangeAsync(Path, saved), Times.Once);
+        Assert.False(modelMgr.WithModel(m => m.Nodes[NodeId.FromName(Assembly)].IsChildrenLayoutRequired));
+        Assert.True(modelService.ContentStamp.Saves >= before.Saves + 2, "A load and a save request");
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldNotTellTheCloudSync_WhenTheLoadedModelIsTheSavedOne()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+
+        AssertOk(await modelService.LoadAsync(Path));
+
+        cloudCopyCheck.Verify(c => c.AcceptLoadChangeAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
+    }
+
+    // The cloud copy of a model was on its way when the user opened another model: written
+    // over that one, it would replace its saved copy, and after the next push its cloud copy.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldReplaceNothing_WhenAnotherModelIsOpen()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        persistenceService.Invocations.Clear();
+
+        AssertError(await modelService.ReplaceCurrentModelAsync("/repo/Other.sln", saved));
+
+        persistenceService.Verify(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
+    }
+
+    // The copy has the view of the device that pushed it; this device keeps its own
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldKeepTheView()
+    {
+        ModelDto saved = await ParseAndLayOutAsync() with { Zoom = 2, Offset = new Pos(10, 20) };
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        IModelMgr modelMgr = new ModelMgr(new StateMgr());
+        using var modelService = CreateModelService(modelMgr);
+        AssertOk(await modelService.LoadAsync(Path));
+
+        ModelDto cloudCopy = saved with { Zoom = 7, Offset = new Pos(500, 600) };
+        ModelInfo replaced = AssertOk(await modelService.ReplaceCurrentModelAsync(Path, cloudCopy));
+
+        Assert.Equal(2, replaced.Zoom);
+        Assert.Equal((2, new Pos(10, 20)), modelMgr.WithModel(m => (m.Zoom, m.Offset)));
+        persistenceService.Verify(p => p.WriteAsync(Path, It.Is<ModelDto>(m => m.Zoom == 2)), Times.Once);
     }
 
     void VerifyParses(Times times) =>

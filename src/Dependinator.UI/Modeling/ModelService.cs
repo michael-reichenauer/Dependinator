@@ -81,7 +81,10 @@ interface IModelService
     // so the cloud sync hashes the model again only then: panning and zooming leave it.
     ModelContentStamp ContentStamp { get; }
     Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
-    Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto);
+
+    // Replaces the open model, which is the one at modelPath, by another copy of it (its cloud
+    // copy). An error when another model was opened meanwhile.
+    Task<Result<ModelInfo>> ReplaceCurrentModelAsync(string modelPath, ModelDto modelDto);
 }
 
 // What a change to the open model's saved content moves: a save request or a model load (Saves,
@@ -209,11 +212,19 @@ class ModelService : IModelService, IDisposable
         }
     }
 
-    public async Task<Result<ModelInfo>> ReplaceCurrentModelAsync(ModelDto modelDto)
+    public async Task<Result<ModelInfo>> ReplaceCurrentModelAsync(string modelPath, ModelDto modelDto)
     {
-        var modelPath = modelMgr.ModelPath;
-        if (string.IsNullOrWhiteSpace(modelPath))
+        if (string.IsNullOrWhiteSpace(modelMgr.ModelPath))
             return new Error("Model is not loaded");
+
+        // The copy was fetched while the user went on: written over another model that was
+        // opened meanwhile, it would replace that model's saved copy, and then its cloud copy.
+        if (modelMgr.ModelPath != modelPath)
+            return new Error($"'{ModelPaths.DisplayName(modelPath)}' is no longer the open model");
+
+        // The view is each device's own: the copy comes with the view of the device that
+        // pushed it, which would move this one's diagram under the user.
+        modelDto = modelMgr.WithModel(m => modelDto with { Zoom = m.Zoom, Offset = m.Offset, ViewRect = m.ViewRect });
 
         if (await WriteModelAsync(modelPath, modelDto) is Error error)
             return error;
@@ -346,7 +357,7 @@ class ModelService : IModelService, IDisposable
         if (await persistenceService.ReadViewAsync(path) is ViewDto view)
             model = view.ApplyTo(model);
 
-        var modelInfo = await LoadCachedModelDataAsync(path, model);
+        var modelInfo = await LoadCachedModelDataAsync(path, model, isSavedHere: true);
 
         return modelInfo;
     }
@@ -1096,7 +1107,7 @@ class ModelService : IModelService, IDisposable
     void UpdateSaveStatus() =>
         saveStatusService.SetPending(savedRequests < saveRequests || savedViewRequests < viewSaveRequests);
 
-    async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto)
+    async Task<ModelInfo> LoadCachedModelDataAsync(string path, ModelDto modelDto, bool isSavedHere = false)
     {
         using (var model = modelMgr.UseModel())
         {
@@ -1104,8 +1115,18 @@ class ModelService : IModelService, IDisposable
             model.SetFromDto(path, modelDto);
         }
 
-        await Task.Run(() => SetNodeAndLinkDtos(modelDto));
+        bool isChangedByLoad = await Task.Run(() => SetNodeAndLinkDtos(modelDto));
         Interlocked.Increment(ref contentVersion);
+        if (isChangedByLoad)
+        {
+            // The loaded model is not the saved one, and nobody changed it: it is saved as it
+            // is now, and the cloud sync is told (before the events below start its check of
+            // the model).
+            TriggerSave();
+            if (isSavedHere)
+                await cloudCopyCheck.AcceptLoadChangeAsync(path, modelDto);
+        }
+
         // Compute line visibility before triggering the render so the first cached tile
         // uses correct hidden state (lines to hidden nodes must render as hidden).
         CheckLineVisibility();
@@ -1149,7 +1170,10 @@ class ModelService : IModelService, IDisposable
         }
     }
 
-    void SetNodeAndLinkDtos(ModelDto modelDto)
+    // True when the model is not as it was saved: a node saved as waiting for a layout that
+    // has nothing to lay out (it is filled by a pass-through node, and a version before Nov 23
+    // 2026 saved the flag that each load set).
+    bool SetNodeAndLinkDtos(ModelDto modelDto)
     {
         using var model = modelMgr.UseModel();
         modelDto.Nodes.ForEach(n => modelStructureService.SetNodeDto(model, n));
@@ -1160,6 +1184,12 @@ class ModelService : IModelService, IDisposable
         foreach (var node in model.Nodes.Values)
             MemberCard.RestoreLayoutState(node);
         RequireChildrenLayoutIfOlder(model, modelDto.LayoutVersion);
+
+        return modelDto.Nodes.Any(dto =>
+            dto.IsChildrenLayoutRequired
+            && model.Nodes.TryGetValue(NodeId.FromName(dto.Name), out var node)
+            && !node.IsChildrenLayoutRequired
+        );
     }
 
     // A model saved with an older automatic layout gets it redone (lazily, as containers are
