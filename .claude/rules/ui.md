@@ -530,9 +530,30 @@ other code, a lazy layout, shifted line numbers), so the model carries a mark in
   the model again), and every lazy layout was a push. Now a device pushes a parse result once;
   pulled back and parsed again it is the structure it pushed before, and stays. So a model can
   differ from its cloud copy and show as synced: only by what a parse or a layout made.
+  It costs as much as the content hash (80-160 ms for the demo on a server, several times that
+  in the browser), so it is kept per `IModelService.StructureStamp`, which the saves of a
+  layout the app made, of what the diagram shows (`ClearCache`) and of the edit mark leave:
+  a `TriggerDerivedSave(isLayoutOnly: true)` must really change nothing a parse gives. Not in
+  it: a line's parsed description (which lines are saved depends on what was shown), so a parse
+  that changes only that is pushed with the next edit.
+- **The mark and the content stamp move as one step** (`TriggerSave` under the model lock, as
+  `MarkSynced` compares and clears): in the server host a sync that just finished ran between
+  the two and cleared the mark of the edit (found in review). `MarkSynced` returns the stamp of
+  its own save, never the stamp read afterwards, which can be of a later change.
+- **A model with no saved copy has nothing synced here** (`ICloudCopyCheck.ForgetSyncedCopyAsync`
+  before its first parse): "Delete local only" and a saved model that cannot be read left the
+  baseline, and with it the new parse was a local change, pushed over the cloud copy (or shown
+  as synced, and pushed with the first edit). Without the baseline the cloud copy is pulled.
+- **The first parse fills the model outside `refreshGate`** (it must not wait for a refresh of
+  the model the user just left), and a model that was only parsed now takes the cloud copy, so
+  `ReplaceCurrentModelAsync` waits for `firstParse` too (found in review: a new codespace got
+  the rest of its parse added to the pulled copy).
 - **An automatic pull gives way to an edit made while the copy was on its way**
-  (`ReplaceCurrentModelAsync(…, isUsersChoice: false)` refuses, the pull is dropped without an
-  error, the next check shows the conflict). The user's own "use the cloud copy" replaces.
+  (`ReplaceCurrentModelAsync(…, isUsersChoice: false)` refuses, before and after writing the
+  copy; the pull is dropped without an error, the next check shows the conflict). The user's
+  own "use the cloud copy" replaces.
+- A cloud copy that is gone (deleted from another device) is made again from this device's
+  model, as before, now also when a parse changed the model here since (it was a conflict).
 - Not built (possible follow-ups): telling a cloud copy that changed only by another device's
   parse from one the user edited there (it would need an edit stamp in the cloud document), and
   a conditional push (If-Match) for two devices pushing at the same moment.

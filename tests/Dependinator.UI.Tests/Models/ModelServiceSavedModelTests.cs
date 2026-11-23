@@ -46,14 +46,14 @@ public class ModelServiceSavedModelTests
             .Callback(() => parsed.TrySetResult());
     }
 
-    ModelService CreateModelService(IModelMgr modelMgr) =>
+    ModelService CreateModelService(IModelMgr modelMgr, IApplicationEvents? applicationEvents = null) =>
         new(
             modelMgr,
             modelListService.Object,
             parserService.Object,
             new StructureService(new LineService()),
             persistenceService.Object,
-            Mock.Of<IApplicationEvents>(),
+            applicationEvents ?? Mock.Of<IApplicationEvents>(),
             Mock.Of<IProgressService>(),
             Mock.Of<IVsCodeSendService>(),
             Mock.Of<ISaveStatusService>(),
@@ -151,6 +151,55 @@ public class ModelServiceSavedModelTests
         parse.SetResult(new Error("stopped"));
         AssertError(await refresh.WaitAsync(Timeout));
         AssertOk(await replace.WaitAsync(Timeout));
+    }
+
+    // A model with no saved copy is filled by its first parse, outside the refresh gate. Its
+    // cloud copy (a new device: the model is in the cloud, and the parse is no edit) waits for
+    // that parse too, or the rest of the parse was added to the copy.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldWaitForTheFirstParse()
+    {
+        ModelDto cloudCopy = await ParseAndLayOutAsync();
+        IModelMgr modelMgr = new ModelMgr(new StateMgr());
+        Mock<IApplicationEvents> applicationEvents = new();
+        using var modelService = CreateModelService(modelMgr, applicationEvents.Object);
+        Task<Result<ModelInfo>>? replace = null;
+        int? nodesWhenReplaced = null;
+        // The parse tells of the model once it is the open one, before its items are added
+        applicationEvents
+            .Setup(e => e.TriggerModelChanged())
+            .Callback(() =>
+            {
+                if (modelMgr.ModelPath == Path)
+                    replace ??= modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: false);
+            });
+        persistenceService
+            .Setup(p => p.WriteAsync(Path, It.IsAny<ModelDto>()))
+            .Callback(() => nodesWhenReplaced ??= modelMgr.WithModel(m => m.Nodes.Count))
+            .ReturnsAsync(Result.Ok);
+
+        AssertOk(await modelService.LoadAsync(Path));
+        int parsedNodes = modelMgr.WithModel(m => m.Nodes.Count);
+        AssertOk(await replace!.WaitAsync(Timeout));
+
+        Assert.Equal(parsedNodes, nodesWhenReplaced);
+    }
+
+    // No saved model here: a sync baseline of this device is of a copy that is gone (deleted
+    // here only), and with it the new parse was a change to push over the cloud copy.
+    [Fact]
+    public async Task LoadAsync_ShouldForgetTheSyncedCopy_OfAModelWithNoSavedCopy()
+    {
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(Path), Times.Once);
+
+        ModelDto saved = AssertOk(modelService.GetCurrentModelDto());
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        cloudCopyCheck.Invocations.Clear();
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(It.IsAny<string>()), Times.Never);
     }
 
     // The pull replaced the model and parses it itself: a second parse here would be of the
@@ -276,6 +325,33 @@ public class ModelServiceSavedModelTests
         Assert.False(modelService.HasUserEdits);
         Assert.True(marked?.Saves > synced.Saves, "Clearing the mark saves the model");
         Assert.Equal(modelService.ContentStamp, modelService.MarkSynced(modelService.ContentStamp));
+    }
+
+    // The structure hash of the cloud sync is made again when this stamp moves: not for the
+    // layouts the app makes as the model is looked at, which are most of the saves.
+    [Fact]
+    public async Task StructureStamp_ShouldMoveWithAParseAndAnEdit_NotWithALayoutOfTheApp()
+    {
+        Mock<IApplicationEvents> applicationEvents = new();
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()), applicationEvents.Object);
+        AssertOk(await modelService.LoadAsync(Path));
+        ModelContentStamp structure = modelService.StructureStamp;
+        ModelContentStamp content = modelService.ContentStamp;
+
+        applicationEvents.Raise(e => e.DerivedSaveNeeded += null);
+        modelService.ClearCache();
+        Assert.Equal(structure, modelService.StructureStamp);
+        Assert.NotEqual(content, modelService.ContentStamp);
+
+        modelService.TriggerSave();
+        Assert.NotEqual(structure, modelService.StructureStamp);
+
+        structure = modelService.StructureStamp;
+        Assert.NotNull(modelService.MarkSynced(modelService.ContentStamp));
+        Assert.Equal(structure, modelService.StructureStamp);
+
+        AssertOk(await modelService.RefreshAsync());
+        Assert.NotEqual(structure, modelService.StructureStamp);
     }
 
     [Fact]

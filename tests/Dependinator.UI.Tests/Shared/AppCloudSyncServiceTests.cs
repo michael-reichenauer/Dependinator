@@ -752,6 +752,23 @@ public class AppCloudSyncServiceTests
         );
     }
 
+    // A model with no saved copy on this device (deleted here only) has nothing synced here:
+    // its new parse is compared with the cloud copy as a model that never was synced.
+    [Fact]
+    public async Task ForgetSyncedCopyAsync_ShouldDropTheBaseline_WhenThereIsOne()
+    {
+        string modelPath = "/models/sample.model";
+        CloudSyncModelState syncState = CreateSyncStateFromModel(CreateModelDto("synced"));
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("parsed"), syncState, []);
+
+        await context.Sut.ForgetSyncedCopyAsync(modelPath);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(modelPath), Times.Once);
+
+        // Nothing to drop, nothing written (every first open of a model comes here)
+        await context.Sut.ForgetSyncedCopyAsync("/models/other.model");
+        context.CloudSyncStateService.Verify(x => x.ClearAsync("/models/other.model"), Times.Never);
+    }
+
     // The user opened another model while the newer copy was on its way: the pull is dropped
     // (ReplaceCurrentModelAsync refuses it), which is nothing to report.
     [Fact]
@@ -1049,6 +1066,7 @@ public class AppCloudSyncServiceTests
         // As in ModelService, a load moves the stamp
         long loads = 0;
         modelService.SetupGet(x => x.ContentStamp).Returns(() => new ModelContentStamp(modelPath, loads));
+        modelService.SetupGet(x => x.StructureStamp).Returns(() => modelService.Object.ContentStamp);
         modelService
             .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>(), It.IsAny<bool>()))
             .Callback(() => loads++)

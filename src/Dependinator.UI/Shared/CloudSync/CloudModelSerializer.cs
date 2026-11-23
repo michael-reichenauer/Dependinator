@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
@@ -54,27 +53,39 @@ static class CloudModelSerializer
     // A hash of what the model is made of, as a parse gives it: the nodes and links with their
     // parsed properties, in a fixed order, without anything of the layout. Two models of the
     // same source have the same structure hash whatever was laid out, shown or loaded in which
-    // order, so it tells a new parse result from a model that only looks different.
+    // order, so it tells a new parse result from a model that only looks different. A line's
+    // parsed description is not in it: which lines are saved depends on what was shown.
     public static string GetStructureHash(ModelDto modelDto)
     {
-        IEnumerable<string> nodes = modelDto.Nodes.Select(n =>
-            $"N\t{n.Name}\t{n.ParentName}\t{n.Type}\t{JsonSerializer.Serialize(n.Properties, serializerOptions)}"
-        );
-        IEnumerable<string> links = modelDto.Links.Select(l =>
-            $"L\t{l.SourceName}\t{l.TargetName}\t{l.TargetType}\t{l.IsManual}\t{l.IsInheritance}\t{l.IsConfiguration}"
-        );
-        IEnumerable<string> problems = modelDto.ParseProblems.Select(p =>
-            $"P\t{JsonSerializer.Serialize(p, serializerOptions)}"
+        StringComparer ordinal = StringComparer.Ordinal;
+        Structure structure = new(
+            [
+                .. modelDto
+                    .Nodes.OrderBy(n => n.Name, ordinal)
+                    .Select(n => new NodeDto
+                    {
+                        Name = n.Name,
+                        ParentName = n.ParentName,
+                        Type = n.Type,
+                        Properties = n.Properties,
+                    }),
+            ],
+            [
+                .. modelDto
+                    .Links.OrderBy(l => l.SourceName, ordinal)
+                    .ThenBy(l => l.TargetName, ordinal)
+                    .ThenBy(l => l.TargetType, ordinal),
+            ],
+            [.. modelDto.ParseProblems.Select(p => JsonSerializer.Serialize(p, serializerOptions)).Order(ordinal)]
         );
 
-        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-        foreach (string item in nodes.Concat(links).Concat(problems).Order(StringComparer.Ordinal))
-        {
-            hash.AppendData(Encoding.UTF8.GetBytes(item));
-            hash.AppendData([(byte)'\n']);
-        }
-        return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+        // One pass over the whole structure, like the content hash: a string and a hash step
+        // per node and link took as long as the content hash itself (the demo, 12k nodes)
+        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(structure, serializerOptions);
+        return Convert.ToHexString(SHA256.HashData(jsonBytes)).ToLowerInvariant();
     }
+
+    sealed record Structure(IReadOnlyList<NodeDto> Nodes, IReadOnlyList<LinkDto> Links, IReadOnlyList<string> Problems);
 
     // Deserializes a compressed cloud document back into a model DTO.
     public static Result<ModelDto> ReadModel(CloudModelDocument document)

@@ -280,6 +280,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
     async Task<Result<CloudModelMetadata>> SyncUpCoreAsync(bool notifyChanged)
     {
         ModelContentStamp contentStamp = modelServiceLazy.Value.ContentStamp;
+        ModelContentStamp structureStamp = modelServiceLazy.Value.StructureStamp;
         var modelDtoResult = modelServiceLazy.Value.GetCurrentModelDto();
         if (modelDtoResult is not ModelDto modelDto)
             return modelDtoResult.Error;
@@ -293,7 +294,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         string localContentHash = CloudModelSerializer.GetContentHash(modelDto);
         string structureHash = CloudModelSerializer.GetStructureHash(modelDto);
         cachedLocalHash = new LocalContentHash(contentStamp, localContentHash);
-        cachedStructureHash = new LocalContentHash(contentStamp, structureHash);
+        cachedStructureHash = new LocalContentHash(structureStamp, structureHash);
         await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash, structureHash);
         ApplySuccessfulSync(localContentHash, metadata.ContentHash, metadata, structureHash);
         MarkModelSynced(contentStamp);
@@ -410,6 +411,22 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         catch (Exception e)
         {
             Log.Exception(e, "Failed to keep the sync baseline of a model changed by loading it");
+        }
+    }
+
+    public async Task ForgetSyncedCopyAsync(string modelPath)
+    {
+        try
+        {
+            if (await cloudSyncStateService.GetAsync(modelPath) is null)
+                return;
+
+            Log.Info("No saved model here, its sync baseline is dropped", modelPath);
+            await cloudSyncStateService.ClearAsync(modelPath);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to drop the sync baseline of a model that is not saved here");
         }
     }
 
@@ -951,24 +968,27 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
 
     sealed record LocalContentHash(ModelContentStamp Stamp, string Hash);
 
+    // Kept while the model's structure is (IModelService.StructureStamp): it costs as much as
+    // the content hash, and a model the app lays out bit by bit as it is looked at would need
+    // it after each of those layouts.
     string? GetCurrentModelStructureHashOrDefault()
     {
         IModelService modelService = modelServiceLazy.Value;
-        ModelContentStamp contentStamp = modelService.ContentStamp;
-        if (cachedStructureHash is { } cached && cached.Stamp == contentStamp)
+        ModelContentStamp structureStamp = modelService.StructureStamp;
+        if (cachedStructureHash is { } cached && cached.Stamp == structureStamp)
             return cached.Hash;
 
         if (modelService.GetCurrentModelDto() is not ModelDto currentModelDto)
             return null;
 
         string hash = CloudModelSerializer.GetStructureHash(currentModelDto);
-        cachedStructureHash = new LocalContentHash(contentStamp, hash);
+        cachedStructureHash = new LocalContentHash(structureStamp, hash);
         return hash;
     }
 
     // The model as it was at syncedStamp is the same as its cloud copy: it has no edits of the
     // user's left (IModelService.MarkSynced). Clearing the mark saves the model, which moves
-    // its stamp but nothing the hashes cover, so they are kept for the new stamp.
+    // its stamp but nothing the content hash covers, so that is kept for the new stamp.
     void MarkModelSynced(ModelContentStamp syncedStamp)
     {
         if (modelServiceLazy.Value.MarkSynced(syncedStamp) is not { } markedStamp || markedStamp == syncedStamp)
@@ -977,8 +997,6 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         lastMark = (syncedStamp, markedStamp);
         if (cachedLocalHash is { } content && content.Stamp == syncedStamp)
             cachedLocalHash = content with { Stamp = markedStamp };
-        if (cachedStructureHash is { } structure && structure.Stamp == syncedStamp)
-            cachedStructureHash = structure with { Stamp = markedStamp };
     }
 
     // Only the user's own edits are changes to stand up for (Model.HasUserEdits). What a parse
