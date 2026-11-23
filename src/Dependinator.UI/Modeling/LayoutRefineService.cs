@@ -123,7 +123,7 @@ class LayoutRefineService(
                 Log.Info($"Refined the layout of {job.ContainerName}");
                 applicationEvents.TriggerModelChanged();
                 applicationEvents.TriggerUIStateChanged();
-                applicationEvents.TriggerSaveNeeded();
+                applicationEvents.TriggerDerivedSaveNeeded();
             }
         }
         catch (OperationCanceledException)

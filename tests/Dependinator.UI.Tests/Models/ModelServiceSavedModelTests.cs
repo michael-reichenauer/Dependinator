@@ -144,7 +144,7 @@ public class ModelServiceSavedModelTests
         Task<Result> refresh = modelService.RefreshAsync();
         await parsing.Task.WaitAsync(Timeout);
 
-        Task<Result<ModelInfo>> replace = modelService.ReplaceCurrentModelAsync(Path, saved);
+        Task<Result<ModelInfo>> replace = modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false);
         await Task.Delay(50);
         Assert.False(replace.IsCompleted);
 
@@ -226,7 +226,7 @@ public class ModelServiceSavedModelTests
         AssertOk(await modelService.LoadAsync(Path));
         persistenceService.Invocations.Clear();
 
-        AssertError(await modelService.ReplaceCurrentModelAsync("/repo/Other.sln", saved));
+        AssertError(await modelService.ReplaceCurrentModelAsync("/repo/Other.sln", saved, isUsersChoice: false));
 
         persistenceService.Verify(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
     }
@@ -242,11 +242,89 @@ public class ModelServiceSavedModelTests
         AssertOk(await modelService.LoadAsync(Path));
 
         ModelDto cloudCopy = saved with { Zoom = 7, Offset = new Pos(500, 600) };
-        ModelInfo replaced = AssertOk(await modelService.ReplaceCurrentModelAsync(Path, cloudCopy));
+        ModelInfo replaced = AssertOk(
+            await modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: false)
+        );
 
         Assert.Equal(2, replaced.Zoom);
         Assert.Equal((2, new Pos(10, 20)), modelMgr.WithModel(m => (m.Zoom, m.Offset)));
         persistenceService.Verify(p => p.WriteAsync(Path, It.Is<ModelDto>(m => m.Zoom == 2)), Times.Once);
+    }
+
+    // The mark the cloud sync goes by (Model.HasUserEdits): a parse is no edit of the user's,
+    // a save request of the app's commands is, a sync clears it, and it is saved with the model.
+    [Fact]
+    public async Task HasUserEdits_ShouldBeSetByAnEdit_NotByAParse_AndClearedByASync()
+    {
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        AssertOk(await modelService.RefreshAsync());
+        Assert.False(modelService.HasUserEdits);
+
+        modelService.TriggerSave();
+        Assert.True(modelService.HasUserEdits);
+        Assert.True(AssertOk(modelService.GetCurrentModelDto()).HasUserEdits);
+
+        // Synced as it was before a later edit: that edit is still to sync
+        ModelContentStamp pushed = modelService.ContentStamp;
+        modelService.TriggerSave();
+        Assert.Null(modelService.MarkSynced(pushed));
+        Assert.True(modelService.HasUserEdits);
+
+        ModelContentStamp synced = modelService.ContentStamp;
+        ModelContentStamp? marked = modelService.MarkSynced(synced);
+        Assert.False(modelService.HasUserEdits);
+        Assert.True(marked?.Saves > synced.Saves, "Clearing the mark saves the model");
+        Assert.Equal(modelService.ContentStamp, modelService.MarkSynced(modelService.ContentStamp));
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldKeepTheMarkOfTheSavedModel()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved with { HasUserEdits = true });
+        AssertOk(await modelService.LoadAsync(Path));
+        Assert.True(modelService.HasUserEdits);
+
+        // Saved before the mark existed: not known
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved with { HasUserEdits = null });
+        AssertOk(await modelService.LoadAsync(Path));
+        Assert.Null(modelService.HasUserEdits);
+    }
+
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldLeaveNoEditsToSync()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        modelService.TriggerSave();
+
+        ModelDto cloudCopy = saved with { HasUserEdits = null };
+        AssertOk(await modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: true));
+
+        Assert.False(modelService.HasUserEdits);
+    }
+
+    // An automatic pull is decided on a model the user has not edited. An edit made while the
+    // copy was on its way is not replaced by it: the next sync check shows the conflict.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldReplaceNothing_WhenTheUserEditedMeanwhile()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        modelService.TriggerSave();
+        persistenceService.Invocations.Clear();
+
+        AssertError(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false));
+
+        Assert.True(modelService.HasUserEdits);
+        persistenceService.Verify(p => p.WriteAsync(Path, It.IsAny<ModelDto>()), Times.Never);
     }
 
     void VerifyParses(Times times) =>

@@ -6,6 +6,11 @@ namespace Dependinator.UI.Shared.CloudSync;
 class CloudSyncModelState
 {
     public CloudSyncBaseline? Baseline { get; set; }
+
+    // The structure hash (CloudModelSerializer.GetStructureHash) of the model this device
+    // pushed last: a model the user has not edited is pushed again only when a parse made
+    // something else of it. Null until the first push by a version that knows it.
+    public string? PushedStructureHash { get; set; }
 }
 
 // Abstraction for reading and updating per-model cloud sync metadata in local config.
@@ -15,7 +20,7 @@ interface ICloudSyncStateService
     Task<CloudSyncModelState?> GetAsync(string modelPath);
 
     // Stores sync metadata after a successful push operation.
-    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string localContentHash);
+    Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string localContentHash, string structureHash);
 
     // Stores sync metadata after a successful pull operation.
     Task RecordPullAsync(string modelPath, string localContentHash, string remoteContentHash);
@@ -44,12 +49,18 @@ class CloudSyncStateService(IConfigService configService) : ICloudSyncStateServi
     }
 
     // Writes a push event snapshot as the latest sync marker.
-    public Task RecordPushAsync(string modelPath, CloudModelMetadata metadata, string localContentHash)
+    public Task RecordPushAsync(
+        string modelPath,
+        CloudModelMetadata metadata,
+        string localContentHash,
+        string structureHash
+    )
     {
         return configService.SetAsync(config =>
         {
             CloudSyncModelState state = GetOrCreateState(config, modelPath);
             state.Baseline = new CloudSyncBaseline(localContentHash, metadata.ContentHash);
+            state.PushedStructureHash = structureHash;
         });
     }
 

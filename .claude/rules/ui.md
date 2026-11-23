@@ -449,8 +449,8 @@ was removed on Nov 14 2026 at Michael's request: the stubs made it unneeded. Don
 Michael got "Sync Conflict" at nearly every open. A conflict is "the model changed here and in
 the cloud since the last sync" (`AppCloudSyncService.CompareToBaseline`, content hashes against
 the saved baseline), and the design assumes only the user changes a model. Measured on the demo
-model, the hash also moved for things nobody did. Part 1 of the fix (this section) removes three
-of them; part 2 (only a user edit can conflict) is not built yet.
+model, the hash also moved for things nobody did. Part 1 of the fix (PR #285) removes three
+of them; part 2 is the rule "only an edit of the user's can conflict" (the next section).
 - **Loading a saved model must give the saved model.** A pass-through node has no stored
   boundary, so `Node.AddChild` flagged the node it fills for a layout on every load, until that
   node was opened on screen. `PassThroughService.UpdatePassThroughFlags` clears the flag, and
@@ -487,7 +487,7 @@ of them; part 2 (only a user edit can conflict) is not built yet.
   version's static lock was never released once a page closed during an update (its storage
   call never returns), and no circuit of the server host started any more, which the e2e run
   showed as every test failing at "app ready" from some point on.
-- Still view-dependent, for part 2: a container laid out the first time it is shown (lazy
+- Still view-dependent, hence part 2: a container laid out the first time it is shown (lazy
   layout) changes the saved model, which lines are saved depends on what was shown, and `Lines`
   are saved in creation order (a parsed and a loaded model differ once). Stripping the automatic
   layout from the hash was looked at and dropped: a pan or zoom inside a container
@@ -497,7 +497,45 @@ of them; part 2 (only a user edit can conflict) is not built yet.
   local change, and with a second device a conflict. It needs a baseline migration.
 - No baseline with differing copies is a conflict by design (`CompareWithoutBaseline`): a new
   codespace, cleared site data, or two hosts on one path (the dev host and VS Code in one
-  devcontainer have separate storage and the same cloud key).
+  devcontainer have separate storage and the same cloud key). Since part 2 only when the user
+  edited the model here: a model that was only parsed takes the cloud copy.
+
+## Cloud sync: only the user's edits can conflict (Nov 23 2026)
+
+Part 2. The content hash cannot tell an edit from what the app made of the model (a parse on
+other code, a lazy layout, shifted line numbers), so the model carries a mark instead.
+- **`Model.HasUserEdits`** (saved in `ModelDto`, left out of the content hash and of the cloud
+  document: it is each device's own). `ModelService.TriggerSave()` and the `SaveNeeded` event
+  are the user's edits and set it; `TriggerDerivedSave()` and `DerivedSaveNeeded` save what the
+  app made (parse, refresh, layout refine, a correction on load, `ClearCache`) and leave it. **A
+  new save site must choose**: an app-made change saved as an edit brings the conflicts back, a
+  user's edit saved as derived can be replaced by a pull without a word. Null is "not known"
+  (saved before the mark) and counts as edited, so an old model behaves as before until its
+  first check that finds it unchanged.
+- **The mark is cleared when the model is the cloud copy**: after a push
+  (`AppCloudSyncService.MarkModelSynced`), after a pull (`ReplaceCurrentModelAsync`,
+  `LoadCloudModelCoreAsync`), and by a check that finds the hash at its baseline.
+  `IModelService.MarkSynced(stamp)` refuses when the model changed since the stamp (an edit
+  made while the push was on its way). Clearing it saves the model, which moves the content
+  stamp of the same content: the cached hashes and `lastCheckedStamp` are moved along
+  (`lastMark`), or the start-up check ran twice.
+- **The rule** (`LeaveOutWhatNobodyEdited`, after `CompareToBaseline`): edited or not known is
+  as before. Not edited and the cloud copy changed: a pull, whatever changed here (the parse
+  after it makes the same of the pulled copy), also without a baseline. Not edited and only
+  changed here: pushed only when the structure is new.
+- **The structure hash** (`CloudModelSerializer.GetStructureHash`: nodes, links and parse
+  problems with their parsed properties, sorted, nothing of the layout) is recorded at each
+  push (`CloudSyncModelState.PushedStructureHash`). Without it two devices on different code
+  pushed their parse over the other's forever (each pull is followed by a parse that changes
+  the model again), and every lazy layout was a push. Now a device pushes a parse result once;
+  pulled back and parsed again it is the structure it pushed before, and stays. So a model can
+  differ from its cloud copy and show as synced: only by what a parse or a layout made.
+- **An automatic pull gives way to an edit made while the copy was on its way**
+  (`ReplaceCurrentModelAsync(…, isUsersChoice: false)` refuses, the pull is dropped without an
+  error, the next check shows the conflict). The user's own "use the cloud copy" replaces.
+- Not built (possible follow-ups): telling a cloud copy that changed only by another device's
+  parse from one the user edited there (it would need an edit stamp in the cloud document), and
+  a conditional push (If-Match) for two devices pushing at the same moment.
 
 ## iPad home-screen web app (Nov 2026)
 

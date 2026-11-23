@@ -15,7 +15,13 @@ record ErrorReport(string Message, ErrorAction? Action);
 interface IApplicationEvents
 {
     event Action? UIStateChanged;
+
+    // The user edited the model: it is saved, and marked as edited for the cloud sync.
     event Action? SaveNeeded;
+
+    // The app itself changed the model (a refined layout): saved like an edit, but no edit of
+    // the user's (see Model.HasUserEdits).
+    event Action? DerivedSaveNeeded;
 
     // Raised when only the view (pan offset, zoom, canvas size) needs saving: the small view
     // record is written instead of the whole model (see ModelService).
@@ -43,6 +49,7 @@ interface IApplicationEvents
 
     void TriggerUIStateChanged();
     void TriggerSaveNeeded();
+    void TriggerDerivedSaveNeeded();
     void TriggerViewSaveNeeded();
     void TriggerUndoneRedone();
     void TriggerModelChanged();
@@ -63,6 +70,7 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
 {
     public event Action? UIStateChanged;
     public event Action? SaveNeeded;
+    public event Action? DerivedSaveNeeded;
     public event Action? ViewSaveNeeded;
     public event Action? UndoneRedone;
     public event Action? ModelChanged;
@@ -74,6 +82,8 @@ class ApplicationEvents(IJSInterop jSInterop) : IApplicationEvents
     public void TriggerUIStateChanged() => UIStateChanged?.Invoke();
 
     public void TriggerSaveNeeded() => SaveNeeded?.Invoke();
+
+    public void TriggerDerivedSaveNeeded() => DerivedSaveNeeded?.Invoke();
 
     public void TriggerViewSaveNeeded() => ViewSaveNeeded?.Invoke();
 

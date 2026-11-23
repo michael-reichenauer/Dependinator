@@ -108,6 +108,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
     // replaced the open model: what a start-up check goes by to not check twice. Pulls are made
     // one at a time (syncOperationLock).
     ModelContentStamp? lastCheckedStamp;
+    (ModelContentStamp From, ModelContentStamp To)? lastMark;
     volatile ModelPull lastPull = new("", 0);
 
     sealed record ModelPull(string ModelPath, long Count);
@@ -129,6 +130,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
     CancellationTokenSource? idleRefreshCancellationTokenSource;
     DateTimeOffset lastSyncStateRefreshUtc = DateTimeOffset.MinValue;
     LocalContentHash? cachedLocalHash;
+    LocalContentHash? cachedStructureHash;
     DateTimeOffset lastAutoSyncAttemptUtc = DateTimeOffset.MinValue;
     CloudAuthState authState = unavailableAuthState;
     CloudSyncModelState? syncState;
@@ -224,7 +226,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
 
     public async Task<Result<SyncDownOutcome>> SyncDownAsync()
     {
-        return await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: true));
+        return await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: true, isUsersChoice: true));
     }
 
     // Loads a selected cloud model into workspace and records local baseline on success.
@@ -289,9 +291,12 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
 
         // The pushed content's hash, which the next checks compare with the baseline it becomes
         string localContentHash = CloudModelSerializer.GetContentHash(modelDto);
+        string structureHash = CloudModelSerializer.GetStructureHash(modelDto);
         cachedLocalHash = new LocalContentHash(contentStamp, localContentHash);
-        await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash);
-        ApplySuccessfulSync(localContentHash, metadata.ContentHash, metadata);
+        cachedStructureHash = new LocalContentHash(contentStamp, structureHash);
+        await cloudSyncStateService.RecordPushAsync(modelPath, metadata, localContentHash, structureHash);
+        ApplySuccessfulSync(localContentHash, metadata.ContentHash, metadata, structureHash);
+        MarkModelSynced(contentStamp);
 
         Log.Info("SyncUpCoreAsync");
         if (notifyChanged)
@@ -300,7 +305,7 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         return metadata;
     }
 
-    async Task<Result<SyncDownOutcome>> SyncDownCoreAsync(bool notifyChanged)
+    async Task<Result<SyncDownOutcome>> SyncDownCoreAsync(bool notifyChanged, bool isUsersChoice)
     {
         string modelPath = modelMgr.ModelPath;
         if (string.IsNullOrWhiteSpace(modelPath))
@@ -322,8 +327,13 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
             return pullResult.Error;
 
         // Not the open model any more when the user opened another one while the copy was on
-        // its way (ReplaceCurrentModelAsync then returns an error and replaces nothing)
-        var replaceResult = await modelServiceLazy.Value.ReplaceCurrentModelAsync(modelPath, pulled.Model);
+        // its way, and an automatic pull gives way to an edit the user made meanwhile
+        // (ReplaceCurrentModelAsync then returns an error and replaces nothing)
+        var replaceResult = await modelServiceLazy.Value.ReplaceCurrentModelAsync(
+            modelPath,
+            pulled.Model,
+            isUsersChoice
+        );
         if (replaceResult is not ModelInfo modelInfo)
             return replaceResult.Error;
 
@@ -347,7 +357,9 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         if (pullResult is not PulledModel pulled)
             return pullResult.Error;
 
-        if (await modelServiceLazy.Value.WriteModelAsync(normalizedPath, pulled.Model) is Error writeError)
+        // The copy as it is in the cloud: nothing of the user's to sync
+        ModelDto cloudCopy = pulled.Model with { HasUserEdits = false };
+        if (await modelServiceLazy.Value.WriteModelAsync(normalizedPath, cloudCopy) is Error writeError)
             return writeError;
 
         await canvasServiceLazy.Value.LoadAsync(normalizedPath);
@@ -369,7 +381,8 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         ApplySuccessfulSync(
             localContentHash,
             pulledContentHash,
-            CreateKnownCloudModelMetadata(modelPath, pulledContentHash)
+            CreateKnownCloudModelMetadata(modelPath, pulledContentHash),
+            (await cloudSyncStateService.GetAsync(modelPath))?.PushedStructureHash
         );
     }
 
@@ -468,6 +481,9 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
     {
         ModelContentStamp stamp = modelServiceLazy.Value.ContentStamp;
         Result result = await RefreshSnapshotAndNotifyAsync(allowAutoSync: true, isAutoSyncThrottled);
+        // Clearing the edit mark in the check moved the stamp of the same content
+        if (lastMark is { } mark && mark.From == stamp)
+            stamp = mark.To;
         lastCheckedStamp = result is Error ? null : stamp;
         if (result is Error error)
         {
@@ -521,7 +537,9 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
     async Task<Result> RunAutoPullAsync()
     {
         string modelPath = modelMgr.ModelPath;
-        Result<SyncDownOutcome> result = await ExecuteSyncOperationAsync(() => SyncDownCoreAsync(notifyChanged: false));
+        Result<SyncDownOutcome> result = await ExecuteSyncOperationAsync(() =>
+            SyncDownCoreAsync(notifyChanged: false, isUsersChoice: false)
+        );
         if (result is SyncDownOutcome outcome && outcome is ModelInfo && !isDisposed)
             BackgroundSyncInfo?.Invoke("Updated this model from its newer cloud copy.");
 
@@ -530,6 +548,14 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         if (result is Error && modelMgr.ModelPath != modelPath)
         {
             Log.Info("Another model was opened while pulling, pull dropped", modelPath);
+            return Result.Ok;
+        }
+
+        // Nor is one dropped because the user edited the model meanwhile: the next check
+        // shows the conflict.
+        if (result is Error && modelServiceLazy.Value.HasUserEdits == true)
+        {
+            Log.Info("The model was edited while pulling, pull dropped", modelPath);
             return Result.Ok;
         }
         return result;
@@ -634,12 +660,18 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
         syncState = await cloudSyncStateService.GetAsync(modelPath);
         CloudSyncBaseline? baseline = syncState?.Baseline;
         CloudModelMetadata? currentCloudModel = GetCurrentCloudModel(cloudModels, modelPath);
+        ModelContentStamp contentStamp = modelServiceLazy.Value.ContentStamp;
         string? currentLocalContentHash = GetCurrentModelContentHashOrDefault();
         string? currentRemoteContentHash = currentCloudModel?.ContentHash;
-        (hasLocalChangesSinceLastSync, hasRemoteChangesSinceLastSync) = CompareToBaseline(
+        (bool hasLocalChanges, bool hasRemoteChanges) = CompareToBaseline(
             baseline,
             currentLocalContentHash,
             currentRemoteContentHash
+        );
+        (hasLocalChangesSinceLastSync, hasRemoteChangesSinceLastSync) = LeaveOutWhatNobodyEdited(
+            hasLocalChanges,
+            hasRemoteChanges,
+            contentStamp
         );
         MarkSyncStateRefreshed();
         return Result.Ok;
@@ -919,10 +951,83 @@ class AppCloudSyncService : IAppCloudSyncService, ICloudCopyCheck, IDisposable
 
     sealed record LocalContentHash(ModelContentStamp Stamp, string Hash);
 
-    void ApplySuccessfulSync(string localContentHash, string remoteContentHash, CloudModelMetadata cloudModel)
+    string? GetCurrentModelStructureHashOrDefault()
+    {
+        IModelService modelService = modelServiceLazy.Value;
+        ModelContentStamp contentStamp = modelService.ContentStamp;
+        if (cachedStructureHash is { } cached && cached.Stamp == contentStamp)
+            return cached.Hash;
+
+        if (modelService.GetCurrentModelDto() is not ModelDto currentModelDto)
+            return null;
+
+        string hash = CloudModelSerializer.GetStructureHash(currentModelDto);
+        cachedStructureHash = new LocalContentHash(contentStamp, hash);
+        return hash;
+    }
+
+    // The model as it was at syncedStamp is the same as its cloud copy: it has no edits of the
+    // user's left (IModelService.MarkSynced). Clearing the mark saves the model, which moves
+    // its stamp but nothing the hashes cover, so they are kept for the new stamp.
+    void MarkModelSynced(ModelContentStamp syncedStamp)
+    {
+        if (modelServiceLazy.Value.MarkSynced(syncedStamp) is not { } markedStamp || markedStamp == syncedStamp)
+            return;
+
+        lastMark = (syncedStamp, markedStamp);
+        if (cachedLocalHash is { } content && content.Stamp == syncedStamp)
+            cachedLocalHash = content with { Stamp = markedStamp };
+        if (cachedStructureHash is { } structure && structure.Stamp == syncedStamp)
+            cachedStructureHash = structure with { Stamp = markedStamp };
+    }
+
+    // Only the user's own edits are changes to stand up for (Model.HasUserEdits). What a parse
+    // or a layout made of the model here gives way to a newer cloud copy (a pull, and the parse
+    // that follows it makes the same of that copy), where it once was a conflict for the user
+    // to resolve. And it is pushed only when the parse made something new of the model
+    // (its structure, not what was laid out or shown since), so two devices on different code
+    // do not push their parse over the other's again and again.
+    (bool HasLocalChanges, bool HasRemoteChanges) LeaveOutWhatNobodyEdited(
+        bool hasLocalChanges,
+        bool hasRemoteChanges,
+        ModelContentStamp contentStamp
+    )
+    {
+        bool? hasUserEdits = modelServiceLazy.Value.HasUserEdits;
+        if (!hasLocalChanges)
+        {
+            // The same as at the last sync: whatever the mark says (also "not known", of a
+            // model saved before the mark existed), there are no edits left to sync
+            if (hasUserEdits != false && syncState?.Baseline is not null)
+                MarkModelSynced(contentStamp);
+            return (hasLocalChanges, hasRemoteChanges);
+        }
+
+        if (hasUserEdits != false)
+            return (hasLocalChanges, hasRemoteChanges);
+
+        if (hasRemoteChanges)
+            return (false, true);
+
+        bool isPushedBefore =
+            syncState?.PushedStructureHash is { } pushedStructureHash
+            && pushedStructureHash == GetCurrentModelStructureHashOrDefault();
+        return (!isPushedBefore, false);
+    }
+
+    void ApplySuccessfulSync(
+        string localContentHash,
+        string remoteContentHash,
+        CloudModelMetadata cloudModel,
+        string? pushedStructureHash
+    )
     {
         authState = authState with { IsAvailable = cloudSyncService.IsAvailable, IsAuthenticated = true };
-        syncState = new CloudSyncModelState() { Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash) };
+        syncState = new CloudSyncModelState()
+        {
+            Baseline = new CloudSyncBaseline(localContentHash, remoteContentHash),
+            PushedStructureHash = pushedStructureHash,
+        };
         hasLocalChangesSinceLastSync = false;
         hasRemoteChangesSinceLastSync = false;
         UpsertCloudModel(cloudModel);

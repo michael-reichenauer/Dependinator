@@ -19,11 +19,16 @@ public class CloudSyncStateServiceTests
             CompressedSizeBytes: 10
         );
 
-        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata, localContentHash: "hash-123");
+        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata, localContentHash: "hash-123", "structure-1");
         CloudSyncModelState? state = await sut.GetAsync("C:/repo/Model.json");
 
         Assert.NotNull(state);
         Assert.Equal(new CloudSyncBaseline("hash-123", "hash-123"), state.Baseline);
+        Assert.Equal("structure-1", state.PushedStructureHash);
+
+        // A pull leaves what this device pushed last
+        await sut.RecordPullAsync("C:/repo/Model.json", "hash-456", "hash-456");
+        Assert.Equal("structure-1", (await sut.GetAsync("C:/repo/Model.json"))?.PushedStructureHash);
     }
 
     [Fact]

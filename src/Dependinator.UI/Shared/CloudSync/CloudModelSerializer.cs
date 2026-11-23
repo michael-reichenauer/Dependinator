@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Dependinator.UI.Modeling.Dtos;
 using Dependinator.UI.Shared.Types;
@@ -16,6 +17,8 @@ static class CloudModelSerializer
     public static CloudModelDocument CreateDocument(string modelPath, ModelDto modelDto)
     {
         string normalizedPath = CloudModelPath.Normalize(modelPath);
+        // Whether the user edited the model since its last sync is each device's own
+        modelDto = modelDto with { HasUserEdits = null };
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
         byte[] compressedBytes = Compress(jsonBytes);
 
@@ -29,8 +32,9 @@ static class CloudModelSerializer
         );
     }
 
-    // Computes SHA-256 hash over the serialized model DTO, excluding view-state fields
-    // (Zoom, Offset, ViewRect) so that panning/zooming does not trigger sync conflicts.
+    // Computes SHA-256 hash over the serialized model DTO, excluding what is each device's own:
+    // the view-state fields (Zoom, Offset, ViewRect), so that panning/zooming does not trigger
+    // sync conflicts, and the mark of the user's edits since the last sync.
     public static string GetContentHash(ModelDto modelDto)
     {
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(StripViewState(modelDto), serializerOptions);
@@ -44,7 +48,33 @@ static class CloudModelSerializer
             Zoom = 0,
             Offset = Pos.None,
             ViewRect = Rect.None,
+            HasUserEdits = null,
         };
+
+    // A hash of what the model is made of, as a parse gives it: the nodes and links with their
+    // parsed properties, in a fixed order, without anything of the layout. Two models of the
+    // same source have the same structure hash whatever was laid out, shown or loaded in which
+    // order, so it tells a new parse result from a model that only looks different.
+    public static string GetStructureHash(ModelDto modelDto)
+    {
+        IEnumerable<string> nodes = modelDto.Nodes.Select(n =>
+            $"N\t{n.Name}\t{n.ParentName}\t{n.Type}\t{JsonSerializer.Serialize(n.Properties, serializerOptions)}"
+        );
+        IEnumerable<string> links = modelDto.Links.Select(l =>
+            $"L\t{l.SourceName}\t{l.TargetName}\t{l.TargetType}\t{l.IsManual}\t{l.IsInheritance}\t{l.IsConfiguration}"
+        );
+        IEnumerable<string> problems = modelDto.ParseProblems.Select(p =>
+            $"P\t{JsonSerializer.Serialize(p, serializerOptions)}"
+        );
+
+        using IncrementalHash hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        foreach (string item in nodes.Concat(links).Concat(problems).Order(StringComparer.Ordinal))
+        {
+            hash.AppendData(Encoding.UTF8.GetBytes(item));
+            hash.AppendData([(byte)'\n']);
+        }
+        return Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant();
+    }
 
     // Deserializes a compressed cloud document back into a model DTO.
     public static Result<ModelDto> ReadModel(CloudModelDocument document)
