@@ -25,6 +25,11 @@ How this project is worked on, beyond CLAUDE.md. Always loaded, in local and clo
   merge into `main` or push it by hand, and never merge `main` into `dev`; the workflow makes the
   release commits. This replaced the earlier flow (every `main` push a release, `./scripts/release`)
   in Oct 2026.
+- **A requested release needs no confirmation** (Michael, Nov 23, 2026): when he asks for a
+  "release", a "production release" or a "real release", go straight ahead as for a preview. Write
+  the notes, commit them, run the workflow, and show the notes in the reply that starts the run.
+  Until then a release got a notes-and-version card and waited for his go. Ask only when it is
+  unclear whether he means a preview or a release, and still never release without being asked.
 - **Previews go to the Marketplace's pre-release track too** (decided with the user Oct 26, 2026;
   the Oct 22 plan had kept them on GitHub only, a preference, not a blocker). The minutes-based
   build number grows across previews and releases, so never introduce the odd/even minor
