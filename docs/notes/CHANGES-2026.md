@@ -721,6 +721,13 @@ Extension versions: 0.5.x (Jan–Mar), 0.8.x (Jul–Oct 6), then one minor bump 
   in the Clerk Dashboard (the 180 days never applied to them).
 - **"Device sync" (Jul).** Login/Logout became Enable/Disable device sync, the texts say device
   sync, and the user storage key is hashed again.
+- **Sync conflicts only for the user's own edits (Nov 23).** "Sync Conflict" showed at nearly
+  every open with a second device, because a parse or a layout changed the model as much as an
+  edit did. First the false changes went (a load that changed the saved model, a pull's
+  baseline made here, the parse before the first sync check). Then the model got a mark for the
+  user's edits since the last sync (`Model.HasUserEdits`): without edits a newer cloud copy is
+  pulled, and what a parse made is pushed only when the structure is new
+  (`GetStructureHash`). Rules in `.claude/rules/ui.md`.
 - **Model handling.**
   - Saves are debounced and model locking lives in `ModelMgr` (Mar).
   - New empty model, delete model and reload (Jul).

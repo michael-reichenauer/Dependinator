@@ -19,6 +19,12 @@ interface IModel : IDisposable
     // Whether test projects are included when this model's solution is parsed.
     bool IncludeTestProjects { get; set; }
 
+    // Whether the user has edited the model since it was last synced with its cloud copy, as
+    // opposed to what a parse or a layout made of it. The cloud sync goes by it: only a model
+    // the user edited can be in conflict with its cloud copy, anything else gives way to the
+    // newer copy. Null: not known (a model saved before the mark existed), which counts as edited.
+    bool? HasUserEdits { get; set; }
+
     // For a workspace model: the user's choice of the sources it is made of (empty until chosen).
     IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; }
 
@@ -136,6 +142,7 @@ class Model : IModel
     public double Zoom { get; set; } = 0;
     public Pos Offset { get; set; } = Pos.None;
     public bool IncludeTestProjects { get; set; }
+    public bool? HasUserEdits { get; set; } = false;
     public IReadOnlyList<WorkspaceSource> WorkspaceSources { get; set; } = [];
 
     public Node Root { get; private set; } = null!;
@@ -257,6 +264,7 @@ class Model : IModel
             Offset = Offset,
             ViewRect = ViewRect,
             IncludeTestProjects = IncludeTestProjects,
+            HasUserEdits = HasUserEdits,
             WorkspaceSources =
             [
                 .. WorkspaceSources.Select(s => new WorkspaceSourceDto
@@ -356,6 +364,7 @@ class Model : IModel
         Offset = modelDto.Offset;
         ViewRect = modelDto.ViewRect;
         IncludeTestProjects = modelDto.IncludeTestProjects;
+        HasUserEdits = modelDto.HasUserEdits;
         WorkspaceSources =
         [
             .. modelDto.WorkspaceSources.Select(s => new WorkspaceSource(
@@ -517,6 +526,7 @@ class Model : IModel
         // Must reset: Clear runs before a model is loaded, and on the uncached path the parse
         // happens before SetFromDto, so a stale value would leak into the next model's parse.
         IncludeTestProjects = false;
+        HasUserEdits = false; // A model made by a parse has none
         WorkspaceSources = [];
         rules.Clear();
         dismissedRules.Clear();

@@ -55,6 +55,15 @@ record ModelDto
     // For a workspace model: the sources the user chose it to be made of, and the ones left
     // out (see WorkspaceSource). Defaulted (no FormatVersion bump).
     public IReadOnlyList<WorkspaceSourceDto> WorkspaceSources { get; init; } = [];
+
+    // Whether the user has edited the model since it was last synced with its cloud copy
+    // (Model.HasUserEdits); null in a model saved before Nov 2026: not known. It is this
+    // device's own (left out of the cloud copy and of the content hash), and left out when
+    // null so that the hash of a model saved before stays what it was.
+    [System.Text.Json.Serialization.JsonIgnore(
+        Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    )]
+    public bool? HasUserEdits { get; init; }
 }
 
 // A source of a workspace model and whether it is in the model (see Models.WorkspaceSource).

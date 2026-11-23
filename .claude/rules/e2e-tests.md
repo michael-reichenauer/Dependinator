@@ -91,6 +91,9 @@ fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
   Click a checkbox-style item with `ToggleSubMenuItemAsync`: it lets the clicked menu close before
   reading the state back. Reopening right after the click found the fading popover's item, then
   polled it after it vanished under a closed menu (ThemeTests and LineDimTests, Oct 23 2026).
+  The same holds for any menu click followed by another menu open (an Undo, then Edit again):
+  wait for the menu to be gone first (`Expect(App.MenuItem("menu-search")).ToBeHiddenAsync()`;
+  LineLabelsTests waited 30 s to click a detached item, Nov 23 2026).
 - Blazor Server drops a click or key press whose element re-renders before the server handles
   it, and Playwright reports it as done. After a step that re-renders its surroundings (a panel
   loading its AI providers, a radio that adds a field, a dialog closing), use

@@ -139,9 +139,11 @@ public class AppCloudSyncServiceTests
         context.CloudSyncService.Setup(x => x.PushAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(pushed);
         context.CloudSyncService.Setup(x => x.ListAsync()).ReturnsAsync(new CloudModelList([pushed]));
         context
-            .CloudSyncStateService.Setup(x => x.RecordPushAsync(modelPath, pushed, It.IsAny<string>()))
-            .Callback<string, CloudModelMetadata, string>(
-                (_, metadata, localHash) =>
+            .CloudSyncStateService.Setup(x =>
+                x.RecordPushAsync(modelPath, pushed, It.IsAny<string>(), It.IsAny<string>())
+            )
+            .Callback<string, CloudModelMetadata, string, string>(
+                (_, metadata, localHash, _) =>
                     context
                         .CloudSyncStateService.Setup(x => x.GetAsync(modelPath))
                         .ReturnsAsync(new CloudSyncModelState() { Baseline = new(localHash, metadata.ContentHash) })
@@ -486,7 +488,7 @@ public class AppCloudSyncServiceTests
         Assert.IsType<UploadedLocalModel>(AssertOk(syncDownResult).Value);
         Assert.True(context.Counters.PushCalls > 0);
         context.ModelService.Verify(
-            x => x.ReplaceCurrentModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>()),
+            x => x.ReplaceCurrentModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>(), It.IsAny<bool>()),
             Times.Never
         );
         Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
@@ -750,6 +752,23 @@ public class AppCloudSyncServiceTests
         );
     }
 
+    // A model with no saved copy on this device (deleted here only) has nothing synced here:
+    // its new parse is compared with the cloud copy as a model that never was synced.
+    [Fact]
+    public async Task ForgetSyncedCopyAsync_ShouldDropTheBaseline_WhenThereIsOne()
+    {
+        string modelPath = "/models/sample.model";
+        CloudSyncModelState syncState = CreateSyncStateFromModel(CreateModelDto("synced"));
+        SutContext context = CreateSutContext(modelPath, CreateModelDto("parsed"), syncState, []);
+
+        await context.Sut.ForgetSyncedCopyAsync(modelPath);
+        context.CloudSyncStateService.Verify(x => x.ClearAsync(modelPath), Times.Once);
+
+        // Nothing to drop, nothing written (every first open of a model comes here)
+        await context.Sut.ForgetSyncedCopyAsync("/models/other.model");
+        context.CloudSyncStateService.Verify(x => x.ClearAsync("/models/other.model"), Times.Never);
+    }
+
     // The user opened another model while the newer copy was on its way: the pull is dropped
     // (ReplaceCurrentModelAsync refuses it), which is nothing to report.
     [Fact]
@@ -771,13 +790,213 @@ public class AppCloudSyncServiceTests
             })
             .ReturnsAsync(Pulled(syncedModel));
         context
-            .ModelService.Setup(x => x.ReplaceCurrentModelAsync(modelPath, It.IsAny<ModelDto>()))
+            .ModelService.Setup(x => x.ReplaceCurrentModelAsync(modelPath, It.IsAny<ModelDto>(), It.IsAny<bool>()))
             .ReturnsAsync(new Error("No longer the open model"));
 
         Assert.False(await context.Sut.PullNewerAsync(modelPath));
 
         Assert.Equal(1, context.Counters.PullCalls);
         Assert.Empty(errorMessages);
+    }
+
+    // The user edited the model while the newer copy was on its way: the pull is dropped
+    // (ReplaceCurrentModelAsync refuses it) without a word, the next check shows the conflict.
+    [Fact]
+    public async Task AutoSync_ShouldNotReportAnError_WhenTheModelWasEditedDuringThePull()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(modelPath, syncedModel, syncState, [cloudModel], CreateFastTimings());
+        List<string> errorMessages = [];
+        context.Sut.BackgroundSyncError += errorMessages.Add;
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(false);
+        context
+            .ModelService.Setup(x => x.ReplaceCurrentModelAsync(modelPath, It.IsAny<ModelDto>(), false))
+            .Callback(() => context.ModelService.SetupGet(x => x.HasUserEdits).Returns(true))
+            .ReturnsAsync(new Error("Edited while its cloud copy was fetched"));
+
+        Assert.False(await context.Sut.PullNewerAsync(modelPath));
+
+        Assert.Equal(1, context.Counters.PullCalls);
+        Assert.Empty(errorMessages);
+    }
+
+    // Only the user's own edits can be in conflict with the cloud copy (Model.HasUserEdits):
+    // what a parse or a layout made of the model here gives way to the newer copy.
+    [Fact]
+    public async Task AutoSync_ShouldPull_WhenBothSidesChangedButTheUserEditedNothing()
+    {
+        string modelPath = "/models/sample.model";
+        CloudSyncModelState syncState = CreateSyncStateFromModel(CreateModelDto("synced"));
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(
+            modelPath,
+            CreateModelDto("parsed again"),
+            syncState,
+            [cloudModel],
+            CreateFastTimings()
+        );
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(false);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PullCalls > 0);
+
+        Assert.Equal(0, context.Counters.PushCalls);
+    }
+
+    [Fact]
+    public async Task AutoSync_ShouldNotPushOrPull_WhenBothSidesChangedAndTheUserEdited()
+    {
+        string modelPath = "/models/sample.model";
+        CloudSyncModelState syncState = CreateSyncStateFromModel(CreateModelDto("synced"));
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(
+            modelPath,
+            CreateModelDto("edited"),
+            syncState,
+            [cloudModel],
+            CreateFastTimings()
+        );
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(true);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.ListCalls > 0);
+        await Task.Delay(50);
+
+        Assert.Equal(0, context.Counters.PullCalls);
+        Assert.Equal(0, context.Counters.PushCalls);
+        Assert.Equal(CloudSyncState.HasConflicts, context.Sut.GetCloudSyncState());
+    }
+
+    // A new codespace, or cleared site data: the model parsed here from scratch and the cloud
+    // copy with the user's layout differ, and nothing says which changed. A fresh parse has
+    // nothing of the user's, so the cloud copy is taken.
+    [Fact]
+    public async Task AutoSync_ShouldPull_WhenNeverSyncedHereAndTheModelIsAFreshParse()
+    {
+        string modelPath = "/models/sample.model";
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, CreateModelDto("remote"));
+        SutContext context = CreateSutContext(
+            modelPath,
+            CreateModelDto("fresh parse"),
+            syncState: null,
+            [cloudModel],
+            CreateFastTimings()
+        );
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(false);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PullCalls > 0);
+
+        Assert.Equal(0, context.Counters.PushCalls);
+    }
+
+    // A layout made while looking around, or the parse of unchanged code after pulling another
+    // device's copy: the model differs from the last sync, but is made of what this device
+    // pushed last. Pushed again, two devices on different code would push in turns for good.
+    [Fact]
+    public async Task AutoSync_ShouldNotPush_WhenOnlyTheLayoutChangedAndTheUserEditedNothing()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        ModelDto laidOutModel = CreateModelDto("laid out");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        syncState.PushedStructureHash = CloudModelSerializer.GetStructureHash(laidOutModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, laidOutModel, syncState, [cloudModel], CreateFastTimings());
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(false);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.ListCalls > 0);
+        await Task.Delay(50);
+
+        Assert.Equal(0, context.Counters.PushCalls);
+        Assert.Equal(CloudSyncState.IsSynced, context.Sut.GetCloudSyncState());
+    }
+
+    [Fact]
+    public async Task AutoSync_ShouldPush_WhenAParseMadeSomethingNewOfTheModel()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        ModelDto parsedModel = CreateModelDto("parsed") with
+        {
+            Nodes =
+            [
+                new NodeDto
+                {
+                    Name = "New",
+                    ParentName = "",
+                    Type = "Type",
+                },
+            ],
+        };
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        syncState.PushedStructureHash = CloudModelSerializer.GetStructureHash(syncedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, parsedModel, syncState, [cloudModel], CreateFastTimings());
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(false);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PushCalls > 0);
+
+        context.CloudSyncStateService.Verify(x =>
+            x.RecordPushAsync(
+                modelPath,
+                It.IsAny<CloudModelMetadata>(),
+                It.IsAny<string>(),
+                CloudModelSerializer.GetStructureHash(parsedModel)
+            )
+        );
+    }
+
+    [Fact]
+    public async Task AutoSync_ShouldPush_WhenTheUserEditedTheLayoutOnly()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto syncedModel = CreateModelDto("synced");
+        ModelDto editedModel = CreateModelDto("edited");
+        CloudSyncModelState syncState = CreateSyncStateFromModel(syncedModel);
+        syncState.PushedStructureHash = CloudModelSerializer.GetStructureHash(editedModel);
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, syncedModel);
+        SutContext context = CreateSutContext(modelPath, editedModel, syncState, [cloudModel], CreateFastTimings());
+        context.ModelService.SetupGet(x => x.HasUserEdits).Returns(true);
+
+        context.ApplicationEvents.TriggerUIStateChanged();
+        await WaitUntilAsync(() => context.Counters.PushCalls > 0);
+    }
+
+    // After a push the model has no edits left to sync, unless it was edited meanwhile (the
+    // model service checks the stamp).
+    [Fact]
+    public async Task SyncUpAsync_ShouldMarkTheModelSynced_AsItWasWhenPushed()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("edited");
+        SutContext context = CreateSutContext(modelPath, model, syncState: null, cloudModels: []);
+        var stamp = Stamp(modelPath, saves: 7);
+        context.ModelService.SetupGet(x => x.ContentStamp).Returns(stamp);
+
+        AssertOk(await context.Sut.SyncUpAsync());
+
+        context.ModelService.Verify(x => x.MarkSynced(stamp), Times.Once);
+    }
+
+    // A model saved before the mark existed does not say whether the user edited it. When it
+    // is the same as at its last sync, it has nothing left to sync either way.
+    [Fact]
+    public async Task RefreshSyncStateAsync_ShouldMarkTheModelSynced_WhenItIsUnchangedSinceTheLastSync()
+    {
+        string modelPath = "/models/sample.model";
+        ModelDto model = CreateModelDto("synced");
+        CloudModelMetadata cloudModel = CreateCloudModelMetadata(modelPath, model);
+        SutContext context = CreateSutContext(modelPath, model, CreateSyncStateFromModel(model), [cloudModel]);
+
+        AssertOk(await context.Sut.RefreshSyncStateAsync());
+
+        context.ModelService.Verify(x => x.MarkSynced(It.IsAny<ModelContentStamp>()), Times.Once);
     }
 
     static PulledModel Pulled(ModelDto model) => new(model, CloudModelSerializer.GetContentHash(model));
@@ -829,7 +1048,14 @@ public class AppCloudSyncServiceTests
 
         cloudSyncStateService.Setup(x => x.GetAsync(modelPath)).ReturnsAsync(syncState);
         cloudSyncStateService
-            .Setup(x => x.RecordPushAsync(It.IsAny<string>(), It.IsAny<CloudModelMetadata>(), It.IsAny<string>()))
+            .Setup(x =>
+                x.RecordPushAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<CloudModelMetadata>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
+                )
+            )
             .Returns(Task.CompletedTask);
         cloudSyncStateService
             .Setup(x => x.RecordPullAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
@@ -840,8 +1066,9 @@ public class AppCloudSyncServiceTests
         // As in ModelService, a load moves the stamp
         long loads = 0;
         modelService.SetupGet(x => x.ContentStamp).Returns(() => new ModelContentStamp(modelPath, loads));
+        modelService.SetupGet(x => x.StructureStamp).Returns(() => modelService.Object.ContentStamp);
         modelService
-            .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>()))
+            .Setup(x => x.ReplaceCurrentModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>(), It.IsAny<bool>()))
             .Callback(() => loads++)
             .ReturnsAsync(new ModelInfo(modelPath, Rect.None, 0));
         modelService.Setup(x => x.WriteModelAsync(It.IsAny<string>(), It.IsAny<ModelDto>())).ReturnsAsync(Result.Ok);

@@ -16,6 +16,8 @@ static class CloudModelSerializer
     public static CloudModelDocument CreateDocument(string modelPath, ModelDto modelDto)
     {
         string normalizedPath = CloudModelPath.Normalize(modelPath);
+        // Whether the user edited the model since its last sync is each device's own
+        modelDto = modelDto with { HasUserEdits = null };
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(modelDto, serializerOptions);
         byte[] compressedBytes = Compress(jsonBytes);
 
@@ -29,8 +31,9 @@ static class CloudModelSerializer
         );
     }
 
-    // Computes SHA-256 hash over the serialized model DTO, excluding view-state fields
-    // (Zoom, Offset, ViewRect) so that panning/zooming does not trigger sync conflicts.
+    // Computes SHA-256 hash over the serialized model DTO, excluding what is each device's own:
+    // the view-state fields (Zoom, Offset, ViewRect), so that panning/zooming does not trigger
+    // sync conflicts, and the mark of the user's edits since the last sync.
     public static string GetContentHash(ModelDto modelDto)
     {
         byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(StripViewState(modelDto), serializerOptions);
@@ -44,7 +47,45 @@ static class CloudModelSerializer
             Zoom = 0,
             Offset = Pos.None,
             ViewRect = Rect.None,
+            HasUserEdits = null,
         };
+
+    // A hash of what the model is made of, as a parse gives it: the nodes and links with their
+    // parsed properties, in a fixed order, without anything of the layout. Two models of the
+    // same source have the same structure hash whatever was laid out, shown or loaded in which
+    // order, so it tells a new parse result from a model that only looks different. A line's
+    // parsed description is not in it: which lines are saved depends on what was shown.
+    public static string GetStructureHash(ModelDto modelDto)
+    {
+        StringComparer ordinal = StringComparer.Ordinal;
+        Structure structure = new(
+            [
+                .. modelDto
+                    .Nodes.OrderBy(n => n.Name, ordinal)
+                    .Select(n => new NodeDto
+                    {
+                        Name = n.Name,
+                        ParentName = n.ParentName,
+                        Type = n.Type,
+                        Properties = n.Properties,
+                    }),
+            ],
+            [
+                .. modelDto
+                    .Links.OrderBy(l => l.SourceName, ordinal)
+                    .ThenBy(l => l.TargetName, ordinal)
+                    .ThenBy(l => l.TargetType, ordinal),
+            ],
+            [.. modelDto.ParseProblems.Select(p => JsonSerializer.Serialize(p, serializerOptions)).Order(ordinal)]
+        );
+
+        // One pass over the whole structure, like the content hash: a string and a hash step
+        // per node and link took as long as the content hash itself (the demo, 12k nodes)
+        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(structure, serializerOptions);
+        return Convert.ToHexString(SHA256.HashData(jsonBytes)).ToLowerInvariant();
+    }
+
+    sealed record Structure(IReadOnlyList<NodeDto> Nodes, IReadOnlyList<LinkDto> Links, IReadOnlyList<string> Problems);
 
     // Deserializes a compressed cloud document back into a model DTO.
     public static Result<ModelDto> ReadModel(CloudModelDocument document)

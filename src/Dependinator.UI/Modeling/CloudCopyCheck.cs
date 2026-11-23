@@ -13,4 +13,8 @@ interface ICloudCopyCheck
     // Before the parse that follows: checks the open model against its cloud copy and pulls a
     // newer copy. True: it was pulled, which replaced the model and started a parse of it.
     Task<bool> PullNewerAsync(string modelPath);
+
+    // The model has no saved copy on this device (any more), so nothing of it is synced here:
+    // what is made of it now (a parse) is compared with the cloud copy as a model never synced.
+    Task ForgetSyncedCopyAsync(string modelPath);
 }

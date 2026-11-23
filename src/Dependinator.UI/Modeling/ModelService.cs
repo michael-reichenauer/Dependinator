@@ -80,11 +80,24 @@ interface IModelService
     // Changes when the open model's content changes the way saving sees it (ModelContentStamp),
     // so the cloud sync hashes the model again only then: panning and zooming leave it.
     ModelContentStamp ContentStamp { get; }
+
+    // Changes when what the open model is made of can have changed (a parse, an edit, a load):
+    // unlike ContentStamp not for a layout the app made, so the cloud sync makes the structure
+    // hash (CloudModelSerializer.GetStructureHash) again only then.
+    ModelContentStamp StructureStamp { get; }
+
+    // Whether the user edited the open model since its last sync (Model.HasUserEdits).
+    bool? HasUserEdits { get; }
+
+    // The open model, as it was at syncedStamp, is the same as its cloud copy: it has no edits
+    // of the user's left to sync. Saves the model when that is news to it, and returns its
+    // stamp after that; null when the model has changed since syncedStamp (nothing is marked).
+    ModelContentStamp? MarkSynced(ModelContentStamp syncedStamp);
     Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto);
 
     // Replaces the open model, which is the one at modelPath, by another copy of it (its cloud
     // copy). An error when another model was opened meanwhile.
-    Task<Result<ModelInfo>> ReplaceCurrentModelAsync(string modelPath, ModelDto modelDto);
+    Task<Result<ModelInfo>> ReplaceCurrentModelAsync(string modelPath, ModelDto modelDto, bool isUsersChoice);
 }
 
 // What a change to the open model's saved content moves: a save request or a model load (Saves,
@@ -117,6 +130,12 @@ class ModelService : IModelService, IDisposable
     // in the middle of one.
     readonly SemaphoreSlim refreshGate = new(1, 1);
 
+    // The parse that makes a model with no saved copy (LoadAsync). It fills the model outside
+    // refreshGate (it must not wait for a refresh of the model the user just left), so what
+    // replaces the model waits for it as well: for the first parse of that model, not for one
+    // of a model the user left since (it goes on for as long as it takes).
+    (string Path, Task End) firstParse = ("", Task.CompletedTask);
+
     // The cloud sync's check of the model that was opened last, which every parse of it waits
     // for (RefreshAfterCloudCheckAsync).
     Task cloudCheck = Task.CompletedTask;
@@ -141,6 +160,10 @@ class ModelService : IModelService, IDisposable
 
     // Save requests and model loads (ModelContentStamp.Saves), bumped after the change
     long contentVersion;
+
+    // The ones of them that can have changed what the model is made of (StructureStamp): all
+    // but the saves of a layout, of what the diagram shows and of the edit mark
+    long structureVersion;
 
     // Reported source changes, and how many of them the last successful parse covered (it covers
     // those reported before it started, so a change saved during the parse keeps the dot).
@@ -171,12 +194,14 @@ class ModelService : IModelService, IDisposable
         this.applicationEvents = applicationEvents;
         this.progressService = progressService;
         this.applicationEvents.SaveNeeded += TriggerSave;
+        this.applicationEvents.DerivedSaveNeeded += OnDerivedSaveNeeded;
         this.applicationEvents.ViewSaveNeeded += TriggerViewSave;
     }
 
     public void Dispose()
     {
         applicationEvents.SaveNeeded -= TriggerSave;
+        applicationEvents.DerivedSaveNeeded -= OnDerivedSaveNeeded;
         applicationEvents.ViewSaveNeeded -= TriggerViewSave;
         saveDebouncer.Dispose();
         viewSaveDebouncer.Dispose();
@@ -185,7 +210,8 @@ class ModelService : IModelService, IDisposable
     public void ClearCache()
     {
         applicationEvents.TriggerModelChanged();
-        TriggerSave();
+        // What it is called for is what the diagram shows: no edit, and nothing of the structure
+        TriggerDerivedSave(isLayoutOnly: true);
     }
 
     public void Clear()
@@ -194,7 +220,7 @@ class ModelService : IModelService, IDisposable
         {
             model.Clear();
         }
-        Interlocked.Increment(ref contentVersion);
+        BumpContentVersion();
         applicationEvents.TriggerModelChanged();
     }
 
@@ -205,6 +231,15 @@ class ModelService : IModelService, IDisposable
             long saves = Interlocked.Read(ref contentVersion);
             return new ModelContentStamp(modelMgr.ModelPath, saves);
         }
+    }
+
+    public ModelContentStamp StructureStamp => new(modelMgr.ModelPath, Interlocked.Read(ref structureVersion));
+
+    long BumpContentVersion(bool isLayoutOnly = false)
+    {
+        if (!isLayoutOnly)
+            Interlocked.Increment(ref structureVersion);
+        return Interlocked.Increment(ref contentVersion);
     }
 
     public Result<ModelDto> GetCurrentModelDto()
@@ -218,7 +253,11 @@ class ModelService : IModelService, IDisposable
         }
     }
 
-    public async Task<Result<ModelInfo>> ReplaceCurrentModelAsync(string modelPath, ModelDto modelDto)
+    public async Task<Result<ModelInfo>> ReplaceCurrentModelAsync(
+        string modelPath,
+        ModelDto modelDto,
+        bool isUsersChoice
+    )
     {
         if (string.IsNullOrWhiteSpace(modelMgr.ModelPath))
             return new Error("Model is not loaded");
@@ -230,11 +269,18 @@ class ModelService : IModelService, IDisposable
 
         // Not in the middle of a parse: the nodes the parse had passed would be the copy's,
         // look removed from the source to it, and lose their layout.
+        if (firstParse is var parse && parse.Path == modelPath)
+            await parse.End;
         await refreshGate.WaitAsync();
         try
         {
             if (modelMgr.ModelPath != modelPath)
                 return NoLongerOpen(modelPath);
+
+            // An automatic pull was decided on a model without edits of the user's. One made
+            // while the copy was on its way stays: the next sync check finds the conflict.
+            if (!isUsersChoice && modelMgr.WithModel(m => m.HasUserEdits == true))
+                return EditedMeanwhile(modelPath);
 
             // The view is each device's own: the copy comes with the view of the device that
             // pushed it, which would move this one's diagram under the user.
@@ -244,6 +290,7 @@ class ModelService : IModelService, IDisposable
                     Zoom = m.Zoom,
                     Offset = m.Offset,
                     ViewRect = m.ViewRect,
+                    HasUserEdits = false, // It is the cloud copy
                 }
             );
 
@@ -251,6 +298,13 @@ class ModelService : IModelService, IDisposable
                 return error;
             if (modelMgr.ModelPath != modelPath)
                 return NoLongerOpen(modelPath);
+            // Edited while the copy was written: the model is written again, whether the
+            // edit's own save came before the copy was in place or is still to come
+            if (!isUsersChoice && modelMgr.WithModel(m => m.HasUserEdits == true))
+            {
+                TriggerDerivedSave(isLayoutOnly: true);
+                return EditedMeanwhile(modelPath);
+            }
 
             var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
             RefreshAsync().RunInBackground();
@@ -264,6 +318,9 @@ class ModelService : IModelService, IDisposable
 
     static Error NoLongerOpen(string modelPath) =>
         new($"'{ModelPaths.DisplayName(modelPath)}' is no longer the open model");
+
+    static Error EditedMeanwhile(string modelPath) =>
+        new($"'{ModelPaths.DisplayName(modelPath)}' was edited while its cloud copy was fetched");
 
     public Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto)
     {
@@ -308,21 +365,34 @@ class ModelService : IModelService, IDisposable
                         $"The saved model '{path}' was written by an older version and could not be read, so it was opened empty."
                     );
                 }
+                await ForgetSyncedCopyIfNotSavedAsync(path);
                 return await CreateEmptyModelAsync(path);
             }
 
             // An .slnx opened for the first time takes over the model of its .sln (a migration)
             if (await ReadMigratedSlnModelAsync(path) is ModelInfo migratedInfo)
             {
-                TriggerSave();
+                TriggerDerivedSave();
                 RefreshAsync().RunInBackground();
                 return migratedInfo;
             }
 
-            var parsedModelInfo = await ParseNewModelAsync(path);
+            await ForgetSyncedCopyIfNotSavedAsync(path);
+
+            TaskCompletionSource parseEnd = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            firstParse = (path, parseEnd.Task);
+            Result<ModelInfo> parsedModelInfo;
+            try
+            {
+                parsedModelInfo = await ParseNewModelAsync(path);
+            }
+            finally
+            {
+                parseEnd.TrySetResult();
+            }
             if (parsedModelInfo is ModelInfo && IsWorkspaceModel(path))
                 unparsedSourceChoices = [];
-            TriggerSave();
+            TriggerDerivedSave();
             applicationEvents.TriggerModelChanged();
             applicationEvents.TriggerUIStateChanged();
             return parsedModelInfo;
@@ -382,7 +452,7 @@ class ModelService : IModelService, IDisposable
             model.UpdateStamp = DateTime.UtcNow;
             modelDto = model.SerializeToDto();
         }
-        Interlocked.Increment(ref contentVersion);
+        BumpContentVersion();
 
         if (await persistenceService.WriteAsync(path, modelDto) is Error e)
             return e;
@@ -501,7 +571,7 @@ class ModelService : IModelService, IDisposable
         }
 
         applicationEvents.TriggerModelChanged();
-        TriggerSave();
+        TriggerDerivedSave();
         applicationEvents.TriggerUIStateChanged();
 
         // A refresh runs in the background, so say what it changed (nothing: stay quiet), and
@@ -517,6 +587,16 @@ class ModelService : IModelService, IDisposable
         if (summaries.Length > 0)
             applicationEvents.TriggerInfoReported($"Model refreshed: {string.Join("; ", summaries)}.");
         return Result.Ok;
+    }
+
+    // Nothing saved here: nothing that was synced here either (a model deleted on this device
+    // only). With the baseline of the copy that is gone, the new parse looked like a change to
+    // push over the cloud copy. A saved model that is there and could not be read keeps its
+    // baseline: the read can have failed for now, and its cloud copy may be as unreadable.
+    async Task ForgetSyncedCopyIfNotSavedAsync(string path)
+    {
+        if (!await persistenceService.ExistsAsync(path))
+            await cloudCopyCheck.ForgetSyncedCopyAsync(path);
     }
 
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
@@ -765,11 +845,14 @@ class ModelService : IModelService, IDisposable
             }
             finally
             {
-                // A parse that failed on the way still applies a change of place made meanwhile
+                // Also a parse that failed on the way changed the model (the hashes of the
+                // cloud sync are kept per stamp) ...
+                BumpContentVersion();
+                // ... and still applies a change of place made meanwhile
                 if (EndUpdatingItems())
                 {
                     applicationEvents.TriggerModelChanged();
-                    TriggerSave();
+                    TriggerDerivedSave();
                 }
             }
 
@@ -1036,15 +1119,49 @@ class ModelService : IModelService, IDisposable
         }
     }
 
+    // The user edited the model: it is saved, and marked as edited since its last sync
+    // (Model.HasUserEdits). What the app itself makes of the model (a parse, a layout, a
+    // correction on load) is saved with TriggerDerivedSave instead: marked as an edit, it could
+    // be in conflict with the cloud copy, which is the user's to resolve.
     public void TriggerSave()
     {
-        Interlocked.Increment(ref contentVersion);
+        // Marked and stamped as one step for MarkSynced (the server host has threads): between
+        // the two, a sync that just finished saw the old stamp and cleared the new mark.
+        using var model = modelMgr.UseModel();
+        model.HasUserEdits = true;
+        TriggerDerivedSave();
+    }
+
+    public bool? HasUserEdits => modelMgr.WithModel(m => m.HasUserEdits);
+
+    public ModelContentStamp? MarkSynced(ModelContentStamp syncedStamp)
+    {
+        using var model = modelMgr.UseModel();
+        // An edit made while the sync was on its way is not synced
+        if (ContentStamp != syncedStamp)
+            return null;
+        if (model.HasUserEdits == false)
+            return syncedStamp;
+
+        // The stamp of this save, not the stamp as it is read after it: that one can be of a
+        // change made since (a parse that ended on another thread), which is not synced.
+        model.HasUserEdits = false;
+        return syncedStamp with { Saves = TriggerDerivedSave(isLayoutOnly: true) };
+    }
+
+    // A layout the app refined (LayoutRefineService)
+    void OnDerivedSaveNeeded() => TriggerDerivedSave(isLayoutOnly: true);
+
+    long TriggerDerivedSave(bool isLayoutOnly = false)
+    {
+        long version = BumpContentVersion(isLayoutOnly);
         lock (saveStatusLock)
         {
             saveRequests++;
             UpdateSaveStatus();
         }
         saveDebouncer.Debounce(SaveDelay, MaxSaveDelay, Save);
+        return version;
     }
 
     void Save()
@@ -1164,13 +1281,13 @@ class ModelService : IModelService, IDisposable
         }
 
         bool isChangedByLoad = await Task.Run(() => SetNodeAndLinkDtos(modelDto));
-        Interlocked.Increment(ref contentVersion);
+        BumpContentVersion();
         if (isChangedByLoad)
         {
             // The loaded model is not the saved one, and nobody changed it: it is saved as it
             // is now, and the cloud sync is told (before the events below start its check of
             // the model).
-            TriggerSave();
+            TriggerDerivedSave();
             if (isSavedHere)
                 await cloudCopyCheck.AcceptLoadChangeAsync(path, modelDto);
         }

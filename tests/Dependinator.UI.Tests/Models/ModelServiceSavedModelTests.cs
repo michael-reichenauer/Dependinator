@@ -46,14 +46,14 @@ public class ModelServiceSavedModelTests
             .Callback(() => parsed.TrySetResult());
     }
 
-    ModelService CreateModelService(IModelMgr modelMgr) =>
+    ModelService CreateModelService(IModelMgr modelMgr, IApplicationEvents? applicationEvents = null) =>
         new(
             modelMgr,
             modelListService.Object,
             parserService.Object,
             new StructureService(new LineService()),
             persistenceService.Object,
-            Mock.Of<IApplicationEvents>(),
+            applicationEvents ?? Mock.Of<IApplicationEvents>(),
             Mock.Of<IProgressService>(),
             Mock.Of<IVsCodeSendService>(),
             Mock.Of<ISaveStatusService>(),
@@ -144,13 +144,95 @@ public class ModelServiceSavedModelTests
         Task<Result> refresh = modelService.RefreshAsync();
         await parsing.Task.WaitAsync(Timeout);
 
-        Task<Result<ModelInfo>> replace = modelService.ReplaceCurrentModelAsync(Path, saved);
+        Task<Result<ModelInfo>> replace = modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false);
         await Task.Delay(50);
         Assert.False(replace.IsCompleted);
 
         parse.SetResult(new Error("stopped"));
         AssertError(await refresh.WaitAsync(Timeout));
         AssertOk(await replace.WaitAsync(Timeout));
+    }
+
+    // A model with no saved copy is filled by its first parse, outside the refresh gate. Its
+    // cloud copy (a new device: the model is in the cloud, and the parse is no edit) waits for
+    // that parse too, or the rest of the parse was added to the copy.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldWaitForTheFirstParse()
+    {
+        ModelDto cloudCopy = await ParseAndLayOutAsync();
+        IModelMgr modelMgr = new ModelMgr(new StateMgr());
+        Mock<IApplicationEvents> applicationEvents = new();
+        using var modelService = CreateModelService(modelMgr, applicationEvents.Object);
+        Task<Result<ModelInfo>>? replace = null;
+        int? nodesWhenReplaced = null;
+        // The parse tells of the model once it is the open one, before its items are added
+        applicationEvents
+            .Setup(e => e.TriggerModelChanged())
+            .Callback(() =>
+            {
+                if (modelMgr.ModelPath == Path)
+                    replace ??= modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: false);
+            });
+        persistenceService
+            .Setup(p => p.WriteAsync(Path, It.IsAny<ModelDto>()))
+            .Callback(() => nodesWhenReplaced ??= modelMgr.WithModel(m => m.Nodes.Count))
+            .ReturnsAsync(Result.Ok);
+
+        AssertOk(await modelService.LoadAsync(Path));
+        int parsedNodes = modelMgr.WithModel(m => m.Nodes.Count);
+        AssertOk(await replace!.WaitAsync(Timeout));
+
+        Assert.Equal(parsedNodes, nodesWhenReplaced);
+    }
+
+    // No saved model here: a sync baseline of this device is of a copy that is gone (deleted
+    // here only), and with it the new parse was a change to push over the cloud copy.
+    [Fact]
+    public async Task LoadAsync_ShouldForgetTheSyncedCopy_OfAModelWithNoSavedCopy()
+    {
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(Path), Times.Once);
+
+        // A saved model that is there and cannot be read (for now) keeps what was synced
+        persistenceService.Setup(p => p.ExistsAsync(Path)).ReturnsAsync(true);
+        cloudCopyCheck.Invocations.Clear();
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(It.IsAny<string>()), Times.Never);
+
+        ModelDto saved = AssertOk(modelService.GetCurrentModelDto());
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    // The first parse of a model the user left goes on for as long as it takes: a pull of the
+    // model that is open now does not wait for it (it holds the sync locks meanwhile).
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldNotWaitForTheFirstParseOfAnotherModel()
+    {
+        const string OtherPath = "/repo/Other.sln";
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        persistenceService.Setup(p => p.ReadAsync(OtherPath)).ReturnsAsync(new Error("no saved model"));
+        TaskCompletionSource<Result<IReadOnlyList<Item>>> otherParse = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        TaskCompletionSource otherParsing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        parserService
+            .Setup(p => p.ParseAsync(OtherPath, It.IsAny<SolutionParseOptions>()))
+            .Callback(() => otherParsing.TrySetResult())
+            .Returns(otherParse.Task);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        Task<Result<ModelInfo>> otherLoad = modelService.LoadAsync(OtherPath);
+        await otherParsing.Task.WaitAsync(Timeout);
+        AssertOk(await modelService.LoadAsync(Path));
+
+        AssertOk(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false).WaitAsync(Timeout));
+
+        otherParse.SetResult(new Error("stopped"));
+        AssertError(await otherLoad.WaitAsync(Timeout));
     }
 
     // The pull replaced the model and parses it itself: a second parse here would be of the
@@ -226,7 +308,7 @@ public class ModelServiceSavedModelTests
         AssertOk(await modelService.LoadAsync(Path));
         persistenceService.Invocations.Clear();
 
-        AssertError(await modelService.ReplaceCurrentModelAsync("/repo/Other.sln", saved));
+        AssertError(await modelService.ReplaceCurrentModelAsync("/repo/Other.sln", saved, isUsersChoice: false));
 
         persistenceService.Verify(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<ModelDto>()), Times.Never);
     }
@@ -242,11 +324,140 @@ public class ModelServiceSavedModelTests
         AssertOk(await modelService.LoadAsync(Path));
 
         ModelDto cloudCopy = saved with { Zoom = 7, Offset = new Pos(500, 600) };
-        ModelInfo replaced = AssertOk(await modelService.ReplaceCurrentModelAsync(Path, cloudCopy));
+        ModelInfo replaced = AssertOk(
+            await modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: false)
+        );
 
         Assert.Equal(2, replaced.Zoom);
         Assert.Equal((2, new Pos(10, 20)), modelMgr.WithModel(m => (m.Zoom, m.Offset)));
         persistenceService.Verify(p => p.WriteAsync(Path, It.Is<ModelDto>(m => m.Zoom == 2)), Times.Once);
+    }
+
+    // The mark the cloud sync goes by (Model.HasUserEdits): a parse is no edit of the user's,
+    // a save request of the app's commands is, a sync clears it, and it is saved with the model.
+    [Fact]
+    public async Task HasUserEdits_ShouldBeSetByAnEdit_NotByAParse_AndClearedByASync()
+    {
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        AssertOk(await modelService.RefreshAsync());
+        Assert.False(modelService.HasUserEdits);
+
+        modelService.TriggerSave();
+        Assert.True(modelService.HasUserEdits);
+        Assert.True(AssertOk(modelService.GetCurrentModelDto()).HasUserEdits);
+
+        // Synced as it was before a later edit: that edit is still to sync
+        ModelContentStamp pushed = modelService.ContentStamp;
+        modelService.TriggerSave();
+        Assert.Null(modelService.MarkSynced(pushed));
+        Assert.True(modelService.HasUserEdits);
+
+        ModelContentStamp synced = modelService.ContentStamp;
+        ModelContentStamp? marked = modelService.MarkSynced(synced);
+        Assert.False(modelService.HasUserEdits);
+        Assert.True(marked?.Saves > synced.Saves, "Clearing the mark saves the model");
+        Assert.Equal(modelService.ContentStamp, modelService.MarkSynced(modelService.ContentStamp));
+    }
+
+    // The structure hash of the cloud sync is made again when this stamp moves: not for the
+    // layouts the app makes as the model is looked at, which are most of the saves.
+    [Fact]
+    public async Task StructureStamp_ShouldMoveWithAParseAndAnEdit_NotWithALayoutOfTheApp()
+    {
+        Mock<IApplicationEvents> applicationEvents = new();
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()), applicationEvents.Object);
+        AssertOk(await modelService.LoadAsync(Path));
+        ModelContentStamp structure = modelService.StructureStamp;
+        ModelContentStamp content = modelService.ContentStamp;
+
+        applicationEvents.Raise(e => e.DerivedSaveNeeded += null);
+        modelService.ClearCache();
+        Assert.Equal(structure, modelService.StructureStamp);
+        Assert.NotEqual(content, modelService.ContentStamp);
+
+        modelService.TriggerSave();
+        Assert.NotEqual(structure, modelService.StructureStamp);
+
+        structure = modelService.StructureStamp;
+        Assert.NotNull(modelService.MarkSynced(modelService.ContentStamp));
+        Assert.Equal(structure, modelService.StructureStamp);
+
+        AssertOk(await modelService.RefreshAsync());
+        Assert.NotEqual(structure, modelService.StructureStamp);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldKeepTheMarkOfTheSavedModel()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved with { HasUserEdits = true });
+        AssertOk(await modelService.LoadAsync(Path));
+        Assert.True(modelService.HasUserEdits);
+
+        // Saved before the mark existed: not known
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved with { HasUserEdits = null });
+        AssertOk(await modelService.LoadAsync(Path));
+        Assert.Null(modelService.HasUserEdits);
+    }
+
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldLeaveNoEditsToSync()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        modelService.TriggerSave();
+
+        ModelDto cloudCopy = saved with { HasUserEdits = null };
+        AssertOk(await modelService.ReplaceCurrentModelAsync(Path, cloudCopy, isUsersChoice: true));
+
+        Assert.False(modelService.HasUserEdits);
+    }
+
+    // An automatic pull is decided on a model the user has not edited. An edit made while the
+    // copy was on its way is not replaced by it: the next sync check shows the conflict.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldReplaceNothing_WhenTheUserEditedMeanwhile()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        modelService.TriggerSave();
+        persistenceService.Invocations.Clear();
+
+        AssertError(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false));
+
+        Assert.True(modelService.HasUserEdits);
+        persistenceService.Verify(p => p.WriteAsync(Path, It.IsAny<ModelDto>()), Times.Never);
+    }
+
+    // ... also one made while the copy was written: the copy is in the saved file by then, so
+    // the model is saved again (the edit's own save may have come before the copy).
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldSaveTheModelAgain_WhenTheUserEditedWhileTheCopyWasWritten()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        await parsed.Task.WaitAsync(Timeout);
+        AssertOk(await modelService.RefreshAsync());
+        persistenceService
+            .Setup(p => p.WriteAsync(Path, It.Is<ModelDto>(m => m.HasUserEdits == false)))
+            .Callback(modelService.TriggerSave)
+            .ReturnsAsync(Result.Ok);
+        long savesBefore = modelService.ContentStamp.Saves;
+
+        AssertError(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false));
+
+        Assert.True(modelService.HasUserEdits);
+        // The edit's save request, and one more after the copy was written
+        Assert.Equal(savesBefore + 2, modelService.ContentStamp.Saves);
     }
 
     void VerifyParses(Times times) =>
