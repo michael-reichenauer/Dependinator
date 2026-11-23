@@ -195,11 +195,44 @@ public class ModelServiceSavedModelTests
         AssertOk(await modelService.LoadAsync(Path));
         cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(Path), Times.Once);
 
-        ModelDto saved = AssertOk(modelService.GetCurrentModelDto());
-        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        // A saved model that is there and cannot be read (for now) keeps what was synced
+        persistenceService.Setup(p => p.ExistsAsync(Path)).ReturnsAsync(true);
         cloudCopyCheck.Invocations.Clear();
         AssertOk(await modelService.LoadAsync(Path));
         cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(It.IsAny<string>()), Times.Never);
+
+        ModelDto saved = AssertOk(modelService.GetCurrentModelDto());
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        AssertOk(await modelService.LoadAsync(Path));
+        cloudCopyCheck.Verify(c => c.ForgetSyncedCopyAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    // The first parse of a model the user left goes on for as long as it takes: a pull of the
+    // model that is open now does not wait for it (it holds the sync locks meanwhile).
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldNotWaitForTheFirstParseOfAnotherModel()
+    {
+        const string OtherPath = "/repo/Other.sln";
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        persistenceService.Setup(p => p.ReadAsync(OtherPath)).ReturnsAsync(new Error("no saved model"));
+        TaskCompletionSource<Result<IReadOnlyList<Item>>> otherParse = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        TaskCompletionSource otherParsing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        parserService
+            .Setup(p => p.ParseAsync(OtherPath, It.IsAny<SolutionParseOptions>()))
+            .Callback(() => otherParsing.TrySetResult())
+            .Returns(otherParse.Task);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        Task<Result<ModelInfo>> otherLoad = modelService.LoadAsync(OtherPath);
+        await otherParsing.Task.WaitAsync(Timeout);
+        AssertOk(await modelService.LoadAsync(Path));
+
+        AssertOk(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false).WaitAsync(Timeout));
+
+        otherParse.SetResult(new Error("stopped"));
+        AssertError(await otherLoad.WaitAsync(Timeout));
     }
 
     // The pull replaced the model and parses it itself: a second parse here would be of the
@@ -401,6 +434,30 @@ public class ModelServiceSavedModelTests
 
         Assert.True(modelService.HasUserEdits);
         persistenceService.Verify(p => p.WriteAsync(Path, It.IsAny<ModelDto>()), Times.Never);
+    }
+
+    // ... also one made while the copy was written: the copy is in the saved file by then, so
+    // the model is saved again (the edit's own save may have come before the copy).
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldSaveTheModelAgain_WhenTheUserEditedWhileTheCopyWasWritten()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        await parsed.Task.WaitAsync(Timeout);
+        AssertOk(await modelService.RefreshAsync());
+        persistenceService
+            .Setup(p => p.WriteAsync(Path, It.Is<ModelDto>(m => m.HasUserEdits == false)))
+            .Callback(modelService.TriggerSave)
+            .ReturnsAsync(Result.Ok);
+        long savesBefore = modelService.ContentStamp.Saves;
+
+        AssertError(await modelService.ReplaceCurrentModelAsync(Path, saved, isUsersChoice: false));
+
+        Assert.True(modelService.HasUserEdits);
+        // The edit's save request, and one more after the copy was written
+        Assert.Equal(savesBefore + 2, modelService.ContentStamp.Saves);
     }
 
     void VerifyParses(Times times) =>

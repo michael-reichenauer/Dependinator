@@ -541,17 +541,24 @@ other code, a lazy layout, shifted line numbers), so the model carries a mark in
   the two and cleared the mark of the edit (found in review). `MarkSynced` returns the stamp of
   its own save, never the stamp read afterwards, which can be of a later change.
 - **A model with no saved copy has nothing synced here** (`ICloudCopyCheck.ForgetSyncedCopyAsync`
-  before its first parse): "Delete local only" and a saved model that cannot be read left the
-  baseline, and with it the new parse was a local change, pushed over the cloud copy (or shown
-  as synced, and pushed with the first edit). Without the baseline the cloud copy is pulled.
+  before its first parse): "Delete local only" left the baseline, and with it the new parse
+  was a local change, pushed over the cloud copy (or shown as synced, and pushed with the
+  first edit). Without the baseline the cloud copy is pulled. Only when no saved copy exists:
+  one that is there and could not be read keeps its baseline (the read can have failed for
+  now, and after a format bump the cloud copy is as unreadable, so a pull would fail forever).
 - **The first parse fills the model outside `refreshGate`** (it must not wait for a refresh of
   the model the user just left), and a model that was only parsed now takes the cloud copy, so
   `ReplaceCurrentModelAsync` waits for `firstParse` too (found in review: a new codespace got
-  the rest of its parse added to the pulled copy).
+  the rest of its parse added to the pulled copy). Only for the first parse of its own model:
+  the one of a model the user left goes on, and the pull holds the sync locks while it waits.
+  Known: the pulled copy is then shown at the view the first parse was fitted to.
+- A parse bumps the stamps also when it fails on the way (it changed the model by then), or
+  the cached hashes were of the model before it.
 - **An automatic pull gives way to an edit made while the copy was on its way**
   (`ReplaceCurrentModelAsync(…, isUsersChoice: false)` refuses, before and after writing the
-  copy; the pull is dropped without an error, the next check shows the conflict). The user's
-  own "use the cloud copy" replaces.
+  copy; after it the model is saved again, the copy is in the file by then). The pull is
+  dropped without an error, the next check shows the conflict. The user's own "use the cloud
+  copy" replaces.
 - A cloud copy that is gone (deleted from another device) is made again from this device's
   model, as before, now also when a parse changed the model here since (it was a conflict).
 - Not built (possible follow-ups): telling a cloud copy that changed only by another device's

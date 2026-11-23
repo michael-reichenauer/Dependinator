@@ -132,8 +132,9 @@ class ModelService : IModelService, IDisposable
 
     // The parse that makes a model with no saved copy (LoadAsync). It fills the model outside
     // refreshGate (it must not wait for a refresh of the model the user just left), so what
-    // replaces the model waits for it as well.
-    Task firstParse = Task.CompletedTask;
+    // replaces the model waits for it as well: for the first parse of that model, not for one
+    // of a model the user left since (it goes on for as long as it takes).
+    (string Path, Task End) firstParse = ("", Task.CompletedTask);
 
     // The cloud sync's check of the model that was opened last, which every parse of it waits
     // for (RefreshAfterCloudCheckAsync).
@@ -268,7 +269,8 @@ class ModelService : IModelService, IDisposable
 
         // Not in the middle of a parse: the nodes the parse had passed would be the copy's,
         // look removed from the source to it, and lose their layout.
-        await firstParse;
+        if (firstParse is var parse && parse.Path == modelPath)
+            await parse.End;
         await refreshGate.WaitAsync();
         try
         {
@@ -296,9 +298,13 @@ class ModelService : IModelService, IDisposable
                 return error;
             if (modelMgr.ModelPath != modelPath)
                 return NoLongerOpen(modelPath);
-            // Edited while the copy was written: the edit's own save writes the model again
+            // Edited while the copy was written: the model is written again, whether the
+            // edit's own save came before the copy was in place or is still to come
             if (!isUsersChoice && modelMgr.WithModel(m => m.HasUserEdits == true))
+            {
+                TriggerDerivedSave(isLayoutOnly: true);
                 return EditedMeanwhile(modelPath);
+            }
 
             var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
             RefreshAsync().RunInBackground();
@@ -359,7 +365,7 @@ class ModelService : IModelService, IDisposable
                         $"The saved model '{path}' was written by an older version and could not be read, so it was opened empty."
                     );
                 }
-                await cloudCopyCheck.ForgetSyncedCopyAsync(path);
+                await ForgetSyncedCopyIfNotSavedAsync(path);
                 return await CreateEmptyModelAsync(path);
             }
 
@@ -371,13 +377,10 @@ class ModelService : IModelService, IDisposable
                 return migratedInfo;
             }
 
-            // Nothing saved here: nothing that was synced here either (a model deleted on this
-            // device only, a saved model that cannot be read). With the baseline of the copy
-            // that is gone, the new parse looked like a change to push over the cloud copy.
-            await cloudCopyCheck.ForgetSyncedCopyAsync(path);
+            await ForgetSyncedCopyIfNotSavedAsync(path);
 
             TaskCompletionSource parseEnd = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            firstParse = parseEnd.Task;
+            firstParse = (path, parseEnd.Task);
             Result<ModelInfo> parsedModelInfo;
             try
             {
@@ -584,6 +587,16 @@ class ModelService : IModelService, IDisposable
         if (summaries.Length > 0)
             applicationEvents.TriggerInfoReported($"Model refreshed: {string.Join("; ", summaries)}.");
         return Result.Ok;
+    }
+
+    // Nothing saved here: nothing that was synced here either (a model deleted on this device
+    // only). With the baseline of the copy that is gone, the new parse looked like a change to
+    // push over the cloud copy. A saved model that is there and could not be read keeps its
+    // baseline: the read can have failed for now, and its cloud copy may be as unreadable.
+    async Task ForgetSyncedCopyIfNotSavedAsync(string path)
+    {
+        if (!await persistenceService.ExistsAsync(path))
+            await cloudCopyCheck.ForgetSyncedCopyAsync(path);
     }
 
     async Task<Result<ModelInfo>> ParseNewModelAsync(string path)
@@ -832,7 +845,10 @@ class ModelService : IModelService, IDisposable
             }
             finally
             {
-                // A parse that failed on the way still applies a change of place made meanwhile
+                // Also a parse that failed on the way changed the model (the hashes of the
+                // cloud sync are kept per stamp) ...
+                BumpContentVersion();
+                // ... and still applies a change of place made meanwhile
                 if (EndUpdatingItems())
                 {
                     applicationEvents.TriggerModelChanged();
