@@ -22,7 +22,9 @@ sealed record AppCloudSyncTimings(
 
     // How long the parse that follows opening a saved model waits for the first sync check of it
     // (ICloudCopyCheck). The saved model is on screen meanwhile, so the wait covers an API that
-    // starts cold (the first call of the day can take 10 s); an unreachable one fails sooner.
+    // starts cold (the first call of the day can take 10 s). Offline, VS Code's check fails at
+    // once; a browser host waits as long for its sign-in script (jsInterop.js waitForClerk), so
+    // the dev host then parses 15 s late (the browser app has no parser).
     public TimeSpan StartCheckTimeout { get; init; } = TimeSpan.FromSeconds(15);
 }
 

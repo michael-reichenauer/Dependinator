@@ -101,6 +101,58 @@ public class ModelServiceSavedModelTests
         await parsed.Task.WaitAsync(Timeout);
     }
 
+    // A file saved (or the Refresh button) right after the model opened: parsed before the
+    // check came back, the model had changed here when the newer cloud copy was found.
+    [Fact]
+    public async Task RefreshAsync_ShouldWaitForTheCloudCheck_OfTheModelJustOpened()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        TaskCompletionSource<bool> check = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        cloudCopyCheck.Setup(c => c.PullNewerAsync(Path)).Returns(check.Task);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+
+        Task<Result> refresh = modelService.RefreshAsync();
+        await Task.Delay(50);
+        VerifyParses(Times.Never());
+
+        check.SetResult(false);
+        AssertOk(await refresh.WaitAsync(Timeout));
+        VerifyParses(Times.AtLeastOnce());
+    }
+
+    // Replaced in the middle of a parse, the nodes the parse had passed would be the copy's and
+    // look removed from the source at the parse's end, with their layout.
+    [Fact]
+    public async Task ReplaceCurrentModelAsync_ShouldWaitForARunningParse()
+    {
+        ModelDto saved = await ParseAndLayOutAsync();
+        persistenceService.Setup(p => p.ReadAsync(Path)).ReturnsAsync(saved);
+        using var modelService = CreateModelService(new ModelMgr(new StateMgr()));
+        AssertOk(await modelService.LoadAsync(Path));
+        await parsed.Task.WaitAsync(Timeout);
+        AssertOk(await modelService.RefreshAsync()); // The parse that followed the load is done
+        TaskCompletionSource<Result<IReadOnlyList<Item>>> parse = new(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        TaskCompletionSource parsing = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        parserService
+            .Setup(p => p.ParseAsync(Path, It.IsAny<SolutionParseOptions>()))
+            .Callback(() => parsing.TrySetResult())
+            .Returns(parse.Task);
+        Task<Result> refresh = modelService.RefreshAsync();
+        await parsing.Task.WaitAsync(Timeout);
+
+        Task<Result<ModelInfo>> replace = modelService.ReplaceCurrentModelAsync(Path, saved);
+        await Task.Delay(50);
+        Assert.False(replace.IsCompleted);
+
+        parse.SetResult(new Error("stopped"));
+        AssertError(await refresh.WaitAsync(Timeout));
+        AssertOk(await replace.WaitAsync(Timeout));
+    }
+
     // The pull replaced the model and parses it itself: a second parse here would be of the
     // model the pull is loading.
     [Fact]

@@ -113,7 +113,13 @@ class ModelService : IModelService, IDisposable
     readonly ISaveStatusService saveStatusService;
     readonly ICloudCopyCheck cloudCopyCheck;
 
+    // One parse of the open model at a time, and no replacement of it (a pulled cloud copy)
+    // in the middle of one.
     readonly SemaphoreSlim refreshGate = new(1, 1);
+
+    // The cloud sync's check of the model that was opened last, which every parse of it waits
+    // for (RefreshAfterCloudCheckAsync).
+    Task cloudCheck = Task.CompletedTask;
 
     // While a parse puts its items into the model, which is then not all of one parse (the
     // projects of the kept sources are stamped at the end), a change of a source's place is only
@@ -220,19 +226,44 @@ class ModelService : IModelService, IDisposable
         // The copy was fetched while the user went on: written over another model that was
         // opened meanwhile, it would replace that model's saved copy, and then its cloud copy.
         if (modelMgr.ModelPath != modelPath)
-            return new Error($"'{ModelPaths.DisplayName(modelPath)}' is no longer the open model");
+            return NoLongerOpen(modelPath);
 
-        // The view is each device's own: the copy comes with the view of the device that
-        // pushed it, which would move this one's diagram under the user.
-        modelDto = modelMgr.WithModel(m => modelDto with { Zoom = m.Zoom, Offset = m.Offset, ViewRect = m.ViewRect });
+        // Not in the middle of a parse: the nodes the parse had passed would be the copy's,
+        // look removed from the source to it, and lose their layout.
+        await refreshGate.WaitAsync();
+        try
+        {
+            if (modelMgr.ModelPath != modelPath)
+                return NoLongerOpen(modelPath);
 
-        if (await WriteModelAsync(modelPath, modelDto) is Error error)
-            return error;
+            // The view is each device's own: the copy comes with the view of the device that
+            // pushed it, which would move this one's diagram under the user.
+            modelDto = modelMgr.WithModel(m =>
+                modelDto with
+                {
+                    Zoom = m.Zoom,
+                    Offset = m.Offset,
+                    ViewRect = m.ViewRect,
+                }
+            );
 
-        var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
-        RefreshAsync().RunInBackground();
-        return modelInfo;
+            if (await WriteModelAsync(modelPath, modelDto) is Error error)
+                return error;
+            if (modelMgr.ModelPath != modelPath)
+                return NoLongerOpen(modelPath);
+
+            var modelInfo = await LoadCachedModelDataAsync(modelPath, modelDto);
+            RefreshAsync().RunInBackground();
+            return modelInfo;
+        }
+        finally
+        {
+            refreshGate.Release();
+        }
     }
+
+    static Error NoLongerOpen(string modelPath) =>
+        new($"'{ModelPaths.DisplayName(modelPath)}' is no longer the open model");
 
     public Task<Result> WriteModelAsync(string modelPath, ModelDto modelDto)
     {
@@ -306,14 +337,30 @@ class ModelService : IModelService, IDisposable
     // The parse that follows opening a saved model waits for the cloud sync's check of it: a
     // newer cloud copy is pulled first, and parsed then. Parsed first, the model had changed
     // here too when the check came, and both sides changed is a sync conflict for the user to
-    // resolve, at nearly every start with a second device.
+    // resolve, at nearly every start with a second device. Any other parse asked for meanwhile
+    // (a file was saved, the Refresh button) waits for the check as well (RefreshAsync).
     async Task<Result> RefreshAfterCloudCheckAsync(string path)
     {
-        if (await cloudCopyCheck.PullNewerAsync(path))
+        Task<bool> check = PullNewerCloudCopyAsync(path);
+        cloudCheck = check;
+        if (await check)
             return Result.Ok; // The pull replaced the model and parses it (ReplaceCurrentModelAsync)
 
         // Another model opened meanwhile has its own parse
         return modelMgr.ModelPath == path ? await RefreshAsync() : Result.Ok;
+    }
+
+    async Task<bool> PullNewerCloudCopyAsync(string path)
+    {
+        try
+        {
+            return await cloudCopyCheck.PullNewerAsync(path);
+        }
+        catch (Exception e)
+        {
+            Log.Exception(e, "Failed to check the cloud copy");
+            return false;
+        }
     }
 
     public void CheckLineVisibility()
@@ -405,6 +452,7 @@ class ModelService : IModelService, IDisposable
     async Task<Result> RefreshAsync(IReadOnlyCollection<string>? changedKinds)
     {
         var path = modelMgr.ModelPath;
+        await cloudCheck;
         await refreshGate.WaitAsync();
         try
         {

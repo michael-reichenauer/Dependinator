@@ -102,12 +102,13 @@ interface IConfigService
     Task SetAsync(Action<Config> updateAction);
 }
 
-[Transient]
+// Scoped, as the browser's storage it reads and writes (FileService): one per user, so its
+// updates can be made one at a time.
+[Scoped]
 class ConfigService : IConfigService
 {
-    // Shared by all instances (the service is transient, and in the server host every circuit
-    // writes the same config file)
-    static readonly SemaphoreSlim setLock = new(1, 1);
+    static readonly TimeSpan SetLockTimeout = TimeSpan.FromSeconds(10);
+    readonly SemaphoreSlim setLock = new(1, 1);
 
     readonly IFileService fileService;
     readonly IHostStoragePaths hostStoragePaths;
@@ -131,7 +132,9 @@ class ConfigService : IConfigService
         // One update at a time: each reads the whole config, changes it and writes it back, so
         // of two at once the first one's change was lost (a recent path, or the cloud sync's
         // baseline of a model, which then looked changed on both sides).
-        await setLock.WaitAsync();
+        // ... as far as that goes: an update that never comes back from the storage (its page
+        // is going away) does not hold the later ones for good.
+        bool isLocked = await setLock.WaitAsync(SetLockTimeout);
         try
         {
             // Default config values when none is stored yet
@@ -143,7 +146,8 @@ class ConfigService : IConfigService
         }
         finally
         {
-            setLock.Release();
+            if (isLocked)
+                setLock.Release();
         }
     }
 }

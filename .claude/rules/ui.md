@@ -470,16 +470,23 @@ of them; part 2 (only a user edit can conflict) is not built yet.
   `ModelService.RefreshAfterCloudCheckAsync`): a newer cloud copy is pulled first and parsed
   then. Only for a model with a baseline, and at most `StartCheckTimeout` (15 s, for an API
   that starts cold; a later answer meets a parsed model, the old conflict). Parsed first, the
-  model had changed here too when the check came back from the network.
+  model had changed here too when the check came back from the network. Every other parse
+  waits for that check too (`ModelService.cloudCheck`: a file saved right after the open), and
+  a pull waits for a running parse (`ReplaceCurrentModelAsync` takes `refreshGate`: replaced
+  mid-parse, the nodes the parse had passed looked removed and lost their layout). So nothing
+  that holds `refreshGate` may wait for the cloud sync: the pull would wait for it in turn.
 - **A pull is of the model it was asked for** (found in review): the copy arrives seconds
   later, and the user may have opened another model. `ReplaceCurrentModelAsync(modelPath, …)`
   refuses then (it once wrote the copy over the other model's saved file), the automatic pull
   drops it without an error, and `PullNewerAsync` counts only a pull of its own model
   (`ModelPull`). A pulled copy keeps this device's view (zoom, offset): it comes with the
   pushing device's, which moved the diagram under the user.
-- `ConfigService.SetAsync` is one update at a time (a static lock: the service is transient).
-  It reads, changes and writes the whole config, so of two at once one was lost, a sync
-  baseline among them.
+- `ConfigService.SetAsync` is one update at a time. It reads, changes and writes the whole
+  config, so of two at once one was lost, a sync baseline among them. The service is scoped,
+  like the browser storage it writes, and the wait for the lock has a time limit: the first
+  version's static lock was never released once a page closed during an update (its storage
+  call never returns), and no circuit of the server host started any more, which the e2e run
+  showed as every test failing at "app ready" from some point on.
 - Still view-dependent, for part 2: a container laid out the first time it is shown (lazy
   layout) changes the saved model, which lines are saved depends on what was shown, and `Lines`
   are saved in creation order (a parsed and a loaded model differ once). Stripping the automatic
