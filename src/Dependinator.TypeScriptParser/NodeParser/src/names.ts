@@ -64,6 +64,11 @@ export function packageOfSpecifier(specifier: string): string | undefined {
     return PackageName.test(name) ? name : undefined;
 }
 
+// The package with only the types of a package: "@types/vscode", "@types/babel__core"
+export function typesPackageName(packageName: string): string {
+    return `@types/${packageName.replace(/^@/, "").replace("/", "__")}`;
+}
+
 // The package a file under node_modules belongs to, with a "@types/x" package named as the
 // package it types ("@types/node" is "node", "@types/babel__core" is "@babel/core").
 export function packageOfFile(filePath: string): string | undefined {
