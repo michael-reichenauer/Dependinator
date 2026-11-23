@@ -978,7 +978,7 @@ function readPackageName(packagePath: string): string | undefined {
 }
 
 // The packages that the project's package.json asks for, and the ones of the folders around
-// it: the root of a monorepo has the packages its projects share.
+// it up to the repository's: the root of a monorepo has the packages its projects share.
 function declaredPackages(projectDir: string): Set<string> {
     const declared = new Set<string>();
     for (let dir = projectDir; ; dir = path.dirname(dir)) {
@@ -992,7 +992,7 @@ function declaredPackages(projectDir: string): Set<string> {
         } catch {
             // No package.json in the folder, or not one to read
         }
-        if (path.dirname(dir) === dir) {
+        if (path.dirname(dir) === dir || fs.existsSync(path.join(dir, ".git"))) {
             return declared;
         }
     }
