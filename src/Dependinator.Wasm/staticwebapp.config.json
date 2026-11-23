@@ -6,7 +6,7 @@
         }
     ],
     "platform": {
-        "apiRuntime": "dotnet-isolated:8.0"
+        "apiRuntime": "dotnet-isolated:10.0"
     },
     "navigationFallback": {
         "rewrite": "/index.html"
