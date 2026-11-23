@@ -57,8 +57,11 @@ public class LineLabelsTests(ITestOutputHelper output) : E2ETestBase(output)
         await Page.GetByTestId("line-labels-cancel").ClickAsync();
         await Expect(add).ToHaveCountAsync(0);
 
-        // One undo removes them all.
+        // One undo removes them all. The clicked menu closes before it is opened again: the
+        // next open found the item of the popover that was still fading out, and then waited
+        // for a click on an item that was gone.
         await (await App.OpenSubMenuItemAsync("menu-edit", "menu-undo")).ClickAsync();
+        await Expect(App.MenuItem("menu-search")).ToBeHiddenAsync();
         Xunit.Assert.Equal(total, await OpenAsync());
     }
 
