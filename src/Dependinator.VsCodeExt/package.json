@@ -58,6 +58,11 @@
                 }
             },
             {
+                "command": "dependinator.openFromBrowserToolbar",
+                "title": "Dependinator: Open",
+                "icon": "$(type-hierarchy)"
+            },
+            {
                 "command": "dependinator.reveal",
                 "title": "Dependinator: Reveal Current File in Diagram"
             },
@@ -87,7 +92,12 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
+                    "when": "!isWeb && resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
+                },
+                {
+                    "command": "dependinator.openFromBrowserToolbar",
+                    "group": "navigation",
+                    "when": "isWeb && resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
                 }
             ],
             "editor/context": [
@@ -101,6 +111,10 @@
                 {
                     "command": "dependinator.reveal",
                     "when": "editorIsOpen"
+                },
+                {
+                    "command": "dependinator.openFromBrowserToolbar",
+                    "when": "false"
                 }
             ]
         },

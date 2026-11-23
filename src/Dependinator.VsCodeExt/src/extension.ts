@@ -17,6 +17,9 @@ import {
 } from "./webview";
 
 const commandId = "dependinator.open";
+// The editor toolbar button of VS Code in a browser (a codespace, vscode.dev). Its icon is one of
+// VS Code's own: the browser did not draw the picture files of `dependinator.open`.
+const browserToolbarCommandId = "dependinator.openFromBrowserToolbar";
 const revealCommandId = "dependinator.reveal";
 const searchCommandId = "dependinator.search";
 const refreshCommandId = "dependinator.refresh";
@@ -550,6 +553,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(
         statusBarItem,
         vscode.commands.registerCommand(commandId, openPanel),
+        vscode.commands.registerCommand(browserToolbarCommandId, openPanel),
         vscode.commands.registerCommand(revealCommandId, openPanel),
         vscode.commands.registerCommand(refreshCommandId, () => {
             if (!activePanel) {
