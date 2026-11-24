@@ -37,7 +37,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url || steps.redeploy.outputs.page_url }}
 
     steps:
       # Every branch, with its whole history, as the graph needs
@@ -78,13 +78,29 @@ jobs:
       # Named per attempt: a re-run keeps the earlier attempt's artifact, and deploy-pages refuses
       # to choose between two of the same name
       - name: Upload the page
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
           name: github-pages-${{ github.run_attempt }}
 
+      # deploy-pages looks the artifact up half a second after the upload, and in about one run of
+      # eight the list of the run's artifacts does not show it yet: "No artifacts named
+      # github-pages-1 were found". The action does not look again, so a failed try gets a second
+      # one a little later.
       - name: Publish the page
         id: deploy
-        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
+
+      - name: Wait before the second try
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 15
+
+      - name: Publish the page, second try
+        id: redeploy
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v5
         with:
           artifact_name: github-pages-${{ github.run_attempt }}
