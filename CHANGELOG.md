@@ -9,6 +9,8 @@ with the next official release.
 
 ## [Unreleased]
 
+## [v0.96.471272] - 2026-11-24
+
 ### Improved
 
 - The "packages are not installed" problem of a TypeScript or JavaScript project now says to run `npm install` and in which folder, and mentions a bundler alias only when a missing package is not one a `package.json` asks for
