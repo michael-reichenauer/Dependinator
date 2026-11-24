@@ -43,135 +43,133 @@ static class SvgExportDocument
     // Canvas.razor. The .linkhandle rule is load-bearing: in edit mode the drag-to-link handles
     // are baked into the markup and only hidden by CSS, so without this rule they would show
     // in the exported image. Hover rules are irrelevant in a static image and omitted.
-    static string StyleSvg =>
-        $$"""
-            .linkhandle { display: none; }
-            .iconName {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                dominant-baseline: hanging;
-                text-anchor: middle;
-            }
-            .memberName {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                dominant-baseline: alphabetic;
-                text-anchor: start;
-            }
-            .nodeName {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                dominant-baseline: hanging;
-                text-anchor: start;
-            }
-            .memberHeading, .summaryPrivate, .summaryMuted {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.CardMutedText}};
-                text-anchor: start;
-            }
-            .summaryMember {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                text-anchor: start;
-            }
-            .iconDescription {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.7;
-                text-anchor: middle;
-            }
-            .privateToggleText {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.CardMutedText}};
-                text-anchor: start;
-            }
-            .summaryMember.summaryPrivate, .memberName.memberPrivate {
-                fill: {{DColors.CardMutedText}};
-            }
-            .memberSignature {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.CardMutedText}};
-                text-anchor: start;
-            }
-            .memberDescription {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.7;
-                text-anchor: start;
-            }
-            .nodeDescription {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.7;
-                text-anchor: start;
-            }
-            .zoneName {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.8;
-                dominant-baseline: hanging;
-                text-anchor: start;
-            }
-            .zoneDescription {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.6;
-                dominant-baseline: hanging;
-                text-anchor: start;
-            }
-            .lineLabel {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                fill: {{DColors.Text}};
-                paint-order: stroke;
-                stroke: {{DColors.CanvasBackground}};
-                stroke-width: 3px;
-                stroke-linejoin: round;
-            }
-            .lineDescription {
-                font-family: Verdana, Helvetica, Arial, sans-serif;
-                font-style: italic;
-                fill: {{DColors.Text}};
-                fill-opacity: 0.75;
-                paint-order: stroke;
-                stroke: {{DColors.CanvasBackground}};
-                stroke-width: 3px;
-                stroke-linejoin: round;
-            }
-            """;
+    static string StyleSvg => $$"""
+        .linkhandle { display: none; }
+        .iconName {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            dominant-baseline: hanging;
+            text-anchor: middle;
+        }
+        .memberName {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            dominant-baseline: alphabetic;
+            text-anchor: start;
+        }
+        .nodeName {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            dominant-baseline: hanging;
+            text-anchor: start;
+        }
+        .memberHeading, .summaryPrivate, .summaryMuted {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.CardMutedText}};
+            text-anchor: start;
+        }
+        .summaryMember {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            text-anchor: start;
+        }
+        .iconDescription {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.7;
+            text-anchor: middle;
+        }
+        .privateToggleText {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.CardMutedText}};
+            text-anchor: start;
+        }
+        .summaryMember.summaryPrivate, .memberName.memberPrivate {
+            fill: {{DColors.CardMutedText}};
+        }
+        .memberSignature {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.CardMutedText}};
+            text-anchor: start;
+        }
+        .memberDescription {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.7;
+            text-anchor: start;
+        }
+        .nodeDescription {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.7;
+            text-anchor: start;
+        }
+        .zoneName {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.8;
+            dominant-baseline: hanging;
+            text-anchor: start;
+        }
+        .zoneDescription {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.6;
+            dominant-baseline: hanging;
+            text-anchor: start;
+        }
+        .lineLabel {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            fill: {{DColors.Text}};
+            paint-order: stroke;
+            stroke: {{DColors.CanvasBackground}};
+            stroke-width: 3px;
+            stroke-linejoin: round;
+        }
+        .lineDescription {
+            font-family: Verdana, Helvetica, Arial, sans-serif;
+            font-style: italic;
+            fill: {{DColors.Text}};
+            fill-opacity: 0.75;
+            paint-order: stroke;
+            stroke: {{DColors.CanvasBackground}};
+            stroke-width: 3px;
+            stroke-linejoin: round;
+        }
+        """;
 
     // The line arrow-head markers, copied from the canvas defs in Canvas.razor.
-    static string MarkersSvg =>
-        $"""
-            <marker id="arrow-line" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.Line}" />
-            </marker>
-            <marker id="arrow-hidden" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.LineHidden}" />
-            </marker>
-            <marker id="arrow-direct" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.DirectLine}" />
-            </marker>
-            <marker id="arrow-cousin" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.CousinLine}" />
-            </marker>
-            <marker id="arrow-cycle" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.CycleLine}" />
-            </marker>
-            <marker id="arrow-path" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.PathLine}" />
-            </marker>
-            <marker id="arrow-rule" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 7 3, 0 6" fill="{DColors.RuleLine}" />
-            </marker>
-            <marker id="arrow-inheritance" markerWidth="15" markerHeight="12" refX="0" refY="6" orient="auto">
-                <polygon points="0.5 0.5, 14.5 6, 0.5 11.5" fill="none" stroke="{DColors.Line}" stroke-width="1" />
-            </marker>
-            """;
+    static string MarkersSvg => $"""
+        <marker id="arrow-line" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.Line}" />
+        </marker>
+        <marker id="arrow-hidden" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.LineHidden}" />
+        </marker>
+        <marker id="arrow-direct" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.DirectLine}" />
+        </marker>
+        <marker id="arrow-cousin" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.CousinLine}" />
+        </marker>
+        <marker id="arrow-cycle" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.CycleLine}" />
+        </marker>
+        <marker id="arrow-path" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.PathLine}" />
+        </marker>
+        <marker id="arrow-rule" markerWidth="7" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 7 3, 0 6" fill="{DColors.RuleLine}" />
+        </marker>
+        <marker id="arrow-inheritance" markerWidth="15" markerHeight="12" refX="0" refY="6" orient="auto">
+            <polygon points="0.5 0.5, 14.5 6, 0.5 11.5" fill="none" stroke="{DColors.Line}" stroke-width="1" />
+        </marker>
+        """;
 
     // The icon defs for the icons the content references. Each icon svg carries its own gradient
     // defs (tint variants have '--Color'-suffixed ids), so including the whole icon svg brings

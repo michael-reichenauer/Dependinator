@@ -111,6 +111,10 @@ class NodeLayout
             )
             .Concat(container.DirectLines);
 
+    // A node whose only child is a pass-through node, which fills it: there is nothing to lay
+    // out in it, so it is never flagged for a layout (IsChildrenLayoutRequired).
+    internal static bool IsFilledByPassThrough(Node parent) => parent.Children is [{ IsPassThrough: true }];
+
     public static void AdjustChildren(Node parent, bool forceAllChildren = false)
     {
         parent.IsChildrenLayoutRequired = false;
@@ -122,7 +126,7 @@ class NodeLayout
 
         // A sole pass-through child has a derived boundary that always covers the parent's
         // viewport; arranging it or fitting the container transform to it would fight that.
-        if (parent.Children.Count == 1 && parent.Children[0].IsPassThrough)
+        if (IsFilledByPassThrough(parent))
             return;
 
         if (NodeViewPolicy.IsMemberCardNode(parent))

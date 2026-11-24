@@ -93,4 +93,103 @@ public class CloudModelSerializerTests
 
         Assert.Equal(CloudModelSerializer.GetContentHash(modelDto), document.ContentHash);
     }
+
+    // The mark of the user's edits since the last sync is each device's own: it changes no
+    // hash, a model without it (saved before the mark existed) hashes as it did before, and it
+    // does not travel to the cloud.
+    [Fact]
+    public void GetContentHash_ShouldLeaveOutTheUserEditsMark()
+    {
+        ModelDto model = Model([Node("App"), Node("App.Core", parent: "App")]);
+
+        string hash = CloudModelSerializer.GetContentHash(model);
+
+        Assert.Equal(hash, CloudModelSerializer.GetContentHash(model with { HasUserEdits = true }));
+        Assert.Equal(hash, CloudModelSerializer.GetContentHash(model with { HasUserEdits = false }));
+        Assert.DoesNotContain("HasUserEdits", System.Text.Json.JsonSerializer.Serialize(model));
+    }
+
+    [Fact]
+    public void CreateDocument_ShouldLeaveOutTheUserEditsMark()
+    {
+        ModelDto model = Model([Node("App")]) with { HasUserEdits = true };
+
+        CloudModelDocument document = CloudModelSerializer.CreateDocument("/models/sample.model", model);
+
+        Assert.Null(AssertOk(CloudModelSerializer.ReadModel(document)).HasUserEdits);
+    }
+
+    // The structure is what a parse makes: the same for the same source, whatever was laid out
+    // or in which order the model was put together.
+    [Fact]
+    public void GetStructureHash_ShouldBeTheSame_WhateverTheLayoutAndTheOrder()
+    {
+        LinkDto link = new("App.Core", "App.Api", "Type");
+        ModelDto model = Model([Node("App"), Node("App.Core", parent: "App"), Node("App.Api", parent: "App")], [link]);
+        ModelDto laidOutOtherwise = Model(
+            [
+                Node("App.Api", parent: "App") with
+                {
+                    Boundary = new Rect(10, 20, 100, 100),
+                    Color = "red",
+                },
+                Node("App") with
+                {
+                    Zoom = 0.5,
+                    IsChildrenLayoutRequired = true,
+                },
+                Node("App.Core", parent: "App"),
+            ],
+            [link]
+        ) with
+        {
+            Lines = [new LineDto { LineId = "1", SegmentPoints = [new Pos(1, 2)] }],
+        };
+
+        Assert.Equal(
+            CloudModelSerializer.GetStructureHash(model),
+            CloudModelSerializer.GetStructureHash(laidOutOtherwise)
+        );
+        Assert.NotEqual(
+            CloudModelSerializer.GetContentHash(model),
+            CloudModelSerializer.GetContentHash(laidOutOtherwise)
+        );
+    }
+
+    [Fact]
+    public void GetStructureHash_ShouldDiffer_WhenAParseMadeSomethingElse()
+    {
+        ModelDto model = Model([Node("App"), Node("App.Core", parent: "App")]);
+        string hash = CloudModelSerializer.GetStructureHash(model);
+
+        ModelDto moreNodes = Model([Node("App"), Node("App.Core", parent: "App"), Node("App.Api", parent: "App")]);
+        ModelDto otherLine = Model([
+            Node("App"),
+            Node("App.Core", parent: "App") with
+            {
+                Properties = new() { FileSpan = new Dependinator.Core.Parsing.FileSpan("Core.cs", 3, 9) },
+            },
+        ]);
+        ModelDto moreLinks = Model(model.Nodes, [new LinkDto("App.Core", "App", "Type")]);
+
+        Assert.NotEqual(hash, CloudModelSerializer.GetStructureHash(moreNodes));
+        Assert.NotEqual(hash, CloudModelSerializer.GetStructureHash(otherLine));
+        Assert.NotEqual(hash, CloudModelSerializer.GetStructureHash(moreLinks));
+    }
+
+    static ModelDto Model(IReadOnlyList<NodeDto> nodes, IReadOnlyList<LinkDto>? links = null) =>
+        new()
+        {
+            Name = "/models/sample.model",
+            Nodes = nodes,
+            Links = links ?? [],
+        };
+
+    static NodeDto Node(string name, string parent = "") =>
+        new()
+        {
+            Name = name,
+            ParentName = parent,
+            Type = "Type",
+        };
 }

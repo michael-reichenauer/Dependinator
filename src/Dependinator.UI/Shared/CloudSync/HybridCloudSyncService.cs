@@ -34,7 +34,8 @@ sealed class HybridCloudSyncService : ICloudSyncService
         ForwardAsync(service => service.PushAsync(modelPath, modelDto));
 
     // Gets current model over active transport selected by ForwardAsync{T}.
-    public Task<Result<ModelDto>> PullAsync(string modelPath) => ForwardAsync(service => service.PullAsync(modelPath));
+    public Task<Result<PulledModel>> PullAsync(string modelPath) =>
+        ForwardAsync(service => service.PullAsync(modelPath));
 
     public Task<Result> DeleteAsync(string modelPath) => ForwardAsync(service => service.DeleteAsync(modelPath));
 

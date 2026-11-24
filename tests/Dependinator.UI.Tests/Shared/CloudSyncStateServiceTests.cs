@@ -19,11 +19,16 @@ public class CloudSyncStateServiceTests
             CompressedSizeBytes: 10
         );
 
-        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata, localContentHash: "hash-123");
+        await sut.RecordPushAsync(@"C:\repo\Model.json", metadata, localContentHash: "hash-123", "structure-1");
         CloudSyncModelState? state = await sut.GetAsync("C:/repo/Model.json");
 
         Assert.NotNull(state);
         Assert.Equal(new CloudSyncBaseline("hash-123", "hash-123"), state.Baseline);
+        Assert.Equal("structure-1", state.PushedStructureHash);
+
+        // A pull leaves what this device pushed last
+        await sut.RecordPullAsync("C:/repo/Model.json", "hash-456", "hash-456");
+        Assert.Equal("structure-1", (await sut.GetAsync("C:/repo/Model.json"))?.PushedStructureHash);
     }
 
     [Fact]
@@ -37,6 +42,30 @@ public class CloudSyncStateServiceTests
 
         Assert.NotNull(state);
         Assert.Equal(new CloudSyncBaseline("pull-hash", "pull-hash"), state.Baseline);
+    }
+
+    [Fact]
+    public async Task RecordLocalAsync_ShouldMoveTheLocalHash_AndKeepTheRemoteOne()
+    {
+        InMemoryConfigService configService = new();
+        CloudSyncStateService sut = new(configService);
+        await sut.RecordPullAsync("/models/sample.model", "local-hash", "remote-hash");
+
+        await sut.RecordLocalAsync("/models/sample.model", "loaded-hash");
+
+        CloudSyncModelState? state = await sut.GetAsync("/models/sample.model");
+        Assert.Equal(new CloudSyncBaseline("loaded-hash", "remote-hash"), state?.Baseline);
+    }
+
+    [Fact]
+    public async Task RecordLocalAsync_ShouldMakeNoBaseline_ForAModelWithoutOne()
+    {
+        InMemoryConfigService configService = new();
+        CloudSyncStateService sut = new(configService);
+
+        await sut.RecordLocalAsync("/models/sample.model", "loaded-hash");
+
+        Assert.Null(await sut.GetAsync("/models/sample.model"));
     }
 
     sealed class InMemoryConfigService : IConfigService

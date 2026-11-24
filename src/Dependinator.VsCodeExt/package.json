@@ -2,7 +2,7 @@
     "name": "dependinator",
     "displayName": "Dependinator",
     "description": "Dependinator visualizes the structure and dependencies of C#/.NET code, TypeScript and JavaScript projects, and Azure Bicep deployments as an interactive, navigable map, making complex architectures easier to understand, analyze, and refactor.",
-    "version": "0.95.0",
+    "version": "0.96.0",
     "publisher": "michaelreichenauer",
     "license": "MIT",
     "repository": "https://github.com/michael-reichenauer/Dependinator",
@@ -58,6 +58,11 @@
                 }
             },
             {
+                "command": "dependinator.openFromBrowserToolbar",
+                "title": "Dependinator: Open",
+                "icon": "$(type-hierarchy)"
+            },
+            {
                 "command": "dependinator.reveal",
                 "title": "Dependinator: Reveal Current File in Diagram"
             },
@@ -87,7 +92,12 @@
                 {
                     "command": "dependinator.open",
                     "group": "navigation",
-                    "when": "resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
+                    "when": "!isWeb && resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
+                },
+                {
+                    "command": "dependinator.openFromBrowserToolbar",
+                    "group": "navigation",
+                    "when": "isWeb && resourceExtname =~ /\\.(cs|razor|cshtml|sln|slnx|csproj|bicep|ts|tsx|mts|cts|js|jsx|mjs|cjs)$/"
                 }
             ],
             "editor/context": [
@@ -101,6 +111,10 @@
                 {
                     "command": "dependinator.reveal",
                     "when": "editorIsOpen"
+                },
+                {
+                    "command": "dependinator.openFromBrowserToolbar",
+                    "when": "false"
                 }
             ]
         },
@@ -196,7 +210,7 @@
         "vscode:prepublish": "npm run build:extension"
     },
     "dependencies": {
-        "vscode-languageclient": "^11.0.0"
+        "vscode-languageclient": "^11.0.1"
     },
     "devDependencies": {
         "@types/node": "^22.20.5",

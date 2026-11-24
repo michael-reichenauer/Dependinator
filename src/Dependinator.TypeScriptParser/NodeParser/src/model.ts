@@ -922,14 +922,23 @@ export class ModelBuilder {
         const missing = [...this.missingPackages].sort();
         if (missing.length > 0) {
             const shown = missing.slice(0, 3).join(", ") + (missing.length > 3 ? ", …" : "");
+            const folder = path.basename(this.project.projectDir);
+            // A package that a package.json asks for is only not installed. Any other name that
+            // was not found can also be an alias only the bundler knows of.
+            const declared = declaredPackages(this.project.projectDir);
+            const isOnlyNotInstalled = missing.every(
+                name => declared.has(name) || declared.has(names.typesPackageName(name))
+            );
             this.problems.push({
                 Problem: {
                     Message:
-                        // Not found can also be an alias only the bundler knows of
                         (missing.length === 1
                             ? `The package ${shown} is not installed, so what is used of it is not shown`
                             : `${missing.length} packages are not installed (${shown}), so what is used of them is not shown`) +
-                        ' (npm install; an alias of the bundler belongs in the config\'s "paths")',
+                        `. Run npm install in ${folder}` +
+                        (isOnlyNotInstalled
+                            ? "."
+                            : ', or add a name that is an alias of the bundler to the config\'s "paths".'),
                     ErrorCount: missing.length,
                     NodeName: this.root,
                 },
@@ -965,6 +974,27 @@ function readPackageName(packagePath: string): string | undefined {
         return typeof name === "string" && name !== "" ? name : undefined;
     } catch {
         return undefined;
+    }
+}
+
+// The packages that the project's package.json asks for, and the ones of the folders around
+// it up to the repository's: the root of a monorepo has the packages its projects share.
+function declaredPackages(projectDir: string): Set<string> {
+    const declared = new Set<string>();
+    for (let dir = projectDir; ; dir = path.dirname(dir)) {
+        try {
+            const json = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf8"));
+            for (const group of ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"]) {
+                if (json[group] && typeof json[group] === "object") {
+                    Object.keys(json[group]).forEach(name => declared.add(name));
+                }
+            }
+        } catch {
+            // No package.json in the folder, or not one to read
+        }
+        if (path.dirname(dir) === dir || fs.existsSync(path.join(dir, ".git"))) {
+            return declared;
+        }
     }
 }
 

@@ -144,7 +144,11 @@ usual output folders (`dist`, `build`, `out`, `coverage`), as JavaScript that ma
   with a folder `src/components`; a place in `node_modules` does not count), since it matches
   every package's name too. An alias that only the bundler's config knows and that looks like a package
   (`@components/Button`) cannot be told from a missing one: it is reported, and the message says
-  that such an alias belongs in the config's `paths`.
+  that such an alias belongs in the config's `paths`. The message leaves that out when every
+  missing package is one a `package.json` asks for (the project's own or one of a folder around
+  it, by its name or as `@types/…`): then the packages are only not installed, as in a fresh
+  checkout, and it says to run `npm install` in the project's folder. The problem counts one
+  error per missing package.
 - A project's sole folder chain (`src`) is a pass-through in the diagram, like the namespaces
   that repeat an assembly's name (`PassThroughService`), so opening the project shows its files.
 

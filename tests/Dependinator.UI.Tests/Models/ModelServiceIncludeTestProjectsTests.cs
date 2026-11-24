@@ -30,7 +30,8 @@ public class ModelServiceIncludeTestProjectsTests
             applicationEvents.Object,
             progressService.Object,
             vsCodeSendService.Object,
-            Mock.Of<ISaveStatusService>()
+            Mock.Of<ISaveStatusService>(),
+            Mock.Of<ICloudCopyCheck>()
         );
 
     [Fact]

@@ -80,14 +80,14 @@ sealed class HttpCloudSyncService : ICloudSyncService
 
     // Fetches a compressed remote model document and converts it back to local DTO.
     // Returns a NotFoundError when no remote model exists for the path.
-    public async Task<Result<ModelDto>> PullAsync(string modelPath)
+    public async Task<Result<PulledModel>> PullAsync(string modelPath)
     {
         string modelKey = CloudModelPath.CreateKey(modelPath);
         Result<CloudModelDocument> documentResult = await httpClient.PullAsync(modelKey);
         if (documentResult is not CloudModelDocument document)
             return documentResult.Error;
 
-        return CloudModelSerializer.ReadModel(document);
+        return CloudModelSerializer.ReadPulledModel(document);
     }
 
     // Deletes the remote model for the path; a missing remote copy counts as already deleted.

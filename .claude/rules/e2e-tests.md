@@ -73,6 +73,11 @@ fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
   drag sent right after a click races mode arming or a navigation's landing: use
   `App.CancelModeAsync()`, `App.DeselectAsync()`, and `Expect(App.ModeBanner).ToBeVisibleAsync()`
   before dragging an armed area.
+- A go to enables Back (`RecordJump`) before its flight has moved the view (it measures the
+  canvas first), and Back or Forward pressed from the very view it returns to records nothing
+  for the other direction. A test that goes back right after a jump must first see the view
+  leave the start view (`ViewHistoryTests.WaitForNodeWidthToLeaveAsync`): WebKit under load
+  lost that race twice in a row in a release run (Nov 20 2026).
 - The app ignores canvas shortcuts while a dialog or menu popover is open, including the fade-out
   after a menu click. `AppPage.OpenSearchViaHotkeyAsync` waits for `KeyboardOwners` to be empty
   and retries; any shortcut sent after a menu or dialog needs the same wait.
@@ -86,6 +91,9 @@ fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
   Click a checkbox-style item with `ToggleSubMenuItemAsync`: it lets the clicked menu close before
   reading the state back. Reopening right after the click found the fading popover's item, then
   polled it after it vanished under a closed menu (ThemeTests and LineDimTests, Oct 23 2026).
+  The same holds for any menu click followed by another menu open (an Undo, then Edit again):
+  wait for the menu to be gone first (`Expect(App.MenuItem("menu-search")).ToBeHiddenAsync()`;
+  LineLabelsTests waited 30 s to click a detached item, Nov 23 2026).
 - Blazor Server drops a click or key press whose element re-renders before the server handles
   it, and Playwright reports it as done. After a step that re-renders its surroundings (a panel
   loading its AI providers, a radio that adds a field, a dialog closing), use

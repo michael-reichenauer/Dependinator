@@ -51,7 +51,8 @@ public class ModelServiceSlnxMigrationTests
             applicationEvents.Object,
             Mock.Of<IProgressService>(),
             Mock.Of<IVsCodeSendService>(),
-            Mock.Of<ISaveStatusService>()
+            Mock.Of<ISaveStatusService>(),
+            Mock.Of<ICloudCopyCheck>()
         );
 
     [Fact]

@@ -14,9 +14,10 @@ browser if need be:
 
 With Claude, ask it to "make a preview" or "make a release": it writes the notes from what changed
 since the latest release, commits them and runs the workflow (the `release` skill,
-`.claude/skills/release/SKILL.md`). A release it shows you first and waits for your go. Ask it
-"what's unreleased?" for the notes alone, as they would be written now and what is new since the
-latest preview, with nothing committed or published.
+`.claude/skills/release/SKILL.md`). A release goes straight ahead like a preview: asking for a
+"release", a "production release" or a "real release" is the go, and its notes come in the reply
+that starts the run. Ask it "what's unreleased?" for the notes alone, as they would be written now
+and what is new since the latest preview, with nothing committed or published.
 
 ## What the workflow does
 

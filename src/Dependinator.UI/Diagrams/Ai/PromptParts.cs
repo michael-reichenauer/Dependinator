@@ -122,19 +122,18 @@ static class PromptParts
 
     // The task for an AI chat (PromptTarget.Chat): it cannot see more than the prompt, so it
     // checks the change against the code shown and gives the edits back to paste in.
-    internal static string ChatEditTask(string change, string after) =>
-        $"""
-            ## Your task
+    internal static string ChatEditTask(string change, string after) => $"""
+        ## Your task
 
-            You see only this prompt, not the rest of the codebase.
+        You see only this prompt, not the rest of the codebase.
 
-            1. Check that the suggested change fits the code above. If it does not, or it needs code that is not shown, say so, and propose another change or ask for the files you need.
-            2. {change}
-            3. Reply with the edits, one per file: the file's path, then each changed type or member in full as it should be after the change, in a code block, so that I can paste it over the old one. Show new files in full.
-            4. List the other places that must change too, such as callers of what you moved or renamed, which you cannot see.
-            5. {after}
+        1. Check that the suggested change fits the code above. If it does not, or it needs code that is not shown, say so, and propose another change or ask for the files you need.
+        2. {change}
+        3. Reply with the edits, one per file: the file's path, then each changed type or member in full as it should be after the change, in a code block, so that I can paste it over the old one. Show new files in full.
+        4. List the other places that must change too, such as callers of what you moved or renamed, which you cannot see.
+        5. {after}
 
-            """;
+        """;
 
     // A path relative to the model's folder (where the .sln is), when inside it.
     internal static string DisplayPath(IModel model, string path) => DisplayPath(model.Path, path);

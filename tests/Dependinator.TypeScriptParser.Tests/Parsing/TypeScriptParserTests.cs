@@ -327,8 +327,55 @@ public class TypeScriptParserTests(TypeScriptFixture fixture)
 
         var problem = Assert.Single(Items, i => i.Problem is not null).Problem!;
         Assert.Contains("chalk is not installed", problem.Message);
+        // No package.json asks for chalk, so it can also be an alias only the bundler knows of
+        Assert.Contains("Run npm install in shop, or add a name that is an alias", problem.Message);
         Assert.Equal(1, problem.ErrorCount);
         Assert.Equal("shop", problem.NodeName);
+    }
+
+    [Fact]
+    public async Task MissingPackages_ShouldOnlyNeedAnInstall_WhenThePackageFileAsksForThem()
+    {
+        // A project as it is checked out, before "npm install": the packages its package.json
+        // asks for are not there ("vscode" is only types, the package "@types/vscode")
+        var folder = Path.Combine(Path.GetTempPath(), $"dep-ts-{Guid.NewGuid():N}", "editor-tool");
+        try
+        {
+            Directory.CreateDirectory(folder);
+            var path = Path.Combine(folder, "package.json");
+            await File.WriteAllTextAsync(
+                path,
+                """
+                {
+                    "name": "editor-tool",
+                    "dependencies": { "@acme/client": "^1.0.0" },
+                    "devDependencies": { "@types/vscode": "^1.101.0" }
+                }
+                """
+            );
+            await File.WriteAllTextAsync(
+                Path.Combine(folder, "index.ts"),
+                """
+                import * as vscode from "vscode";
+                import { Client } from "@acme/client";
+                export const start = () => vscode.window.showInformationMessage(new Client().name);
+                """
+            );
+
+            var items = AssertOk(await TypeScriptFixture.Parser().ParseAsync(path, SolutionParseOptions.Default));
+
+            var problem = Assert.Single(items, i => i.Problem is not null).Problem!;
+            Assert.Equal(
+                "2 packages are not installed (@acme/client, vscode), so what is used of them is not shown."
+                    + " Run npm install in editor-tool.",
+                problem.Message
+            );
+            Assert.Equal(2, problem.ErrorCount);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(folder)!, recursive: true);
+        }
     }
 
     [Fact]
