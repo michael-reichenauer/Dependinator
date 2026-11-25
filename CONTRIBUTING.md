@@ -58,7 +58,8 @@ the `npm i -g` commands above when you need `./scripts/watch` or `./scripts/run`
 | Format check | `dotnet csharpier check .` |
 | Build and install the VS Code extension locally | `./scripts/install-ext` |
 
-The e2e tests target the running app at `http://localhost:5000`; see
+`./scripts/e2e` starts the app itself in test mode at `http://127.0.0.1:5000` and refuses to run
+while another app (such as `./scripts/watch`) is on that port; see
 `tests/Dependinator.E2E.Tests/README.md`.
 
 ## Repository layout

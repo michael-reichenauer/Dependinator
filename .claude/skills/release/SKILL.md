@@ -43,7 +43,7 @@ Start the **Release** workflow (`release.yml`) from `dev`, also for a release, w
 gh workflow run release.yml --ref dev -f kind=preview
 ```
 
-Without `gh` (a cloud session), dispatch the same workflow with the GitHub tools: ref `dev`, the
+When `gh` is not available, dispatch the same workflow with the GitHub tools: ref `dev`, the
 same `kind`. `publish=false` is a dry run that tests, builds and prints what it would release.
 
 Reply as soon as the run has started, with the kind, the notes as they will be published and a
@@ -55,9 +55,11 @@ failed.
 - Before its push (a test or a build): nothing was published. Read the failed job's log first.
   A flaky e2e test is re-run with **Re-run failed jobs**; a real failure is fixed through a pull
   request, then the workflow is run again.
-- After its push (the deploy, the Marketplace or the GitHub release): never start a new run,
-  which is refused because the notes are used up. Use **Re-run failed jobs** on that run, as
-  "A run that failed after its push" in `docs/RELEASING.md` describes.
+- While publishing (the deploy, the Marketplace or the GitHub release): use **Re-run failed
+  jobs** on that run, as "A run that failed after its push" in `docs/RELEASING.md` describes.
+  A release has pushed `dev` and `main` by then, and a new release run is refused because the
+  notes are used up. A new preview run would publish a second version beside the half-published
+  one.
 
 ## "What's unreleased?"
 
