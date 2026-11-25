@@ -26,6 +26,8 @@ tools/**
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
+# The Claude Code skill named "release" is not a build result
+!.claude/skills/release/
 x64/
 x86/
 [Aa][Rr][Mm]/
