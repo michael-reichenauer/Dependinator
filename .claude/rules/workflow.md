@@ -16,24 +16,22 @@ How this project is worked on, beyond CLAUDE.md. Always loaded, in local and clo
   up, report the findings and get the user's go-ahead before merging. One such review found 15
   issues, among them a cache bug that would have shipped.
 - **Merge messages describe the change** as one summary line, then `- ` lines, for users where it
-  matters. They are raw material for the release notes, not the notes themselves.
-  `git merge --no-ff <branch> -F <file>`; write the message to a file first (`git merge -F -` does
-  not read stdin).
+  matters. They are raw material for the release notes, not the notes themselves. The message
+  goes in as the merge commit of the pull request, not through a local `git merge` into `dev`.
 - **Releases only through the Release workflow, when the user asks** (the `release` skill,
   `docs/RELEASING.md`): a preview from `dev`, a release from `main`, the notes written in
   `CHANGELOG.md`'s `## [Unreleased]` beforehand. Nothing is published by a push or a merge. Never
   merge into `main` or push it by hand, and never merge `main` into `dev`; the workflow makes the
-  release commits. This replaced the earlier flow (every `main` push a release, `./scripts/release`)
-  in Oct 2026.
+  release commits.
 - **A requested release needs no confirmation** (Michael, Nov 23, 2026): when he asks for a
   "release", a "production release" or a "real release", go straight ahead as for a preview. Write
   the notes, commit them, run the workflow, and show the notes in the reply that starts the run.
-  Until then a release got a notes-and-version card and waited for his go. Ask only when it is
-  unclear whether he means a preview or a release, and still never release without being asked.
-- **Previews go to the Marketplace's pre-release track too** (decided with the user Oct 26, 2026;
-  the Oct 22 plan had kept them on GitHub only, a preference, not a blocker). The minutes-based
-  build number grows across previews and releases, so never introduce the odd/even minor
-  convention, and never publish a version lower than one already on the Marketplace.
+  Ask only when it is unclear whether he means a preview or a release, and still never release
+  without being asked.
+- **Previews go to the Marketplace's pre-release track too** (decided with the user Oct 26, 2026).
+  The minutes-based build number grows across previews and releases, so never introduce the
+  odd/even minor convention, and never publish a version lower than one already on the
+  Marketplace.
 - **Whenever you are blocked or waiting on the user**, notify them: they are often not watching.
 - A 401 in the Release workflow's Marketplace step means the `VSCE_PAT` secret (an Azure DevOps
   PAT, expires around July 2027) needs a new token.
@@ -93,11 +91,10 @@ the project works. In 2027 start `CHANGES-2027.md` in the same format (ask the u
   is the sanctioned split.
 - Pass-through namespaces are view-level (`Node.IsPassThrough`). Renaming nodes at parse time was
   rejected: it churns node identity and breaks references and search.
-- AI help: a `claude -p` route on the user's subscription was postponed (the policy for a
-  published extension is unclear), then built on Oct 26 at Michael's request as an experimental
-  opt-in. First hidden (unlisted VS Code setting, env var), then moved the same day to Settings ›
-  Use Claude Code (Experimental) with a warning, since Michael is the only user for now; he plans
-  to hide it again later. Since Oct 30 the switch is in Settings › AI, with the default provider. Keep it out of the README and the tour.
+- AI help: the Claude Code route (`claude -p` on the user's subscription) is an experimental
+  opt-in in Settings › AI, behind a warning, because the policy for a published extension is
+  unclear. Michael is the only user for now and plans to hide it again later. Keep it out of the
+  README and the tour.
 - Line anchors stay centered edge midpoints; spreading them was tried and rejected.
 - All children of a node open as containers at the same zoom (Nov 12, Michael). Opening each node
   by its own size on screen (Oct 14 to Nov 12) left icons beside open containers over a 3x zoom

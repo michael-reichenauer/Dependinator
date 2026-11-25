@@ -159,8 +159,9 @@ fields (`dp <addr>`, then `dumpobj` each pointer) show what the method captured.
 
 ## Browsers
 
-Feature-branch pushes run chromium only; the dev push runs all three browsers plus sync, so
-browser-specific bugs surface there. Run touched tests with `-b firefox` and `-b webkit` before
+Every push, a push to `dev` included, runs chromium only and without sync. All three browsers
+plus sync run only in the Release workflow's gate, so a browser-specific bug first surfaces
+when a preview or release is made. Run touched tests with `-b firefox` and `-b webkit` before
 trusting a chromium-only run for a release.
 
 - Clipboard: `GrantPermissionsAsync(["clipboard-read", "clipboard-write"])` throws on firefox and
