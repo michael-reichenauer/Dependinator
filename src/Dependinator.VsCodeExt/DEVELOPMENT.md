@@ -32,6 +32,7 @@ personal choice.
 - `publisher` in `package.json` must match your VS Code Marketplace publisher name before publishing.
 - Packaging requires the .NET 11 SDK pinned in `global.json` (the language server and WASM target `net11.0`) plus the .NET 10 runtime for CSharpier, and Node 22+ (`@vscode/vsce` pulls in Azure packages that require it).
 - Installed extensions use a self-contained language server, so `dotnet` is not required at runtime.
+- `overrides.minimatch` in `package.json` holds `@vscode/vsce` on the patched minimatch 11 (advisory GHSA-g3hv-75wg-m249; vsce 4.1.1 still asks for `^10.2.6`, which has no fix). Remove the override once vsce asks for minimatch 11 itself.
 
 ## Build a VSIX locally
 

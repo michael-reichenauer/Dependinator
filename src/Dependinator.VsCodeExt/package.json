@@ -210,7 +210,7 @@
         "vscode:prepublish": "npm run build:extension"
     },
     "dependencies": {
-        "vscode-languageclient": "^11.0.1"
+        "vscode-languageclient": "^12.0.0"
     },
     "devDependencies": {
         "@types/node": "^22.20.7",
@@ -218,5 +218,8 @@
         "@vscode/vsce": "^4.1.1",
         "esbuild": "^0.28.2",
         "typescript": "^7.0.2"
+    },
+    "overrides": {
+        "minimatch": "^11.0.9"
     }
 }
